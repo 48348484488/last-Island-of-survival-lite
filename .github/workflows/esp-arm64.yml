@@ -1,0 +1,84 @@
+name: Oxide ESP C ABI host and Android ARM64 validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "esp_core/**"
+      - ".github/workflows/esp-arm64.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sanitizer-tests:
+    name: Test projection and C ABI on host with sanitizers
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: esp_core
+      - name: Compile and test C++ bridge with AddressSanitizer and UBSan
+        shell: bash
+        run: |
+          set -euo pipefail
+          clang++ -std=c++17 -Wall -Wextra -Werror -O1 -g -fno-omit-frame-pointer \
+            -fsanitize=address,undefined -Iesp_core/include \
+            esp_core/src/esp_bridge.cpp esp_core/tests/test_bridge.cpp \
+            -o /tmp/test_bridge
+          /tmp/test_bridge
+          clang++ -std=c++17 -Wall -Wextra -Werror -O1 -g -fno-omit-frame-pointer \
+            -fsanitize=address,undefined -Iesp_core/include \
+            esp_core/tests/test_projection.cpp -o /tmp/test_projection
+          /tmp/test_projection
+      - name: Safety scope
+        run: |
+          echo "## Native frame bridge" >> "$GITHUB_STEP_SUMMARY"
+          echo "C ABI tests ran with ASan/UBSan. No game hooks, APK modifications, or ESP player-data provider." >> "$GITHUB_STEP_SUMMARY"
+
+  android-arm64-build:
+    name: Cross-compile native bridge for Android arm64-v8a
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: esp_core
+      - uses: android-actions/setup-android@v3
+      - name: Install supported Android NDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager --install "ndk;27.2.12479018"
+      - name: Compile Android native ELF
+        shell: bash
+        run: |
+          set -euo pipefail
+          NDK="${ANDROID_HOME}/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          mkdir -p esp-arm64-out
+          "$NDK/aarch64-linux-android26-clang++" -std=c++17 -O2 -Wall -Wextra -Werror \
+            -fPIC -fstack-protector-strong -shared \
+            -Wl,-z,relro -Wl,-z,now -Wl,--no-undefined \
+            -Iesp_core/include esp_core/src/esp_bridge.cpp \
+            -o esp-arm64-out/liboxide_esp_bridge.so
+          file esp-arm64-out/liboxide_esp_bridge.so
+          "$NDK/llvm-readelf" -h esp-arm64-out/liboxide_esp_bridge.so | tee esp-arm64-out/elf_header.txt
+          "$NDK/llvm-readelf" --dyn-syms esp-arm64-out/liboxide_esp_bridge.so | tee esp-arm64-out/symbols.txt
+          grep -q "Machine:.*AArch64" esp-arm64-out/elf_header.txt
+          grep -q "oxide_esp_project_v1" esp-arm64-out/symbols.txt
+          sha256sum esp-arm64-out/liboxide_esp_bridge.so | tee esp-arm64-out/sha256.txt
+      - name: Save Android native build artifact (not an APK)
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-esp-bridge-android-arm64
+          path: esp-arm64-out/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Report compatibility boundary
+        shell: bash
+        run: |
+          echo "## Android ARM64 cross-compilation verified" >> "$GITHUB_STEP_SUMMARY"
+          echo "This native library is *not* an injectable ESP or Android APK. It requires a compatible authorized in-process data source and renderer; no boot/gameplay test is claimed." >> "$GITHUB_STEP_SUMMARY"
