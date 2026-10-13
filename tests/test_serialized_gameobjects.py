@@ -39,4 +39,23 @@ class TestTransformResolution(unittest.TestCase):
         self.assertLessEqual(len(chain),3)
         self.assertIn("cycle_at",chain[-1])
 
+class TestCameraSubtree(unittest.TestCase):
+    def test_named_children_and_types(self):
+        trans={10:{"m_GameObject":{"m_FileID":0,"m_PathID":101},
+                   "m_Children":[{"m_FileID":0,"m_PathID":11}],
+                   "m_LocalPosition":{"x":0.0,"y":1.2,"z":0.0}},
+               11:{"m_GameObject":{"m_FileID":0,"m_PathID":102},
+                   "m_Children":[{"m_FileID":0,"m_PathID":10}]}}
+        go={101:{"name":"World Camera Root","components":[{"fileID":0,"pathID":10}]},
+            102:{"name":"View","components":[{"fileID":0,"pathID":11},
+                                                   {"fileID":0,"pathID":32}]}}
+        hierarchy=mod.camera_subtree({"fileID":0,"pathID":10},trans,go,
+                                    {10:"Transform",11:"Transform",32:"Camera"})
+        self.assertEqual([n["gameObject"] for n in hierarchy],["World Camera Root","View"])
+        self.assertEqual(hierarchy[1]["components"][1]["type"],"Camera")
+        self.assertEqual(len(hierarchy),2)  # cycle-safe
+    def test_missing_local_reference(self):
+        self.assertIsNone(mod.camera_subtree({"fileID":0,"pathID":99},{}, {}, {}))
+        self.assertIsNone(mod.camera_subtree({"fileID":1,"pathID":10},{10:{}}, {}, {}))
+
 if __name__=="__main__":unittest.main()
