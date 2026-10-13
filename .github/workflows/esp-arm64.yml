@@ -32,6 +32,11 @@ jobs:
           /tmp/test_bridge
           clang++ -std=c++17 -Wall -Wextra -Werror -O1 -g -fno-omit-frame-pointer \
             -fsanitize=address,undefined -Iesp_core/include \
+            esp_core/src/esp_bridge.cpp esp_core/src/esp_timed_bridge.cpp \
+            esp_core/tests/test_timed_bridge.cpp -o /tmp/test_timed_bridge
+          /tmp/test_timed_bridge
+          clang++ -std=c++17 -Wall -Wextra -Werror -O1 -g -fno-omit-frame-pointer \
+            -fsanitize=address,undefined -Iesp_core/include \
             esp_core/tests/test_projection.cpp -o /tmp/test_projection
           /tmp/test_projection
       - name: Safety scope
@@ -67,13 +72,14 @@ jobs:
           "$NDK/aarch64-linux-android26-clang++" -std=c++17 -O2 -Wall -Wextra -Werror \
             -fPIC -fstack-protector-strong -shared \
             -Wl,-z,relro -Wl,-z,now -Wl,--no-undefined \
-            -Iesp_core/include esp_core/src/esp_bridge.cpp \
+            -Iesp_core/include esp_core/src/esp_bridge.cpp esp_core/src/esp_timed_bridge.cpp \
             -o esp-arm64-out/liboxide_esp_bridge.so
           file esp-arm64-out/liboxide_esp_bridge.so
           "$NDK/llvm-readelf" -h esp-arm64-out/liboxide_esp_bridge.so | tee esp-arm64-out/elf_header.txt
           "$NDK/llvm-readelf" --dyn-syms esp-arm64-out/liboxide_esp_bridge.so | tee esp-arm64-out/symbols.txt
           grep -q "Machine:.*AArch64" esp-arm64-out/elf_header.txt
           grep -q "oxide_esp_project_v1" esp-arm64-out/symbols.txt
+          grep -q "oxide_esp_project_timed_v2" esp-arm64-out/symbols.txt
           sha256sum esp-arm64-out/liboxide_esp_bridge.so | tee esp-arm64-out/sha256.txt
       - name: Save Android native build artifact (not an APK)
         uses: actions/upload-artifact@v4
