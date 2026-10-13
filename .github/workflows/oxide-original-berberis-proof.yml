@@ -1,0 +1,102 @@
+name: Prove original Oxide Berberis ARM64 MRS crash against independent native controls
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-original-berberis-proof.yml"
+      - "tools/verify_original_berberis_mrs.py"
+      - "tests/test_verify_original_berberis_mrs.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  original-game-and-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Test strict signal/PID/opcode association
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_classify_cpu_id_probe.py' -v
+          python3 -m unittest discover -s tests -p 'test_correlate_arm64_cpu_id.py' -v
+          python3 -m unittest discover -s tests -p 'test_verify_original_berberis_mrs.py' -v
+      - name: Retrieve ACTUAL unmodified Oxide Google Play emulator process evidence
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38480303555
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: oxide-original-official-play-image-proof
+          path: original
+      - name: Retrieve translated ARM64 isolated JNI crash
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38483564342
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: isolated-arm64-cpu-id-mrs-official-play-runtime
+          path: translated
+      - name: Retrieve NATIVE ARM64 isolated JNI success
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38483882677
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: oxide-independent-mrs-native-arm64
+          path: native
+      - name: Verify real original game opcode, crash and independent controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/verify_original_berberis_mrs.py \
+            --original original/all_buffers.txt \
+            --original-forensic original/forensic_summary.json \
+            --translated translated/logcat.txt \
+            --native native/logcat.txt \
+            --out original-translator-proof
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("original-translator-proof/original_game_translator_crash.json").read_text())
+          assert d["status"]=="ORIGINAL_OXIDE_BERBERIS_MRS_CRASH_WITH_INDEPENDENT_CONTROL_CONFIRMED",d
+          assert d["original_game_pid"]==4078,d
+          assert d["original_berberis_undefined_opcodes"]==["0xd5380429"],d
+          assert d["original_game_has_sigill_si_tkill"],d
+          assert d["original_game_guest_top_frame_pc_confirmed"],d
+          assert d["independent_translated_pid"]==2727,d
+          assert d["independent_native_pid"]==1720,d
+          assert not d["original_game_playable"],d
+          print("ACTUAL_ORIGINAL_OXIDE_MRS_CRASH_FROM_BERBERIS=VERIFIED")
+          print("TRANSLATED_CONTROL_SIGILL_NATIVE_CONTROL_RETURN=VERIFIED")
+          print("ORIGINAL_REDRIOD_SECURITY_SELF_KILL=STILL_UNRESOLVED")
+          PY
+      - name: Publish evidence scope not ESP claims
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original Oxide native translator immediate crash diagnosis"
+            echo "No original game APKs executed or installed during this reanalysis."
+            if [ -s original-translator-proof/original_game_translator_crash.md ]; then
+              cat original-translator-proof/original_game_translator_crash.md
+            else
+              echo "Cross-run original-game opcode verification incomplete."
+            fi
+            echo "Independent test APKs had NO game access; game security causes beyond this loader error remain unresolved."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve lightweight causal correspondence audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-berberis-arm64-mrs-crash-proof
+          path: original-translator-proof/
+          retention-days: 14
+          if-no-files-found: warn
