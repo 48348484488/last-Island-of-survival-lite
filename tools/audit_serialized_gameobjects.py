@@ -122,13 +122,14 @@ def inspect(raw,bundle_name):
     object_types={}
     behaviours=[]
     scripts=[]
+    camera_components=[]
     issues=Counter()
 
     for obj in objects:
         name=obj.type.name
         counts[name]+=1
         object_types[obj.path_id]=name
-        if name not in ("GameObject","MonoBehaviour","MonoScript","Transform","RectTransform"):continue
+        if name not in ("GameObject","MonoBehaviour","MonoScript","Transform","RectTransform","Camera"):continue
         try:
             tree=obj.read_typetree()
             if not isinstance(tree,dict):continue
@@ -145,6 +146,17 @@ def inspect(raw,bundle_name):
             }
         elif name in ("Transform","RectTransform"):
             transforms[pathid]=tree
+        elif name=="Camera":
+            cam_go=pointer(tree.get("m_GameObject"))
+            camera_components.append({
+                "pathID":pathid,
+                "gameObject_pathID":cam_go["pathID"] if cam_go and cam_go["fileID"]==0 else None,
+                "enabled":safe_extract(tree.get("m_Enabled")),
+                "fieldOfView":safe_extract(tree.get("field of view",tree.get("m_FieldOfView"))),
+                "nearClipPlane":safe_extract(tree.get("near clip plane",tree.get("m_NearClipPlane"))),
+                "farClipPlane":safe_extract(tree.get("far clip plane",tree.get("m_FarClipPlane"))),
+                "depth":safe_extract(tree.get("m_Depth"))
+            })
         elif name=="MonoScript":
             scripts.append({
                 "pathID":pathid,
@@ -180,6 +192,26 @@ def inspect(raw,bundle_name):
                         "go_ptr":go,"script_ptr":pointer(tree.get("m_Script")),
                         "fields":targeted,"resolved_references":refs})
     featured=[g for g in go_byid.values() if g["name"] in COMPONENT_NAMES]
+    camera_named_objects=[{
+        "pathID":g["pathID"],"name":g["name"],
+        "components":[{"pathID":c["pathID"],"type":object_types.get(c["pathID"],"unresolved")}
+                      for c in g["components"][:100] if c["fileID"]==0]
+    } for g in go_byid.values()
+      if ("camera" in g["name"].lower() or "cinemachine" in g["name"].lower())][:100]
+    for cam in camera_components:
+        go=go_byid.get(cam["gameObject_pathID"])
+        cam["gameObject"] = go["name"] if go else None
+    camera_roots=[]
+    for m in matches:
+        root=m["resolved_references"].get("worldCameraRoot")
+        if not root:continue
+        nodes=root.get("camera_subtree") or []
+        attachments=[{"gameObject":n["gameObject"],"component_pathID":c["pathID"]}
+                     for n in nodes for c in n["components"] if c["type"]=="Camera"]
+        camera_roots.append({"playerPrefab":m["gameObject"],
+                             "root_pathID":root["pointer"]["pathID"],
+                             "nodes":nodes,"nativeCameraAttachments":attachments,
+                             "nodesVisited":len(nodes)})
     return {
         "bundle":bundle_name,
         "serialized_objects":len(objects),
@@ -188,6 +220,10 @@ def inspect(raw,bundle_name):
         "Transforms_readable":len(transforms),
         "MonoBehaviour_readable":len(behaviours),
         "MonoScript_readable":len(scripts),
+        "Camera_readable":len(camera_components),
+        "camera_objects":camera_components,
+        "camera_named_objects":camera_named_objects,
+        "world_camera_roots":camera_roots,
         "read_issues":dict(issues),
         "named_objects":featured[:30],
         "matching_components":matches[:50],
