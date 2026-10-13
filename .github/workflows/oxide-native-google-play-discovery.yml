@@ -1,0 +1,82 @@
+name: Official native ARM64 Google Play image and host availability audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-native-google-play-discovery.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  official-google-play-arm64-images:
+    name: List official Android ARM64 Google Play system images
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Inspect Android SDK published system image catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p discovery
+          SDK="$ANDROID_HOME"
+          SDKMGR="$SDK/cmdline-tools/16.0/bin/sdkmanager"
+          if [ ! -x "$SDKMGR" ]; then
+            SDKMGR="$(find "$SDK/cmdline-tools" -type f -name sdkmanager | head -n1)"
+          fi
+          timeout 180 "$SDKMGR" --list --channel=0 > discovery/sdk_catalog.txt
+          python3 - <<'PY'
+          import json,re
+          from pathlib import Path
+          out=Path("discovery")
+          entries=[]
+          for line in (out/"sdk_catalog.txt").read_text(errors="replace").splitlines():
+              if re.search(r"system-images;android-(?:33|34|35|36);google_apis_playstore;arm64-v8a",line):
+                  entries.append(line.strip())
+          result={"official_play_arm64_entries":entries,"count":len(entries),
+                  "status":"LISTED" if entries else "NOT_LISTED_IN_THIS_SDK_CATALOG",
+                  "next_stage":"Requires native ARM64 host, emulator boot and legitimate app installation.",
+                  "play_integrity_verdict":"NOT_MEASURED"}
+          (out/"catalog_result.json").write_text(json.dumps(result,indent=2)+"\n")
+          print(json.dumps(result,indent=2))
+          PY
+      - name: Summarize official Google Play native ARM catalog
+        shell: bash
+        run: |
+          echo '### ARM64 official Google Play system image availability' >> "$GITHUB_STEP_SUMMARY"
+          cat discovery/catalog_result.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-google-play-sdk-catalog
+          path: discovery/catalog_result.json
+          retention-days: 14
+
+  arm64-runner-virtualization:
+    name: Identify actual ARM64 GitHub runner virtualization capabilities
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 6
+    steps:
+      - name: Record native AArch64 acceleration environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p host-evidence
+          uname -m | tee host-evidence/architecture.txt
+          uname -a > host-evidence/kernel.txt
+          if [ -e /dev/kvm ]; then
+            echo KVM_DEVICE_PRESENT | tee host-evidence/kvm.txt
+            ls -l /dev/kvm >> host-evidence/kvm.txt
+          else
+            echo NO_KVM_DEVICE | tee host-evidence/kvm.txt
+          fi
+          if [ -d /dev/dri ]; then ls -l /dev/dri > host-evidence/dri.txt; else echo NO_DRI > host-evidence/dri.txt; fi
+          if [ -d /dev/binderfs ]; then ls -l /dev/binderfs > host-evidence/binder.txt; else echo NO_BINDERFS_MOUNT > host-evidence/binder.txt; fi
+          echo "### Native ARM64 runner availability" >> "$GITHUB_STEP_SUMMARY"
+          cat host-evidence/architecture.txt host-evidence/kvm.txt >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-native-runner-capabilities
+          path: host-evidence/
+          retention-days: 14
