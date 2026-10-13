@@ -1,0 +1,93 @@
+name: Oxide original ARM64 startup timeline - archived real logs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-boot-timeline.yml"
+      - "tools/audit_original_boot_timeline.py"
+      - "tools/diagnose_original_exit.py"
+      - "tests/test_audit_original_boot_timeline.py"
+      - "tests/test_diagnose_original_exit.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  archived-a-b:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Verify log parser regression suites
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_diagnose_original_exit.py' -v
+          python3 -m unittest discover -s tests -p 'test_audit_original_boot_timeline.py' -v
+      - name: Retrieve actual previously-collected Android ARM64 logs (NOT game assets)
+        uses: actions/download-artifact@v4
+        with:
+          name: oxide-original-permission-ab-evidence
+          run-id: 38478578089
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: android-evidence
+      - name: Reconstruct both ORIGINAL Android Activity process timelines
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s android-evidence/before/all_buffers.txt
+          test -s android-evidence/after/all_buffers.txt
+          python3 tools/audit_original_boot_timeline.py \
+            --before android-evidence/before \
+            --after android-evidence/after \
+            --out boot-timeline
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path("boot-timeline/startup_timeline.json").read_text())
+          comparison=data["comparison"]
+          assert comparison["before_pid"] == 2197, comparison
+          assert comparison["after_pid"] == 2578, comparison
+          assert comparison["both_self_terminated"], comparison
+          for scenario in ("before","after"):
+              events=data[scenario]["events"]
+              assert events["il2cpp_jni_loaded"]["count"] >= 1, events
+              assert events["unity_memory_initialized"]["count"] >= 1, events
+              assert events["play_store_missing"]["count"] >= 1, events
+              assert events["graphic_buffer_errors"]["count"] >= 1, events
+              assert data[scenario]["security_rejection_cause"] == "NOT_IDENTIFIED"
+          print("REAL_ARCHIVED_GAME_PROCESS_EVENTS=VERIFIED")
+          print("GOOGLE_SERVICES_ERRORS_AND_UNITY_STARTED=OBSERVED_BOTH_RUNS")
+          print("BOTH_ORIGINAL_ACTIVITIES_SELF_SIGKILL=VERIFIED")
+          print("PLAY_INTEGRITY_VERDICT=NOT_MEASURED")
+          PY
+      - name: Summarize read-only evidence and scope
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original Oxide 1.14.11949: original-process timeline"
+            echo "Processed real GitHub Actions run #38478578089 logs; no emulator or game downloads."
+            if [ -s boot-timeline/startup_timeline.md ]; then
+              cat boot-timeline/startup_timeline.md
+            else
+              echo "No timeline produced: check preceding logs."
+            fi
+            echo "No bypass, gameplay, or Play Integrity verdict is claimed."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save report without game code or full logcat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-real-arm64-original-process-timeline
+          path: boot-timeline/
+          if-no-files-found: warn
+          retention-days: 14
