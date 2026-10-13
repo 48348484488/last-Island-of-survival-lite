@@ -87,6 +87,13 @@ jobs:
           SERIAL="127.0.0.1:5555"
           PKG="com.catsbit.oxidesurvivalisland"
           adb -s "$SERIAL" logcat -c 2>/dev/null || true
+          # Persist a live stream before launch; Android's ring buffers can
+          # overwrite evidence if read only after the app has terminated.
+          adb -s "$SERIAL" logcat -b all -v threadtime \
+            > oxide-original-arm64/live_logcat.txt 2>&1 &
+          LOGCAT_PID=$!
+          adb -s "$SERIAL" shell cat /proc/meminfo \
+            > oxide-original-arm64/meminfo_before.txt 2>&1 || true
           adb -s "$SERIAL" shell am force-stop "$PKG" || true
           adb -s "$SERIAL" shell cmd package resolve-activity --brief -c android.intent.category.LAUNCHER "$PKG" \
             > oxide-original-arm64/resolved_launcher.txt 2>&1 || true
@@ -106,6 +113,8 @@ jobs:
               if [ -n "$PID" ]; then
                 adb -s "$SERIAL" shell cat "/proc/$PID/status" 2>/dev/null \
                   | grep -E '^(Name|State|VmRSS|VmSize|Threads):' || true
+                echo "oom_score_adj / oom_score:"
+                adb -s "$SERIAL" shell "cat /proc/$PID/oom_score_adj /proc/$PID/oom_score" 2>/dev/null || true
               fi
               if [ "$sec" = 2 ]; then
                 adb -s "$SERIAL" exec-out screencap -p \
@@ -121,6 +130,17 @@ jobs:
           adb -s "$SERIAL" shell pidof "$PKG" | tr -d '\r' | tee oxide-original-arm64/pid_35s.txt || true
           adb -s "$SERIAL" exec-out screencap -p > oxide-original-arm64/screen_35s.png 2>/dev/null || true
           adb -s "$SERIAL" logcat -d -v threadtime > oxide-original-arm64/logcat.txt 2>&1 || true
+          adb -s "$SERIAL" logcat -b all -d -v threadtime > oxide-original-arm64/all_buffers.txt 2>&1 || true
+          kill "$LOGCAT_PID" 2>/dev/null || true
+          wait "$LOGCAT_PID" 2>/dev/null || true
+          adb -s "$SERIAL" shell cat /proc/meminfo > oxide-original-arm64/meminfo_after.txt 2>&1 || true
+          adb -s "$SERIAL" shell dumpsys meminfo "$PKG" > oxide-original-arm64/app_meminfo.txt 2>&1 || true
+          sudo dmesg --ctime | tail -n 500 > oxide-original-arm64/host_kernel_tail.txt 2>&1 || true
+          docker stats --no-stream oxide-native-android > oxide-original-arm64/container_resources.txt 2>&1 || true
+          grep -iE 'lowmemorykiller|lmkd|am_kill|am_proc_died|out of memory|oom_kill|killing .*process|sending signal|SIGKILL' \
+            oxide-original-arm64/all_buffers.txt > oxide-original-arm64/kill_evidence.txt || true
+          grep -iE 'out of memory|oom.kill|killed process|memory cgroup' \
+            oxide-original-arm64/host_kernel_tail.txt > oxide-original-arm64/host_oom_evidence.txt || true
           adb -s "$SERIAL" shell dumpsys activity activities > oxide-original-arm64/activities.txt 2>&1 || true
           adb -s "$SERIAL" shell dumpsys activity exit-info "$PKG" > oxide-original-arm64/exit_info.txt 2>&1 || true
           adb -s "$SERIAL" logcat -b crash -d -v threadtime > oxide-original-arm64/crash_buffer.txt 2>&1 || true
@@ -138,6 +158,23 @@ jobs:
             RESULT="NOT_RUNNING_AT_10S"
           fi
           echo "$RESULT" | tee oxide-original-arm64/status.txt
+          {
+            echo "Oxide original ARM64 process/exit diagnostic (non-invasive)"
+            echo "RESULT=$RESULT"
+            if grep -qiE 'Process: Sending signal\\. PID: [0-9]+ SIG: 9' oxide-original-arm64/all_buffers.txt; then
+              echo "ANDROID_PROCESS_SENDSIGNAL_9=OBSERVED"
+            else
+              echo "ANDROID_PROCESS_SENDSIGNAL_9=NOT_OBSERVED"
+            fi
+            if [ -s oxide-original-arm64/host_oom_evidence.txt ]; then
+              echo "HOST_OOM_LOG=HAS_MATCHES_REVIEW_CONTEXT"
+            else
+              echo "HOST_OOM_LOG=NO_MATCHES_IN_TAIL_NOT_PROOF_OF_ABSENCE"
+            fi
+            echo "ROOT_CAUSE=UNDETERMINED"
+            echo "A security-warning screenshot, SIGKILL, or host OOM keyword alone does not prove the signal sender."
+            echo "Review all_buffers.txt, live_logcat.txt, exit_info.txt, kill_evidence.txt, and host_kernel_tail.txt."
+          } > oxide-original-arm64/exit_diagnosis.txt
           if [ "$RESULT" != "PROCESS_RUNNING_AT_10S_AND_35S" ]; then
             echo "Original app did not pass basic boot; inspect unmodified native crash logs."
             exit 1
@@ -151,6 +188,12 @@ jobs:
             echo "Status: $(cat oxide-original-arm64/status.txt 2>/dev/null || echo INCOMPLETE)"
             echo "ABI: $(cat oxide-original-arm64/abis.txt 2>/dev/null || echo UNKNOWN)"
             echo "Android: $(cat oxide-original-arm64/android_version.txt 2>/dev/null || echo UNKNOWN)"
+            if [ -f oxide-original-arm64/exit_diagnosis.txt ]; then
+              echo '#### Additional termination evidence'
+              echo '\`\`\`text'
+              cat oxide-original-arm64/exit_diagnosis.txt
+              echo '\`\`\`'
+            fi
             echo "This is a process start test only, not proof of a playable menu, multiplayer player coordinates, or ESP."
             echo "No APK was modified and no process injection was performed."
           } >> "$GITHUB_STEP_SUMMARY"
