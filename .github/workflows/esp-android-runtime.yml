@@ -62,7 +62,7 @@ jobs:
             esp_core/android_probe/src/com/oxide/bridgeprobe/MainActivity.java
           "$BT/d8" --min-api 26 --lib "$ANDROID_JAR" \
             --output android-probe-out/build/dex \
-            android-probe-out/build/classes/com/oxide/bridgeprobe/MainActivity.class
+            android-probe-out/build/classes/com/oxide/bridgeprobe/*.class
           "$BT/aapt" package -f \
             -M esp_core/android_probe/AndroidManifest.xml -I "$ANDROID_JAR" \
             -F android-probe-out/build/unsigned.apk
