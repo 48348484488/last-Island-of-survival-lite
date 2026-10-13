@@ -1,0 +1,136 @@
+name: Oxide original APK on native ARM64 Android container
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/redroid-original-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-arm64-game:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 35
+    steps:
+      - name: Fetch unmodified original APK splits from repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+      - name: Configure ARM64 kernel Binder and Android debugging tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p oxide-original-arm64
+          echo "$(uname -a)" | tee oxide-original-arm64/host.txt
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          ls -l /dev/binderfs | tee oxide-original-arm64/binderfs.txt
+      - name: Start unmodified Android 13 ARM64 guest
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 420 docker pull redroid/redroid:13.0.0_64only-latest
+          sudo chmod a+rw /dev/binderfs/binder || true
+          mkdir -p /tmp/oxide-redroid-data
+          docker run -d --rm --privileged --name oxide-native-android \
+            -p 127.0.0.1:5555:5555 -v /dev/binderfs:/dev/binderfs \
+            -v /tmp/oxide-redroid-data:/data \
+            redroid/redroid:13.0.0_64only-latest androidboot.redroid_gpu_mode=guest \
+            | tee oxide-original-arm64/container_id.txt
+          for i in $(seq 1 45); do
+            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+            if timeout 5 adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | grep -q '^1'; then
+              echo "ANDROID_BOOT_COMPLETED" | tee oxide-original-arm64/boot.txt
+              break
+            fi
+            sleep 4
+          done
+          test -s oxide-original-arm64/boot.txt
+          adb -s 127.0.0.1:5555 shell getprop ro.product.cpu.abilist | tee oxide-original-arm64/abis.txt
+          grep -q arm64-v8a oxide-original-arm64/abis.txt
+          adb -s 127.0.0.1:5555 shell getprop ro.build.version.release | tee oxide-original-arm64/android_version.txt
+      - name: Retrieve original Unity asset APK and validate its checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors --connect-timeout 30 \
+            --max-time 1200 --silent --show-error \
+            --output split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          echo "2f0f7f1be7d78d269f710edd471c40a9755a93a07481cae0c058356515e19834  split_UnityDataAssetPack.apk" | sha256sum --check
+      - name: Install all four original APK splits, no modifications
+        shell: bash
+        run: |
+          set -euo pipefail
+          adb -s 127.0.0.1:5555 install-multiple -r \
+            base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk split_UnityDataAssetPack.apk \
+            > oxide-original-arm64/install.log 2>&1
+          cat oxide-original-arm64/install.log
+          grep -q '^Success' oxide-original-arm64/install.log
+          adb -s 127.0.0.1:5555 shell pm path com.catsbit.oxidesurvivalisland \
+            | tee oxide-original-arm64/installed_packages.txt
+      - name: Observe real original process, startup and native crash logs
+        shell: bash
+        run: |
+          set -u
+          SERIAL="127.0.0.1:5555"
+          PKG="com.catsbit.oxidesurvivalisland"
+          adb -s "$SERIAL" logcat -c 2>/dev/null || true
+          adb -s "$SERIAL" shell am force-stop "$PKG" || true
+          adb -s "$SERIAL" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 \
+            > oxide-original-arm64/launch.txt 2>&1 || true
+          cat oxide-original-arm64/launch.txt
+          sleep 10
+          adb -s "$SERIAL" shell pidof "$PKG" | tr -d '\r' | tee oxide-original-arm64/pid_10s.txt || true
+          adb -s "$SERIAL" exec-out screencap -p > oxide-original-arm64/screen_10s.png 2>/dev/null || true
+          sleep 25
+          adb -s "$SERIAL" shell pidof "$PKG" | tr -d '\r' | tee oxide-original-arm64/pid_35s.txt || true
+          adb -s "$SERIAL" exec-out screencap -p > oxide-original-arm64/screen_35s.png 2>/dev/null || true
+          adb -s "$SERIAL" logcat -d -v threadtime > oxide-original-arm64/logcat.txt 2>&1 || true
+          adb -s "$SERIAL" shell dumpsys activity activities > oxide-original-arm64/activities.txt 2>&1 || true
+          docker logs oxide-native-android > oxide-original-arm64/container.log 2>&1 || true
+          grep -iE 'FATAL EXCEPTION|Fatal signal|SIGILL|SIGSEGV|libloader\.so|libil2cpp\.so' \
+            oxide-original-arm64/logcat.txt | tail -80 > oxide-original-arm64/relevant_errors.txt || true
+          if [ -s oxide-original-arm64/pid_10s.txt ] && [ -s oxide-original-arm64/pid_35s.txt ]; then
+            RESULT="PROCESS_RUNNING_AT_10S_AND_35S"
+          elif [ -s oxide-original-arm64/pid_10s.txt ]; then
+            RESULT="EXITED_BETWEEN_10S_AND_35S"
+          else
+            RESULT="NOT_RUNNING_AT_10S"
+          fi
+          echo "$RESULT" | tee oxide-original-arm64/status.txt
+          if [ "$RESULT" != "PROCESS_RUNNING_AT_10S_AND_35S" ]; then
+            echo "Original app did not pass basic boot; inspect unmodified native crash logs."
+            exit 1
+          fi
+      - name: Save proof and exact limitations
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original unmodified Oxide 1.14.11949 on native ARM64 Android"
+            echo "Status: $(cat oxide-original-arm64/status.txt 2>/dev/null || echo INCOMPLETE)"
+            echo "ABI: $(cat oxide-original-arm64/abis.txt 2>/dev/null || echo UNKNOWN)"
+            echo "Android: $(cat oxide-original-arm64/android_version.txt 2>/dev/null || echo UNKNOWN)"
+            echo "This is a process start test only, not proof of a playable menu, multiplayer player coordinates, or ESP."
+            echo "No APK was modified and no process injection was performed."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve logs without redistributing APKs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-native-arm64-smoke
+          path: oxide-original-arm64/
+          retention-days: 14
+          if-no-files-found: warn
