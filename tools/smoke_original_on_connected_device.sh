@@ -12,18 +12,16 @@ OUTPUT="$3"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PKG="com.catsbit.oxidesurvivalisland"
 ACTIVITY="cTOOT3.abKmV1.tP0Gr1.OxideActivity"
-for name in base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk split_UnityDataAssetPack.apk; do
-  if [[ ! -s "$APK_DIR/$name" ]]; then
-    echo "Missing signed original split: $APK_DIR/$name" >&2
-    exit 65
-  fi
-done
+# Verify all four full SHA-256 digests against the repository's archived originals
+# BEFORE calling ADB or installing anything. Missing or altered files fail closed.
 command -v adb >/dev/null || { echo "Missing adb" >&2; exit 69; }
 command -v python3 >/dev/null || { echo "Missing python3" >&2; exit 69; }
 adb -s "$SERIAL" get-state | grep -qx device || { echo "ADB target unavailable" >&2; exit 69; }
 ABI="$(adb -s "$SERIAL" shell getprop ro.product.cpu.abilist | tr -d '\r')"
 if [[ "$ABI" != *arm64-v8a* ]]; then echo "Not an ARM64 target: $ABI" >&2; exit 65; fi
 mkdir -p "$OUTPUT"
+python3 "$ROOT/tools/verify_original_splits.py" "$APK_DIR" \
+  --output "$OUTPUT/apk_hashes.json"
 printf 'ABI: %s\n' "$ABI" > "$OUTPUT/device.txt"
 python3 "$ROOT/tools/audit_android_environment.py" --serial "$SERIAL" --out "$OUTPUT"
 adb -s "$SERIAL" install-multiple -r \
@@ -56,10 +54,13 @@ trap - EXIT
 cp "$OUTPUT/live_logcat.txt" "$OUTPUT/all_buffers.txt"
 python3 "$ROOT/tools/diagnose_original_exit.py" "$OUTPUT" > "$OUTPUT/forensic_run_output.txt"
 cat "$OUTPUT/forensic_summary.md"
-if grep -E '(topResumedActivity|mResumedActivity).*com[.]catsbit[.]oxidesurvivalisland/' \
-    "$OUTPUT/activities_35s.txt" >/dev/null; then
-  echo "ACTIVITY_RESUMED_AT_35S_NOT_PROOF_OF_GAMEPLAY" | tee "$OUTPUT/status.txt"
+# The existence of a package PID or a resumed activity on its own is not enough.
+# Require continuity of the original PID at both checkpoints and no exit event.
+if python3 "$ROOT/tools/check_activity_liveness.py" "$OUTPUT" \
+     > "$OUTPUT/activity_verdict_stdout.txt"; then
+  echo "ACTIVITY_SMOKE_PASS_NOT_GAMEPLAY" | tee "$OUTPUT/status.txt"
 else
-  echo "ORIGINAL_GAME_ACTIVITY_NOT_RESUMED_AT_35S" | tee "$OUTPUT/status.txt"
+  cat "$OUTPUT/activity_verdict_stdout.txt"
+  echo "ORIGINAL_GAME_ACTIVITY_SMOKE_FAILED" | tee "$OUTPUT/status.txt"
   exit 1
 fi
