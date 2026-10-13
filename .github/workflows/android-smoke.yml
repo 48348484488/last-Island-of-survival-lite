@@ -1,0 +1,75 @@
+name: Oxide original app boot smoke test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/android-smoke.yml'
+      - 'tools/smoke_original.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-app-boot:
+    name: Android 15 emulator boot of unmodified Oxide
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Prepare KVM access for Android emulator
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+
+      - name: Download original Unity split APK from Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-all-errors \
+            --connect-timeout 30 --max-time 1800 \
+            --silent --show-error \
+            --output split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          echo "2f0f7f1be7d78d269f710edd471c40a9755a93a07481cae0c058356515e19834  split_UnityDataAssetPack.apk" | sha256sum --check
+
+      - name: Launch original Oxide on Android 15 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          ram-size: 4096M
+          heap-size: 512M
+          disk-size: 8192M
+          emulator-boot-timeout: 900
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-animations: true
+          script: bash tools/smoke_original.sh
+
+      - name: Publish smoke test summary
+        if: always()
+        shell: bash
+        run: |
+          echo "## Original Oxide boot smoke test" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f smoke-output/status.txt ]; then
+            echo "Result: `$(cat smoke-output/status.txt)`" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Native ABIs: `$(cat smoke-output/abis.txt)`" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Emulator setup or download failed before the app smoke script started." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "This is a 45-second process smoke test, not proof of gameplay, ESP operation or crash-free use on a POCO X6." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep diagnostic logs and screenshots only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-app-smoke
+          path: smoke-output/
+          retention-days: 14
+          if-no-files-found: warn
