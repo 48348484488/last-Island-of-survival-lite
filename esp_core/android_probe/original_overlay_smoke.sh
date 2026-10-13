@@ -58,7 +58,14 @@ sleep 1
 adb -s "$SERIAL" shell pidof "$GAME" > "$OUTPUT/game_pid_capture_2.txt" 2>&1 || true
 adb -s "$SERIAL" shell dumpsys activity activities > "$OUTPUT/activities_capture_2.txt" 2>&1 || true
 adb -s "$SERIAL" exec-out screencap -p > "$OUTPUT/overlay_on_game_2.png" 2>/dev/null || true
-sleep 7
+# Redroid presents Android's own first-time immersive-mode tutorial ("GOT IT")
+# above the original app and above overlay pixels. Dismiss that standard prompt
+# with a user-equivalent touch; do not change security, system properties or APK.
+adb -s "$SERIAL" shell input tap 855 405 > "$OUTPUT/immersive_dialog_tap.txt" 2>&1 || true
+adb -s "$SERIAL" shell pidof "$GAME" > "$OUTPUT/game_pid_capture_3.txt" 2>&1 || true
+adb -s "$SERIAL" shell dumpsys activity activities > "$OUTPUT/activities_capture_3.txt" 2>&1 || true
+adb -s "$SERIAL" exec-out screencap -p > "$OUTPUT/overlay_on_game_3.png" 2>/dev/null || true
+sleep 6
 adb -s "$SERIAL" shell dumpsys activity exit-info "$GAME" > "$OUTPUT/game_exit_info.txt" 2>&1 || true
 
 # Verify that all overlay pixels disappear when the diagnostic app is stopped.
