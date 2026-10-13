@@ -152,3 +152,19 @@ Java_com_oxide_bridgeprobe_MainActivity_nativeProjectSnapshot(
     if (env->ExceptionCheck()) return nullptr;
     return out;
 }
+
+
+/*
+ * Independent Android native-bridge compatibility experiment.
+ * Called ONLY when our own diagnostic APK receives cpu_id_probe=true.
+ * Reproduces the ARM64 MRS instruction at the original loader crash PC.
+ * It never loads, scans, modifies or interacts with the original game.
+ * SIGILL is intentionally handled by the Android process crash reporter,
+ * so the result distinguishes returned instructions from native failures.
+ */
+extern "C" JNIEXPORT jlong JNICALL
+Java_com_oxide_bridgeprobe_MainActivity_nativeReadCpuIdPfr1(JNIEnv*, jclass) {
+    uint64_t features = 0;
+    __asm__ __volatile__("mrs %0, id_aa64pfr1_el1" : "=r"(features));
+    return static_cast<jlong>(features);
+}
