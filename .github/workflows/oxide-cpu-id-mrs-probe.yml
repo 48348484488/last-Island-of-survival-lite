@@ -1,0 +1,130 @@
+name: ARM64 CPU-ID MRS native-bridge compatibility without Oxide game
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-cpu-id-mrs-probe.yml"
+      - "tools/classify_cpu_id_probe.py"
+      - "tests/test_classify_cpu_id_probe.py"
+      - "esp_core/android_probe/bridge_probe_jni.cpp"
+      - "esp_core/android_probe/src/com/oxide/bridgeprobe/MainActivity.java"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-isolated-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            esp_core
+            tools
+            tests
+      - name: Validate CPU-ID verdict tests
+        run: python3 -m unittest discover -s tests -p 'test_classify_cpu_id_probe.py' -v
+      - name: Install Android NDK SDK for isolated debug APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$ANDROID_HOME"
+          SDKMGR="$ROOT/cmdline-tools/16.0/bin/sdkmanager"
+          if [ ! -x "$SDKMGR" ]; then
+            SDKMGR="$(find "$ROOT/cmdline-tools" -name sdkmanager -type f | head -n1)"
+          fi
+          yes | "$SDKMGR" --sdk_root="$ROOT" --licenses >/dev/null || true
+          "$SDKMGR" --sdk_root="$ROOT" --install \
+            "ndk;27.2.12479018" "platforms;android-35" "build-tools;35.0.0"
+      - name: Build separate AArch64 JNI diagnostic app
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash esp_core/android_probe/build_smoke_apk.sh cpu-id-apk-build
+          "$ANDROID_HOME/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm" \
+            -D cpu-id-apk-build/build/lib/arm64-v8a/liboxide_esp_probe.so \
+            | grep -q Java_com_oxide_bridgeprobe_MainActivity_nativeReadCpuIdPfr1
+          echo ISOLATED_CPU_ID_JNI_SYMBOL_CONFIRMED
+      - uses: actions/upload-artifact@v4
+        with:
+          name: isolated-arm64-cpu-id-mrs-jni-apk
+          path: cpu-id-apk-build/oxide-bridge-jni-smoke.apk
+          retention-days: 3
+          if-no-files-found: error
+
+  original-instruction-on-official-play-bridge:
+    needs: build-isolated-probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - uses: actions/download-artifact@v4
+        with:
+          name: isolated-arm64-cpu-id-mrs-jni-apk
+          path: cpu-id-apk
+      - name: Activate KVM for Google's official x86_64 Play Android 15 AVD
+        shell: bash
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - name: Execute only our independent ARM64 instruction probe (NO GAME APK)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis_playstore
+          arch: x86_64
+          profile: pixel_5
+          cores: 2
+          ram-size: 4096M
+          disk-size: 4096M
+          emulator-boot-timeout: 900
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            set -e
+            mkdir -p cpu-id-evidence
+            adb shell getprop ro.product.cpu.abilist > cpu-id-evidence/abi.txt
+            adb shell getprop ro.dalvik.vm.native.bridge > cpu-id-evidence/bridge.txt
+            adb install -r cpu-id-apk/oxide-bridge-jni-smoke.apk > cpu-id-evidence/install.txt
+            grep -q '^Success' cpu-id-evidence/install.txt
+            adb logcat -b all -c || true
+            adb logcat -b all -v threadtime > cpu-id-evidence/logcat.txt 2>&1 &
+            LOGPID=$!
+            adb shell am start -W -n com.oxide.bridgeprobe/.MainActivity --ez cpu_id_probe true \
+              > cpu-id-evidence/activity_start.txt 2>&1 || true
+            sleep 4
+            kill "$LOGPID" 2>/dev/null || true
+            wait "$LOGPID" 2>/dev/null || true
+            python3 tools/classify_cpu_id_probe.py cpu-id-evidence/logcat.txt --out cpu-id-evidence
+      - name: Summarize what this isolated ARM64 test can and cannot establish
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## ARM64 ID_AA64PFR1_EL1 read via Google Play x86_64 native bridge"
+            echo "Only the isolated diagnostic app ran. Original Oxide APK NOT installed."
+            if [ -f cpu-id-evidence/cpu_id_probe_verdict.json ]; then
+              cat cpu-id-evidence/cpu_id_probe_verdict.json
+            else
+              echo "No valid verdict captured."
+            fi
+            echo "This does not prove original game's security or translation failure root cause."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save only CPU-ID status and Android diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-arm64-cpu-id-mrs-official-play-runtime
+          path: |
+            cpu-id-evidence/*.json
+            cpu-id-evidence/*.txt
+          retention-days: 14
+          if-no-files-found: warn
