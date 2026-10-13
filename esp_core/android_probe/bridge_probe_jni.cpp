@@ -72,3 +72,33 @@ extern "C" JNIEXPORT jint JNICALL
 Java_com_oxide_bridgeprobe_MainActivity_runNativeSmoke(JNIEnv*, jclass) {
     return static_cast<jint>(verify());
 }
+
+/*
+ * Separate non-production render test vector.
+ * The point is intentionally synthetic. It cannot observe the Oxide process.
+ */
+extern "C" JNIEXPORT jfloatArray JNICALL
+Java_com_oxide_bridgeprobe_MainActivity_nativeDebugRects(JNIEnv* env, jclass) {
+    auto f=camera();
+    oxide_esp_timed_frame timed{};
+    timed.abi_version=OXIDE_ESP_TIMED_ABI_VERSION;
+    timed.now_ms=20000;
+    timed.camera_sample_ms=19999;
+    timed.max_age_ms=100;
+    timed.camera=f;
+    oxide_esp_timed_player actor{};
+    actor.sample.entity_id=1;
+    actor.sample.flags=OXIDE_ESP_PLAYER_VALID;
+    actor.sample.head[1]=1.f;
+    actor.sample.head[2]=-5.f;
+    actor.sample.feet[1]=-1.f;
+    actor.sample.feet[2]=-5.f;
+    actor.sample_ms=19999;
+    oxide_esp_box box{};
+    if (oxide_esp_project_timed_v2(&timed,&actor,&box,1)!=1) return nullptr;
+    const jfloat values[4]={box.left,box.top,box.right,box.bottom};
+    jfloatArray result=env->NewFloatArray(4);
+    if (!result) return nullptr;
+    env->SetFloatArrayRegion(result,0,4,values);
+    return result;
+}
