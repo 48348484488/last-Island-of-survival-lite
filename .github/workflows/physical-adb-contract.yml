@@ -10,6 +10,11 @@ on:
       - "tools/check_activity_liveness.py"
       - "tests/test_verify_original_splits.py"
       - "tests/test_check_activity_liveness.py"
+      - "tools/diagnose_original_exit.py"
+      - "tests/test_diagnose_original_exit.py"
+      - "tools/compare_android_grants.py"
+      - "tests/test_compare_android_grants.py"
+      - "tools/run_android_permission_ab.sh"
   workflow_dispatch:
 
 permissions:
@@ -36,9 +41,11 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p 'test_diagnose_original_exit.py' -v
           python3 -m unittest discover -s tests -p 'test_audit_android_environment.py' -v
+          python3 -m unittest discover -s tests -p 'test_compare_android_grants.py' -v
       - name: Validate remote script shell syntax and argument handling
         run: |
           bash -n tools/smoke_original_on_connected_device.sh
+          bash -n tools/run_android_permission_ab.sh
           bash tools/smoke_original_on_connected_device.sh --help
       - name: Reject missing originals before any ADB operation
         shell: bash
