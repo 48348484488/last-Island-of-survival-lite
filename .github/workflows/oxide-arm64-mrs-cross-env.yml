@@ -1,0 +1,92 @@
+name: Reanalyze real native versus translated ARM64 CPU-ID crash logs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-arm64-mrs-cross-env.yml"
+      - "tools/correlate_arm64_cpu_id.py"
+      - "tools/classify_cpu_id_probe.py"
+      - "tests/test_correlate_arm64_cpu_id.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  real-cross-environment-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Test opcode match and PID boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_classify_cpu_id_probe.py' -v
+          python3 -m unittest discover -s tests -p 'test_correlate_arm64_cpu_id.py' -v
+      - name: Retrieve translated Android 15 official Google Play diagnostic logs
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38483564342
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: isolated-arm64-cpu-id-mrs-official-play-runtime
+          path: translated
+      - name: Retrieve Android 13 native ARM64 diagnostic logs
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38483882677
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: oxide-independent-mrs-native-arm64
+          path: native
+      - name: Validate actual PID-scoped native bridge opcode and native success
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s translated/logcat.txt
+          test -s native/logcat.txt
+          python3 tools/correlate_arm64_cpu_id.py \
+            --translated translated/logcat.txt \
+            --native native/logcat.txt \
+            --out mrs-cross-environment
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("mrs-cross-environment/cpu_id_cross_environment.json").read_text())
+          assert d["status"]=="ARM64_TRANSLATOR_MRS_INCOMPATIBILITY_REPRODUCED",d
+          assert d["translated_pid"]==2727 and d["native_pid"]==1720,d
+          assert d["translated_sigill"] and not d["native_sigill"],d
+          assert d["native_mrs_returned"] and not d["translated_mrs_returned"],d
+          assert not d["original_game_sigill_root_cause_proven"],d
+          assert len(d["translated_bridge_errors"]) >= 1,d
+          assert d["translated_bridge_errors"][0]["opcode"]=="0xd5380420",d
+          print("ORIGINAL_ARM64_CPU_REGISTER_READ_REPRODUCED=TRANSLATED_FAILS_NATIVE_PASSES")
+          print("ORIGINAL_GAME_SECURITY_CAUSATION=NOT_PROVEN")
+          PY
+      - name: Explain true evidence scope
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Reproduction from actual independent Android ARM64 logcat'
+            if [ -s mrs-cross-environment/cpu_id_cross_environment.md ]; then
+              cat mrs-cross-environment/cpu_id_cross_environment.md
+            else
+              echo 'Result unavailable: inspect failed prior steps.'
+            fi
+            echo 'No original-game APK executed in either isolated experiment.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve compact findings not raw Android logcat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-cpu-register-cross-environment-proof
+          path: mrs-cross-environment/
+          if-no-files-found: warn
+          retention-days: 14
