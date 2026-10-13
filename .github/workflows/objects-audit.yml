@@ -1,0 +1,70 @@
+name: Oxide 1.14 serialized player and camera object graph
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/audit_serialized_gameobjects.py"
+      - "tests/test_serialized_gameobjects.py"
+      - ".github/workflows/objects-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Install Unity serialized asset parser
+        run: python3 -m pip install --user "UnityPy>=1.20,<2"
+      - name: Run pointer decoding regression tests
+        run: python3 -m unittest discover -s tests -p "test_serialized_gameobjects.py" -v
+      - name: Fetch original Unity data asset pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors --connect-timeout 30 \
+            --max-time 1800 --silent --show-error \
+            -o split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          echo "2f0f7f1be7d78d269f710edd471c40a9755a93a07481cae0c058356515e19834  split_UnityDataAssetPack.apk" | sha256sum --check
+      - name: Resolve PlayerManager and observer component references
+        run: python3 tools/audit_serialized_gameobjects.py --assetpack split_UnityDataAssetPack.apk --out objects-out/objects.json
+      - name: Summarize findings and limitations
+        if: always()
+        shell: bash
+        run: |
+          if [ -f objects-out/objects.json ]; then
+            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open("objects-out/objects.json"))
+          print("## Oxide PlayerManager serialized reference graph")
+          for b in d["bundles"]:
+              print("- {}: {} objects, {} readable GameObjects, {} readable MonoBehaviours; {} interesting components".format(
+                  b["bundle"].split("/")[-1],b["serialized_objects"],b["GameObject_readable"],
+                  b["MonoBehaviour_readable"],b["matching_component_count"]))
+              print("  - read issues: {}".format(b["read_issues"]))
+              for m in b["matching_components"][:5]:
+                  print("  - pathID {} object={} keys={}".format(m["pathID"],m["gameObject"],list(m["fields"])))
+          print("Errors: {}".format(d["errors"]))
+          print("Unity prefab references are not live memory offsets or a working ESP.")
+          PY
+          else
+            echo "No analysis data generated; check logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Save only structured data, not the original APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-v114-serialized-graph
+          path: objects-out/
+          if-no-files-found: warn
+          retention-days: 14
