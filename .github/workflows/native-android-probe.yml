@@ -1,0 +1,85 @@
+name: Oxide native ARM64 Android container feasibility
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/native-android-probe.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe-host:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 8
+    steps:
+      - name: Inspect native hardware, Linux binder and container support
+        shell: bash
+        run: |
+          set -u
+          mkdir -p native-arm64-probe
+          {
+            echo "# Native ARM64 Android container environment"
+            echo
+            date -u
+            echo "kernel: $(uname -a)"
+            echo "arch: $(uname -m)"
+            echo "kernel config and device modules:"
+            grep -i 'binder\|ashmem' /proc/filesystems 2>/dev/null || true
+            ls -l /dev/binder* /dev/ashmem /dev/binderfs 2>&1 || true
+            echo
+            echo "mounts:"
+            cat /proc/mounts | grep 'binder\|ashmem' || true
+            echo
+            echo "modinfo binder_linux:"
+            modinfo binder_linux 2>&1 || true
+            echo
+            echo "modinfo ashmem_linux:"
+            modinfo ashmem_linux 2>&1 || true
+            echo
+            echo "kernel modules:"
+            lsmod | grep -i 'binder\|ashmem' || true
+            echo
+            echo "docker:"
+            docker --version || true
+            docker info --format '{{.Architecture}}|{{.OSType}}|{{.Driver}}' || true
+            echo
+            echo "kernel feature hints:"
+            ls -la /sys/fs/binderfs 2>&1 || true
+            cat /proc/config.gz 2>/dev/null | zcat | grep 'ANDROID_BINDER\|ASHMEM' || true
+          } > native-arm64-probe/environment.txt 2>&1
+          cat native-arm64-probe/environment.txt
+      - name: Try binderfs without modifying host kernel configuration
+        shell: bash
+        run: |
+          set -u
+          mkdir -p native-arm64-probe
+          echo "# Binderfs probe" > native-arm64-probe/binderfs.txt
+          if sudo mkdir -p /tmp/oxide-binderfs; then
+            if sudo mount -t binder binder /tmp/oxide-binderfs >> native-arm64-probe/binderfs.txt 2>&1; then
+              echo "BINDERFS_MOUNTED" | tee -a native-arm64-probe/binderfs.txt
+              ls -l /tmp/oxide-binderfs | tee -a native-arm64-probe/binderfs.txt
+              sudo umount /tmp/oxide-binderfs || true
+            else
+              echo "BINDERFS_UNAVAILABLE" | tee -a native-arm64-probe/binderfs.txt
+            fi
+          fi
+      - name: Publish truthful decision
+        if: always()
+        shell: bash
+        run: |
+          cat native-arm64-probe/binderfs.txt 2>/dev/null || true
+          echo "## Native ARM64 Android container feasibility" >> "$GITHUB_STEP_SUMMARY"
+          echo "Runner architecture: $(uname -m)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Binder status: $(grep -E 'BINDERFS_(MOUNTED|UNAVAILABLE)' native-arm64-probe/binderfs.txt | tail -1 || echo NOT_RUN)" >> "$GITHUB_STEP_SUMMARY"
+          echo "No game, Android container, or ESP executed in this environmental test." >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain environment details
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-native-arm64-android-feasibility
+          path: native-arm64-probe/
+          retention-days: 14
+          if-no-files-found: error
