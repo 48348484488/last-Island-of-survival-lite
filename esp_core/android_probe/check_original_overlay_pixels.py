@@ -46,11 +46,13 @@ def plausible_centered_box(hit):
 
 def evaluate(directory):
     root = Path(directory)
-    names = ("overlay_on_launcher.png", "overlay_on_game_1.png",
-             "overlay_on_game_2.png", "overlay_removed.png")
+    names = ["overlay_on_launcher.png", "overlay_on_game_1.png",
+             "overlay_on_game_2.png", "overlay_removed.png"]
+    if (root / "overlay_on_game_3.png").is_file():
+        names.append("overlay_on_game_3.png")
     captures = {n: measure(root / n) for n in names}
-    game_boxes = [name for name in ("overlay_on_game_1.png", "overlay_on_game_2.png")
-                  if plausible_centered_box(captures[name])]
+    game_boxes = [name for name in names if name.startswith("overlay_on_game_")
+                  and plausible_centered_box(captures[name])]
     game_max = max(captures[name]["pixels"] for name in game_boxes) if game_boxes else 0
     off = captures["overlay_removed.png"]["pixels"]
     disappears = off <= max(10, int(game_max * .02))
