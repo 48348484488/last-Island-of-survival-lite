@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.oxide.bridgeprobe">
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="28" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <application android:label="Oxide Bridge Test" android:hasCode="true" android:allowBackup="false" android:theme="@android:style/Theme.Material.NoActionBar">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
@@ -8,5 +9,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name=".OverlayProbeService" android:exported="false" />
     </application>
 </manifest>
