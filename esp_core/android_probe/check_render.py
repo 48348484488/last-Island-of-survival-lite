@@ -28,6 +28,11 @@ if __name__=="__main__":
     empty=green_bounds(Path(sys.argv[2]))
     print("PROJECTION_RECT",colored)
     print("EMPTY_FRAME",empty)
+    if len(sys.argv)>3:
+        stale=green_bounds(Path(sys.argv[3]))
+        print("STALE_FRAME",stale)
+        if stale["pixels"]>0:
+            raise SystemExit("FAIL: stale-data frame showed an old marker")
     if not (300 <= colored["pixels"] < 30000):
         raise SystemExit("FAIL: synthetic native rectangle not visible in diagnostic app")
     if empty["pixels"]>0:
@@ -36,4 +41,4 @@ if __name__=="__main__":
     if not (a<colored["width"]*0.6 and c>colored["width"]*0.4 and
             b<colored["height"]*0.75 and d>colored["height"]*0.25):
         raise SystemExit("FAIL: native rectangle is not near viewport center")
-    print("PASS: native-projected box rendered in Android Canvas; no data => no boxes")
+    print("PASS: native-projected box rendered in Android Canvas; no valid data => no boxes")
