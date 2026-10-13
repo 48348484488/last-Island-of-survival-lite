@@ -1,0 +1,71 @@
+name: Oxide physical ADB smoke contract (no device)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/physical-adb-contract.yml"
+      - "tools/smoke_original_on_connected_device.sh"
+      - "tools/verify_original_splits.py"
+      - "tools/check_activity_liveness.py"
+      - "tests/test_verify_original_splits.py"
+      - "tests/test_check_activity_liveness.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout scripts only, not game APKs
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /tools/
+            /tests/
+      - name: Run original split SHA-256 verifier regressions
+        run: python3 -m unittest discover -s tests -p 'test_verify_original_splits.py' -v
+      - name: Run original Activity PID continuity regressions
+        run: python3 -m unittest discover -s tests -p 'test_check_activity_liveness.py' -v
+      - name: Recheck Android forensic parser and environment inventory
+        run: |
+          python3 -m unittest discover -s tests -p 'test_diagnose_original_exit.py' -v
+          python3 -m unittest discover -s tests -p 'test_audit_android_environment.py' -v
+      - name: Validate remote script shell syntax and argument handling
+        run: |
+          bash -n tools/smoke_original_on_connected_device.sh
+          bash tools/smoke_original_on_connected_device.sh --help
+      - name: Reject missing originals before any ADB operation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/not-the-apks"
+          set +e
+          bash tools/smoke_original_on_connected_device.sh \
+            non-existent-device "$RUNNER_TEMP/not-the-apks" "$RUNNER_TEMP/denied" \
+            > "$RUNNER_TEMP/remote_rejection.log" 2>&1
+          status=$?
+          set -e
+          test "$status" -eq 2
+          python3 - "$RUNNER_TEMP/denied/apk_hashes.json" <<'PY'
+          import json, sys
+          data = json.load(open(sys.argv[1], encoding="utf-8"))
+          assert data["status"] == "FAIL", data
+          assert len(data["entries"]) == 4, data
+          assert all(item["status"] == "MISSING" for item in data["entries"]), data
+          print("HASH_MISMATCH_OR_MISSING_SPLIT_FAILS_BEFORE_ADB=PASS")
+          PY
+      - name: Summarize verified limitations
+        run: |
+          {
+            echo "### Physical device smoke contract"
+            echo "- Python tests and CLI fail-closed behavior verified."
+            echo "- No device reserved, connected or tested."
+            echo "- No APKs downloaded, uploaded or modified."
+            echo "- No gameplay or multiplayer ESP validated."
+          } >> "$GITHUB_STEP_SUMMARY"
