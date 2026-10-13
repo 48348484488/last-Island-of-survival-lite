@@ -1,0 +1,67 @@
+name: Oxide original manifest permissions audit (no game run)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-permissions-audit.yml"
+      - "tools/diagnose_prerequisites.py"
+      - "tests/test_diagnose_prerequisites.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  manifest-permissions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            tools
+            tests
+      - name: Test diagnostic parser, without attestation claims
+        run: python3 -m unittest discover -s tests -p 'test_diagnose_prerequisites.py' -v
+      - name: Install Android AAPT
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$ANDROID_HOME"
+          SDKMGR="$SDK/cmdline-tools/16.0/bin/sdkmanager"
+          if [ ! -x "$SDKMGR" ]; then SDKMGR="$(find "$SDK/cmdline-tools" -type f -name sdkmanager | head -n1)"; fi
+          yes | "$SDKMGR" --sdk_root="$SDK" --licenses >/dev/null || true
+          "$SDKMGR" --sdk_root="$SDK" --install "build-tools;35.0.0"
+      - name: Extract unmodified original base.apk declared permissions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p permission-audit
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump permissions base.apk \
+            | tee permission-audit/aapt_permissions.txt
+          python3 tools/diagnose_prerequisites.py \
+            --aapt permission-audit/aapt_permissions.txt --out permission-audit
+      - name: Explain limits of manifest evidence
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Original APK permission declarations'
+            if [ -s permission-audit/prerequisite_audit.md ]; then
+              cat permission-audit/prerequisite_audit.md
+            else
+              echo 'Audit incomplete: inspect earlier logs.'
+            fi
+            echo 'Declared permissions alone do not prove runtime grants, Play certification, or security rejection cause.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve reports, not APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-manifest-permissions
+          path: permission-audit/
+          if-no-files-found: warn
+          retention-days: 14
