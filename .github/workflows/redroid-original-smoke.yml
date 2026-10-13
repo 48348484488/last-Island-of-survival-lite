@@ -1,13 +1,8 @@
 name: Oxide original APK on native ARM64 Android container
 
+# Run the expensive ~1 GB APK download / Android container test intentionally.
+# Fast, no-device regression checks run on every relevant push in physical-adb-contract.yml.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/redroid-original-smoke.yml"
-      - "tools/audit_android_environment.py"
-      - "tests/test_audit_android_environment.py"
-      - "tools/smoke_original_on_connected_device.sh"
   workflow_dispatch:
 
 permissions:
