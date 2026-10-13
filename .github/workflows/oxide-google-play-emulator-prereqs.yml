@@ -1,0 +1,80 @@
+name: Official Google Play emulator prerequisites for original Oxide ARM64
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-google-play-emulator-prereqs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  play-image-probe:
+    name: Boot genuine Google Play system image and measure native ABI
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Test ABI and Google Play presence interpretation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_audit_google_play_emulator.py' -v
+          bash -n tools/check_google_play_emulator.sh
+      - name: Enable KVM on GitHub Ubuntu runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -e /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm
+            ls -l /dev/kvm
+          else
+            echo "No hardware KVM exposed; Android emulator execution may fail or be slow."
+          fi
+      - name: Boot official Google Play Android 15 system image
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis_playstore
+          arch: x86_64
+          profile: pixel_5
+          cores: 2
+          ram-size: 4096M
+          heap-size: 512M
+          disk-size: 4096M
+          emulator-boot-timeout: 900
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: bash tools/check_google_play_emulator.sh
+      - name: Add grounded comparison and next step
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Official Android Google Play system image - Oxide prerequisites"
+            echo "Unlike Redroid, this is a Google-provided Play Store emulator image."
+            if [ -s google-play-emulator-evidence/prerequisites.md ]; then
+              cat google-play-emulator-evidence/prerequisites.md
+            else
+              echo "AVD unavailable or did not boot; inspect logs."
+            fi
+            echo "No game data, APK splits or Play Integrity tokens were accessed."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve light diagnostic report (never game APK)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-google-play-emulator-abi-and-gms
+          path: |
+            google-play-emulator-evidence/*.md
+            google-play-emulator-evidence/*.json
+            google-play-emulator-evidence/*.txt
+          if-no-files-found: warn
+          retention-days: 14
