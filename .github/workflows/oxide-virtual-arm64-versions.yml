@@ -1,0 +1,96 @@
+name: Oxide 100 percent virtual - native ARM64 Android 12 vs 14
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-virtual-arm64-versions.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-arm64-android-versions:
+    name: Original unchanged Oxide on ARM64 virtual Android 12 and Android 14
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+            tools
+            tests
+      - name: Verify actual virtual-only test implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_compare_virtual_redroid_versions.py' -v
+          python3 -m unittest discover -s tests -p 'test_diagnose_original_exit.py' -v
+          python3 -m unittest discover -s tests -p 'test_verify_original_splits.py' -v
+          bash -n tools/run_native_virtual_android_matrix.sh
+          test "$(uname -m)" = aarch64
+      - name: Configure native ARM64 virtual Android Binder kernel
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p virtual-android-results
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          sudo chmod a+rw /dev/binderfs/binder || true
+          test -e /dev/binderfs/binder
+          uname -m > virtual-android-results/host_arch.txt
+      - name: Download EXACT original Unity asset split only once
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors \
+            --connect-timeout 30 --max-time 1200 \
+            --silent --show-error \
+            --output split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          python3 tools/verify_original_splits.py . \
+            --output virtual-android-results/original_apk_sha256.json
+      - name: Execute both versions in native AArch64 containers, original APK unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/run_native_virtual_android_matrix.sh . virtual-android-results
+      - name: Show observed outcomes, never claim gameplay from CI green
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original Oxide 1.14.11949: native ARM64 virtual Android 12 and 14"
+            echo "No physical phones, no x86 native bridge, no spoofing app identity or integrity."
+            echo "Both original four-split APK installs use exact SHA-256 verified files."
+            if [ -s virtual-android-results/virtual_android_version_comparison.md ]; then
+              cat virtual-android-results/virtual_android_version_comparison.md
+            else
+              echo "Comparison unavailable; inspect boot/installation diagnostics."
+            fi
+            echo "Android boot and app launch must be distinguished from playable multiplayer."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve comparison and limited original screenshot evidence (no APK/logcat)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-native-virtual-arm64-versions-proof
+          path: |
+            virtual-android-results/*.md
+            virtual-android-results/*.json
+            virtual-android-results/android_12/experiment_phase.txt
+            virtual-android-results/android_12/forensic_summary.json
+            virtual-android-results/android_12/screen_2s.png
+            virtual-android-results/android_14/experiment_phase.txt
+            virtual-android-results/android_14/forensic_summary.json
+            virtual-android-results/android_14/screen_2s.png
+          if-no-files-found: warn
+          retention-days: 14
