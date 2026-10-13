@@ -126,9 +126,11 @@ jobs:
           sleep 3
           adb -s "$SERIAL" shell pidof "$PKG" | tr -d '\r' | tee oxide-original-arm64/pid_10s.txt || true
           adb -s "$SERIAL" exec-out screencap -p > oxide-original-arm64/screen_10s.png 2>/dev/null || true
+          adb -s "$SERIAL" shell dumpsys activity activities > oxide-original-arm64/activities_10s.txt 2>&1 || true
           sleep 25
           adb -s "$SERIAL" shell pidof "$PKG" | tr -d '\r' | tee oxide-original-arm64/pid_35s.txt || true
           adb -s "$SERIAL" exec-out screencap -p > oxide-original-arm64/screen_35s.png 2>/dev/null || true
+          adb -s "$SERIAL" shell dumpsys activity activities > oxide-original-arm64/activities_35s.txt 2>&1 || true
           adb -s "$SERIAL" logcat -d -v threadtime > oxide-original-arm64/logcat.txt 2>&1 || true
           adb -s "$SERIAL" logcat -b all -d -v threadtime > oxide-original-arm64/all_buffers.txt 2>&1 || true
           kill "$LOGCAT_PID" 2>/dev/null || true
@@ -148,19 +150,26 @@ jobs:
           docker logs oxide-native-android > oxide-original-arm64/container.log 2>&1 || true
           grep -iE 'FATAL EXCEPTION|Fatal signal|SIGILL|SIGSEGV|libloader\.so|libil2cpp\.so' \
             oxide-original-arm64/logcat.txt | tail -80 > oxide-original-arm64/relevant_errors.txt || true
-          if [ -s oxide-original-arm64/pid_10s.txt ] && [ -s oxide-original-arm64/pid_35s.txt ]; then
-            RESULT="PROCESS_RUNNING_AT_10S_AND_35S"
-          elif [ -s oxide-original-arm64/pid_10s.txt ]; then
-            RESULT="EXITED_BETWEEN_10S_AND_35S"
-          elif grep -qE '[0-9]{4,}' oxide-original-arm64/early_process.txt; then
-            RESULT="STARTED_BUT_EXITED_BEFORE_10S"
+          # pidof matches the package's background services as well as its
+          # Activity process. A later analytics PID MUST NOT count as game survival.
+          START_PID="$(awk '$1 ~ /^[1-7]$/ && $3 ~ /^[0-9]+$/ {print $3; exit}' oxide-original-arm64/early_process.txt)"
+          echo "${START_PID:-NONE}" > oxide-original-arm64/initial_activity_pid.txt
+          if [ -n "$START_PID" ] && awk -v game="$START_PID" '$6=="Process" && $7==":" && $8=="Sending" && $9=="signal." && $10=="PID:" && $12=="SIG:" && $13=="9" && $3==game && $11==game {seen=1;exit} END {exit !seen}' oxide-original-arm64/all_buffers.txt; then
+            RESULT="INITIAL_ACTIVITY_PROCESS_SELF_SIGKILL"
+          elif grep -Eq 'topResumedActivity=.*com[.]catsbit[.]oxidesurvivalisland/' oxide-original-arm64/activities_10s.txt && grep -Eq 'topResumedActivity=.*com[.]catsbit[.]oxidesurvivalisland/' oxide-original-arm64/activities_35s.txt; then
+            RESULT="ACTIVITY_RESUMED_AT_10S_AND_35S"
+          elif [ -s oxide-original-arm64/pid_10s.txt ] || [ -s oxide-original-arm64/pid_35s.txt ]; then
+            RESULT="PACKAGE_PROCESS_ONLY_ACTIVITY_NOT_CONFIRMED"
+          elif grep -qE '^[1-7] [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]+' oxide-original-arm64/early_process.txt; then
+            RESULT="INITIAL_PROCESS_STARTED_THEN_EXITED"
           else
-            RESULT="NOT_RUNNING_AT_10S"
+            RESULT="ORIGINAL_ACTIVITY_NOT_CONFIRMED"
           fi
           echo "$RESULT" | tee oxide-original-arm64/status.txt
           {
             echo "Oxide original ARM64 process/exit diagnostic (non-invasive)"
             echo "RESULT=$RESULT"
+            echo "FIRST_OBSERVED_PROCESS_PID=${START_PID:-NONE}"
             if grep -qiE 'Process *: Sending signal[.] PID: [0-9]+ SIG: 9' oxide-original-arm64/all_buffers.txt; then
               echo "ANDROID_PROCESS_SENDSIGNAL_9=OBSERVED"
             else
@@ -168,10 +177,10 @@ jobs:
             fi
             # logcat threadtime prefix is: date time EMITTER_PID THREAD_ID level tag : text
             # If emitter PID equals signal target PID, app process logged its own SIGKILL.
-            if awk '$6=="Process" && $7==":" && $8=="Sending" && $9=="signal." && $10=="PID:" && $12=="SIG:" && $13=="9" && $3==$11 {seen=1; exit} END {exit !seen}' oxide-original-arm64/all_buffers.txt; then
-              echo "SELF_SIGKILL_LOG=OBSERVED"
+            if [ -n "$START_PID" ] && awk -v game="$START_PID" '$6=="Process" && $7==":" && $8=="Sending" && $9=="signal." && $10=="PID:" && $12=="SIG:" && $13=="9" && $3==game && $11==game {seen=1; exit} END {exit !seen}' oxide-original-arm64/all_buffers.txt; then
+              echo "INITIAL_ACTIVITY_SELF_SIGKILL_LOG=OBSERVED"
             else
-              echo "SELF_SIGKILL_LOG=NOT_OBSERVED"
+              echo "INITIAL_ACTIVITY_SELF_SIGKILL_LOG=NOT_OBSERVED"
             fi
             if [ -s oxide-original-arm64/host_oom_evidence.txt ]; then
               echo "HOST_OOM_LOG=HAS_MATCHES_REVIEW_CONTEXT"
@@ -182,7 +191,7 @@ jobs:
             echo "A security-warning screenshot, SIGKILL, or host OOM keyword alone does not prove the signal sender."
             echo "Review all_buffers.txt, live_logcat.txt, exit_info.txt, kill_evidence.txt, and host_kernel_tail.txt."
           } > oxide-original-arm64/exit_diagnosis.txt
-          if [ "$RESULT" != "PROCESS_RUNNING_AT_10S_AND_35S" ]; then
+          if [ "$RESULT" != "ACTIVITY_RESUMED_AT_10S_AND_35S" ]; then
             echo "Original app did not pass basic boot; inspect unmodified native crash logs."
             exit 1
           fi
