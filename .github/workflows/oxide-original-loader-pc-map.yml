@@ -1,0 +1,87 @@
+name: Oxide original ARM64 libloader crash PC read-only analysis
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-original-loader-pc-map.yml"
+      - "tools/map_original_loader_pcs.py"
+      - "tests/test_map_original_loader_pcs.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-loader-pc-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            tools
+            tests
+      - name: Verify static ELF parser and Python tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_map_original_loader_pcs.py' -v
+      - name: Inspect the unchanged crash site bytes in original AArch64 libloader
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p loader-evidence
+          python3 tools/map_original_loader_pcs.py \
+            base.apk split_config.arm64_v8a.apk \
+            --out loader-evidence | tee loader-evidence/summary.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, "tools")
+          from map_original_loader_pcs import load_original_lib
+          b,source=load_original_lib([Path("base.apk"),Path("split_config.arm64_v8a.apk")])
+          Path("/tmp/oxide-original-libloader.so").write_bytes(b)
+          print("Exact original library extracted ONLY to temp for read-only disassembly")
+          PY
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-aarch64-linux-gnu
+          aarch64-linux-gnu-readelf -l /tmp/oxide-original-libloader.so \
+            > loader-evidence/load_segments.txt
+          aarch64-linux-gnu-objdump -d --start-address=0x830ba0 \
+            --stop-address=0x830c30 /tmp/oxide-original-libloader.so \
+            > loader-evidence/crash_site_0x830bec.txt
+          aarch64-linux-gnu-objdump -d --start-address=0x830d50 \
+            --stop-address=0x830de0 /tmp/oxide-original-libloader.so \
+            > loader-evidence/crash_site_0x830d98.txt
+          echo "=== ORIGINAL GUEST CRASH SITE 0x830BEC ==="
+          cat loader-evidence/crash_site_0x830bec.txt
+          echo "=== ORIGINAL GUEST CALLER 0x830D98 ==="
+          cat loader-evidence/crash_site_0x830d98.txt
+      - name: Summarize bounded crash address evidence
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Read-only original libloader.so ARM64 tombstone PC mapping"
+            echo "Actual original SHA-256 verified library, no code patches."
+            if [ -s loader-evidence/summary.txt ]; then
+              cat loader-evidence/summary.txt
+            else
+              echo "No static mapping produced."
+            fi
+            echo "Even valid disassembly cannot establish the origin of native SI_TKILL by itself."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve bounded text/JSON only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-arm64-libloader-crash-pcs
+          path: |
+            loader-evidence/*.json
+            loader-evidence/*.txt
+          retention-days: 14
+          if-no-files-found: warn
