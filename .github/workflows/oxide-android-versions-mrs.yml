@@ -1,0 +1,106 @@
+name: Official Google Play Android 14 and 16 ARM64 CPU-ID translator compatibility
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-android-versions-mrs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  mrs-feature-across-official-android-images:
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [34, 36]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    name: Android API ${{ matrix.api }} official Play x86_64 ARM64 MRS
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 38483564342
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: isolated-arm64-cpu-id-mrs-jni-apk
+          path: original-independent-probe
+      - name: Validate read-only native crash classifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_classify_cpu_id_probe.py' -v
+          test -s original-independent-probe/oxide-bridge-jni-smoke.apk
+      - name: Enable hardware KVM
+        shell: bash
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - name: Boot official Google Play image and run independent CPU-ID MRS
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: google_apis_playstore
+          arch: x86_64
+          profile: pixel_5
+          cores: 2
+          ram-size: 4096M
+          heap-size: 384M
+          disk-size: 4096M
+          emulator-boot-timeout: 900
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            set -e
+            mkdir -p cpu-id-evidence
+            adb shell getprop ro.build.version.sdk > cpu-id-evidence/api.txt
+            adb shell getprop ro.product.cpu.abilist > cpu-id-evidence/abi.txt
+            adb shell getprop ro.dalvik.vm.native.bridge > cpu-id-evidence/native_bridge.txt
+            adb shell pm list packages com.google.android.gms > cpu-id-evidence/gms_presence.txt
+            adb install -r original-independent-probe/oxide-bridge-jni-smoke.apk \
+              > cpu-id-evidence/install.txt 2>&1
+            cat cpu-id-evidence/install.txt
+            grep -q '^Success' cpu-id-evidence/install.txt
+            adb logcat -b all -c 2>/dev/null || true
+            adb logcat -b all -v threadtime > cpu-id-evidence/logcat.txt 2>&1 &
+            LOGPID=$!
+            adb shell am start -W -n com.oxide.bridgeprobe/.MainActivity \
+              --ez cpu_id_probe true > cpu-id-evidence/activity_start.txt 2>&1 || true
+            sleep 4
+            kill "$LOGPID" 2>/dev/null || true
+            wait "$LOGPID" 2>/dev/null || true
+            python3 tools/classify_cpu_id_probe.py cpu-id-evidence/logcat.txt --out cpu-id-evidence
+      - name: Report exact Android version/ABI; game never installed
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## ARM64 MRS on official Play Android API ${{ matrix.api }}"
+            echo "Only our independently signed JNI diagnostic app was installed."
+            for file in cpu-id-evidence/api.txt cpu-id-evidence/abi.txt cpu-id-evidence/native_bridge.txt; do
+              if [ -f "$file" ]; then echo "$file: $(cat "$file")"; fi
+            done
+            if [ -f cpu-id-evidence/cpu_id_probe_verdict.json ]; then
+              cat cpu-id-evidence/cpu_id_probe_verdict.json
+            else
+              echo "No verified runtime verdict: see prior step logs."
+            fi
+            echo "A successful register-read is NOT proof original game's protection accepts this environment."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve independent app CPU-ID results per Android version
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-independent-arm64-mrs-google-play-api-${{ matrix.api }}
+          path: |
+            cpu-id-evidence/*.json
+            cpu-id-evidence/*.txt
+          if-no-files-found: warn
+          retention-days: 14
