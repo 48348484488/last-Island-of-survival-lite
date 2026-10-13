@@ -88,9 +88,14 @@ jobs:
           PKG="com.catsbit.oxidesurvivalisland"
           adb -s "$SERIAL" logcat -c 2>/dev/null || true
           adb -s "$SERIAL" shell am force-stop "$PKG" || true
-          adb -s "$SERIAL" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 \
+          adb -s "$SERIAL" shell cmd package resolve-activity --brief -c android.intent.category.LAUNCHER "$PKG" \
+            > oxide-original-arm64/resolved_launcher.txt 2>&1 || true
+          # Monkey exits with -5 on redroid before starting the game.
+          # Use the original package's explicit launcher Activity instead.
+          adb -s "$SERIAL" shell am start -W \
+            -n "$PKG/cTOOT3.abKmV1.tP0Gr1.OxideActivity" \
             > oxide-original-arm64/launch.txt 2>&1 || true
-          cat oxide-original-arm64/launch.txt
+          cat oxide-original-arm64/resolved_launcher.txt oxide-original-arm64/launch.txt
           sleep 10
           adb -s "$SERIAL" shell pidof "$PKG" | tr -d '\r' | tee oxide-original-arm64/pid_10s.txt || true
           adb -s "$SERIAL" exec-out screencap -p > oxide-original-arm64/screen_10s.png 2>/dev/null || true
