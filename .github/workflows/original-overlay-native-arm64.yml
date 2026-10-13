@@ -114,39 +114,14 @@ jobs:
           bash esp_core/android_probe/original_overlay_smoke.sh \
             127.0.0.1:5555 . overlay-probe/oxide-bridge-jni-smoke.apk \
             oxide-overlay-evidence
-      - name: Assess actual colored overlay pixels and foreground evidence
+      - name: Validate dimmed/bright diagnostic overlay with real Activity foreground evidence
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import sys
-          from pathlib import Path
-          sys.path.insert(0, "esp_core/android_probe")
-          from check_overlay import count_markers
-          root = Path("oxide-overlay-evidence")
-          names = ("overlay_on_launcher.png", "overlay_on_game_1.png",
-                   "overlay_on_game_2.png", "overlay_removed.png")
-          counts = {name: count_markers(root / name) for name in names}
-          for name, count in counts.items():
-              print(name + "_MARKER_PIXELS=" + str(count))
-          (root / "pixel_counts.txt").write_text(
-              "\n".join(name + "=" + str(n) for name, n in counts.items()) + "\n")
-          on = max(counts["overlay_on_game_1.png"], counts["overlay_on_game_2.png"])
-          removed = counts["overlay_removed.png"]
-          service = (root / "overlay_service.txt").read_text().strip()
-          foreground = (root / "original_foreground.txt").read_text().strip()
-          print(service)
-          print(foreground)
-          print("ORIGINAL_GAME_MULTIPLAYER=NOT_TESTED")
-          print("REAL_PLAYER_TELEMETRY=NOT_AVAILABLE")
-          if on < 500 or removed > max(10, int(on * .02)):
-              raise SystemExit("FAIL: overlay-on-game image does not independently prove the pixels")
-          if not foreground.endswith("OBSERVED"):
-              raise SystemExit("FAIL: original Activity foreground at capture not proven")
-          if not service.endswith("PASS"):
-              raise SystemExit("FAIL: isolated overlay service start not observed")
-          print("PASS: standalone overlay visible on original game's loading Activity; no gameplay claims")
-          PY
+          python3 -m unittest discover -s esp_core/android_probe/tests \
+            -p 'test_original_overlay_pixels.py' -v
+          python3 esp_core/android_probe/check_original_overlay_pixels.py \
+            oxide-overlay-evidence | tee oxide-overlay-evidence/loading_overlay_validation.txt
       - name: Preserve non-proprietary evidence even on failure
         if: always()
         uses: actions/upload-artifact@v4
@@ -169,9 +144,9 @@ jobs:
             echo "Overlay: standalone diagnostic package using supplied synthetic points."
             echo "Results must distinguish pixel proof from original-game process termination."
             echo "Even success is NOT a playable game ESP, player-coordinate extraction, or a security bypass."
-            if [ -f oxide-overlay-evidence/pixel_counts.txt ]; then
-              echo '#### Pixel observations'
-              cat oxide-overlay-evidence/pixel_counts.txt
+            if [ -f oxide-overlay-evidence/loading_overlay_validation.txt ]; then
+              echo '#### Native pixel and Activity validation'
+              cat oxide-overlay-evidence/loading_overlay_validation.txt
             fi
             if [ -f oxide-overlay-evidence/original_foreground.txt ]; then
               cat oxide-overlay-evidence/original_foreground.txt
