@@ -56,6 +56,18 @@ def scan(data,filename,registry):
     import UnityPy
     env=UnityPy.load(data)
     objects=list(env.objects)
+    external_tables=[]
+    for file_name, asset_file in (getattr(env,"files",{}) or {}).items():
+        entries=[]
+        for index, ext in enumerate(getattr(asset_file,"externals",[]) or [],start=1):
+            def attr(name):
+                if isinstance(ext,dict):return ext.get(name)
+                return getattr(ext,name,None)
+            values={k:str(attr(k))[:250] for k in
+                    ("file_name","path_name","name","path") if attr(k) is not None}
+            entries.append({"fileID":index,"values":values,"repr":repr(ext)[:220]})
+        if entries:
+            external_tables.append({"assetFile":str(file_name)[:180],"entries":entries[:40]})
     gameobjects={};mb={};kinds={o.path_id:o.type.name for o in objects}
     for obj in objects:
         if obj.type.name not in ("GameObject","MonoBehaviour"):continue
@@ -95,7 +107,7 @@ def scan(data,filename,registry):
             detail.append(cm)
         items.append({"gameObject":name,"pathID":obj.path_id,"components":detail})
     return {"bundle":filename,"candidateObjects":items,"monobehavioursRead":len(mb),
-            "serializedObjects":len(objects)}
+            "serializedObjects":len(objects),"externalAssetFileTables":external_tables}
 
 def main():
     p=argparse.ArgumentParser()
