@@ -1,0 +1,102 @@
+name: Oxide original APK smoke on official Google Play Android emulator
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-original-official-play-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-play-image:
+    name: Original Oxide 1.14.11949 four-split boot check on Google Play AVD
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+            tools
+            tests
+      - name: Validate original-game forensic and PID continuity logic
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_diagnose_original_exit.py' -v
+          python3 -m unittest discover -s tests -p 'test_check_activity_liveness.py' -v
+          bash -n tools/smoke_original_official_play_emulator.sh
+      - name: Download original signed Unity data asset split without modifications
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p original-play-evidence
+          curl --fail --location --retry 4 --retry-all-errors --connect-timeout 30 \
+            --max-time 1200 --silent --show-error \
+            --output split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          python3 tools/verify_original_splits.py . \
+            --output original-play-evidence/sha256_preinstall.json
+      - name: Enable hardware acceleration for Android 15 emulator
+        shell: bash
+        run: |
+          if [ -e /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm
+            ls -l /dev/kvm
+          else
+            echo "KVM not provided, official emulator may be slow or unavailable."
+          fi
+      - name: Run original signed APK on official Google Play image (no APK patches)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis_playstore
+          arch: x86_64
+          profile: pixel_5
+          cores: 2
+          ram-size: 4096M
+          heap-size: 512M
+          disk-size: 8192M
+          emulator-boot-timeout: 900
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: bash tools/smoke_original_official_play_emulator.sh . original-play-evidence
+      - name: Report precise game install / exit result without gameplay claims
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Unmodified Oxide 1.14.11949 on official Android 15 Google Play image"
+            echo "Four unmodified SHA-256-verified original APK splits."
+            echo "Unlike Redroid, this image has Google Play Services, Play Store and GSF."
+            echo "No account sign-in, Play Integrity verdict, gameplay or ESP is inferred."
+            if [ -s original-play-evidence/status.txt ]; then
+              echo '### Install / observation'
+              cat original-play-evidence/status.txt
+            fi
+            if [ -s original-play-evidence/game_start_verdict.json ]; then
+              echo '### Activity process evidence'
+              cat original-play-evidence/game_start_verdict.json
+            fi
+            if [ -s original-play-evidence/install.txt ]; then
+              echo '### Package manager'
+              head -c 1000 original-play-evidence/install.txt
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve original screenshots and diagnostics, never APKs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-official-play-image-proof
+          path: |
+            original-play-evidence/*.json
+            original-play-evidence/*.txt
+            original-play-evidence/*.png
+          if-no-files-found: warn
+          retention-days: 14
