@@ -64,7 +64,7 @@ def manifest(z):
             typ,header,size=struct.unpack_from("<HHI",b,p)
             if header<8 or size<header or p+size>len(b): raise ValueError("invalid chunk")
             if typ==1: strings=parse_stringpool(b,p)
-            elif typ==0x102 and header>=36 and strings:
+            elif typ==0x102 and header>=16 and strings:
                 idx=struct.unpack_from("<I",b,p+20)[0]
                 if idx<len(strings) and strings[idx]=="manifest":
                     attr_off,attr_size,count=struct.unpack_from("<HHH",b,p+24)
@@ -132,6 +132,9 @@ def audit(folder,out,expected_sha=""):
         try: files.append(inspect(p))
         except (OSError,zipfile.BadZipFile,ValueError,RuntimeError) as e:
             errors.append(name+": "+str(e))
+    for f in files:
+        if f["manifest"].get("error"):
+            errors.append(f["name"]+": "+f["manifest"]["error"])
     pack=next((f for f in files if f["name"]==NAMES[-1]),None)
     if expected_sha and pack and pack["sha256"].lower()!=expected_sha.lower():
         errors.append("asset pack SHA-256 mismatch with Release metadata")
