@@ -24,12 +24,19 @@ adb shell pm list packages | grep -E 'com.google.android.gms|com.android.vending
 adb shell getprop sys.boot_completed > "$OUT/boot_completed.txt"
 # Only one install attempt; capture exact original package-manager error.
 set +e
-timeout 600 adb install-multiple -r \
-  "$APK/base.apk" \
-  "$APK/split_config.arm64_v8a.apk" \
-  "$APK/split_config.xxhdpi.apk" \
-  "$APK/split_UnityDataAssetPack.apk" \
-  > "$OUT/install.txt" 2>&1
+# macOS GitHub runners may not have GNU timeout. The overall job timeout
+# remains the fallback limit; do not require Homebrew or privileged changes.
+if command -v timeout >/dev/null 2>&1; then
+  timeout 600 adb install-multiple -r \
+    "$APK/base.apk" "$APK/split_config.arm64_v8a.apk" \
+    "$APK/split_config.xxhdpi.apk" "$APK/split_UnityDataAssetPack.apk" \
+    > "$OUT/install.txt" 2>&1
+else
+  adb install-multiple -r \
+    "$APK/base.apk" "$APK/split_config.arm64_v8a.apk" \
+    "$APK/split_config.xxhdpi.apk" "$APK/split_UnityDataAssetPack.apk" \
+    > "$OUT/install.txt" 2>&1
+fi
 installed_code=$?
 set -e
 echo "$installed_code" > "$OUT/install_exit_code.txt"
