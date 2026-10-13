@@ -1,0 +1,116 @@
+name: Oxide native bridge Android runtime check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "esp_core/**"
+      - ".github/workflows/esp-android-runtime.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-run:
+    name: Build Android JNI smoke APK and run the ARM64 library
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: esp_core
+      - name: Install Android SDK platform, build tools and NDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          SDKMGR="$ROOT/cmdline-tools/16.0/bin/sdkmanager"
+          if [ ! -x "$SDKMGR" ]; then SDKMGR="$(find "$ROOT/cmdline-tools" -name sdkmanager -type f | head -n1)"; fi
+          yes | "$SDKMGR" --sdk_root="$ROOT" --licenses >/dev/null || true
+          "$SDKMGR" --sdk_root="$ROOT" --install "ndk;27.2.12479018" "platforms;android-35" "build-tools;35.0.0"
+      - name: Build and sign isolated diagnostic Android APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          BIN="$ROOT/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          BT="$ROOT/build-tools/35.0.0"
+          ANDROID_JAR="$ROOT/platforms/android-35/android.jar"
+          mkdir -p android-probe-out/build/classes android-probe-out/build/dex android-probe-out/build/lib/arm64-v8a
+          LIBDIR="android-probe-out/build/lib/arm64-v8a"
+          "$BIN/aarch64-linux-android26-clang++" -O2 -std=c++17 -fPIC -shared \
+            -fstack-protector-strong -Wl,-z,relro -Wl,-z,now -Wl,--no-undefined \
+            -Iesp_core/include esp_core/src/esp_bridge.cpp \
+            -o "$LIBDIR/liboxide_esp_bridge.so"
+          "$BIN/aarch64-linux-android26-clang++" -O2 -std=c++17 -fPIC -shared \
+            -fstack-protector-strong -Wl,-z,relro -Wl,-z,now -Wl,--no-undefined \
+            -Iesp_core/include esp_core/android_probe/bridge_probe_jni.cpp \
+            -L"$LIBDIR" -loxide_esp_bridge \
+            -o "$LIBDIR/liboxide_esp_probe.so"
+          "$BIN/llvm-readelf" -h "$LIBDIR/liboxide_esp_probe.so" | tee android-probe-out/elf_header.txt
+          "$BIN/llvm-readelf" --dyn-syms "$LIBDIR/liboxide_esp_probe.so" | tee android-probe-out/symbols.txt
+          "$BIN/llvm-readelf" -d "$LIBDIR/liboxide_esp_probe.so" | tee android-probe-out/dynamic.txt
+          grep -q 'Machine:.*AArch64' android-probe-out/elf_header.txt
+          grep -q 'liboxide_esp_bridge.so' android-probe-out/dynamic.txt
+          grep -q 'Java_com_oxide_bridgeprobe_MainActivity_runNativeSmoke' android-probe-out/symbols.txt
+          if grep -q 'libc++_shared.so' android-probe-out/dynamic.txt; then
+            cp "$ROOT/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" "$LIBDIR/"
+          fi
+          javac --release 8 -cp "$ANDROID_JAR" -d android-probe-out/build/classes \
+            esp_core/android_probe/src/com/oxide/bridgeprobe/MainActivity.java
+          "$BT/d8" --min-api 26 --lib "$ANDROID_JAR" \
+            --output android-probe-out/build/dex \
+            android-probe-out/build/classes/com/oxide/bridgeprobe/MainActivity.class
+          "$BT/aapt" package -f \
+            -M esp_core/android_probe/AndroidManifest.xml -I "$ANDROID_JAR" \
+            -F android-probe-out/build/unsigned.apk
+          (cd android-probe-out/build && zip -q -u unsigned.apk dex/classes.dex)
+          (cd android-probe-out/build && zip -q -u unsigned.apk lib/arm64-v8a/*.so)
+          "$BT/zipalign" -f 4 android-probe-out/build/unsigned.apk android-probe-out/build/aligned.apk
+          keytool -genkeypair -noprompt -keystore android-probe-out/build/debug.jks \
+            -storepass android -keypass android -alias androiddebugkey \
+            -dname "CN=Debug,OU=Testing,O=Oxide Lab,C=BR" -keyalg RSA -keysize 2048 -validity 1000
+          "$BT/apksigner" sign --ks android-probe-out/build/debug.jks \
+            --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android \
+            --out android-probe-out/oxide-bridge-jni-smoke.apk android-probe-out/build/aligned.apk
+          "$BT/apksigner" verify --verbose android-probe-out/oxide-bridge-jni-smoke.apk
+          sha256sum android-probe-out/oxide-bridge-jni-smoke.apk | tee android-probe-out/sha256.txt
+      - name: Start Android 15 emulator, test JNI loading and 20000 frames
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          ram-size: 4096M
+          heap-size: 512M
+          disk-size: 4096M
+          emulator-boot-timeout: 900
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: bash esp_core/android_probe/smoke_test.sh
+      - name: Publish test results
+        if: always()
+        shell: bash
+        run: |
+          echo "## Android ARM64 JNI proof of execution" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f android-probe-out/result.txt ]; then
+            cat android-probe-out/result.txt >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "APK build or emulator setup failed; see logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "This is an isolated test app, not the original Oxide game or a working ESP." >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep logs and signed diagnostic APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-jni-runtime-proof
+          path: |
+            android-probe-out/*.apk
+            android-probe-out/*.txt
+            android-probe-out/*.log
+            android-probe-out/*.png
+          if-no-files-found: warn
+          retention-days: 14
