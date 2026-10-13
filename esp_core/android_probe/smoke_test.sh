@@ -34,6 +34,12 @@ if ! grep -q 'OXIDE_BRIDGE_TEST.*RESULT=PASS CODE=0 MODE=NO_SAMPLES' android-pro
   echo "FAIL: missing successful no-data test marker" | tee android-probe-out/result.txt
   exit 1
 fi
+# Ignore unrelated system crashes, but never accept an app-specific exception.
+if grep -Eq 'AndroidRuntime: Process: com\\.oxide\\.bridgeprobe|libc[[:space:]]*: Fatal signal.*com\\.oxide\\.bridgeprobe' android-probe-out/logcat.log; then
+  echo "FAIL: diagnostic app crash detected in logcat" | tee android-probe-out/result.txt
+  exit 1
+fi
+
 if [ ! -s android-probe-out/pid.txt ] || [ ! -s android-probe-out/pid_empty.txt ]; then
   echo "FAIL: diagnostic app did not remain alive after both rendering states" | tee android-probe-out/result.txt
   exit 1
