@@ -96,7 +96,25 @@ jobs:
             -n "$PKG/cTOOT3.abKmV1.tP0Gr1.OxideActivity" \
             > oxide-original-arm64/launch.txt 2>&1 || true
           cat oxide-original-arm64/resolved_launcher.txt oxide-original-arm64/launch.txt
-          sleep 10
+          # Observe the first five seconds at high temporal resolution; the
+          # original may start and exit before the old 10-second checkpoint.
+          {
+            echo "second UTC_TIME pidof uid resident_kb vm_size_kb state"
+            for sec in $(seq 1 7); do
+              PID="$(adb -s "$SERIAL" shell pidof "$PKG" 2>/dev/null | tr -d '\r' || true)"
+              echo "$sec $(date -u +%H:%M:%S) ${PID:-none}" 
+              if [ -n "$PID" ]; then
+                adb -s "$SERIAL" shell cat "/proc/$PID/status" 2>/dev/null \
+                  | grep -E '^(Name|State|VmRSS|VmSize|Threads):' || true
+              fi
+              if [ "$sec" = 2 ]; then
+                adb -s "$SERIAL" exec-out screencap -p \
+                  > oxide-original-arm64/screen_2s.png 2>/dev/null || true
+              fi
+              sleep 1
+            done
+          } > oxide-original-arm64/early_process.txt
+          sleep 3
           adb -s "$SERIAL" shell pidof "$PKG" | tr -d '\r' | tee oxide-original-arm64/pid_10s.txt || true
           adb -s "$SERIAL" exec-out screencap -p > oxide-original-arm64/screen_10s.png 2>/dev/null || true
           sleep 25
@@ -104,6 +122,9 @@ jobs:
           adb -s "$SERIAL" exec-out screencap -p > oxide-original-arm64/screen_35s.png 2>/dev/null || true
           adb -s "$SERIAL" logcat -d -v threadtime > oxide-original-arm64/logcat.txt 2>&1 || true
           adb -s "$SERIAL" shell dumpsys activity activities > oxide-original-arm64/activities.txt 2>&1 || true
+          adb -s "$SERIAL" shell dumpsys activity exit-info "$PKG" > oxide-original-arm64/exit_info.txt 2>&1 || true
+          adb -s "$SERIAL" logcat -b crash -d -v threadtime > oxide-original-arm64/crash_buffer.txt 2>&1 || true
+          adb -s "$SERIAL" logcat -b events -d -v threadtime > oxide-original-arm64/events.txt 2>&1 || true
           docker logs oxide-native-android > oxide-original-arm64/container.log 2>&1 || true
           grep -iE 'FATAL EXCEPTION|Fatal signal|SIGILL|SIGSEGV|libloader\.so|libil2cpp\.so' \
             oxide-original-arm64/logcat.txt | tail -80 > oxide-original-arm64/relevant_errors.txt || true
@@ -111,6 +132,8 @@ jobs:
             RESULT="PROCESS_RUNNING_AT_10S_AND_35S"
           elif [ -s oxide-original-arm64/pid_10s.txt ]; then
             RESULT="EXITED_BETWEEN_10S_AND_35S"
+          elif grep -qE '[0-9]{4,}' oxide-original-arm64/early_process.txt; then
+            RESULT="STARTED_BUT_EXITED_BEFORE_10S"
           else
             RESULT="NOT_RUNNING_AT_10S"
           fi
