@@ -34,7 +34,8 @@ capture() {
     > "$target/dumpsys_package.txt" 2>&1 || true
   adb -s "$SERIAL" shell cmd appops get "$PKG" \
     > "$target/appops.txt" 2>&1 || true
-  adb -s "$SERIAL" logcat -c 2>/dev/null || true
+  # Clear *all* Android log buffers; -c alone can retain previous events.
+  adb -s "$SERIAL" logcat -b all -c 2>/dev/null || true
   adb -s "$SERIAL" shell am force-stop "$PKG" > "$target/force_stop.txt" 2>&1 || true
   adb -s "$SERIAL" logcat -b all -v threadtime \
     > "$target/live_logcat.txt" 2>&1 &
