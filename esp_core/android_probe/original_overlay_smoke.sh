@@ -23,6 +23,19 @@ adb -s "$SERIAL" install-multiple -r "$ORIGINALS/base.apk" \
   "$ORIGINALS/split_config.xxhdpi.apk" \
   "$ORIGINALS/split_UnityDataAssetPack.apk" > "$OUTPUT/game_install.txt" 2>&1
 grep -q '^Success' "$OUTPUT/game_install.txt"
+# Read-only Android package/permission evidence. A declared permission is NOT
+# necessarily granted; app-ops and package-manager decisions are independent.
+# We do not run pm grant, setprop, patch signatures or forge Play certification.
+adb -s "$SERIAL" shell dumpsys package "$GAME" \
+  > "$OUTPUT/game_package_permissions.txt" 2>&1 || true
+adb -s "$SERIAL" shell cmd appops get "$GAME" \
+  > "$OUTPUT/game_appops.txt" 2>&1 || true
+adb -s "$SERIAL" shell pm list packages com.google.android.gms \
+  > "$OUTPUT/available_google_services.txt" 2>&1 || true
+adb -s "$SERIAL" shell pm list features \
+  > "$OUTPUT/device_features.txt" 2>&1 || true
+adb -s "$SERIAL" shell dumpsys sensorservice \
+  > "$OUTPUT/sensorservice.txt" 2>&1 || true
 adb -s "$SERIAL" install -r "$PROBE_APK" > "$OUTPUT/probe_install.txt" 2>&1
 grep -q '^Success' "$OUTPUT/probe_install.txt"
 adb -s "$SERIAL" shell am force-stop "$PROBE" || true
