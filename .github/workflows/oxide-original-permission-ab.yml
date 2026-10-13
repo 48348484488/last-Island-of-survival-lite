@@ -1,10 +1,8 @@
 name: Oxide native ARM64 original-game Android permission A/B
 
+# Downloading ~867 MB of original Unity assets is expensive; invoke as needed.
+# Initial A/B proof: actions/runs/38478578089. Corrected parser: 38479050657.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/oxide-original-permission-ab.yml"
   workflow_dispatch:
 
 permissions:
