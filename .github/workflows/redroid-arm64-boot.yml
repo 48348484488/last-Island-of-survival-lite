@@ -1,0 +1,92 @@
+name: Oxide ARM64-native Android container boot
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/redroid-arm64-boot.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-android:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 22
+    steps:
+      - name: Prepare ARM64 kernel binder and local diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p native-android-out
+          uname -a | tee native-android-out/host.txt
+          echo "PAGESIZE=$(getconf PAGESIZE)" | tee -a native-android-out/host.txt
+          if [ "$(uname -m)" != "aarch64" ]; then echo "Not native AArch64"; exit 2; fi
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          ls -la /dev/binderfs | tee native-android-out/binderfs.txt
+          grep -i binder /proc/filesystems | tee -a native-android-out/host.txt
+      - name: Boot Android 13 natively as an isolated ARM64 container
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Android container image: redroid/redroid:13.0.0_64only-latest" | tee native-android-out/target.txt
+          timeout 420 docker pull redroid/redroid:13.0.0_64only-latest
+          sudo chmod a+rw /dev/binderfs/binder || true
+          mkdir -p /tmp/oxide-redroid-data
+          docker run -d --rm --privileged --name oxide-android-arm64 \
+            -p 127.0.0.1:5555:5555 \
+            -v /dev/binderfs:/dev/binderfs \
+            -v /tmp/oxide-redroid-data:/data \
+            redroid/redroid:13.0.0_64only-latest \
+            androidboot.redroid_gpu_mode=guest \
+            | tee native-android-out/container_id.txt
+          docker inspect oxide-android-arm64 --format '{{.State.Status}} {{.State.Running}}' \
+            | tee native-android-out/container_state.txt
+          sleep 8
+          docker logs oxide-android-arm64 > native-android-out/container.log 2>&1 || true
+      - name: Inspect real Android ARM64 boot and ADB response
+        shell: bash
+        run: |
+          set -u
+          RESULT="BOOT_NOT_CONFIRMED"
+          for i in $(seq 1 45); do
+            adb connect 127.0.0.1:5555 > /tmp/oxide-adb-connect.txt 2>&1 || true
+            if timeout 5 adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | grep -q '^1'; then
+              RESULT="ANDROID_BOOT_COMPLETED"
+              break
+            fi
+            sleep 4
+          done
+          echo "$RESULT" | tee native-android-out/status.txt
+          adb devices -l | tee native-android-out/adb_devices.txt
+          adb -s 127.0.0.1:5555 shell getprop ro.product.cpu.abilist \
+            > native-android-out/guest_abis.txt 2>&1 || true
+          adb -s 127.0.0.1:5555 shell getprop ro.build.version.release \
+            > native-android-out/guest_version.txt 2>&1 || true
+          adb -s 127.0.0.1:5555 shell getprop sys.boot_completed \
+            > native-android-out/guest_boot.txt 2>&1 || true
+          docker ps -a | tee native-android-out/containers.txt
+          docker logs oxide-android-arm64 > native-android-out/container.log 2>&1 || true
+          cat native-android-out/status.txt native-android-out/guest_abis.txt native-android-out/guest_version.txt
+          if [ "$RESULT" != "ANDROID_BOOT_COMPLETED" ]; then exit 1; fi
+      - name: Publish tested scope
+        if: always()
+        shell: bash
+        run: |
+          echo "## Native ARM64 Android container boot" >> "$GITHUB_STEP_SUMMARY"
+          echo "Status: $(cat native-android-out/status.txt 2>/dev/null || echo NOT_RUN)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Guest CPU ABI: $(cat native-android-out/guest_abis.txt 2>/dev/null || echo UNKNOWN)" >> "$GITHUB_STEP_SUMMARY"
+          echo "The Oxide app has not been installed or run in this workflow. No ESP telemetry exists yet." >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep native Android boot diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-redroid-boot-diagnostics
+          path: native-android-out/
+          retention-days: 14
+          if-no-files-found: warn
