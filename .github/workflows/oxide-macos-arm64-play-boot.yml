@@ -1,0 +1,75 @@
+name: Native Apple Silicon ARM64 Google Play Android emulator boot probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-macos-arm64-play-boot.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-apple-silicon-avd:
+    name: ARM64 macOS VM native Google Play emulator compatibility
+    runs-on: macos-15
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Confirm physical runner ABI and audit regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          uname -m
+          test "$(uname -m)" = "arm64"
+          python3 -m unittest discover -s tests -p 'test_audit_google_play_emulator.py' -v
+          bash -n tools/check_google_play_emulator.sh
+          mkdir -p google-play-emulator-evidence
+          uname -a > google-play-emulator-evidence/host.txt
+          sw_vers > google-play-emulator-evidence/macos_version.txt
+      - name: Boot official Google Play Android 15 ARM64 emulator on Apple Silicon
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis_playstore
+          arch: arm64-v8a
+          profile: pixel_5
+          cores: 2
+          ram-size: 3072M
+          heap-size: 384M
+          disk-size: 4096M
+          emulator-boot-timeout: 1200
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: bash tools/check_google_play_emulator.sh
+      - name: Distinguish successful AVD boot from actual game startup
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Native ARM64 Android emulator on standard GitHub Apple Silicon runner"
+            echo "The native ARM64 Google Play system image must boot, not just be listed in SDK."
+            if [ -s google-play-emulator-evidence/prerequisites.md ]; then
+              cat google-play-emulator-evidence/prerequisites.md
+            else
+              echo "Native ARM64 Android image did not produce a complete boot report."
+            fi
+            echo "No original game APKs downloaded or installed, no licensing/integrity verdict."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save emulator/host diagnostics only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-apple-silicon-native-google-play-arm64-probe
+          path: |
+            google-play-emulator-evidence/*.txt
+            google-play-emulator-evidence/*.md
+            google-play-emulator-evidence/*.json
+          if-no-files-found: warn
+          retention-days: 14
