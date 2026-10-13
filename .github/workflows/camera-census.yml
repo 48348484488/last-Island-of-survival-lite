@@ -1,0 +1,68 @@
+name: Oxide original assets all-bundle Camera census
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/audit_all_cameras.py"
+      - "tests/test_camera_census.py"
+      - ".github/workflows/camera-census.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  camera-census:
+    name: Locate native Camera components across 275 bundles
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Install UnityPy
+        run: python3 -m pip install --user "UnityPy>=1.20,<2"
+      - name: Validate pointer decoder
+        run: python3 -m unittest discover -s tests -p "test_camera_census.py" -v
+      - name: Download original 1.14.11949 data from the Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors --connect-timeout 30 \
+            --max-time 1800 --silent --show-error \
+            -o split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          echo "2f0f7f1be7d78d269f710edd471c40a9755a93a07481cae0c058356515e19834  split_UnityDataAssetPack.apk" | sha256sum --check
+      - name: Enumerate Unity Cameras without executing the game
+        run: python3 tools/audit_all_cameras.py --assetpack split_UnityDataAssetPack.apk --out camera-census/cameras.json
+      - name: Summarize validated findings
+        if: always()
+        shell: bash
+        run: |
+          if [ -f camera-census/cameras.json ]; then
+            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open("camera-census/cameras.json"))
+          print("# Unity serialized Camera objects")
+          print("Bundles parsed: {}/{}; native Camera records: {}; scanner errors: {}".format(
+              d["bundles_processed"],d["bundles_total"],d["cameras_native_total"],len(d["errors"])))
+          for b in d["camera_bundles"][:30]:
+              print("- {}: {} Camera objects; named roots: {}".format(
+                  b["bundle"].split("/")[-1],b["camera_count"], [x.get("gameObject") for x in b["cameras"]][:25]))
+          print("Static assets cannot identify the active multiplayer camera or its live projection matrix.")
+          PY
+          else
+            echo "No result JSON produced. Review logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload JSON report only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-v114-native-camera-census
+          path: camera-census/
+          retention-days: 14
+          if-no-files-found: warn
