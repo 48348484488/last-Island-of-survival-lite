@@ -1,0 +1,68 @@
+name: Oxide APK offline audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/audit_apks.py'
+      - 'tests/test_audit_apks.py'
+      - '.github/workflows/apk-audit.yml'
+      - 'base.apk'
+      - 'split_config.arm64_v8a.apk'
+      - 'split_config.xxhdpi.apk'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Verify all four APK splits
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Python regression tests
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Show available disk space
+        run: df -h .
+
+      - name: Download Unity asset pack from GitHub Release v1.0.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-all-errors \
+            --connect-timeout 30 --max-time 1800 \
+            --silent --show-error \
+            --output split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          ls -lh base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk split_UnityDataAssetPack.apk
+
+      - name: Check version, native binaries, Unity catalogs and hashes
+        run: |
+          python3 tools/audit_apks.py --apk-dir . --out audit-output \
+            --assetpack-sha256 2f0f7f1be7d78d269f710edd471c40a9755a93a07481cae0c058356515e19834
+
+      - name: Add report to workflow summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f audit-output/REPORT.md ]; then
+            cat audit-output/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Audit did not produce a report. Inspect earlier logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload reports only (never the proprietary APK files)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-offline-audit-report
+          path: audit-output/
+          if-no-files-found: warn
+          retention-days: 14
