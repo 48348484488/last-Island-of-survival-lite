@@ -10,6 +10,12 @@
 - Native Android ARM64 cross-compiled shared library `liboxide_esp_bridge.so`, verified by GitHub Actions.
 - 20,000 randomized input frames tested under ASan/UBSan (plus projection unit tests).
 
+### Frame freshness checks (v2)
+
+`oxide_esp_project_timed_v2` takes bounded frame/player snapshots with timestamps from one monotonic millisecond clock. It rejects stale or future camera samples, discards expired or future player samples, validates entity ID uniqueness, and guarantees that a capacity error cannot partially overwrite the output buffer. The accepted freshness window is 1–5000 ms (caller chooses the actual threshold).
+
+This prevents some classes of flickering or stale markers **only after a legitimate source of real positions and view-projection matrices is available**. The application does not authenticate that source, and these checks cannot manufacture missing player data. In particular, timestamps and positions fabricated for tests are never evidence of multiplayer replication.
+
 ### What is NOT implemented
 - No player acquisition from Oxide, no reads of third-party process memory.
 - No Unity camera discovery, no runtime method hooks, no IPC or network interception.
