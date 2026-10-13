@@ -42,8 +42,11 @@ def inspect_bundle(bundle):
     revision,pos=zstr(bundle,pos)
     declared,info_c,info_u,flags=struct.unpack_from(">QIII",bundle,pos)
     pos+=20
-    if declared>len(bundle):
+    size_delta=declared-len(bundle)
+    if size_delta>16:
         raise ValueError(f"truncated bundle: expected {declared}, got {len(bundle)}")
+    if size_delta>0 and size_delta!=16:
+        raise ValueError(f"nonstandard missing size: {size_delta} bytes")
     if declared<len(bundle):
         tail=bundle[declared:]
         if len(tail)>15 or any(tail):
@@ -80,7 +83,7 @@ def inspect_bundle(bundle):
                 if at+len(term)>old_len:hits[term.decode()]+=1
                 start=at+len(term)
         carry=combined[-96:]
-    return {"unity_version":unity,"revision":revision,"format":version,
+    return {"unity_version":unity,"revision":revision,"format":version,"size_delta":size_delta,
             "block_count":count,"decoded_bytes":bytes_decoded,"terms":dict(hits)}
 
 def run(apk,out):
