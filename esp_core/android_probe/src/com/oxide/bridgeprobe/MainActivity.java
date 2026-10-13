@@ -2,6 +2,7 @@ package com.oxide.bridgeprobe;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -18,7 +19,52 @@ public final class MainActivity extends Activity {
     static { System.loadLibrary("oxide_esp_probe"); }
 
     private static native int runNativeSmoke();
-    private static native float[] nativeDebugRects();
+    // Production-shaped JNI boundary: all values come from the Java caller.
+    // This diagnostic app supplies CONTROLLED input, never game data.
+    private static native float[] nativeProjectSnapshot(
+            float[] viewProjection, int width, int height,
+            long nowMs, long cameraMs, int maxAgeMs, int matrixFlags,
+            long[] entityIds, float[] headFeetXYZ, long[] entitySampleMs);
+
+    private static float[] testCamera() {
+        final float near=0.1f, far=100.0f;
+        return new float[]{
+                1,0,0,0, 0,1,0,0,
+                0,0,(far+near)/(near-far),(2*far*near)/(near-far),
+                0,0,-1,0
+        };
+    }
+
+    // Ensure invalid/stale data cannot accidentally create stale markers.
+    private static boolean verifyInputBoundary(long now) {
+        float[] camera = testCamera();
+        long[] ids={1};
+        float[] coords={0,1,-5,0,-1,-5};
+        long[] samples={now-5};
+        float[] valid=nativeProjectSnapshot(camera,1080,1920,now,now-5,
+                                             250,0,ids,coords,samples);
+        if (valid==null || valid.length!=4) return false;
+        samples[0]=now-251;
+        float[] stale=nativeProjectSnapshot(camera,1080,1920,now,now-5,
+                                             250,0,ids,coords,samples);
+        if (stale==null || stale.length!=0) return false;
+        float[] empty=nativeProjectSnapshot(camera,1080,1920,now,now-5,
+                                             250,0,new long[0],new float[0],new long[0]);
+        if (empty==null || empty.length!=0) return false;
+        if (nativeProjectSnapshot(camera,1080,1920,now,now+1,
+                     250,0,ids,coords,samples)!=null) return false;
+        camera[0]=Float.NaN;
+        if (nativeProjectSnapshot(camera,1080,1920,now,now-5,
+                     250,0,ids,coords,samples)!=null) return false;
+        camera=testCamera();
+        if (nativeProjectSnapshot(camera,1080,1920,now,now-5,
+                     250,0,new long[]{1,2},coords,new long[]{now-5,now-5})!=null)
+                     return false; // mismatched player and position array sizes
+        if (nativeProjectSnapshot(camera,1080,1920,now,now-5,
+                     250,0,new long[]{1,1},new float[]{0,1,-5,0,-1,-5, 0,1,-5,0,-1,-5},
+                     new long[]{now-5,now-5})!=null) return false;
+        return true;
+    }
 
     private static final class NativeRectView extends View {
         private final float[] rectangles;
@@ -60,13 +106,27 @@ public final class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final int result = runNativeSmoke();
-        final String verdict = result == 0 ? "PASS" : "FAIL";
-        final boolean noSamples = getIntent().getBooleanExtra("no_boxes", false);
-        float[] rects = null;
-        if (result == 0 && !noSamples) rects = nativeDebugRects();
-        String mode = result != 0 ? "NATIVE FAIL" : noSamples ? "NO_SAMPLES" :
-                rects != null && rects.length >= 4 ? "TEST_RECT_PRESENT" : "NO_SAMPLES";
+        final int nativeResult=runNativeSmoke();
+        final long now=SystemClock.elapsedRealtime();
+        final boolean contractsOk=nativeResult==0 && verifyInputBoundary(now);
+        final boolean noSamples=getIntent().getBooleanExtra("no_boxes",false);
+        final boolean staleSamples=getIntent().getBooleanExtra("stale_boxes",false);
+
+        final long[] ids=noSamples?new long[0]:new long[]{1};
+        final float[] coordinates=noSamples?new float[0]:
+                new float[]{0,1,-5,0,-1,-5};
+        final long[] ages=noSamples?new long[0]:
+                new long[]{now-(staleSamples?600:5)};
+        final float[] rects=contractsOk ?
+                nativeProjectSnapshot(testCamera(),1080,1920,now,now-5,250,0,
+                                      ids,coordinates,ages) : null;
+        final boolean expectEmpty=noSamples || staleSamples;
+        final boolean correct=rects!=null &&
+                (expectEmpty ? rects.length==0 : rects.length==4);
+        final int result=nativeResult!=0?nativeResult:(contractsOk && correct?0:11);
+        final String verdict=result==0?"PASS":"FAIL";
+        final String mode=result!=0?"NATIVE_FAIL":
+                noSamples?"NO_SAMPLES":staleSamples?"STALE_SAMPLES":"TEST_RECT_PRESENT";
         Log.i(TAG, "RESULT=" + verdict + " CODE=" + result + " MODE=" + mode);
         setContentView(new NativeRectView(this, rects, mode));
     }
