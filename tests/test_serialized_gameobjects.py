@@ -21,4 +21,22 @@ class TestPointers(unittest.TestCase):
         self.assertEqual(r,{"ptr":{"fileID":0,"pathID":10}})
     def test_ptr_without_fileid(self):
         self.assertEqual(mod.pointer({"path_id":123}),{"fileID":None,"pathID":123})
+class TestTransformResolution(unittest.TestCase):
+    def test_named_hierarchy(self):
+        trans={10:{"m_GameObject":{"m_FileID":0,"m_PathID":101},
+                   "m_Father":{"m_FileID":0,"m_PathID":20}},
+               20:{"m_GameObject":{"m_FileID":0,"m_PathID":102},
+                   "m_Father":{"m_FileID":0,"m_PathID":0}}}
+        go={101:{"name":"Camera Root"},102:{"name":"player"}}
+        chain=mod.resolve_transform({"fileID":0,"pathID":10},trans,go)
+        self.assertEqual([x["gameObject"] for x in chain],["Camera Root","player"])
+    def test_external_transform_unresolved(self):
+        self.assertIsNone(mod.resolve_transform({"fileID":1,"pathID":10},{},{}))
+    def test_cycle_bounded(self):
+        trans={1:{"m_Father":{"m_FileID":0,"m_PathID":2}},
+               2:{"m_Father":{"m_FileID":0,"m_PathID":1}}}
+        chain=mod.resolve_transform({"fileID":0,"pathID":1},trans,{})
+        self.assertLessEqual(len(chain),3)
+        self.assertIn("cycle_at",chain[-1])
+
 if __name__=="__main__":unittest.main()
