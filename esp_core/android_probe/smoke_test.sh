@@ -10,16 +10,36 @@ mkdir -p android-probe-out
 cat android-probe-out/android_environment.txt
 adb logcat -c || true
 adb install -r android-probe-out/oxide-bridge-jni-smoke.apk 2>&1 | tee android-probe-out/install.log
+
+# First scene: only explicitly labeled controlled test geometry is drawn.
 adb shell am start -W -n com.oxide.bridgeprobe/.MainActivity 2>&1 | tee android-probe-out/start.log
-sleep 12
-adb logcat -d -v threadtime > android-probe-out/logcat.log || true
+sleep 3
+adb exec-out screencap -p > android-probe-out/screen.png
 adb shell pidof com.oxide.bridgeprobe > android-probe-out/pid.txt || true
-adb exec-out screencap -p > android-probe-out/screen.png || true
+
+# Second scene: no samples, no box. A process that keeps stale rectangles fails.
+adb shell am force-stop com.oxide.bridgeprobe
+adb shell am start -W -n com.oxide.bridgeprobe/.MainActivity --ez no_boxes true 2>&1 | tee android-probe-out/start_no_samples.log
+sleep 3
+adb exec-out screencap -p > android-probe-out/screen_empty.png
+adb shell pidof com.oxide.bridgeprobe > android-probe-out/pid_empty.txt || true
+adb logcat -d -v threadtime > android-probe-out/logcat.log || true
 grep 'OXIDE_BRIDGE_TEST' android-probe-out/logcat.log | tail -25 || true
-if grep -q 'OXIDE_BRIDGE_TEST.*RESULT=PASS CODE=0' android-probe-out/logcat.log && [ -s android-probe-out/pid.txt ]; then
-  echo "PASS: JNI loaded ARM64 native library, 20k native frame tests completed, process remained alive." | tee android-probe-out/result.txt
-  exit 0
+
+if ! grep -q 'OXIDE_BRIDGE_TEST.*RESULT=PASS CODE=0 MODE=TEST_RECT_PRESENT' android-probe-out/logcat.log; then
+  echo "FAIL: missing successful native rectangle test marker" | tee android-probe-out/result.txt
+  exit 1
 fi
-echo "FAIL: JNI result marker or surviving Android process missing. Check logcat and start log." | tee android-probe-out/result.txt
-grep -E 'FATAL EXCEPTION|Fatal signal|SIGILL|SIGSEGV|UnsatisfiedLinkError|INSTALL_FAILED' android-probe-out/logcat.log | tail -30 || true
-exit 1
+if ! grep -q 'OXIDE_BRIDGE_TEST.*RESULT=PASS CODE=0 MODE=NO_SAMPLES' android-probe-out/logcat.log; then
+  echo "FAIL: missing successful no-data test marker" | tee android-probe-out/result.txt
+  exit 1
+fi
+if [ ! -s android-probe-out/pid.txt ] || [ ! -s android-probe-out/pid_empty.txt ]; then
+  echo "FAIL: diagnostic app did not remain alive after both rendering states" | tee android-probe-out/result.txt
+  exit 1
+fi
+
+python3 esp_core/android_probe/check_render.py \
+  android-probe-out/screen.png android-probe-out/screen_empty.png \
+  | tee android-probe-out/render_pixels.txt
+echo "PASS: JNI ran 20k frames; Canvas drew native-projected diagnostic box and none without samples; process alive." | tee android-probe-out/result.txt
