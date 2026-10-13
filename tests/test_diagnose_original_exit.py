@@ -44,6 +44,38 @@ class ExitEvidenceTests(unittest.TestCase):
         self.assertIsNone(r['first_self_sigkill'])
         self.assertTrue(r['host_kernel_oom_keyword_match'])
 
+    def test_second_launch_does_not_inherit_prior_pid(self):
+        # Real Redroid A/B failure: second logcat still contains old
+        # am_proc_start/finish/died events, yet a fresh process self-kills.
+        lines = [
+            '10-13 22:35:04.086  224  253 I am_proc_start: [0,2197,10077,com.catsbit.oxidesurvivalisland,next-top-activity,{com.catsbit.oxidesurvivalisland/cTOOT3.abKmV1.tP0Gr1.OxideActivity}]',
+            '10-13 22:35:08.928  224  594 I wm_finish_activity: [0,1,8,com.catsbit.oxidesurvivalisland/cTOOT3.abKmV1.tP0Gr1.OxideActivity,finish-activity]',
+            '10-13 22:35:09.026  224  594 I am_proc_died: [0,2197,com.catsbit.oxidesurvivalisland,0,2]',
+            '10-13 22:35:15.776  224  253 I am_proc_start: [0,2578,10077,com.catsbit.oxidesurvivalisland,next-top-activity,{com.catsbit.oxidesurvivalisland/cTOOT3.abKmV1.tP0Gr1.OxideActivity}]',
+            '10-13 22:35:20.380  224  594 I wm_finish_activity: [0,2,9,com.catsbit.oxidesurvivalisland/cTOOT3.abKmV1.tP0Gr1.OxideActivity,finish-activity]',
+            '10-13 22:35:20.425 2578 2578 I Process : Sending signal. PID: 2578 SIG: 9',
+            '10-13 22:35:20.483  224  594 I am_proc_died: [0,2578,com.catsbit.oxidesurvivalisland,0,2]',
+        ]
+        r = self.run_log(lines)
+        self.assertEqual(r['initial_activity_pid'], 2578)
+        self.assertEqual(r['activity_starts_observed'], 2)
+        self.assertEqual(r['classification'], 'ORIGINAL_ACTIVITY_SELF_SIGKILL')
+        self.assertEqual(r['finish_to_self_sigkill_ms'], 45)
+        self.assertTrue(r['exit_after_self_sigkill'])
+        self.assertEqual(r['activity_finish'], '10-13 22:35:20.380')
+
+    def test_mixed_logs_with_background_service_not_a_new_activity(self):
+        lines = [
+            '10-13 22:35:15.776 224 253 I am_proc_start: [0,2578,10077,com.catsbit.oxidesurvivalisland,next-top-activity,{com.catsbit.oxidesurvivalisland/cTOOT3.abKmV1.tP0Gr1.OxideActivity}]',
+            '10-13 22:35:20.425 2578 2578 I Process : Sending signal. PID: 2578 SIG: 9',
+            '10-13 22:35:20.483 224 594 I am_proc_died: [0,2578,com.catsbit.oxidesurvivalisland,0,2]',
+            '10-13 22:35:25.000 224 253 I am_proc_start: [0,3000,10077,com.catsbit.oxidesurvivalisland,service,{com.catsbit.oxidesurvivalisland/com.google.android.gms.measurement.AppMeasurementJobService}]',
+        ]
+        r = self.run_log(lines)
+        self.assertEqual(r['initial_activity_pid'], 2578)
+        self.assertEqual(r['classification'], 'ORIGINAL_ACTIVITY_SELF_SIGKILL')
+        self.assertEqual(r['other_package_processes'][0]['pid'], 3000)
+
     def test_only_background_service_not_activity(self):
         line = '10-13 21:25:44.970  225  254 I am_proc_start: [0,2523,10077,com.catsbit.oxidesurvivalisland,service,{com.catsbit.oxidesurvivalisland/com.google.android.gms.measurement.AppMeasurementJobService}]'
         r = self.run_log([line])
