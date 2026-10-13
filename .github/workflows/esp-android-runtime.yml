@@ -50,7 +50,7 @@ jobs:
             -L"$LIBDIR" -loxide_esp_bridge \
             -o "$LIBDIR/liboxide_esp_probe.so"
           "$BIN/llvm-readelf" -h "$LIBDIR/liboxide_esp_probe.so" | tee android-probe-out/elf_header.txt
-          "$BIN/llvm-readelf" --dyn-syms "$LIBDIR/liboxide_esp_probe.so" | tee android-probe-out/symbols.txt
+          "$BIN/llvm-readelf" --wide --dyn-syms "$LIBDIR/liboxide_esp_probe.so" | tee android-probe-out/symbols.txt
           "$BIN/llvm-readelf" -d "$LIBDIR/liboxide_esp_probe.so" | tee android-probe-out/dynamic.txt
           grep -q 'Machine:.*AArch64' android-probe-out/elf_header.txt
           grep -q 'liboxide_esp_bridge.so' android-probe-out/dynamic.txt
@@ -66,7 +66,8 @@ jobs:
           "$BT/aapt" package -f \
             -M esp_core/android_probe/AndroidManifest.xml -I "$ANDROID_JAR" \
             -F android-probe-out/build/unsigned.apk
-          (cd android-probe-out/build && zip -q -u unsigned.apk dex/classes.dex)
+          cp android-probe-out/build/dex/classes.dex android-probe-out/build/classes.dex
+          (cd android-probe-out/build && zip -q -u unsigned.apk classes.dex)
           (cd android-probe-out/build && zip -q -u unsigned.apk lib/arm64-v8a/*.so)
           "$BT/zipalign" -f 4 android-probe-out/build/unsigned.apk android-probe-out/build/aligned.apk
           keytool -genkeypair -noprompt -keystore android-probe-out/build/debug.jks \
