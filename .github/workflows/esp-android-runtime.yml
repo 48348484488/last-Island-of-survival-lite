@@ -78,6 +78,8 @@ jobs:
             --out android-probe-out/oxide-bridge-jni-smoke.apk android-probe-out/build/aligned.apk
           "$BT/apksigner" verify --verbose android-probe-out/oxide-bridge-jni-smoke.apk
           sha256sum android-probe-out/oxide-bridge-jni-smoke.apk | tee android-probe-out/sha256.txt
+      - name: Install pixel-level screenshot assertion dependency
+        run: python3 -m pip install --user "Pillow>=10,<13"
       - name: Permit hardware virtualization for Android emulator
         shell: bash
         run: |
@@ -87,7 +89,7 @@ jobs:
           else
             echo "No /dev/kvm present; Android emulator may be much slower"
           fi
-      - name: Start Android 15 emulator, test JNI loading and 20000 frames
+      - name: Run native JNI and Canvas drawing checks in Android 15 emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
