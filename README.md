@@ -1,5 +1,32 @@
 # Oxide: Survival Island (APK & Split Packages)
 
+## Direção atual: execução 100% virtual, sem aparelhos físicos
+
+**Regra deste projeto:** os próximos testes do Oxide devem ocorrer em ambientes
+Android virtuais no GitHub Actions. Não será solicitado telefone pessoal,
+aluguel de aparelho físico, serviço de device farm nem credencial de ADB físico.
+
+O foco é usar **Android ARM64 nativo em contêiner Redroid**. Isso evita a
+incompatibilidade já demonstrada do tradutor Berberis nos emuladores oficiais
+x86_64 (Android 14, 15 e 16). O [workflow de comparação Android 12/14 ARM64
+virtual](../../actions/workflows/oxide-virtual-arm64-versions.yml) baixa os
+arquivos do Oxide **uma vez**, instala os quatro splits originais intactos em
+ambos os ambientes e compara o PID, os eventos de morte do processo e o
+estado da Activity após dez segundos.
+
+O workflow de dispositivos físicos desenvolvido anteriormente é **legado** e
+não faz parte do plano de execução atual. Seu teste de contrato passado não
+significa que algum dispositivo físico foi usado, e não é necessário conectar
+nada físico para continuar a investigação.
+
+**Estado conhecido:** o Oxide chega à tela de carregamento no Redroid ARM64
+Android 13, mas se autoencerra; o motivo específico do alerta de segurança
+continua não identificado. O marcador verde do overlay é sintético e só
+foi demonstrado no carregamento, não em partida multiplayer.
+
+---
+
+
 Arquivos completos do jogo **Oxide: Survival Island** extraídos diretamente do dispositivo via ADB.
 
 ---
