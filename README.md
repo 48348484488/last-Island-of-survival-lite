@@ -96,3 +96,15 @@ O [experimento real em Redroid ARM64 #38478578089](../../actions/runs/3847857808
 O comparador inicial exibiu um **falso negativo** porque leu um PID antigo no logcat. A falha foi corrigida e a [validação rápida #38479050657](../../actions/runs/38479050657) aprovou 23 testes. [Relatório com horários e PIDs](reports/1.14.11949-android-permission-ab.md).
 
 Conclusão: as permissões normais não bastam para o Oxide completar o boot nesse Android virtual. Os serviços Google continuam ausentes, a causa exata da verificação de segurança segue desconhecida e **não existe ESP em partida validado**.
+
+## Android virtual com Google Play: prova de compatibilidade e limite atual
+
+Em 13/10/2026, o [emulador Google Play oficial, Android 15](../../actions/runs/38479923337) foi executado no GitHub Actions. Ele contém Play Store, Play Services e Google Services Framework, anuncia ABI arm64-v8a e usa a ponte libndk_translation.so em host x86_64.
+
+O [teste com os quatro APKs originais e verificados](../../actions/runs/38480303555) confirmou INSTALL_SUCCESS, mas o processo real PID 4078 encerrou com crash nativo **SIGILL (sinal 4; SI_TKILL)** durante os construtores de **libloader.so**, antes da inicialização da Unity. Os endereços de pilha do módulo original foram 0x830BEC e 0x830D98; a [classificação reproduzida dos logs](../../actions/runs/38480931360) passou nos testes. Isso é um resultado diferente do Redroid ARM64 sem GMS, onde a Unity abriu antes de SIGKILL.
+
+O [catálogo oficial de SDK e host ARM64](../../actions/runs/38481155935) contém imagens Play ARM64 nativas para Android 13 a 16, mas o runner Linux ARM64 não possui KVM. O [ensaio Apple Silicon nativo](../../actions/runs/38481294705) verifica uma possível alternativa sem tradução ARM; o resultado desse ensaio deve ser consultado no run, sem presumir boot.
+
+Relatórios: [linha do tempo original](reports/1.14.11949-original-process-boot-timeline.md) e [crash no emulador Google Play](reports/1.14.11949-official-google-play-emulator-boot.md).
+
+**Não há prova de jogo em partida, ESP real, token Play Integrity ou garantia de compatibilidade.** Nenhum APK foi modificado ou qualquer verificação de integridade contornada.
