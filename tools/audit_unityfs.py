@@ -44,7 +44,7 @@ def inspect_bundle(bundle):
     pos+=20
     if declared!=len(bundle):raise ValueError("bundle size mismatch")
     if info_c>MAX_INFO_BYTES or info_u>MAX_INFO_BYTES:raise ValueError("oversized metadata")
-    if flags&0x200:pos=(pos+15)&~15
+    if version>=7:pos=(pos+15)&~15
     directory_at_end=bool(flags&0x80)
     info_pos=len(bundle)-info_c if directory_at_end else pos
     if info_pos<0 or info_pos+info_c>len(bundle):raise ValueError("invalid directory offset")
@@ -58,6 +58,7 @@ def inspect_bundle(bundle):
         if q+10>len(info):raise ValueError("truncated block descriptor")
         blocks.append(struct.unpack_from(">IIH",info,q));q+=10
     stream_pos=pos if directory_at_end else info_pos+info_c
+    if flags&0x200:stream_pos=(stream_pos+15)&~15
     hits=Counter();carry=b"";bytes_decoded=0
     for usize,csize,bflags in blocks:
         if stream_pos+csize>len(bundle) or (directory_at_end and stream_pos+csize>info_pos):
