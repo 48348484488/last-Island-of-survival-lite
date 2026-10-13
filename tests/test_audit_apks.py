@@ -49,6 +49,40 @@ class TestAudit(unittest.TestCase):
         r=a.audit(self.d,self.d/"out",expected_sha="0"*64)
         self.assertEqual(r["status"],"FAIL")
         self.assertTrue(any("SHA-256 mismatch" in e for e in r["errors"]))
+    def test_binary_axml_manifest(self):
+        import struct
+        strs=["manifest","package","com.catsbit.oxidesurvivalisland","versionCode","versionName","1.14.9"]
+        chunks=[]; offsets=[]; idx=0
+        for x in strs:
+            raw=x.encode("utf-8")
+            offsets.append(idx)
+            encoded=bytes([len(x),len(raw)])+raw+b"\x00"
+            chunks.append(encoded);idx+=len(encoded)
+        string_bytes=b"".join(chunks)
+        pool_size=28+4*len(strs)+len(string_bytes)
+        pool=(struct.pack("<HHI",1,28,pool_size)+
+              struct.pack("<IIIII",len(strs),0,0x100,28+4*len(strs),0)+
+              struct.pack("<"+"I"*len(strs),*offsets)+string_bytes)
+        def attr(k,raw,kind,v):
+            return struct.pack("<IIIHBBI",0xffffffff,k,raw,8,0,kind,v)
+        attrs=(attr(1,2,3,2)+attr(3,0xffffffff,0x10,12345)+attr(4,5,3,5))
+        ext=struct.pack("<IIHHHHHH",0xffffffff,0,20,20,3,0,0,0)
+        tag=(struct.pack("<HHI",0x102,16,16+len(ext)+len(attrs))+
+             struct.pack("<II",1,0xffffffff)+ext+attrs)
+        manifest=struct.pack("<HHI",3,8,8+len(pool)+len(tag))+pool+tag
+        with zipfile.ZipFile(self.d/"base.apk","w") as z:
+            z.writestr("AndroidManifest.xml",manifest)
+        with zipfile.ZipFile(self.d/"base.apk") as z:
+            got=a.manifest(z)
+        self.assertEqual(got["package"],"com.catsbit.oxidesurvivalisland")
+        self.assertEqual(got["versionCode"],12345)
+        self.assertEqual(got["versionName"],"1.14.9")
+    def test_bad_manifest_fails_audit(self):
+        with zipfile.ZipFile(self.d/"base.apk","w") as z:
+            z.writestr("AndroidManifest.xml",b"\x03\x00\x08\x00\x08\x00\x00\x00")
+        r=a.audit(self.d,self.d/"out")
+        self.assertEqual(r["status"],"FAIL")
+        self.assertTrue(any("AXML parse" in x for x in r["errors"]))
     def test_native_metadata(self):
         elf=bytearray(32);elf[:4]=b"\x7fELF";elf[4]=2;elf[18:20]=(183).to_bytes(2,"little")
         apk(self.d/"split_config.arm64_v8a.apk",extra={
