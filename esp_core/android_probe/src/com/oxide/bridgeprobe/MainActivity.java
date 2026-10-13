@@ -20,6 +20,7 @@ public final class MainActivity extends Activity {
     static { System.loadLibrary("oxide_esp_probe"); }
 
     private static native int runNativeSmoke();
+    private static native long nativeReadCpuIdPfr1();
     // Production-shaped JNI boundary: all values come from the Java caller.
     // This diagnostic app supplies CONTROLLED input, never game data.
     static native float[] nativeProjectSnapshot(
@@ -107,6 +108,15 @@ public final class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Isolated ARM64 CPU ID compatibility experiment. Never touches Oxide.
+        if (getIntent().getBooleanExtra("cpu_id_probe", false)) {
+            Log.i("OXIDE_CPU_ID_PROBE", "STAGE=BEFORE_MRS_ID_AA64PFR1_EL1");
+            long value = nativeReadCpuIdPfr1();
+            Log.i("OXIDE_CPU_ID_PROBE", "STAGE=MRS_RETURNED VALUE=0x" +
+                  Long.toHexString(value));
+            finish();
+            return;
+        }
         final int nativeResult=runNativeSmoke();
         final long now=SystemClock.elapsedRealtime();
         final boolean contractsOk=nativeResult==0 && verifyInputBoundary(now);
