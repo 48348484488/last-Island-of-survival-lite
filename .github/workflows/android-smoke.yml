@@ -57,9 +57,9 @@ jobs:
         run: |
           echo "## Original Oxide boot smoke test" >> "$GITHUB_STEP_SUMMARY"
           if [ -f smoke-output/status.txt ]; then
-            echo "Result: `$(cat smoke-output/status.txt)`" >> "$GITHUB_STEP_SUMMARY"
+            echo "Result: $(cat smoke-output/status.txt)" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Native ABIs: `$(cat smoke-output/abis.txt)`" >> "$GITHUB_STEP_SUMMARY"
+            echo "Native ABIs: $(cat smoke-output/abis.txt)" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "Emulator setup or download failed before the app smoke script started." >> "$GITHUB_STEP_SUMMARY"
           fi
