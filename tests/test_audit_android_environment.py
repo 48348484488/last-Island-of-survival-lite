@@ -19,8 +19,8 @@ class FakeADB:
             return 1, "", "failed"
         if args[0] == "getprop":
             return 0, self.props.get(args[1], "") + "\n", ""
-        if args[:2] == ["pm", "path"]:
-            return 0, "package:/data/app/base.apk\n" if args[2] in self.packages else "", ""
+        if args[:3] == ["pm", "list", "packages"]:
+            return 0, ("package:" + args[3] + "\n") if args[3] in self.packages else "", ""
         if args[:2] == ["pm", "has-feature"]:
             return 0, "false\n", ""
         if args == ["dumpsys", "SurfaceFlinger"]:
@@ -47,7 +47,7 @@ class EnvironmentAuditTests(unittest.TestCase):
         self.assertEqual(r["game_start_success"], "NOT_TESTED_BY_THIS_SCRIPT")
         self.assertEqual(r["virtual_environment_hints"], [])
     def test_adb_failure_not_mistaken_for_missing_package(self):
-        fake = FakeADB(failures={"pm path com.google.android.gms",
+        fake = FakeADB(failures={"pm list packages com.google.android.gms",
                                  "getprop ro.build.version.release"})
         r = audit.collect(fake)
         self.assertEqual(r["google_package_presence"]["play_services"], "UNKNOWN")
