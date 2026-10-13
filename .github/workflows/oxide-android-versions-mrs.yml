@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/oxide-android-versions-mrs.yml"
+      - "tools/probe_cpu_id_official_emulator.sh"
   workflow_dispatch:
 
 permissions:
@@ -57,26 +58,7 @@ jobs:
           emulator-boot-timeout: 900
           emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           disable-animations: true
-          script: |
-            set -e
-            mkdir -p cpu-id-evidence
-            adb shell getprop ro.build.version.sdk > cpu-id-evidence/api.txt
-            adb shell getprop ro.product.cpu.abilist > cpu-id-evidence/abi.txt
-            adb shell getprop ro.dalvik.vm.native.bridge > cpu-id-evidence/native_bridge.txt
-            adb shell pm list packages com.google.android.gms > cpu-id-evidence/gms_presence.txt
-            adb install -r original-independent-probe/oxide-bridge-jni-smoke.apk \
-              > cpu-id-evidence/install.txt 2>&1
-            cat cpu-id-evidence/install.txt
-            grep -q '^Success' cpu-id-evidence/install.txt
-            adb logcat -b all -c 2>/dev/null || true
-            adb logcat -b all -v threadtime > cpu-id-evidence/logcat.txt 2>&1 &
-            LOGPID=$!
-            adb shell am start -W -n com.oxide.bridgeprobe/.MainActivity \
-              --ez cpu_id_probe true > cpu-id-evidence/activity_start.txt 2>&1 || true
-            sleep 4
-            kill "$LOGPID" 2>/dev/null || true
-            wait "$LOGPID" 2>/dev/null || true
-            python3 tools/classify_cpu_id_probe.py cpu-id-evidence/logcat.txt --out cpu-id-evidence
+          script: bash tools/probe_cpu_id_official_emulator.sh original-independent-probe/oxide-bridge-jni-smoke.apk cpu-id-evidence
       - name: Report exact Android version/ABI; game never installed
         if: always()
         shell: bash
