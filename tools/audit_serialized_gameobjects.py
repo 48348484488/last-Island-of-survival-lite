@@ -52,12 +52,35 @@ def safe_extract(v):
         return {str(k):safe_extract(w) for k,w in list(v.items())[:16]}
     return repr(v)[:200]
 
+def resolve_transform(ptr, transform_byid, gameobject_byid):
+    """Resolve a local Transform pointer into a named parent chain, cycle-safe."""
+    if not ptr or ptr.get("fileID") != 0: return None
+    current=ptr.get("pathID")
+    if not isinstance(current,int) or current==0: return None
+    seen=set()
+    chain=[]
+    while current in transform_byid and len(chain)<16:
+        if current in seen:
+            chain.append({"cycle_at":current})
+            break
+        seen.add(current)
+        data=transform_byid[current]
+        go=pointer(data.get("m_GameObject"))
+        obj=gameobject_byid.get(go["pathID"]) if go and go["fileID"]==0 else None
+        chain.append({"transform_pathID":current,"gameObject":obj["name"] if obj else None,
+                      "gameObject_pathID":go["pathID"] if go else None})
+        p=pointer(data.get("m_Father"))
+        if not p or p.get("fileID")!=0 or p.get("pathID")==0:break
+        current=p["pathID"]
+    return chain if chain else None
+
 def inspect(raw,bundle_name):
     import UnityPy
     env=UnityPy.load(raw)
     objects=list(env.objects)
     counts=Counter()
     go_byid={}
+    transforms={}
     behaviours=[]
     scripts=[]
     issues=Counter()
@@ -65,7 +88,7 @@ def inspect(raw,bundle_name):
     for obj in objects:
         name=obj.type.name
         counts[name]+=1
-        if name not in ("GameObject","MonoBehaviour","MonoScript"):continue
+        if name not in ("GameObject","MonoBehaviour","MonoScript","Transform","RectTransform"):continue
         try:
             tree=obj.read_typetree()
             if not isinstance(tree,dict):continue
@@ -80,6 +103,8 @@ def inspect(raw,bundle_name):
                 "active":tree.get("m_IsActive"),
                 "components":flatten_pointers(tree.get("m_Component",[]))
             }
+        elif name in ("Transform","RectTransform"):
+            transforms[pathid]=tree
         elif name=="MonoScript":
             scripts.append({
                 "pathID":pathid,
@@ -105,6 +130,7 @@ def inspect(raw,bundle_name):
                 refs[key]={
                     "pointer":ref,
                     "resolved_local_behaviour":target is not None,
+                    "transform_chain":resolve_transform(ref,transforms,go_byid),
                     "resolved_gameobject":safe_extract(pointer(target.get("m_GameObject")))
                     if target else None,
                     "target_field_keys":[k for k in target if not k.startswith("m_")][:30] if target else []
@@ -118,6 +144,7 @@ def inspect(raw,bundle_name):
         "serialized_objects":len(objects),
         "object_classes":dict(counts),
         "GameObject_readable":len(go_byid),
+        "Transforms_readable":len(transforms),
         "MonoBehaviour_readable":len(behaviours),
         "MonoScript_readable":len(scripts),
         "read_issues":dict(issues),
