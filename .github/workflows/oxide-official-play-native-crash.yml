@@ -1,0 +1,81 @@
+name: Oxide original native crash - real Google Play emulator tombstone
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-official-play-native-crash.yml"
+      - "tools/classify_original_native_crash.py"
+      - "tests/test_classify_original_native_crash.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  original-native-tombstone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Test native crash signal and guest architecture classifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_classify_original_native_crash.py' -v
+      - name: Retrieve real ORIGINAL Google Play emulator crash evidence, no APK download
+        uses: actions/download-artifact@v4
+        with:
+          name: oxide-original-official-play-image-proof
+          run-id: 38480303555
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: official-evidence
+      - name: Classify real game native SIGILL and loader frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/classify_original_native_crash.py official-evidence \
+            --out classified-crash
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("classified-crash/native_crash.json").read_text())
+          assert d["original_activity_pid"]==4078,d
+          assert d["fatal_signal"]=="SIGILL",d
+          assert d["signal_code"]=="SI_TKILL",d
+          assert d["guest_architecture"]=="arm64",d
+          assert d["native_crash_confirmed_by_android_exit_info"],d
+          assert d["library_frames"][0]["pc"]=="0x830bec",d
+          assert d["library_frames"][1]["pc"]=="0x830d98",d
+          assert not d["unity_il2cpp_start_logged_for_game_pid"],d
+          assert d["specific_security_response_cause"]=="NOT_DETERMINED",d
+          print("REAL_OFFICIAL_PLAY_ORIGINAL_SIGILL_LOADER_EVIDENCE=VERIFIED")
+          PY
+      - name: Show report without claiming integrity or gameplay
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original unchanged Oxide on official Google Play image"
+            echo "Native crash evidence reproduced from run #38480303555."
+            if [ -s classified-crash/native_crash.md ]; then
+              cat classified-crash/native_crash.md
+            else
+              echo "Native crash classifier did not finish."
+            fi
+            echo "No Play Integrity verdict or gameplay success is inferred."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload processed classification, never original APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-native-loader-sigill-proof
+          path: classified-crash/
+          retention-days: 14
+          if-no-files-found: warn
