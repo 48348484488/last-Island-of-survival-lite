@@ -1,0 +1,112 @@
+name: Isolated ARM64 CPU-ID MRS instruction on NATIVE Android 13 (no game)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-native-redroid-cpu-id.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  native-arm64-cpu-id:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 38483564342
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: isolated-arm64-cpu-id-mrs-jni-apk
+          path: cpu-id-apk
+      - name: Test classification, configure native binder
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_classify_cpu_id_probe.py' -v
+          test "$(uname -m)" = aarch64
+          mkdir -p cpu-id-evidence
+          uname -m > cpu-id-evidence/host_arch.txt
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          sudo chmod a+rw /dev/binderfs/binder || true
+      - name: Start native Android ARM64 without original Oxide
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 420 docker pull redroid/redroid:13.0.0_64only-latest
+          mkdir -p /tmp/oxide-native-mrs-only
+          docker run -d --rm --privileged --name oxide-native-mrs \
+            -p 127.0.0.1:5555:5555 -v /dev/binderfs:/dev/binderfs \
+            -v /tmp/oxide-native-mrs-only:/data \
+            redroid/redroid:13.0.0_64only-latest androidboot.redroid_gpu_mode=guest \
+            > cpu-id-evidence/container.txt
+          for i in $(seq 1 50); do
+            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+            if timeout 5 adb -s 127.0.0.1:5555 shell getprop sys.boot_completed \
+              2>/dev/null | grep -q '^1'; then
+              echo 1 > cpu-id-evidence/boot.txt
+              break
+            fi
+            sleep 4
+          done
+          test -s cpu-id-evidence/boot.txt
+          adb -s 127.0.0.1:5555 shell getprop ro.product.cpu.abilist \
+            > cpu-id-evidence/abi.txt
+          grep -q arm64-v8a cpu-id-evidence/abi.txt
+          adb -s 127.0.0.1:5555 shell getprop ro.dalvik.vm.native.bridge \
+            > cpu-id-evidence/native_bridge.txt || true
+      - name: Run our separate JNI MRS test and collect Android result
+        shell: bash
+        run: |
+          set -euo pipefail
+          SERIAL=127.0.0.1:5555
+          DIR=cpu-id-evidence
+          test -s cpu-id-apk/oxide-bridge-jni-smoke.apk
+          adb -s "$SERIAL" install -r cpu-id-apk/oxide-bridge-jni-smoke.apk > "$DIR/install.txt" 2>&1
+          grep -q '^Success' "$DIR/install.txt"
+          adb -s "$SERIAL" logcat -b all -c 2>/dev/null || true
+          adb -s "$SERIAL" logcat -b all -v threadtime > "$DIR/logcat.txt" 2>&1 &
+          LOG_PID=$!
+          adb -s "$SERIAL" shell am start -W -n \
+            com.oxide.bridgeprobe/.MainActivity --ez cpu_id_probe true \
+            > "$DIR/activity_start.txt" 2>&1 || true
+          sleep 4
+          kill "$LOG_PID" 2>/dev/null || true
+          wait "$LOG_PID" 2>/dev/null || true
+          python3 tools/classify_cpu_id_probe.py "$DIR/logcat.txt" --out "$DIR"
+      - name: Explain native ARM64 system register result without game claims
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Android 13 native ARM64 MRS CPU ID reproduction"
+            echo "No original Oxide APK installed, no app protection modified."
+            if [ -s cpu-id-evidence/cpu_id_probe_verdict.json ]; then
+              cat cpu-id-evidence/cpu_id_probe_verdict.json
+            else
+              echo "No JNI probe verdict: inspect logs."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve independent JNI instructions diagnostic only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-independent-mrs-native-arm64
+          path: |
+            cpu-id-evidence/*.json
+            cpu-id-evidence/*.txt
+          retention-days: 14
+          if-no-files-found: warn
