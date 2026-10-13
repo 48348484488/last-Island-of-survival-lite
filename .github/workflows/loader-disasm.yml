@@ -1,0 +1,44 @@
+name: Oxide loader crash address disassembly
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/loader-disasm.yml'
+      - 'tools/loader_disasm.py'
+      - 'split_config.arm64_v8a.apk'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    name: Verify original libloader code at emulator crash addresses
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify Python source
+        run: python3 -m py_compile tools/loader_disasm.py
+      - name: Install ARM64 disassembler
+        run: python3 -m pip install --user "capstone==5.0.6"
+      - name: Disassemble original libloader and print report
+        run: python3 tools/loader_disasm.py --apk split_config.arm64_v8a.apk --out loader-disasm
+      - name: Publish text results
+        if: always()
+        shell: bash
+        run: |
+          if [ -f loader-disasm/LOADER_DISASM.md ]; then
+            cat loader-disasm/LOADER_DISASM.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload text results, not original binaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-libloader-crash-disassembly
+          path: loader-disasm/
+          retention-days: 14
+          if-no-files-found: warn
