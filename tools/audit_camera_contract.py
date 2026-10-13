@@ -68,7 +68,11 @@ def registry(data):
     env=UnityPy.load(data)
     scripts=defaultdict(list)
     errors=[]
+    serialized_names=set()
     for obj in env.objects:
+        owner=asset_of(obj)
+        name=get_field(owner,"name")
+        if name:serialized_names.add(str(name))
         if obj.type.name!="MonoScript":continue
         try:
             t=obj.read_typetree()
@@ -80,7 +84,7 @@ def registry(data):
             })
         except Exception as e:
             errors.append({"pathID":obj.path_id,"error":type(e).__name__})
-    return scripts,errors
+    return scripts,errors,sorted(serialized_names)
 
 def pointer(x):
     if not isinstance(x,dict):return None
@@ -144,9 +148,11 @@ def run(apk,out):
         monos=[i for i in infos if i.filename.endswith(".bundle") and "monoscripts" in i.filename.lower()]
         if not monos:raise ValueError("Original asset pack missing MonoScripts bundle")
         registry_dict=defaultdict(list)
+        mono_serialized_names=set()
         for info in monos:
             with z.open(info) as fh:buf=fh.read()
-            scripts,errors=registry(buf)
+            scripts,errors,serialized_names=registry(buf)
+            mono_serialized_names.update(serialized_names)
             if errors:raise ValueError(f"MonoScript read errors: {errors[:3]}")
             for pathid,items in scripts.items():registry_dict[pathid].extend(items)
         targets=[i for i in infos if any(i.filename.rsplit("/",1)[-1].startswith(p)
@@ -164,7 +170,14 @@ def run(apk,out):
                  "class_counts":result["class_counts"],
                  "assetFiles":len(result["serializedFiles"])}),flush=True)
     items=[x for b in bundles for x in b["targetComponents"]]
-    report={"MonoScriptCount":len(registry_dict),"targetedBundles":bundles,
+    for item in items:
+        ext=item["externalFileForScript"]
+        name=(ext.get("info") or {}).get("name") if ext else None
+        item["MonoScriptCABVerified"]=bool(name and name in mono_serialized_names)
+    report={"MonoScriptCount":len(registry_dict),
+            "MonoScriptSerializedFiles":sorted(mono_serialized_names),
+            "validatedCABMappings":sum(x["MonoScriptCABVerified"] for x in items),
+            "targetedBundles":bundles,
             "targetComponentCount":len(items),
             "withScriptFileEntry":sum(c["externalFileForScript"] is not None for c in items),
             "missingExternalFileEntry":sum(c["externalFileForScript"] is None and c["scriptPointer"]["fileID"]>0 for c in items),
@@ -173,10 +186,14 @@ def run(apk,out):
                         "Serialized controller fields do not include a live projection matrix or enemy coordinates."]}
     out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(report,indent=2,ensure_ascii=False)+"\n")
+    print(json.dumps({"actualMonoScriptCABs":sorted(mono_serialized_names),
+                      "verifiedCABs":report["validatedCABMappings"]}),flush=True)
     print(json.dumps({"targetComponentCount":report["targetComponentCount"],
                       "withExternalFileEntry":report["withScriptFileEntry"],
                       "missingExternalFileEntry":report["missingExternalFileEntry"]}),flush=True)
     if not items:raise SystemExit("No target camera scripts found")
+    if report["validatedCABMappings"]!=len(items):
+        raise SystemExit("Unverified external CAB ownership for one or more script pointers")
 
 if __name__=="__main__":
     p=argparse.ArgumentParser()
