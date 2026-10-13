@@ -118,3 +118,14 @@ O Oxide original (PID 4078) registrou Berberis: Undefined instruction 0xd5380429
 **Resultado:** incompatibilidade real do tradutor ARM64 Berberis com essa instrução no Android 15 Google Play x86_64. [Relatorio tecnico detalhado](reports/1.14.11949-arm64-system-register-reproduction.md).
 
 **Ainda nao resolvido:** no Android ARM64 nativo, o Oxide ultrapassa o inicio da Unity, mas o aplicativo original se autoencerra com SIGKILL por motivo distinto ainda nao estabelecido. Nenhuma partida multiplayer nem ESP de jogadores reais foi validado.
+
+
+## Estado do Oxide Android 14–16 e da mensagem de segurança (13/10/2026)
+
+O [teste em Android 14 e Android 16 com Google Play](../../actions/runs/38485084410) passou na infraestrutura, mas **a instrução ARM64 MRS continuou produzindo SIGILL nos dois**. Android 15 já havia falhado da mesma forma. Portanto, nenhuma dessas três imagens x86_64 com tradução ARM64 resolveu o carregamento do Oxide; o APK do jogo não foi instalado nas duas variações mais recentes.
+
+Também foi feita uma [varredura somente de leitura nos três APKs originais menores](../../actions/runs/38485899858): 1.454 entradas, 384.032.039 bytes descompactados, hashes íntegros, cinco testes aprovados e **nenhuma ocorrência em texto simples** da frase “Security Threat Detected by App”. Isso não demonstra ausência do aviso nem identifica sua origem: o texto pode estar codificado, ser gerado em runtime ou residir no grande pacote de assets ainda não examinado.
+
+O bloqueio restante é o encerramento por SIGKILL emitido pelo Oxide em ARM64 nativo, após iniciar a Unity e apresentar a mensagem de segurança. Uma investigação conclusiva da compatibilidade exige Android ARM64 legítimo e autorizado, idealmente um dispositivo físico remoto que atenda aos requisitos da instalação; não basta conceder permissões do Android. [Relatório do aviso](reports/1.14.11949-original-security-warning-literal-audit.md).
+
+**Limite verificável:** overlay verde de diagnóstico no carregamento original; nenhum ESP com posições de jogadores ou partida jogável comprovado.
