@@ -14,8 +14,9 @@ class TestUnityFS(unittest.TestCase):
         info=bytes(16)+struct.pack(">I",1)+struct.pack(">IIH",len(payload),len(body),2 if compressed else 0)+struct.pack(">I",0)
         meta=lz4.block.compress(info,store_size=False)
         head=b"UnityFS\0"+struct.pack(">I",7)+b"6000.3.18f1\0"+b"test\0"
-        total=len(head)+20+len(meta)+len(body)
-        return head+struct.pack(">QIII",total,len(meta),len(info),2)+meta+body
+        pad=b"\0"*((-(len(head)+20))%16)
+        total=len(head)+20+len(pad)+len(meta)+len(body)
+        return head+struct.pack(">QIII",total,len(meta),len(info),2)+pad+meta+body
     def test_plain_body(self):
         result=a.inspect_bundle(self.fixture(b"PlayerManager\0visRange",False))
         self.assertEqual(result["terms"].get("PlayerManager"),1)
