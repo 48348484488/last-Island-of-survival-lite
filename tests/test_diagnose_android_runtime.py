@@ -44,7 +44,7 @@ install permissions:
         self.assertEqual(r["runtime_log_signal_counts"]["play_services_missing"], 1)
 
     def test_does_not_interpret_other_package_or_graphics_as_game_security(self):
-        r = module.summarize(self.AAPT, "", "", "package:com.google.android.gms.rogue",
+        r = module.summarize(self.AAPT, "", "", "package:com.google.android.gms.rogue\n__PACKAGE_QUERY_COMPLETED__",
                              "E GraphicBufferAllocator: Failed to allocate (4 x 4)\n"
                              "E Sensors : Failed to get Sensor list\n"
                              "I Process : Sending signal. PID: 99 SIG: 9")
