@@ -42,10 +42,13 @@ def collect(run):
         props[key] = out.strip()[:180] if rc == 0 and out.strip() else "UNKNOWN"
     packages = {}
     for label, name in PACKAGES.items():
-        rc, out, _ = run(["pm", "path", name])
+        # pm path may return a nonzero status for an absent package. Instead,
+        # pm list packages returns an enumerable package list on stock Android.
+        rc, out, _ = run(["pm", "list", "packages", name])
+        exact_entry = "package:" + name
         packages[label] = ("UNKNOWN" if rc != 0 else
-                           "PRESENT" if any(x.strip().startswith("package:")
-                                            for x in out.splitlines()) else "NOT_FOUND")
+                           "PRESENT" if exact_entry in {x.strip() for x in out.splitlines()}
+                           else "NOT_FOUND")
     features = {}
     for name in FEATURES:
         rc, out, _ = run(["pm", "has-feature", name])
