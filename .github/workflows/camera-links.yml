@@ -1,0 +1,78 @@
+name: Oxide camera controller and native Camera reference graph
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/audit_camera_links.py"
+      - "tests/test_camera_links.py"
+      - ".github/workflows/camera-links.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  camera-references:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Install Unity asset reader
+        run: python3 -m pip install --user "UnityPy>=1.20,<2"
+      - name: Verify pointer and hierarchy routines
+        run: python3 -m unittest discover -s tests -p "test_camera_links.py" -v
+      - name: Fetch original Unity pack from release
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors --connect-timeout 30 \
+            --max-time 1800 --silent --show-error \
+            -o split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          echo "2f0f7f1be7d78d269f710edd471c40a9755a93a07481cae0c058356515e19834  split_UnityDataAssetPack.apk" | sha256sum --check
+      - name: Trace exact GameObject camera components and pointers
+        run: python3 tools/audit_camera_links.py --apk split_UnityDataAssetPack.apk --out camera-links/report.json
+      - name: Summarize without inferring live-player data
+        if: always()
+        shell: bash
+        run: |
+          if [ -f camera-links/report.json ]; then
+            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open("camera-links/report.json"))
+          print("## Camera components and serialized references")
+          for b in d["bundles"]:
+              print("### "+b["file"].split("/")[-1])
+              print("Objects {} / Cameras {} / Incoming camera references {}".format(
+                  b["object_count"],len(b["native_cameras"]),len(b["incoming_native_camera_refs"])))
+              for c in b["native_cameras"]:
+                  print("- Camera **{}** fov={} / parent hierarchy {}".format(
+                      c["gameObject"],c["projection"]["fov"],
+                      " → ".join(x.get("GameObject") or "?" for x in c["hierarchy"])))
+                  print("  - components: "+", ".join(x["type"] for x in c["components"]))
+              for x in b["incoming_native_camera_refs"][:30]:
+                  print("- Reference {} → {} via {}".format(
+                      x["sourceGameObject"],x["targetPathIDs"],x["field"]))
+              for item in b["camera_related_behaviours"][:12]:
+                  print("- Controller {} fields: {}".format(
+                      item["GameObject"],list(item["fields"])[:22]))
+          print("Errors: ",d["errors"])
+          print("These are static references, not evidence of runtime camera activation or ESP.")
+          PY
+          else
+            echo "No JSON report. Check preceding failure." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Save camera-reference JSON only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-1-14-camera-links
+          path: camera-links/report.json
+          if-no-files-found: warn
+          retention-days: 14
