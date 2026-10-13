@@ -1,0 +1,70 @@
+name: Oxide camera/player C# script mapping
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/audit_camera_scripts.py"
+      - "tests/test_camera_scripts.py"
+      - ".github/workflows/camera-scripts.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scripted-camera:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Install Unity reader
+        run: python3 -m pip install --user "UnityPy>=1.20,<2"
+      - name: Run external MonoScript pointer regression tests
+        run: python3 -m unittest discover -s tests -p "test_camera_scripts.py" -v
+      - name: Fetch and validate original Unity asset pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors --connect-timeout 30 \
+            --max-time 1800 --silent --show-error \
+            -o split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          echo "2f0f7f1be7d78d269f710edd471c40a9755a93a07481cae0c058356515e19834  split_UnityDataAssetPack.apk" | sha256sum --check
+      - name: Resolve camera MonoBehaviours against MonoScript registry
+        run: python3 tools/audit_camera_scripts.py --apk split_UnityDataAssetPack.apk --out camera-scripts/scripts.json
+      - name: Add summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f camera-scripts/scripts.json ]; then
+            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open("camera-scripts/scripts.json"))
+          print("# Camera/player prefab MonoScript registry")
+          print("Registered MonoScripts:",d["registeredMonoScriptPathIDs"],"script mapping stats:",d["stats"])
+          for b in d["bundles"]:
+              print("## "+b["bundle"].split("/")[-1])
+              for go in b["candidateObjects"][:20]:
+                  for c in go["components"]:
+                      if "scriptResolution" in c:
+                          scripts=["{}.{}".format(t["namespace"],t["class"]) for t in c.get("resolvedMonoScripts",[])]
+                          print("- {} / {} => {} ({})".format(go["gameObject"],c["componentPathID"],scripts,c["scriptResolution"]))
+          print("Static MonoScript path matches are not live method addresses.")
+          PY
+          else
+            echo "No JSON result produced; inspect logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Preserve report JSON only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-v114-camera-script-registry
+          path: camera-scripts/
+          retention-days: 14
+          if-no-files-found: warn
