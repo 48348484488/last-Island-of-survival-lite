@@ -161,10 +161,17 @@ jobs:
           {
             echo "Oxide original ARM64 process/exit diagnostic (non-invasive)"
             echo "RESULT=$RESULT"
-            if grep -qiE 'Process: Sending signal\\. PID: [0-9]+ SIG: 9' oxide-original-arm64/all_buffers.txt; then
+            if grep -qiE 'Process *: Sending signal[.] PID: [0-9]+ SIG: 9' oxide-original-arm64/all_buffers.txt; then
               echo "ANDROID_PROCESS_SENDSIGNAL_9=OBSERVED"
             else
               echo "ANDROID_PROCESS_SENDSIGNAL_9=NOT_OBSERVED"
+            fi
+            # logcat threadtime prefix is: date time EMITTER_PID THREAD_ID level tag : text
+            # If emitter PID equals signal target PID, app process logged its own SIGKILL.
+            if awk '$6=="Process" && $7==":" && $8=="Sending" && $9=="signal." && $10=="PID:" && $12=="SIG:" && $13=="9" && $3==$11 {seen=1; exit} END {exit !seen}' oxide-original-arm64/all_buffers.txt; then
+              echo "SELF_SIGKILL_LOG=OBSERVED"
+            else
+              echo "SELF_SIGKILL_LOG=NOT_OBSERVED"
             fi
             if [ -s oxide-original-arm64/host_oom_evidence.txt ]; then
               echo "HOST_OOM_LOG=HAS_MATCHES_REVIEW_CONTEXT"
@@ -190,9 +197,9 @@ jobs:
             echo "Android: $(cat oxide-original-arm64/android_version.txt 2>/dev/null || echo UNKNOWN)"
             if [ -f oxide-original-arm64/exit_diagnosis.txt ]; then
               echo '#### Additional termination evidence'
-              echo '\`\`\`text'
+              echo '```text'
               cat oxide-original-arm64/exit_diagnosis.txt
-              echo '\`\`\`'
+              echo '```'
             fi
             echo "This is a process start test only, not proof of a playable menu, multiplayer player coordinates, or ESP."
             echo "No APK was modified and no process injection was performed."
