@@ -1,0 +1,144 @@
+name: Original Oxide on authorized remote physical ARM64 Android (SSH + ADB)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-remote-physical-arm64.yml"
+      - "tools/remote_physical_preflight.py"
+      - "tools/run_remote_physical_oxide.sh"
+      - "tools/summarize_remote_physical.py"
+      - "tests/test_remote_physical_preflight.py"
+      - "tests/test_summarize_remote_physical.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  readiness:
+    name: Test safe device gate (no device or game download)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    outputs:
+      configured: ${{ steps.gate.outputs.configured }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Test readiness gate, fake-injection rejection and artifact sanitization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_remote_physical_preflight.py' -v
+          python3 -m unittest discover -s tests -p 'test_summarize_remote_physical.py' -v
+          python3 -m unittest discover -s tests -p 'test_verify_original_splits.py' -v
+          python3 -m unittest discover -s tests -p 'test_check_activity_liveness.py' -v
+          bash -n tools/run_remote_physical_oxide.sh
+          bash -n tools/smoke_original_on_connected_device.sh
+      - name: Inspect configured secret names, without connecting or downloading
+        id: gate
+        shell: bash
+        env:
+          OXIDE_REMOTE_HOST: ${{ secrets.OXIDE_REMOTE_HOST }}
+          OXIDE_REMOTE_USER: ${{ secrets.OXIDE_REMOTE_USER }}
+          OXIDE_REMOTE_SSH_KEY: ${{ secrets.OXIDE_REMOTE_SSH_KEY }}
+          OXIDE_REMOTE_KNOWN_HOSTS: ${{ secrets.OXIDE_REMOTE_KNOWN_HOSTS }}
+          OXIDE_REMOTE_ADB_SERIAL: ${{ secrets.OXIDE_REMOTE_ADB_SERIAL }}
+        run: |
+          set -euo pipefail
+          mkdir -p readiness
+          python3 tools/remote_physical_preflight.py --output readiness/preflight.json
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          r=json.load(open("readiness/preflight.json"))
+          print("configured="+str(r["status"]=="REMOTE_PHYSICAL_CONNECTION_CONFIGURED").lower())
+          PY
+      - name: Explain prerequisites without promising real game execution
+        shell: bash
+        run: |
+          {
+            echo "## Original Oxide physical ARM64 remote lab readiness"
+            python3 - <<'PY'
+          import json,os
+          d=json.load(open("readiness/preflight.json"))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("Credentials: "+d["status"]+"\n\n")
+              f.write("Missing secret NAMES: "+(", ".join(d["missing_secret_names"]) or "none")+"\n\n")
+              f.write("Invalid secret format NAMES: "+(", ".join(d["invalid_format_secret_names"]) or "none")+"\n\n")
+              f.write("No device contacted or paid for in the readiness job.\n")
+              f.write("Game files are only downloaded in workflow_dispatch after an authorized ADB device is actually reachable.\n")
+          PY
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oxide-remote-physical-credential-readiness
+          path: readiness/preflight.json
+          retention-days: 14
+
+  remote-original:
+    name: Authenticated physical Android original game diagnostic
+    needs: readiness
+    if: github.event_name == 'workflow_dispatch' && needs.readiness.outputs.configured == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+            tools
+            tests
+      - name: Confirm normal ADB client tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v adb || sudo apt-get update -qq
+          if ! command -v adb >/dev/null; then
+            sudo apt-get install -y --no-install-recommends adb
+          fi
+          command -v ssh
+          command -v curl
+      - name: Connect via pinned SSH, check authorized ADB BEFORE downloading original asset pack
+        shell: bash
+        env:
+          OXIDE_REMOTE_HOST: ${{ secrets.OXIDE_REMOTE_HOST }}
+          OXIDE_REMOTE_USER: ${{ secrets.OXIDE_REMOTE_USER }}
+          OXIDE_REMOTE_SSH_KEY: ${{ secrets.OXIDE_REMOTE_SSH_KEY }}
+          OXIDE_REMOTE_KNOWN_HOSTS: ${{ secrets.OXIDE_REMOTE_KNOWN_HOSTS }}
+          OXIDE_REMOTE_ADB_SERIAL: ${{ secrets.OXIDE_REMOTE_ADB_SERIAL }}
+        run: |
+          set -euo pipefail
+          bash tools/run_remote_physical_oxide.sh remote-physical-diagnostic
+      - name: Present only sanitized original-game status
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original Oxide 1.14.11949 — authorized physical ARM64 lab"
+            echo "Only valid signed original splits; no binary patch or anti-cheat bypass."
+            if [ -s remote-physical-diagnostic/remote_physical_verdict.json ]; then
+              cat remote-physical-diagnostic/remote_physical_verdict.json
+            else
+              echo "No game boot verdict: see preceding connection or installation step."
+            fi
+            echo "Full logcat, device serial, screenshots and personal data are NEVER uploaded by this workflow."
+            echo "No gameplay or real-player ESP is inferred from a stable Activity."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save sanitized report only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-physical-android-sanitized-verdict
+          path: |
+            remote-physical-diagnostic/remote_physical_verdict.json
+            remote-physical-diagnostic/connection_status.txt
+            remote-physical-diagnostic/original_integrity_status.txt
+          if-no-files-found: warn
+          retention-days: 14
