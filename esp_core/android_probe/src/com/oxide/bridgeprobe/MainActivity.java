@@ -2,6 +2,7 @@ package com.oxide.bridgeprobe;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.content.Intent;
 import android.os.SystemClock;
 import android.util.Log;
 import android.graphics.Canvas;
@@ -21,12 +22,12 @@ public final class MainActivity extends Activity {
     private static native int runNativeSmoke();
     // Production-shaped JNI boundary: all values come from the Java caller.
     // This diagnostic app supplies CONTROLLED input, never game data.
-    private static native float[] nativeProjectSnapshot(
+    static native float[] nativeProjectSnapshot(
             float[] viewProjection, int width, int height,
             long nowMs, long cameraMs, int maxAgeMs, int matrixFlags,
             long[] entityIds, float[] headFeetXYZ, long[] entitySampleMs);
 
-    private static float[] testCamera() {
+    static float[] testCamera() {
         final float near=0.1f, far=100.0f;
         return new float[]{
                 1,0,0,0, 0,1,0,0,
@@ -129,5 +130,9 @@ public final class MainActivity extends Activity {
                 noSamples?"NO_SAMPLES":staleSamples?"STALE_SAMPLES":"TEST_RECT_PRESENT";
         Log.i(TAG, "RESULT=" + verdict + " CODE=" + result + " MODE=" + mode);
         setContentView(new NativeRectView(this, rects, mode));
+        if (getIntent().getBooleanExtra("overlay_probe",false)) {
+            startService(new Intent(this,OverlayProbeService.class));
+            finish(); // Return to home: overlay is independent of the activity.
+        }
     }
 }
