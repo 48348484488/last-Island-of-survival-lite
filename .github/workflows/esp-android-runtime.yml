@@ -42,7 +42,7 @@ jobs:
           LIBDIR="android-probe-out/build/lib/arm64-v8a"
           "$BIN/aarch64-linux-android26-clang++" -O2 -std=c++17 -fPIC -shared \
             -fstack-protector-strong -Wl,-z,relro -Wl,-z,now -Wl,--no-undefined \
-            -Iesp_core/include esp_core/src/esp_bridge.cpp \
+            -Iesp_core/include esp_core/src/esp_bridge.cpp esp_core/src/esp_timed_bridge.cpp \
             -o "$LIBDIR/liboxide_esp_bridge.so"
           "$BIN/aarch64-linux-android26-clang++" -O2 -std=c++17 -fPIC -shared \
             -fstack-protector-strong -Wl,-z,relro -Wl,-z,now -Wl,--no-undefined \
