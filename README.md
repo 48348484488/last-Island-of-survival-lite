@@ -88,3 +88,11 @@ A execução [#38476139597](../../actions/runs/38476139597) **passou nos dois jo
 - [Relatório da prova visual](reports/1.14.11949-original-overlay-native.md)
 
 **Limite essencial:** isso valida a sobreposição de uma caixa de **dados artificiais de diagnóstico apenas durante o carregamento**. O jogo continua exibindo alerta de segurança e encerra seu próprio processo. **Não existe ESP multiplayer validado nem garantia de funcionamento ou estabilidade durante uma partida.** O teste pesado ficou manual para não repetir downloads e execuções desnecessárias.
+
+## Teste A/B de permissões do Android virtual
+
+O [experimento real em Redroid ARM64 #38478578089](../../actions/runs/38478578089) concedeu com sucesso as quatro permissões comuns antes negadas: câmera, microfone, Bluetooth e notificações. **Mesmo com todas essas permissões concedidas**, a segunda execução do jogo original encerrou por SIGKILL emitido pelo próprio processo (PID 2578), assim como a primeira (PID 2197).
+
+O comparador inicial exibiu um **falso negativo** porque leu um PID antigo no logcat. A falha foi corrigida e a [validação rápida #38479050657](../../actions/runs/38479050657) aprovou 23 testes. [Relatório com horários e PIDs](reports/1.14.11949-android-permission-ab.md).
+
+Conclusão: as permissões normais não bastam para o Oxide completar o boot nesse Android virtual. Os serviços Google continuam ausentes, a causa exata da verificação de segurança segue desconhecida e **não existe ESP em partida validado**.
