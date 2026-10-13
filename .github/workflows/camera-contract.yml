@@ -1,0 +1,71 @@
+name: Oxide camera runtime contract static audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/audit_camera_contract.py"
+      - "tests/test_camera_contract.py"
+      - ".github/workflows/camera-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Install Unity reader
+        run: python3 -m pip install --user "UnityPy>=1.20,<2"
+      - name: Unit tests for external file indexing and controller fields
+        run: python3 -m unittest discover -s tests -p "test_camera_contract.py" -v
+      - name: Download original release asset pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors --connect-timeout 30 \
+            --max-time 1800 --silent --show-error \
+            -o split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          echo "2f0f7f1be7d78d269f710edd471c40a9755a93a07481cae0c058356515e19834  split_UnityDataAssetPack.apk" | sha256sum --check
+      - name: Inspect camera scripts, saved fields and serialized file external references
+        run: python3 tools/audit_camera_contract.py --apk split_UnityDataAssetPack.apk --out camera-contract/report.json
+      - name: Summarize evidence boundaries
+        if: always()
+        shell: bash
+        run: |
+          if [ -f camera-contract/report.json ]; then
+            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open("camera-contract/report.json"))
+          print("## Camera controller serialized field contract")
+          print("MonoScript IDs: {}; target components: {}; with external-file records: {}".format(
+            d["MonoScriptCount"],d["targetComponentCount"],d["withScriptFileEntry"]))
+          for b in d["targetedBundles"]:
+            print("### "+b["bundle"].rsplit("/",1)[-1])
+            for c in b["targetComponents"]:
+              if c["classMatches"][0]["class"] in ("FPCameraController","MouseLook","CameraManager"):
+                print("- **{}** fields={} pointer={} referenced file={}".format(
+                  c["classMatches"][0]["class"],list(c["fields"]),c["scriptPointer"],
+                  c["externalFileForScript"]))
+          print("Only static prefabs inspected. Does not prove gameplay camera matrix or ESP.")
+          PY
+          else
+            echo "No report found; inspect failure logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Save the JSON findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-camera-controller-contract
+          path: camera-contract/
+          retention-days: 14
+          if-no-files-found: warn
