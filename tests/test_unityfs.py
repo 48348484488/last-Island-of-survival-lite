@@ -25,6 +25,14 @@ class TestUnityFS(unittest.TestCase):
     def test_compressed_body(self):
         result=a.inspect_bundle(self.fixture(b"networkPositionObserver"*5,True))
         self.assertEqual(result["terms"].get("networkPositionObserver"),5)
+    def test_zero_padding(self):
+        data=self.fixture(b"PlayerManager",True)
+        found=a.inspect_bundle(data+b"\x00"*5)
+        self.assertEqual(found["terms"].get("PlayerManager"),1)
+    def test_nonzero_padding_rejected(self):
+        data=self.fixture(b"PlayerManager",True)
+        with self.assertRaises(ValueError):
+            a.inspect_bundle(data+b"NOTZERO")
     def test_truncated(self):
         raw=self.fixture(b"PlayerManager",True)[:-1]
         with self.assertRaises(ValueError):a.inspect_bundle(raw)
