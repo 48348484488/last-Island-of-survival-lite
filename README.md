@@ -129,3 +129,16 @@ Também foi feita uma [varredura somente de leitura nos três APKs originais men
 O bloqueio restante é o encerramento por SIGKILL emitido pelo Oxide em ARM64 nativo, após iniciar a Unity e apresentar a mensagem de segurança. Uma investigação conclusiva da compatibilidade exige Android ARM64 legítimo e autorizado, idealmente um dispositivo físico remoto que atenda aos requisitos da instalação; não basta conceder permissões do Android. [Relatório do aviso](reports/1.14.11949-original-security-warning-literal-audit.md).
 
 **Limite verificável:** overlay verde de diagnóstico no carregamento original; nenhum ESP com posições de jogadores ou partida jogável comprovado.
+
+
+## Teste do APK original em Android ARM64 fisico remoto (sem usar celular pessoal)
+
+Foi criado um workflow com **ADB remoto por SSH autenticado e host pinado** para um dispositivo Android ARM64 fisico autorizado. O teste preserva os 4 APKs originais, baixa os recursos grandes somente depois de validar a conexao e coleta o PID/Activity aos 10 e 35 segundos. Nenhum mecanismo de seguranca do Oxide e modificado.
+
+**Resultado real atual:** [GitHub Actions #38486718125](../../actions/runs/38486718125) passou **18 testes de contrato**, mas o job no aparelho fisico ficou SKIPPED porque o repositorio ainda nao possui as cinco credenciais para um laboratorio remoto. **Nao houve dispositivo fisico executado, gameplay ou ESP validado.**
+
+Para habilitar o dispositivo remoto (uma unica configuracao do provedor), adicionar nos **GitHub Actions Secrets** as chaves: OXIDE_REMOTE_HOST, OXIDE_REMOTE_USER, OXIDE_REMOTE_SSH_KEY, OXIDE_REMOTE_KNOWN_HOSTS e OXIDE_REMOTE_ADB_SERIAL. O provedor deve fornecer um telefone fisico autorizado acessivel por ADB no host SSH; esta integracao nao cria um aparelho nem contrata servicos pagos sozinha.
+
+[Instrucoes e limites](reports/1.14.11949-remote-physical-adb-integration.md) | [Workflow](../../actions/workflows/oxide-remote-physical-arm64.yml)
+
+**Privacidade:** logs completos, capturas e identificadores do aparelho nao sao publicados automaticamente nos artefatos. ADB sideload dos quatro splits nao garante licenciamento Play ou um veredito de integridade positivo.
