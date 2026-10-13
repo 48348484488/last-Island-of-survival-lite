@@ -35,7 +35,7 @@ def summarize(aapt="", dumpsys="", appops="", play_packages="", logs="", forensi
                     for key, pattern in SIGNALS.items()}
     pkg_lines = {x.strip() for x in play_packages.splitlines() if x.strip()}
     gms_state = ("PRESENT" if "package:com.google.android.gms" in pkg_lines else
-                 "NOT_FOUND" if play_packages.strip() else "NOT_OBSERVED")
+                 "NOT_FOUND" if "__PACKAGE_QUERY_COMPLETED__" in pkg_lines else "NOT_OBSERVED")
     return {
         "app": PKG,
         "declared_permission_count": len(names),
