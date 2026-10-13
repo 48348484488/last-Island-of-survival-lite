@@ -156,7 +156,7 @@ def audit(folder,out,expected_sha=""):
             if "elf_machine" in i:lines.append("  - ELF machine: "+str(i["elf_machine"]))
             if "version_field" in i:lines.append("  - Metadata version field: "+str(i["version_field"])+", header="+i["header_hex"])
             if i.get("string_markers"):lines.append("  - String markers: "+json.dumps(i["string_markers"]))
-    lines+=["","## Checks","","- "+e for e in errors] if errors else ["","## Checks","","All four ZIP central directories readable, all APK SHA256 hashes computed, cross-split package/version agreement checked when present."]
+    lines += (["","## Checks",""] + ["- " + e for e in errors]) if errors else ["","## Checks","","All four ZIP central directories readable, all APK SHA256 hashes computed, cross-split package/version agreement checked when present."]
     lines+=["","## Limitations","",*["- "+s for s in r["limitations"]],""]
     (out/"REPORT.md").write_text("\n".join(lines))
     return r
