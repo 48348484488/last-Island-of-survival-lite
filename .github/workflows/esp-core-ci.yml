@@ -1,0 +1,34 @@
+name: ESP projection core safety checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "esp_core/**"
+      - ".github/workflows/esp-core-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-projection:
+    name: C++17 projection module and memory sanitizer
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build with Clang AddressSanitizer and UBSan
+        run: |
+          clang++ -std=c++17 -Wall -Wextra -Werror -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            -Iesp_core/include esp_core/tests/test_projection.cpp -o /tmp/esp_projection_test
+      - name: Run geometry and invalid data tests
+        run: /tmp/esp_projection_test
+      - name: Record module scope
+        run: |
+          echo "## ESP projection core" >> "$GITHUB_STEP_SUMMARY"
+          echo "Clang ASan/UBSan test passed. Module only computes 3D → 2D projection." >> "$GITHUB_STEP_SUMMARY"
+          echo "It does not acquire game data, hook or alter an APK, render an overlay, or prove Android compatibility." >> "$GITHUB_STEP_SUMMARY"
