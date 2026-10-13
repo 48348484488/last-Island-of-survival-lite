@@ -42,7 +42,13 @@ def inspect_bundle(bundle):
     revision,pos=zstr(bundle,pos)
     declared,info_c,info_u,flags=struct.unpack_from(">QIII",bundle,pos)
     pos+=20
-    if declared!=len(bundle):raise ValueError("bundle size mismatch")
+    if declared>len(bundle):
+        raise ValueError(f"truncated bundle: expected {declared}, got {len(bundle)}")
+    if declared<len(bundle):
+        tail=bundle[declared:]
+        if len(tail)>15 or any(tail):
+            raise ValueError(f"unexpected trailing bytes: declared {declared}, real {len(bundle)}, first_tail {tail[:8].hex()}")
+        bundle=bundle[:declared]
     if info_c>MAX_INFO_BYTES or info_u>MAX_INFO_BYTES:raise ValueError("oversized metadata")
     if version>=7:pos=(pos+15)&~15
     directory_at_end=bool(flags&0x80)
