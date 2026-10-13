@@ -74,6 +74,44 @@ def resolve_transform(ptr, transform_byid, gameobject_byid):
         current=p["pathID"]
     return chain if chain else None
 
+def camera_subtree(ptr, transform_byid, gameobject_byid, object_types, limit=48):
+    """A bounded local GameObject/Transform hierarchy (static, never a live camera)."""
+    if not ptr or ptr.get("fileID")!=0 or ptr.get("pathID") not in transform_byid:
+        return None
+    queue=[(ptr["pathID"],0)]
+    result=[]
+    seen=set()
+    while queue and len(result)<limit:
+        tid,depth=queue.pop(0)
+        if tid in seen or tid not in transform_byid:
+            continue
+        seen.add(tid)
+        transform=transform_byid[tid]
+        go=pointer(transform.get("m_GameObject"))
+        gameobject=gameobject_byid.get(go["pathID"]) if go and go["fileID"]==0 else None
+        children=[]
+        for child in flatten_pointers(transform.get("m_Children", [])):
+            if child["fileID"]==0 and child["pathID"] in transform_byid and child["pathID"] not in seen:
+                children.append(child["pathID"])
+        components=[]
+        if gameobject:
+            for component in gameobject["components"][:80]:
+                if component["fileID"]==0:
+                    components.append({"pathID":component["pathID"],
+                                       "type":object_types.get(component["pathID"],"unresolved")})
+        result.append({
+            "depth":depth,
+            "transform_pathID":tid,
+            "gameObject":gameobject["name"] if gameobject else None,
+            "components":components,
+            "localPosition":safe_extract(transform.get("m_LocalPosition")),
+            "localRotation":safe_extract(transform.get("m_LocalRotation")),
+            "childTransformCount":len(children),
+        })
+        if depth<6:
+            queue.extend((c,depth+1) for c in children)
+    return result
+
 def inspect(raw,bundle_name):
     import UnityPy
     env=UnityPy.load(raw)
@@ -81,6 +119,7 @@ def inspect(raw,bundle_name):
     counts=Counter()
     go_byid={}
     transforms={}
+    object_types={}
     behaviours=[]
     scripts=[]
     issues=Counter()
@@ -88,6 +127,7 @@ def inspect(raw,bundle_name):
     for obj in objects:
         name=obj.type.name
         counts[name]+=1
+        object_types[obj.path_id]=name
         if name not in ("GameObject","MonoBehaviour","MonoScript","Transform","RectTransform"):continue
         try:
             tree=obj.read_typetree()
@@ -131,6 +171,7 @@ def inspect(raw,bundle_name):
                     "pointer":ref,
                     "resolved_local_behaviour":target is not None,
                     "transform_chain":resolve_transform(ref,transforms,go_byid),
+                    "camera_subtree":camera_subtree(ref,transforms,go_byid,object_types) if key=="worldCameraRoot" else None,
                     "resolved_gameobject":safe_extract(pointer(target.get("m_GameObject")))
                     if target else None,
                     "target_field_keys":[k for k in target if not k.startswith("m_")][:30] if target else []
