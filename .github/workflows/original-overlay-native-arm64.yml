@@ -1,10 +1,8 @@
 name: Oxide original loading-screen overlay interop on native ARM64
 
+# The expensive test downloads ~867 MB of original assets; invoke intentionally.
+# Evidence: actions/runs/38476139597 already verified loading Activity compositing.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/original-overlay-native-arm64.yml"
   workflow_dispatch:
 
 permissions:
