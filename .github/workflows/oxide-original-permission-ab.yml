@@ -1,0 +1,169 @@
+name: Oxide native ARM64 original-game Android permission A/B
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-original-permission-ab.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  declared-permissions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            tools
+            tests
+      - name: Verify diagnostic parser regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_diagnose_android_runtime.py' -v
+          python3 -m unittest discover -s tests -p 'test_diagnose_prerequisites.py' -v
+          python3 -m unittest discover -s tests -p 'test_compare_android_grants.py' -v
+      - name: Extract original APK declarations with SDK tools on x86_64
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$ANDROID_HOME"
+          SDKMGR="$SDK/cmdline-tools/16.0/bin/sdkmanager"
+          if [ ! -x "$SDKMGR" ]; then
+            SDKMGR="$(find "$SDK/cmdline-tools" -name sdkmanager -type f | head -n1)"
+          fi
+          yes | "$SDKMGR" --sdk_root="$SDK" --licenses >/dev/null || true
+          "$SDKMGR" --sdk_root="$SDK" --install "build-tools;35.0.0"
+          mkdir -p original-manifest
+          "$SDK/build-tools/35.0.0/aapt" dump permissions base.apk \
+            > original-manifest/aapt_permissions.txt
+          grep -q 'uses-permission:' original-manifest/aapt_permissions.txt
+          sha256sum base.apk > original-manifest/base_sha256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: original-oxide-aapt-permissions
+          path: original-manifest/
+          if-no-files-found: error
+          retention-days: 3
+
+  runtime-prerequisites:
+    needs: declared-permissions
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 35
+    steps:
+      - name: Checkout only original APK splits and diagnostic tools
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+            tools
+      - uses: actions/download-artifact@v4
+        with:
+          name: original-oxide-aapt-permissions
+          path: original-manifest
+      - name: Configure Binder and boot clean native ARM64 Android 13
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime-prerequisites
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          timeout 420 docker pull redroid/redroid:13.0.0_64only-latest
+          sudo chmod a+rw /dev/binderfs/binder || true
+          mkdir -p /tmp/oxide-permission-data
+          docker run -d --rm --privileged --name oxide-permission-audit \
+            -p 127.0.0.1:5555:5555 -v /dev/binderfs:/dev/binderfs \
+            -v /tmp/oxide-permission-data:/data \
+            redroid/redroid:13.0.0_64only-latest androidboot.redroid_gpu_mode=guest \
+            > runtime-prerequisites/container_id.txt
+          for i in $(seq 1 50); do
+            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+            if timeout 5 adb -s 127.0.0.1:5555 shell getprop sys.boot_completed \
+              2>/dev/null | grep -q '^1'; then
+              echo ANDROID_BOOT_COMPLETED | tee runtime-prerequisites/boot.txt
+              break
+            fi
+            sleep 4
+          done
+          test -s runtime-prerequisites/boot.txt
+          adb -s 127.0.0.1:5555 shell getprop ro.product.cpu.abilist | tee runtime-prerequisites/abis.txt
+          grep -q arm64-v8a runtime-prerequisites/abis.txt
+      - name: Download original assets and verify every split SHA-256
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors \
+            --connect-timeout 30 --max-time 1200 --silent --show-error \
+            --output split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          python3 tools/verify_original_splits.py . \
+            --output runtime-prerequisites/original_split_sha256.json
+      - name: Install original game without changing it; measure granted permissions
+        shell: bash
+        run: |
+          set -euo pipefail
+          SERIAL=127.0.0.1:5555
+          PKG=com.catsbit.oxidesurvivalisland
+          DIR=runtime-prerequisites
+          adb -s "$SERIAL" install-multiple -r \
+            base.apk split_config.arm64_v8a.apk \
+            split_config.xxhdpi.apk split_UnityDataAssetPack.apk \
+            > "$DIR/install.txt" 2>&1
+          grep -q '^Success' "$DIR/install.txt"
+          adb -s "$SERIAL" shell dumpsys package "$PKG" > "$DIR/dumpsys_package.txt"
+          adb -s "$SERIAL" shell cmd appops get "$PKG" > "$DIR/appops.txt" 2>&1 || true
+          if adb -s "$SERIAL" shell pm list packages com.google.android.gms \
+            > "$DIR/play_packages.txt" 2>&1; then
+            echo __PACKAGE_QUERY_COMPLETED__ >> "$DIR/play_packages.txt"
+          fi
+          adb -s "$SERIAL" shell pm list packages com.android.vending \
+            > "$DIR/play_store_packages.txt" 2>&1 || true
+          adb -s "$SERIAL" shell pm list features > "$DIR/device_features.txt" 2>&1 || true
+          adb -s "$SERIAL" shell dumpsys sensorservice > "$DIR/sensorservice.txt" 2>&1 || true
+          adb -s "$SERIAL" shell getprop ro.opengles.version > "$DIR/opengles_version.txt"
+          adb -s "$SERIAL" shell getprop ro.build.type > "$DIR/build_type.txt"
+          adb -s "$SERIAL" shell getprop ro.hardware > "$DIR/hardware.txt"
+          python3 tools/audit_android_environment.py --serial "$SERIAL" --out "$DIR"
+      - name: Perform paired original boot checks before and after normal Android grants
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n tools/run_android_permission_ab.sh
+          bash tools/run_android_permission_ab.sh \
+            127.0.0.1:5555 original-manifest/aapt_permissions.txt \
+            runtime-prerequisites
+      - name: Explain the actual test result without boot success inference
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Android 13 ARM64: original Oxide runtime prerequisites'
+            echo 'Exact original signed 4-split APKs, no game patch, no spoofed attestation.'
+            echo 'A/B comparison only. CI green does NOT mean original game boot or multiplayer.'
+            if [ -s runtime-prerequisites/comparison.md ]; then
+              cat runtime-prerequisites/comparison.md
+            else
+              echo 'Runtime audit missing; inspect failed stage.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve Android evidence but never proprietary APK files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-permission-ab-evidence
+          path: runtime-prerequisites/
+          if-no-files-found: warn
+          retention-days: 14
