@@ -14,7 +14,7 @@ def count_markers(path):
         for y in range(y1,y2):
             for x in range(x1,x2):
                 r,g,b=im.getpixel((x,y))
-                if 15<=r<=80 and g>=220 and 65<=b<=155 and g>r*2 and g>b*1.3:
+                if 15<=r<=110 and g>=190 and b<=160 and g>r*2 and g>b*1.3:
                     hits+=1
     return hits
 
