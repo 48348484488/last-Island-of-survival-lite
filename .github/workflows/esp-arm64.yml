@@ -48,7 +48,6 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: esp_core
-      - uses: android-actions/setup-android@v3
       - name: Install supported Android NDK
         run: |
           yes | sdkmanager --licenses >/dev/null || true
