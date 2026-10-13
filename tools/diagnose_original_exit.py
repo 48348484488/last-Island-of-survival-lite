@@ -46,10 +46,16 @@ def diagnose(directory):
             m = PID_RE.search(x['msg'])
             if m:
                 starts.append({**x, 'started_pid': int(m.group(1))})
-    initial = starts[0] if starts else None
+    # Android logcat -c can leave older events in other buffers. A paired
+    # experiment may contain prior Oxide starts even after buffer clearing.
+    # Select the MOST RECENT OxideActivity launch (not the first), and only
+    # associate evidence at/after that launch with its PID.
+    initial = max(starts, key=lambda x: x['timestamp']) if starts else None
     pid = initial['started_pid'] if initial else None
     signals, finishes, deaths, other_processes = [], [], [], []
     for x in rows:
+        if initial and x['timestamp'] < initial['timestamp']:
+            continue
         if x['tag'] == 'Process':
             m = SIG_RE.search(x['msg'])
             if m and int(m.group(2)) == 9 and pid is not None and int(m.group(1)) == pid:
@@ -76,6 +82,8 @@ def diagnose(directory):
                            'INITIAL_ACTIVITY_NO_SELF_SIGKILL_OBSERVED' if initial else
                            'ORIGINAL_ACTIVITY_START_NOT_FOUND'),
         'initial_activity_pid': pid,
+        'activity_starts_observed': len(starts),
+        'selection_policy': 'LATEST_ACTIVITY_START_NOT_BACKGROUND_SERVICE',
         'initial_activity_start': initial['timestamp'] if initial else None,
         'activity_finish': finishes[0]['timestamp'] if finishes else None,
         'first_self_sigkill': self_kills[0]['timestamp'] if self_kills else None,
@@ -103,7 +111,8 @@ def markdown(r):
         return 'not observed' if v is None else str(v)
     lines = ['# Original Oxide ARM64 process exit: evidence audit', '',
              f"- Classification: **{r['classification']}**",
-             f"- Initial Activity PID: {t(r['initial_activity_pid'])}",
+             f"- Most recent Activity PID: {t(r['initial_activity_pid'])}",
+             f"- Activity launch events observed: {r['activity_starts_observed']}",
              f"- Activity process start: {t(r['initial_activity_start'])}",
              f"- Activity finish event: {t(r['activity_finish'])}",
              f"- First self-directed SIGKILL log: {t(r['first_self_sigkill'])}",
