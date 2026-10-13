@@ -23,6 +23,10 @@ jobs:
             base.apk
             split_config.arm64_v8a.apk
             split_config.xxhdpi.apk
+            tools
+            tests
+      - name: Unit test original Activity exit analyzer
+        run: python3 -m unittest discover -s tests -p 'test_diagnose_original_exit.py' -v
       - name: Configure ARM64 kernel Binder and Android debugging tools
         shell: bash
         run: |
@@ -195,6 +199,19 @@ jobs:
             echo "Original app did not pass basic boot; inspect unmodified native crash logs."
             exit 1
           fi
+      - name: Generate evidence-based termination classification
+        if: always()
+        shell: bash
+        run: |
+          if [ -s oxide-original-arm64/all_buffers.txt ] && [ -f tools/diagnose_original_exit.py ]; then
+            python3 tools/diagnose_original_exit.py oxide-original-arm64 \
+              > oxide-original-arm64/forensic_run_output.txt 2>&1 || {
+                cat oxide-original-arm64/forensic_run_output.txt
+                echo ANALYSIS_FAILED > oxide-original-arm64/forensic_status.txt
+              }
+          else
+            echo MISSING_EVIDENCE_OR_ANALYZER > oxide-original-arm64/forensic_status.txt
+          fi
       - name: Save proof and exact limitations
         if: always()
         shell: bash
@@ -212,6 +229,10 @@ jobs:
             fi
             echo "This is a process start test only, not proof of a playable menu, multiplayer player coordinates, or ESP."
             echo "No APK was modified and no process injection was performed."
+            if [ -s oxide-original-arm64/forensic_summary.md ]; then
+              echo '### Process-exit evidence audit'
+              cat oxide-original-arm64/forensic_summary.md
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Preserve logs without redistributing APKs
         if: always()
