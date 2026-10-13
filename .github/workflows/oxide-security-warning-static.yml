@@ -1,0 +1,72 @@
+name: Original Oxide security-warning literal source - read-only static scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-security-warning-static.yml"
+      - "tools/scan_original_warning_literals.py"
+      - "tests/test_scan_original_warning_literals.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-apk-warning-origin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+            tools
+            tests
+      - name: Verify diagnostic scanner and origin-not-causation tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_scan_original_warning_literals.py' -v
+      - name: Scan original SHA256-verified APK assets without modifying files
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/scan_original_warning_literals.py \
+            base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk \
+            --out warning-audit
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          d=json.loads(Path("warning-audit/warning_origin.json").read_text())
+          assert len(d["apks_scanned"])==3,d
+          assert not d["game_modified"],d
+          assert not d["specific_security_trigger_identified"],d
+          print("ORIGINAL_3_SPLITS_SHA256_VERIFIED=TRUE")
+          print("SECURITY_STRING_SCAN_COMPLETED_NO_CAUSATION_INFERENCE=TRUE")
+          PY
+      - name: Record exact evidence scope
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "# Original Oxide 1.14.11949 warning literal ownership"
+            echo "Scans intact original APK members for exact warning text without unpacking or re-signing APKs."
+            if [ -f warning-audit/warning_origin.md ]; then
+              cat warning-audit/warning_origin.md
+            else
+              echo "No verified report; see failed stage."
+            fi
+            echo "Plaintext source does not identify why the app security system exited."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save textual diagnostics only (no original binaries)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-security-warning-literals
+          path: warning-audit/
+          if-no-files-found: warn
+          retention-days: 14
