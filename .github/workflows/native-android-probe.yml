@@ -51,6 +51,33 @@ jobs:
             cat /proc/config.gz 2>/dev/null | zcat | grep 'ANDROID_BINDER\|ASHMEM' || true
           } > native-arm64-probe/environment.txt 2>&1
           cat native-arm64-probe/environment.txt
+      - name: Inspect kernel binder configuration and module availability
+        shell: bash
+        run: |
+          set -u
+          {
+            echo "# Kernel build options and installability"
+            KERNEL="$(uname -r)"
+            echo "running kernel: $KERNEL"
+            for CONFIG in "/boot/config-$KERNEL" "/lib/modules/$KERNEL/build/.config"; do
+              if [ -f "$CONFIG" ]; then
+                grep -E 'CONFIG_ANDROID_BINDER_(IPC|FS|DEVICES)' "$CONFIG" || true
+              fi
+            done
+            echo "# Installed modules"
+            find "/lib/modules/$KERNEL" -iname '*binder*' 2>/dev/null | head -20 || true
+            echo "# Kernel module packaging"
+            apt-cache policy "linux-modules-extra-$KERNEL" "linux-modules-$KERNEL" || true
+            if apt-cache show "linux-modules-extra-$KERNEL" 2>/dev/null | grep -q '^Package:'; then
+              echo "extra package available: trying installation"
+              timeout 180 sudo apt-get install -y "linux-modules-extra-$KERNEL" || true
+              sudo modprobe binder_linux devices=binder,hwbinder,vndbinder 2>&1 || true
+              grep -i binder /proc/filesystems || true
+            else
+              echo "No currently indexed extra-module package for running kernel"
+            fi
+          } > native-arm64-probe/kernel_binder.txt 2>&1
+          cat native-arm64-probe/kernel_binder.txt
       - name: Try binderfs without modifying host kernel configuration
         shell: bash
         run: |
