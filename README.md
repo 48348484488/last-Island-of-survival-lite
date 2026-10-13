@@ -108,3 +108,13 @@ O [catálogo oficial de SDK e host ARM64](../../actions/runs/38481155935) conté
 Relatórios: [linha do tempo original](reports/1.14.11949-original-process-boot-timeline.md) e [crash no emulador Google Play](reports/1.14.11949-official-google-play-emulator-boot.md).
 
 **Não há prova de jogo em partida, ESP real, token Play Integrity ou garantia de compatibilidade.** Nenhum APK foi modificado ou qualquer verificação de integridade contornada.
+
+## Causa do crash do Oxide no Android Google Play x86_64: identificada
+
+[Verificacao do APK original mais dois controles, 13 testes aprovados](../../actions/runs/38484496716).
+
+O Oxide original (PID 4078) registrou Berberis: Undefined instruction 0xd5380429 e, em seguida, SIGILL. A tombstone localizou a falha em libloader.so +0x830BEC, onde o ELF original contem a instrucao ARM64 MRS x9, ID_AA64PFR1_EL1. Um teste JNI isolado reproduziu o erro no mesmo tipo de tradutor (opcode 0xd5380420, apenas com registrador de destino diferente); no Android ARM64 nativo, essa leitura funcionou.
+
+**Resultado:** incompatibilidade real do tradutor ARM64 Berberis com essa instrução no Android 15 Google Play x86_64. [Relatorio tecnico detalhado](reports/1.14.11949-arm64-system-register-reproduction.md).
+
+**Ainda nao resolvido:** no Android ARM64 nativo, o Oxide ultrapassa o inicio da Unity, mas o aplicativo original se autoencerra com SIGKILL por motivo distinto ainda nao estabelecido. Nenhuma partida multiplayer nem ESP de jogadores reais foi validado.
