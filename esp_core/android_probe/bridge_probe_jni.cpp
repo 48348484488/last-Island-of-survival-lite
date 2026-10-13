@@ -1,4 +1,6 @@
 #include <jni.h>
+#include <array>
+#include <cstring>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -73,32 +75,80 @@ Java_com_oxide_bridgeprobe_MainActivity_runNativeSmoke(JNIEnv*, jclass) {
     return static_cast<jint>(verify());
 }
 
+
 /*
- * Separate non-production render test vector.
- * The point is intentionally synthetic. It cannot observe the Oxide process.
+ * Caller-provided snapshots (Java → JNI → C++). No process scanning.
+ * A null return denotes invalid data, while an empty array denotes
+ * a valid snapshot with no visible, fresh players.
+ * All arrays are copied into bounded native buffers.
  */
 extern "C" JNIEXPORT jfloatArray JNICALL
-Java_com_oxide_bridgeprobe_MainActivity_nativeDebugRects(JNIEnv* env, jclass) {
-    auto f=camera();
-    oxide_esp_timed_frame timed{};
-    timed.abi_version=OXIDE_ESP_TIMED_ABI_VERSION;
-    timed.now_ms=20000;
-    timed.camera_sample_ms=19999;
-    timed.max_age_ms=100;
-    timed.camera=f;
-    oxide_esp_timed_player actor{};
-    actor.sample.entity_id=1;
-    actor.sample.flags=OXIDE_ESP_PLAYER_VALID;
-    actor.sample.head[1]=1.f;
-    actor.sample.head[2]=-5.f;
-    actor.sample.feet[1]=-1.f;
-    actor.sample.feet[2]=-5.f;
-    actor.sample_ms=19999;
-    oxide_esp_box box{};
-    if (oxide_esp_project_timed_v2(&timed,&actor,&box,1)!=1) return nullptr;
-    const jfloat values[4]={box.left,box.top,box.right,box.bottom};
-    jfloatArray result=env->NewFloatArray(4);
-    if (!result) return nullptr;
-    env->SetFloatArrayRegion(result,0,4,values);
-    return result;
+Java_com_oxide_bridgeprobe_MainActivity_nativeProjectSnapshot(
+    JNIEnv* env, jclass,
+    jfloatArray matrix, jint width, jint height,
+    jlong now_ms, jlong camera_ms, jint max_age_ms, jint flags,
+    jlongArray ids, jfloatArray head_feet, jlongArray sample_times) {
+    if (!matrix || !ids || !head_feet || !sample_times ||
+        width<=0 || height<=0 || now_ms<0 || camera_ms<0 ||
+        max_age_ms<=0 || max_age_ms>static_cast<jint>(OXIDE_ESP_MAX_AGE_MS) ||
+        (flags & ~(static_cast<jint>(OXIDE_ESP_FRAME_COLUMN_MAJOR | OXIDE_ESP_FRAME_Z_ZERO_TO_ONE)))!=0) {
+        return nullptr;
+    }
+    if (env->GetArrayLength(matrix)!=16) return nullptr;
+    const jsize count=env->GetArrayLength(ids);
+    if (count<0 || count>static_cast<jsize>(OXIDE_ESP_MAX_PLAYERS) ||
+        env->GetArrayLength(head_feet)!=count*6 ||
+        env->GetArrayLength(sample_times)!=count) return nullptr;
+
+    oxide_esp_timed_frame frame{};
+    frame.abi_version=OXIDE_ESP_TIMED_ABI_VERSION;
+    frame.now_ms=static_cast<uint64_t>(now_ms);
+    frame.camera_sample_ms=static_cast<uint64_t>(camera_ms);
+    frame.max_age_ms=static_cast<uint32_t>(max_age_ms);
+    frame.camera.abi_version=OXIDE_ESP_ABI_VERSION;
+    frame.camera.flags=static_cast<uint32_t>(flags);
+    frame.camera.width=static_cast<uint32_t>(width);
+    frame.camera.height=static_cast<uint32_t>(height);
+    frame.camera.player_count=static_cast<uint32_t>(count);
+    env->GetFloatArrayRegion(matrix,0,16,frame.camera.view_projection);
+    if (env->ExceptionCheck()) return nullptr;
+
+    std::array<oxide_esp_timed_player,OXIDE_ESP_MAX_PLAYERS> players{};
+    std::array<jlong,OXIDE_ESP_MAX_PLAYERS> raw_ids{};
+    std::array<jlong,OXIDE_ESP_MAX_PLAYERS> raw_times{};
+    std::array<jfloat,OXIDE_ESP_MAX_PLAYERS*6> raw_coords{};
+    if(count) {
+        env->GetLongArrayRegion(ids,0,count,raw_ids.data());
+        env->GetLongArrayRegion(sample_times,0,count,raw_times.data());
+        env->GetFloatArrayRegion(head_feet,0,count*6,raw_coords.data());
+        if(env->ExceptionCheck()) return nullptr;
+        for(jsize i=0;i<count;++i) {
+            if(raw_ids[i]<0 || raw_times[i]<0) return nullptr;
+            auto& p=players[static_cast<size_t>(i)];
+            p.sample.entity_id=static_cast<uint64_t>(raw_ids[i]);
+            p.sample.flags=raw_ids[i]!=0 ? OXIDE_ESP_PLAYER_VALID : 0u;
+            p.sample_ms=static_cast<uint64_t>(raw_times[i]);
+            for(int j=0;j<3;++j) {
+                p.sample.head[j]=raw_coords[6*i+j];
+                p.sample.feet[j]=raw_coords[6*i+j+3];
+            }
+        }
+    }
+    std::array<oxide_esp_box,OXIDE_ESP_MAX_PLAYERS> projected{};
+    int result=oxide_esp_project_timed_v2(&frame,players.data(),projected.data(),OXIDE_ESP_MAX_PLAYERS);
+    if (result<0) return nullptr;
+    jfloatArray out=env->NewFloatArray(static_cast<jsize>(result*4));
+    if (!out) return nullptr;
+    if (!result) return out;
+
+    std::array<jfloat,OXIDE_ESP_MAX_PLAYERS*4> coords{};
+    for(int i=0;i<result;++i) {
+        coords[4*i]=projected[static_cast<size_t>(i)].left;
+        coords[4*i+1]=projected[static_cast<size_t>(i)].top;
+        coords[4*i+2]=projected[static_cast<size_t>(i)].right;
+        coords[4*i+3]=projected[static_cast<size_t>(i)].bottom;
+    }
+    env->SetFloatArrayRegion(out,0,static_cast<jsize>(result*4),coords.data());
+    if (env->ExceptionCheck()) return nullptr;
+    return out;
 }
