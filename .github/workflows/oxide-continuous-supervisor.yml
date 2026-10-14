@@ -5,6 +5,7 @@ name: "Oxide - Auto-continue events and stuck-run watchdog"
 on:
   workflow_run:
     workflows:
+      - "Oxide native ARM64 virtual signal observability preflight"
       - "Oxide M1-M2 - ARM64 signal evidence regression"
       - "Oxide original APK on native ARM64 Android container"
       - "Native Apple Silicon ARM64 Google Play Android emulator boot probe"
