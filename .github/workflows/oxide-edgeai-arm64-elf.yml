@@ -85,7 +85,15 @@ jobs:
           tempdir="$(mktemp -d)"
           trap 'rm -rf "$tempdir"' EXIT
           unzip -p split_config.arm64_v8a.apk lib/arm64-v8a/libloader.so > "$tempdir/libloader.so"
-          llvm-objdump --disassemble-symbols=JNI_OnLoad --no-show-raw-insn "$tempdir/libloader.so" \
+          read -r start end < <(python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('edgeai-static-evidence/loader-jni-arm64-control-transfers.json').read_text())
+          start=int(d['entry'],16)
+          print(hex(start),hex(start+d['size_bytes']))
+          PY
+          )
+          llvm-objdump -d --no-show-raw-insn --start-address="$start" --stop-address="$end" "$tempdir/libloader.so" \
             > edgeai-static-evidence/loader-jni-llvm-disasm.txt
           python3 - <<'PY'
           import json
@@ -115,7 +123,8 @@ jobs:
           Path('edgeai-static-evidence/loader-jni-llvm-comparison.json').write_text(
               json.dumps(report,indent=2)+'\n')
           print(json.dumps({k:v for k,v in report.items() if k not in ('scanner_only','llvm_only')},indent=2))
-          assert len(matched)>=20,report
+          assert 20 <= len(entries) <= d['size_bytes']//4,report
+          assert len(matched)==len(ours) and not llvm_only,report
           PY
       - name: Upload audit logs, no game executables
         if: always()
