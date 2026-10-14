@@ -61,6 +61,7 @@ jobs:
             split_config.arm64_v8a.apk
             split_config.xxhdpi.apk
             tools
+            tests
             esp_core
       - uses: actions/download-artifact@v4
         with:
