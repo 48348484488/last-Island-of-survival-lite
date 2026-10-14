@@ -2,6 +2,12 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### EdgeAI ARM64: comparacao independente com LLVM nas APIs do Unity
+
+[GitHub Actions #38566956506](../../actions/runs/38566956506): **37 testes aprovados**, com **57/57 transferencias de controle** equivalentes por endereco e tipo de instrucao, comparadas ao LLVM em `UnitySendMessage` (3), `UnityInitialize` (32), `UnityShutdown` (5) e `JNI_OnLoad` (17) do `libunity.so` original. Alem disso, [#38565737985](../../actions/runs/38565737985) identificou duas condicoes locais `CMP/B.HI` com maximo de indice 7 nos despachos da `libloader.so`. [Relatorio completo](reports/1.14.11949-edgeai-unity-llvm.md) | [JSON e disassembly](../../actions/runs/38566956506/artifacts/11895846504).
+
+**Nao prova** recuperacao de metodos de gameplay, camera ou jogadores, nem reconstrucao C++. Sao verificacoes estaticas do ELF ARM64 sem executar o jogo.
+
 ### Triagem real de simbolos IL2CPP pela EdgeAI
 
 O [workflow #38563095341](../../actions/runs/38563095341) **passou 21 testes** e pesquisou os 1.747 simbolos STT_FUNC nomeados do `libil2cpp.so` original ARM64. Os nomes contendo `camera`, `player`, `position`, `network` ou `entity` tiveram **zero correspondencias**. Os quatro nomes contendo `transform` sao funcoes `std::__ndk1::collate::do_transform`, nao `Unity Transform`. Isso delimita o valor da lista ELF sem provar que metodos de gameplay estejam ausentes do executavel.
