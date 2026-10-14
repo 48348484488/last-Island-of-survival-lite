@@ -13,6 +13,7 @@ on:
       - "tools/edgeai_arm64_table_entries.py"
       - "tools/edgeai_arm64_unity_exports.py"
       - "tools/edgeai_arm64_llvm_crosscheck.py"
+      - "tools/edgeai_arm64_arg_guards.py"
       - "tools/edgeai_arm64_symbol_triage.py"
       - "tests/test_edgeai_arm64_split.py"
       - "tests/test_edgeai_arm64_branch_map.py"
@@ -22,6 +23,7 @@ on:
       - "tests/test_edgeai_arm64_table_entries.py"
       - "tests/test_edgeai_arm64_unity_exports.py"
       - "tests/test_edgeai_arm64_llvm_crosscheck.py"
+      - "tests/test_edgeai_arm64_arg_guards.py"
       - "tests/test_edgeai_arm64_symbol_triage.py"
       - ".github/workflows/oxide-edgeai-arm64-elf.yml"
   workflow_dispatch:
@@ -47,6 +49,7 @@ jobs:
             tools/edgeai_arm64_table_entries.py
             tools/edgeai_arm64_unity_exports.py
             tools/edgeai_arm64_llvm_crosscheck.py
+            tools/edgeai_arm64_arg_guards.py
             tools/edgeai_arm64_symbol_triage.py
             tests/test_edgeai_arm64_split.py
             tests/test_edgeai_arm64_branch_map.py
@@ -56,6 +59,7 @@ jobs:
             tests/test_edgeai_arm64_table_entries.py
             tests/test_edgeai_arm64_unity_exports.py
             tests/test_edgeai_arm64_llvm_crosscheck.py
+            tests/test_edgeai_arm64_arg_guards.py
             tests/test_edgeai_arm64_symbol_triage.py
             split_config.arm64_v8a.apk
           sparse-checkout-cone-mode: false
@@ -75,6 +79,7 @@ jobs:
           python3 -m unittest discover -s tests -p test_edgeai_arm64_table_entries.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_unity_exports.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_llvm_crosscheck.py -v
+          python3 -m unittest discover -s tests -p test_edgeai_arm64_arg_guards.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_symbol_triage.py -v
       - name: Audit unmodified 80MB APK and 236MB IL2CPP library read-only
         shell: bash
@@ -342,6 +347,37 @@ jobs:
           assert all(1<=len(s["candidate_entries"])<=64 for s in x["sites"] if s["status"]=="STATIC_CANDIDATES"),x
           assert not x["game_executed"] and not x["all_runtime_targets_confirmed"],x
           print("EDGEAI_ORIGINAL_LOADER_BOUNDED_TABLE_BYTES_CHECK_PASS")
+          PY
+      - name: Recover guarded entry argument comparison from unmodified UnityInitialize
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,sys
+          from pathlib import Path
+          sys.path.insert(0,"tools")
+          from edgeai_arm64_branch_map import analyze_split
+          from edgeai_arm64_arg_guards import infer
+          apk=Path("split_config.arm64_v8a.apk")
+          disassembly=Path("edgeai-static-evidence/llvm-unity-UnityInitialize.txt").read_text()
+          scan=analyze_split(apk,name="libunity.so",function="UnityInitialize",max_results=1000)
+          evidence=infer(scan,disassembly)
+          target=[g for g in evidence["candidates"]
+                  if g["copy_pc"]=="0x935b08"
+                  and g["compare_pc"]=="0x935b54"
+                  and g["conditional_branch_pc"]=="0x935b58"
+                  and g["branch_target"]=="0x935c6c"
+                  and g["argument_index"]==1
+                  and g["saved_register"]=="w21"
+                  and g["compared_immediate"]==736
+                  and g["branch_if_argument"]=="not_equal"]
+          assert len(target)==1,evidence
+          assert not evidence["global_path_feasibility_proven"],evidence
+          assert not evidence["original_code_executed"],evidence
+          p=Path("edgeai-static-evidence/oxide-unityinitialize-argument-guard.json")
+          p.write_text(json.dumps(evidence,indent=2)+"\n")
+          print("EDGEAI_REAL_UNITY_INITIALIZE_ARG1_COMPARE_736_PASS")
+          print(json.dumps(target,indent=2))
           PY
       - name: Upload audit logs, no game executables
         if: always()
