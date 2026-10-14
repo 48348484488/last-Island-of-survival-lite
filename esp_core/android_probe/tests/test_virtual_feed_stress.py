@@ -1,7 +1,9 @@
 import tempfile
 import unittest
+import sys
 from pathlib import Path
 from PIL import Image, ImageDraw
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from check_virtual_feed_stress import evaluate, STAGES, COUNT
 
 def snapshot(path, center=360, visible=True):
