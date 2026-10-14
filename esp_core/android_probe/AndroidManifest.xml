@@ -10,5 +10,12 @@
             </intent-filter>
         </activity>
         <service android:name=".OverlayProbeService" android:exported="false" />
+        <!-- Diagnostic-only: external synthetic feed requires DUMP permission (ADB shell). -->
+        <receiver android:name=".SyntheticFeedReceiver" android:exported="true"
+                  android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="com.oxide.bridgeprobe.SYNTHETIC_FEED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
