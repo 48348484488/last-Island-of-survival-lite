@@ -2,6 +2,32 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### Auditoria completa dos recursos Unity (100% virtual)
+
+As execucoes [#38491435687](../../actions/runs/38491435687) e
+[#38491935549](../../actions/runs/38491935549) confirmaram todos os
+quatro APKs originais por SHA-256 e analisaram **1.741 arquivos internos**,
+somando **1.251.260.312 bytes descompactados dos ZIPs**, sem ignorar
+arquivos. **Nenhuma** das quatro frases exatas do aviso de seguranca
+foi encontrada em UTF-8/UTF-16LE/UTF-16BE nessa camada.
+
+A nova auditoria de formato identificou **277 AssetBundles UnityFS**
+com diretorios internos de blocos sinalizados como **LZ4HC** nos
+cabecalhos, e dois arquivos GZIP. Isso explica por que a varredura
+dos bytes do ZIP nao equivale a ler todo o conteudo descompactado da
+Unity. Ainda nao examinamos os blocos internos de recursos dos
+277 UnityFS; a causa do aviso de seguranca continua desconhecida.
+
+**Validacao:** 17 testes de regressao passaram na execucao mais
+recente. Nenhum APK foi modificado, nenhum aparelho fisico foi
+utilizado e nao houve comprovacao de partida multiplayer ou ESP
+com dados de jogadores reais.
+
+[Relatorio completo](reports/1.14.11949-full-original-unity-asset-audit.md) |
+[Workflow automatizado](../../actions/workflows/oxide-original-full-four-warning-scan.yml) |
+[Leitor de formatos Unity](tools/inventory_original_asset_containers.py).
+
+
 ### Sequência de saída do Oxide original confirmada em Android virtual
 
 O [workflow #38491070005](../../actions/runs/38491070005) passou **10 testes**
