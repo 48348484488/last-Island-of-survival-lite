@@ -293,9 +293,29 @@ jobs:
                   (output/("llvm-unity-"+name+"-comparison.json")).write_text(json.dumps(report,indent=2)+"\n")
                   assert report["status"]=="MATCH",report
                   assert report["scanner_controls"]==report["llvm_controls"]==report["exact_agreements"],report
+                  assert report["direct_target_comparisons"]==report["direct_target_agreements"],report
                   summaries.append({"name":name,"matched":report["exact_agreements"],"size":scan["size_bytes"]})
               (output/"llvm-unity-four-export-summary.json").write_text(json.dumps(summaries,indent=2)+"\n")
               print("EDGEAI_ORIGINAL_UNITY_FOUR_EXPORT_LLVM_EXACT_PASS",json.dumps(summaries))
+          PY
+      - name: Cross-check all 117 original loader control targets against LLVM
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/edgeai_arm64_llvm_crosscheck.py \
+            edgeai-static-evidence/loader-jni-arm64-control-transfers.json \
+            edgeai-static-evidence/loader-jni-llvm-disasm.txt \
+            --output edgeai-static-evidence/loader-jni-exact-target-comparison.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("edgeai-static-evidence/loader-jni-exact-target-comparison.json").read_text())
+          assert d["function"]=="JNI_OnLoad",d
+          assert d["scanner_controls"]==d["llvm_controls"]==d["exact_agreements"]==117,d
+          assert d["direct_target_comparisons"]==d["direct_target_agreements"],d
+          assert d["direct_target_comparisons"]>20,d
+          assert not d["original_code_executed"],d
+          print("EDGEAI_ORIGINAL_LOADER_117_BRANCH_OPCODE_AND_TARGETS_MATCH")
           PY
       - name: Upload audit logs, no game executables
         if: always()
