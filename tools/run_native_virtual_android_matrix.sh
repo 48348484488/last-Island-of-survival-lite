@@ -152,8 +152,8 @@ PY
 tracepoint:binder:binder_transaction
 /args->to_proc == __ANDROID_SYSTEM_SERVER_HOST_PID__ && args->reply == 0/
 {
-  printf("ANDROID_BINDER host_sender=%d host_tid=%d dest_proc=%d dest_thread=%d transaction=%d code=%d reply=%d flags=%d comm=%s boot_ns=%llu\n",
-    pid,tid,args->to_proc,args->to_thread,args->debug_id,args->code,args->reply,args->flags,comm,nsecs);
+  printf("ANDROID_BINDER host_sender=%d host_tid=%d dest_proc=%d dest_thread=%d transaction=%d target_node=%d code=%d reply=%d flags=%d comm=%s boot_ns=%llu\n",
+    pid,tid,args->to_proc,args->to_thread,args->debug_id,args->target_node,args->code,args->reply,args->flags,comm,nsecs);
 }
 BTB
       sed -i "s/__ANDROID_SYSTEM_SERVER_HOST_PID__/$SERVER_HOST_PID/g" \
@@ -201,6 +201,44 @@ BTB
       exit 73
     fi
     echo KERNEL_TRACE_ATTACHED_BEFORE_ORIGINAL_ACTIVITY > "$DIR/kernel_trace_preflight.txt"
+    if [[ "${OXIDE_CAPTURE_BINDER_FINISH_WINDOW:-0}" == "1" ]]; then
+      # Calibration occurs entirely within the stock Android Settings UI.
+      adb -s "$SERIAL" shell am start -W -n com.android.settings/.Settings \
+        > "$DIR/settings_calibration_launch.txt" 2>&1 || true
+      SETTINGS_GUEST_PID="$(timeout 8 adb -s "$SERIAL" shell pidof com.android.settings | tr -d '\r' || true)"
+      if [[ "$SETTINGS_GUEST_PID" =~ ^[0-9]+$ ]]; then
+        sudo -n python3 - "$ROOT" "$CONTAINER_SERVER_INIT" "$SETTINGS_GUEST_PID" \
+          "$DIR/host_settings_namespace.json" <<'PY'
+import json,sys
+from pathlib import Path
+sys.path.insert(0,str(Path(sys.argv[1])/"tools"))
+from prove_original_host_pid_namespace import inspect
+result=inspect(Path("/proc"),int(sys.argv[2]),int(sys.argv[3]),package="com.android.settings")
+Path(sys.argv[4]).write_text(json.dumps(result,indent=2)+"\n")
+print(result)
+PY
+      else
+        echo SETTINGS_CALIBRATION_PID_MISSING > "$DIR/settings_calibration_status.txt"
+      fi
+      # Host and kernel timestamps use the same CLOCK_BOOTTIME clock.
+      python3 - "$SERIAL" "$DIR" <<'PY'
+import json,sys,time,subprocess
+from pathlib import Path
+before=time.clock_gettime_ns(time.CLOCK_BOOTTIME)
+res=subprocess.run(["adb","-s",sys.argv[1],"shell","input","keyevent","4"],
+                   capture_output=True,text=True,timeout=12)
+after=time.clock_gettime_ns(time.CLOCK_BOOTTIME)
+Path(sys.argv[2],"settings_calibration_back_output.txt").write_text(res.stdout+"\n"+res.stderr)
+Path(sys.argv[2],"settings_back_window.json").write_text(json.dumps({
+    "before_host_boot_ns":before,"after_host_boot_ns":after,
+    "input_keyevent_exit_code":res.returncode,
+    "note":"Android stock Settings BACK; never an original game intervention.",
+},indent=2)+"\n")
+PY
+      sleep 0.7
+      adb -s "$SERIAL" shell am force-stop com.android.settings \
+        > "$DIR/settings_calibration_force_stop.txt" 2>&1 || true
+    fi
   fi
   # Start rapid read-only PID observation BEFORE launching the original Activity.
   # This avoids relying only on am_proc_start events, which Android 12 can lose.

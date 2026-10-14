@@ -16,7 +16,7 @@ from diagnose_original_exit import PACKAGE
 LINE = re.compile(
     r"\bANDROID_BINDER\s+host_sender=(\d+)\s+host_tid=(\d+)\s+"
     r"dest_proc=(\d+)\s+dest_thread=(\d+)\s+"
-    r"transaction=(\d+)\s+code=(\d+)\s+reply=(\d+)\s+flags=(\d+)\s+"
+    r"transaction=(\d+)\s+(?:target_node=(\d+)\s+)?code=(\d+)\s+reply=(\d+)\s+flags=(\d+)\s+"
     r"comm=(\S+)\s+boot_ns=(\d+)\b"
 )
 
@@ -57,7 +57,7 @@ def inspect(root):
         if not m:
             continue
         total_binder += 1
-        (sender, thread, dest, dest_thread, transaction, code, reply,
+        (sender, thread, dest, dest_thread, transaction, target_node, code, reply,
          flags, comm, when_ns) = m.groups()
         when_ns = int(when_ns)
         if int(sender) != original_host_pid or int(dest) != server["host_pid"]:
@@ -69,6 +69,7 @@ def inspect(root):
             "sender_host_thread_id": int(thread),
             "destination_system_server_host_pid": int(dest),
             "transaction_id": int(transaction),
+            "target_node_id": int(target_node) if target_node else None,
             "numeric_transaction_code": int(code),
             "flags": int(flags),
             "kernel_boot_ns": when_ns,
