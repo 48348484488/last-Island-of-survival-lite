@@ -2,6 +2,12 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### EdgeAI: comparação de argumento recuperada em UnityInitialize real
+
+O [teste #38570345080](../../actions/runs/38570345080) aprovou **59 regressões** e recuperou, sem executar o jogo, uma condição ARM64 verificável em `libunity.so`: `0x935B08: MOV W21,W1` → `0x935B54: CMP W21,#0x2E0` → `0x935B58: B.NE 0x935C6C`. A EdgeAI classifica isso como **segundo argumento diferente de 736**, apoiando-se na preservação do registrador `W21` definida pelo ABI AAPCS64. A análise rejeita sequências com escrita ou efeito desconhecido no registrador e desvios que entrem no meio do intervalo acompanhado.
+
+O significado do segundo argumento **não foi identificado**. A inferência é linear e não prova todos os caminhos de execução. [Relatório](reports/1.14.11949-edgeai-unity-arg-guard.md) | [JSON e logs verificados](../../actions/runs/38570345080/artifacts/11897536364).
+
 ### EdgeAI ARM64: comparacao independente com LLVM nas APIs do Unity
 
 [GitHub Actions #38566956506](../../actions/runs/38566956506): **37 testes aprovados**, com **57/57 transferencias de controle** equivalentes por endereco e tipo de instrucao, comparadas ao LLVM em `UnitySendMessage` (3), `UnityInitialize` (32), `UnityShutdown` (5) e `JNI_OnLoad` (17) do `libunity.so` original. Alem disso, [#38565737985](../../actions/runs/38565737985) identificou duas condicoes locais `CMP/B.HI` com maximo de indice 7 nos despachos da `libloader.so`. [Relatorio completo](reports/1.14.11949-edgeai-unity-llvm.md) | [JSON e disassembly](../../actions/runs/38566956506/artifacts/11895846504).
