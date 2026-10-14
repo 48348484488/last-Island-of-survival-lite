@@ -1,8 +1,13 @@
 name: Oxide original APK on native ARM64 Android container
 
-# Run the expensive ~1 GB APK download / Android container test intentionally.
-# Fast, no-device regression checks run on every relevant push in physical-adb-contract.yml.
+# Explicit original Android launch requested for virtual-only testing.
+# Push trigger is scoped to this workflow; routine repository changes do
+# not re-download the ~867MB signed asset split.
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/redroid-original-smoke.yml"
   workflow_dispatch:
 
 permissions:
@@ -117,6 +122,12 @@ jobs:
             -n "$PKG/cTOOT3.abKmV1.tP0Gr1.OxideActivity" \
             > oxide-original-arm64/launch.txt 2>&1 || true
           cat oxide-original-arm64/resolved_launcher.txt oxide-original-arm64/launch.txt
+          # Capture the actual original Activity as early as possible; preserve
+          # both screenshot and Activity state without touching APK/security.
+          adb -s "$SERIAL" shell dumpsys activity activities \
+            > oxide-original-arm64/activities_immediate.txt 2>&1 || true
+          adb -s "$SERIAL" exec-out screencap -p \
+            > oxide-original-arm64/screen_immediate.png 2>/dev/null || true
           # Observe the first five seconds at high temporal resolution; the
           # original may start and exit before the old 10-second checkpoint.
           {
@@ -129,6 +140,10 @@ jobs:
                   | grep -E '^(Name|State|VmRSS|VmSize|Threads):' || true
                 echo "oom_score_adj / oom_score:"
                 adb -s "$SERIAL" shell "cat /proc/$PID/oom_score_adj /proc/$PID/oom_score" 2>/dev/null || true
+              fi
+              if [ "$sec" = 1 ]; then
+                adb -s "$SERIAL" exec-out screencap -p \
+                  > oxide-original-arm64/screen_1s.png 2>/dev/null || true
               fi
               if [ "$sec" = 2 ]; then
                 adb -s "$SERIAL" exec-out screencap -p \
