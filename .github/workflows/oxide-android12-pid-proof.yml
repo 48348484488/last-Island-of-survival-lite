@@ -1,0 +1,81 @@
+name: Oxide Android12 virtual original Activity PID and SIGKILL archived replay
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-android12-pid-proof.yml"
+      - "tools/verify_virtual_android12_process.py"
+      - "tests/test_verify_virtual_android12_process.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify-archived-real-android12:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Validate source association and fail-closed regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_verify_virtual_android12_process.py' -v
+          python3 -m unittest discover -s tests -p 'test_diagnose_virtual_activity_pid.py' -v
+      - name: Retrieve real, unmodified original Oxide virtual Android12 evidence (no APK)
+        uses: actions/download-artifact@v4
+        with:
+          name: oxide-original-virtual-android12-precise-lifecycle
+          run-id: 38488270142
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: archived-android12
+      - name: Correlate exact resumed Activity, PID trace and exit signal status
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/verify_virtual_android12_process.py \
+            archived-android12/android_12 --out original-pid-proof
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("original-pid-proof/android12_activity_pid_exit_verified.json").read_text())
+          assert r["status"]=="ORIGINAL_ACTIVITY_PID_AND_SIGNAL_CONFIRMED",r
+          assert r["activity_snapshot_pid"]==1829,r
+          assert r["main_package_pid_sample_count"]>=30,r
+          assert r["snapshot_activity_resumed"],r
+          assert r["prior_pid_scoped_logcat_self_sigkill"],r
+          assert r["android_exit_info_sigkill_status9"],r
+          assert r["specific_game_security_trigger"]=="UNKNOWN",r
+          print("REAL_UNMODIFIED_OXIDE_ANDROID12_ACTIVITY_PID_SIGKILL=CONFIRMED")
+          print("GAME_SECURITY_TRIGGER=UNKNOWN")
+          print("MULTIPLAYER_ESP=NOT_VERIFIED")
+          PY
+      - name: Report evidence limits
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Native ARM64 Android 12 virtual original Oxide process recovery"
+            echo "No physical Android, new game download or protection modifications."
+            if [ -f original-pid-proof/android12_activity_pid_exit_verified.md ]; then
+              cat original-pid-proof/android12_activity_pid_exit_verified.md
+            else
+              echo "No valid original-game PID proof produced."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save small verified replay report only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-android12-virtual-activity-pid-signal-proof
+          path: original-pid-proof/
+          retention-days: 14
+          if-no-files-found: warn
