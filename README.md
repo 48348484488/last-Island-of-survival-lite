@@ -2,6 +2,29 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### Overlay JNI funcionando nos Androids virtuais ARM64 12, 13 e 14
+
+Os testes reais no Redroid provaram o overlay **independente** com o
+mesmo APK em **Android 12, 13 e 14 ARM64**, sem aparelho fisico.
+O marcador sintetico apareceu com 2.112 pixels verdes por imagem
+com dados validos, e com 0 pixels para amostras vazias, antigas
+ou apos parar o Service, nas tres versoes.
+
+[Android 12 e 14: execucao aprovada #38543269293](../../actions/runs/38543269293) |
+[Android 13: execucao aprovada #38542414642](../../actions/runs/38542414642) |
+[Relatorio tecnico e capturas](reports/1.14.11949-native-virtual-overlay-android12-13-14.md).
+
+O [teste adicional #38543062941](../../actions/runs/38543062941)
+confirmou que o **mesmo Service Android, com o mesmo PID**, consegue
+mover a caixa, apaga-la quando os dados vencem e restaura-la com
+dados validos, tambem sem crash observado.
+
+**Limite:** estes sao snapshots sinteticos no Android real
+virtualizado; nao sao dados do Oxide multiplayer. O jogo original
+nao foi instalado nos testes, e seu encerramento com aviso de
+seguranca permanece uma questao separada.
+
+
 ### Overlay real no Android ARM64 virtual: dados validos, vazios, antigos e remocao
 
 A [execucao #38542414642](../../actions/runs/38542414642) instalou
