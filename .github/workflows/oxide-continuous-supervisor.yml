@@ -12,6 +12,7 @@ on:
       - "Oxide M3 - Android 16 ARM64 real boot failure diagnostics"
       - "Oxide M3-M4 - Original unchanged game on native virtual Android 15"
       - "Oxide virtual-only ARM64 Android 15 standalone overlay compatibility"
+      - "Oxide M5 - Original Oxide and standalone JNI overlay on native Android 16 ARM64"
       - "Oxide M3 - Android 16 ARM64 host ashmem prerequisite diagnosis"
       - "Oxide M3 - Compile-only ashmem Linux 6.17 ARM64 compatibility proof"
       - "Oxide M3 - Validate stock Android 16 ARM64 boot with upstream ashmem"
