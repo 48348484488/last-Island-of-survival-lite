@@ -2,6 +2,35 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### Compatibilidade grafica medida em Android virtual ARM64 (12, 13, 14)
+
+As execucoes [#38490256931](../../actions/runs/38490256931) e
+[#38490502668](../../actions/runs/38490502668) testaram, em APK de
+diagnostico **separado**, as mesmas alocacoes Android HardwareBuffer
+de 4x4 pixels com format 43 e 56 e uso 0xb00 observadas nos logs do
+Oxide original; tambem testaram RGBA8888 de controle.
+
+| Formato, uso 0xb00 | Android 12 | Android 13 | Android 14 |
+|---|---|---|---|
+| RGBA1010102 (43) | PASS | FAIL | FAIL |
+| R8 (56) | FAIL | FAIL | FAIL |
+| RGBA8888 (1) | PASS | PASS | PASS |
+
+Com uso 0x300, os resultados de cada formato permaneceram iguais.
+O erro do alocador do Redroid e reproduzivel **sem instalar o Oxide**,
+logo ha uma incompatibilidade grafica propria do ambiente. Isso nao
+comprova que esse erro provoque o alerta de seguranca; o jogo original
+tambem encerrou no Android 12, embora o buffer de formato 43
+funcione no diagnostico independente.
+
+[Relatorio e evidencias](reports/1.14.11949-virtual-android-gralloc-independent-reproduction.md) |
+[Applet Java isolado](graphics_lab/src/com/oxide/grallocprobe/MainActivity.java) |
+[Workflow da comparacao virtual](../../actions/workflows/oxide-virtual-gralloc-versions.yml).
+
+**Nao houve modificacao dos APKs originais, aparelho fisico,
+jogadores reais ou ESP em partida comprovado.**
+
+
 
 ### Diagnóstico de ambiente do Oxide original — execução virtual
 
