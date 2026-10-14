@@ -2,6 +2,35 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### UnityFS interno decodificado: 277/277 pacotes, somente ambiente virtual
+
+A [execucao real #38539788069](../../actions/runs/38539788069)
+concluiu a descompactacao **integral dos 277 UnityFS** do
+Oxide original 1.14.11949, apos validar todos os quatro APKs
+originais por SHA-256. O processamento, limitado em memoria e
+com verificacao dos limites dos blocos, examinou **11.123 blocos
+internos e 1.437.758.381 bytes**, catalogou 484 recursos e
+nao ignorou nenhum pacote. Foram **22 testes aprovados**.
+
+Uma excecao controlada resolveu o unico pacote pendente: o
+bundle original *monoscripts* Unity 6000 declara **16 bytes**
+alem do tamanho fisico do arquivo, mas todos os blocos e o
+diretorio foram validados dentro do tamanho real, sem modificar
+o APK. Ausencia dos literais pesquisados (Security Threat
+Detected by App, Security Threat, Threat Detected,
+5600:AA4C) nos dados descompactados **nao determina**
+qual rotina de protecao produziu o aviso no jogo.
+
+[Relatorio final da decodificacao UnityFS](reports/1.14.11949-complete-unityfs-internal-block-scan.md) |
+[Codigo do leitor com limites](tools/audit_original_unityfs_blocks.py) |
+[Workflow do teste](../../actions/workflows/oxide-unityfs-internal-audit.yml).
+
+Este resultado **nao** e prova de partida multiplayer ou ESP
+com jogadores reais; o APK original ainda se autoencerra
+nas execucoes de Redroid. Seguimos 100% virtual, sem aparelho
+fisico, sem alteracoes nos APKs ou protecoes.
+
+
 ### Auditoria completa dos recursos Unity (100% virtual)
 
 As execucoes [#38491435687](../../actions/runs/38491435687) e
