@@ -83,6 +83,16 @@ jobs:
             echo KERNEL_SIGNAL_NOT_OBSERVED > signal-preflight/probe_status.txt
           fi
 
+      - name: Require a real controlled host signal before marking probe passed
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s signal-preflight/probe_status.txt
+          grep -qx 'CONTROLLED_KERNEL_SIGNAL_OBSERVED' signal-preflight/probe_status.txt
+          test -s signal-preflight/controlled_sender.txt
+          test -s signal-preflight/bpftrace_output.txt
+          echo 'CONTROLLED_ARM64_SIGNAL_CAPTURE=VERIFIED'
+
       - name: Report exact capability and limitations
         if: always()
         shell: bash
