@@ -9,6 +9,7 @@ on:
       - ".github/workflows/oxide-m4-android16-binder-finish-origin.yml"
       - "tools/audit_original_binder_finish_window.py"
       - "tests/test_audit_original_binder_finish_window.py"
+      - "tools/run_native_virtual_android_matrix.sh"
       - "tools/corroborate_original_kernel_and_namespace.py"
       - "tests/test_corroborate_original_kernel_and_namespace.py"
       - "tools/prove_original_host_pid_namespace.py"

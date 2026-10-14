@@ -121,7 +121,7 @@ BT
     if [[ "${OXIDE_CAPTURE_BINDER_FINISH_WINDOW:-0}" == "1" ]]; then
       # Capture only the stock Android system_server destination; generic
       # Binder numeric code is NOT proof of a particular AIDL method.
-      if [ ! -r /sys/kernel/tracing/events/binder/binder_transaction/id ]; then
+      if ! sudo -n test -r /sys/kernel/tracing/events/binder/binder_transaction/id; then
         echo BINDER_TRANSACTION_TRACEPOINT_NOT_PRESENT > "$DIR/binder_preflight.txt"
         exit 74
       fi
