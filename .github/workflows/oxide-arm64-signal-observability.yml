@@ -1,0 +1,105 @@
+name: Oxide native ARM64 virtual signal observability preflight
+
+# Only tests whether the GitHub ARM64 host can observe kernel signal syscalls.
+# No game, APK, tracing target app, or integrity-check modification is involved.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-arm64-signal-observability.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  arm64-kernel-signal-probe:
+    name: ARM64 guest host read-only kernel trace capability
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - name: Inventory native ARM64 host and tracepoint visibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p signal-preflight
+          uname -m > signal-preflight/arch.txt
+          uname -a > signal-preflight/kernel.txt
+          test "$(cat signal-preflight/arch.txt)" = aarch64
+          if [ ! -d /sys/kernel/tracing/events ]; then
+            sudo mkdir -p /sys/kernel/tracing
+            sudo mount -t tracefs tracefs /sys/kernel/tracing 2>signal-preflight/tracefs_mount_error.txt || true
+          fi
+          for event in syscalls/sys_enter_kill syscalls/sys_enter_tgkill syscalls/sys_enter_rt_sigqueueinfo signal/signal_generate; do
+            if [ -e "/sys/kernel/tracing/events/$event/id" ]; then
+              printf '%s=VISIBLE\n' "$event"
+            else
+              printf '%s=UNAVAILABLE\n' "$event"
+            fi
+          done | tee signal-preflight/tracepoints.txt
+          for p in /proc/sys/kernel/perf_event_paranoid /proc/sys/kernel/unprivileged_bpf_disabled /proc/sys/kernel/kptr_restrict; do
+            [ ! -r "$p" ] || printf '%s=%s\n' "$p" "$(cat "$p")"
+          done > signal-preflight/kernel_policy.txt
+
+      - name: Try collecting a controlled Python self-signal without modifying other processes
+        shell: bash
+        run: |
+          set -u
+          mkdir -p signal-preflight
+          sudo apt-get update -qq >signal-preflight/apt_update.txt 2>&1
+          if ! sudo apt-get install -y --no-install-recommends bpftrace >signal-preflight/install_bpftrace.txt 2>&1; then
+            echo INSTALL_BPFTRACE_UNAVAILABLE > signal-preflight/probe_status.txt
+            exit 0
+          fi
+          cat > signal-preflight/controlled_kill.bt <<'BT'
+          tracepoint:syscalls:sys_enter_kill
+          /comm == "python3" && args->sig == 10/
+          {
+            printf("OXIDE_SIGNAL_PROBE sender_host_pid=%d target_pid=%d sig=%d\\n", pid, args->pid, args->sig);
+          }
+          BT
+          sudo timeout --signal=INT 16s bpftrace signal-preflight/controlled_kill.bt             > signal-preflight/bpftrace_output.txt 2>&1 &
+          tracer=$!
+          sleep 5
+          python3 - <<'PY' > signal-preflight/controlled_sender.txt
+          import os
+          import signal
+          signal.signal(signal.SIGUSR1, lambda signum, frame: None)
+          print("SENDER_PID="+str(os.getpid()), flush=True)
+          os.kill(os.getpid(), signal.SIGUSR1)
+          print("CONTROL_SIGNAL_SENT", flush=True)
+          PY
+          sleep 3
+          sudo pkill -INT -f '^bpftrace signal-preflight/controlled_kill.bt$' 2>/dev/null || true
+          wait "$tracer" || true
+          if grep -q 'OXIDE_SIGNAL_PROBE sender_host_pid=' signal-preflight/bpftrace_output.txt; then
+            echo CONTROLLED_KERNEL_SIGNAL_OBSERVED > signal-preflight/probe_status.txt
+          else
+            echo KERNEL_SIGNAL_NOT_OBSERVED > signal-preflight/probe_status.txt
+          fi
+
+      - name: Report exact capability and limitations
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## ARM64 read-only host signal instrumentation preflight"
+            echo "Host: $(cat signal-preflight/arch.txt 2>/dev/null || echo UNKNOWN)"
+            echo "Verdict: $(cat signal-preflight/probe_status.txt 2>/dev/null || echo NOT_EXECUTED)"
+            echo '### Tracepoint visibility'
+            cat signal-preflight/tracepoints.txt 2>/dev/null || true
+            echo
+            echo "Only a synthetic Python SIGUSR1 was sent and observed, never a game process."
+            echo "Tracepoint presence alone is insufficient; a matching controlled kernel event is required."
+            echo "No Android game launched. No APK changed. No Play Integrity inference or bypass."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve non-sensitive kernel support and synthetic test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-native-arm64-signal-preflight
+          path: |
+            signal-preflight/*.txt
+          if-no-files-found: warn
+          retention-days: 14
