@@ -30,6 +30,17 @@ public final class OverlayProbeService extends Service {
     private boolean feedEnabled;
     private long lastFeedSequence=-1;
     private static OverlayProbeService activeFeed;
+    private static final long FEED_IDLE_LIMIT_MS=4000;
+    private final Runnable feedIdleTimeout=() -> {
+        if(feedEnabled && view!=null) {
+            view.setRects(new float[0]);
+            Log.i(TAG,"RESULT=PASS FEED_IDLE_TIMEOUT RECT_COUNT=0");
+        }
+    };
+    private void resetFeedExpiry() {
+        sequenceHandler.removeCallbacks(feedIdleTimeout);
+        sequenceHandler.postDelayed(feedIdleTimeout,FEED_IDLE_LIMIT_MS);
+    }
 
     @Override public IBinder onBind(Intent intent) { return null; }
 
@@ -101,6 +112,7 @@ public final class OverlayProbeService extends Service {
                 activeFeed=this;
                 lastFeedSequence=-1;
                 Log.i(TAG,"RESULT=PASS FEED_READY SYNTHETIC_SHELL_ONLY");
+                resetFeedExpiry();
             }
             if(sequenceEnabled) {
                 sequenceHandler.postDelayed(() -> projectSequence("MOVED",1f,false),3000);
@@ -158,6 +170,7 @@ public final class OverlayProbeService extends Service {
         }
         service.lastFeedSequence=sequence;
         service.view.setRects(result);
+        service.resetFeedExpiry();
         final String phase=ageMs>250?"STALE":
                            sequence==1?"MOVED":"RESTORED";
         Log.i(TAG,"RESULT=PASS PHASE="+phase+" RECT_COUNT="+
