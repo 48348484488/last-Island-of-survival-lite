@@ -1,0 +1,98 @@
+name: "Oxide M3 - Compare original native ARM64 Android 12-14 archived evidence"
+
+# Reuses three existing authentic experimental artifacts, no 867 MB download.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m3-archived-android-matrix.yml"
+      - "tools/audit_virtual_arm64_matrix.py"
+      - "tests/test_audit_virtual_arm64_matrix.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  cross-version-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Check strict cross-version evidence and parser regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_audit_virtual_arm64_matrix.py' -v
+          python3 -m py_compile tools/audit_virtual_arm64_matrix.py
+      - name: Retrieve earlier verified Android 12 Activity/PID/exit audit
+        uses: actions/download-artifact@v4
+        with:
+          name: oxide-original-android12-virtual-activity-pid-signal-proof
+          run-id: 38488773446
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: source-android12
+      - name: Retrieve original Android 13 ARM64 kernel-observed game
+        uses: actions/download-artifact@v4
+        with:
+          name: oxide-original-native-arm64-smoke
+          run-id: 38599474610
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: source-android13
+      - name: Retrieve prior original Android 14 native ARM64 game
+        uses: actions/download-artifact@v4
+        with:
+          name: oxide-original-native-virtual-arm64-versions-proof
+          run-id: 38487286930
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: source-android14
+      - name: Independently audit all three authentic original game outcomes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s source-android12/android12_activity_pid_exit_verified.json
+          test -s source-android13/forensic_summary.json
+          test -s source-android14/android_14/forensic_summary.json
+          python3 tools/audit_virtual_arm64_matrix.py \
+            --android12 source-android12/android12_activity_pid_exit_verified.json \
+            --android13 source-android13/forensic_summary.json \
+            --android14 source-android14/android_14/forensic_summary.json \
+            --out oxide-m3-arm64-matrix
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          m = json.loads(Path("oxide-m3-arm64-matrix/arm64_android_version_matrix.json").read_text())
+          assert [c["original_activity_pid"] for c in m["cases"]] == [1829, 2232, 1876], m
+          assert m["all_three_self_sigkill_confirmed"] is True, m
+          assert m["gameplay_verified"] is False, m
+          assert m["security_root_cause"] == "UNKNOWN", m
+          print("THREE_UNMODIFIED_OXIDE_NATIVE_ARM64_ANDROID_EARLY_EXITS=VERIFIED")
+          print("GAMEPLAY_35S=NOT_CONFIRMED")
+          PY
+      - name: Publish honest M3 report
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Virtual Android 12/13/14 authentic original-game compatibility'
+            if [ -s oxide-m3-arm64-matrix/arm64_android_version_matrix.md ]; then
+              cat oxide-m3-arm64-matrix/arm64_android_version_matrix.md
+            else
+              echo 'Evidence missing or validation failed; NO cross-version claim.'
+            fi
+            echo 'Only archived evidence; no APK replay, physical phone or integrity bypass.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep tiny derived evidence table
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-m3-original-android12-13-14-comparison
+          path: oxide-m3-arm64-matrix/
+          if-no-files-found: ignore
+          retention-days: 14
