@@ -1,17 +1,29 @@
 import hashlib
+import struct
 import sys
 import tempfile
 import unittest
 import zipfile
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"tools"))
-from inventory_original_asset_containers import identify,inventory
+from inventory_original_asset_containers import identify,inventory,parse_unityfs_header
 
 class AssetContainerMetadata(unittest.TestCase):
     def test_unityfs_magic_only_a_format_hint(self):
         self.assertEqual(identify(b"UnityFS\x000\x00\x00\x00"),"UNITY_FS_ASSET_BUNDLE")
         self.assertEqual(identify(b"UnityWeb\x00"),"UNITY_WEB_ASSET_BUNDLE")
         self.assertEqual(identify(b"not unity fs"),"NOT_IDENTIFIED_BY_SIGNATURE")
+    def test_unityfs_internal_block_info_lz4_flags(self):
+        data=(b"UnityFS\\x00"+struct.pack(">I",6)+
+              b"2021.3.10f1\\x00"+b"2021.3.10f1\\x00"+
+              struct.pack(">QIII",867228273,84,160,0x82)+b"rest")
+        meta=parse_unityfs_header(data)
+        self.assertEqual(meta["bundle_format_version"],6)
+        self.assertEqual(meta["blocks_info_compression"],"LZ4")
+        self.assertTrue(meta["blocks_info_at_file_end"])
+        self.assertEqual(meta["blocks_info_uncompressed_bytes"],160)
+    def test_unityfs_short_header_fails_closed(self):
+        self.assertEqual(parse_unityfs_header(b"UnityFS\\x00")["status"],"INCOMPLETE_HEADER")
     def test_sha256_gated_metadata_with_nested_sample(self):
         with tempfile.TemporaryDirectory() as d:
             path=Path(d)/"base.apk"
