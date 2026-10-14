@@ -1,0 +1,79 @@
+name: Oxide original ARM64 startup milestones - 3 archived runs
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-original-launch-milestones.yml"
+      - "tools/audit_original_launch_stages.py"
+      - "tests/test_audit_original_launch_stages.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  archive-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Test real PID attribution and fail-closed milestones
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p test_diagnose_original_exit.py -v
+          python3 -m unittest discover -s tests -p test_audit_original_launch_stages.py -v
+      - name: Fetch previous two original native Android13 starts
+        uses: actions/download-artifact@v4
+        with:
+          name: oxide-original-permission-ab-evidence
+          run-id: 38478578089
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: previous
+      - name: Fetch latest original native Android13 boot attempt
+        uses: actions/download-artifact@v4
+        with:
+          name: oxide-original-native-arm64-smoke
+          run-id: 38574879916
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: latest
+      - name: Compare three ORIGINAL PID event histories (do not run APK)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s previous/before/all_buffers.txt
+          test -s previous/after/all_buffers.txt
+          test -s latest/all_buffers.txt
+          python3 tools/audit_original_launch_stages.py --before previous/before --latest latest --out stage-replay/a
+          python3 tools/audit_original_launch_stages.py --before previous/after --latest latest --out stage-replay/b
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path("stage-replay/a/original_stage_milestones.json").read_text())
+          b=json.loads(Path("stage-replay/b/original_stage_milestones.json").read_text())
+          assert a["before"]["activity_pid"]==2197,a
+          assert b["before"]["activity_pid"]==2578,b
+          assert a["latest"]["activity_pid"]==2168,b
+          assert a["comparison"]["before_ms_to_self_sigkill"]==4895,a
+          assert b["comparison"]["before_ms_to_self_sigkill"]==4649,b
+          assert a["comparison"]["after_ms_to_self_sigkill"]==4648,a
+          assert a["latest"]["milestones_ms_after_activity_start"]["fully_drawn"]==4404,a
+          for record in (a["before"],b["before"],a["latest"]):
+              assert record["unity_and_il2cpp_observed"],record
+              assert record["self_sigkill_observed"],record
+              assert record["warnings"]["play_store_missing_game_pid"]==6,record
+              assert not record["security_cause_established"] and not record["playable_game_verified"]
+          print("ORIGINAL_OXIDE_3_VIRTUAL_ARM64_LAUNCHES_REPLAY_VERIFIED")
+          PY
+      - name: Save audited summary (no APKs or full game logs)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-3-virtual-launch-milestones
+          path: stage-replay/**/*.json
+          if-no-files-found: warn
+          retention-days: 14
