@@ -14,6 +14,8 @@
 - **M3 — comparação de versões verificada:** [replay #38606700050](../../actions/runs/38606700050) validou a Activity original em Android ARM64 virtual 12 (PID 1829), 13 (2232) e 14 (1876). Os três apresentaram autossinal SIGKILL; [matriz reproduzível](reports/1.14.11949-m3-original-android12-13-14-matrix.md). A meta continua aberta até encontrar/validar outro ambiente virtual legítimo; trocar só a versão do Redroid não resolveu.
 - **M4–M6:** ainda não concluídas. **Não há confirmação de menu jogável, gameplay, ESP real ou causa da proteção.** Somente ambientes virtuais; APK original preservado.
 
+**Pipeline automático validado (14/10):** sinal ARM64 [#38607509257](../../actions/runs/38607509257) → replay de SIGKILL [#38607625417](../../actions/runs/38607625417) → marcos da Activity [#38607658290](../../actions/runs/38607658290) → matriz Android 12–14 [#38607691912](../../actions/runs/38607691912). As quatro execuções terminaram com sucesso, e a sequência foi acionada sem intervenção entre os jobs. São auditorias de evidência existente; **não** corrigem o encerramento do jogo, não executam código novo autonomamente e não comprovam gameplay. O supervisor separado registra falhas e possíveis travamentos.
+
 As issues contêm os critérios de aceitação e evidências. Desenvolvimento futuro e atualizações devem seguir esses critérios e registrar honestamente bloqueios, sem afirmar sucesso apenas porque a CI passou.
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
