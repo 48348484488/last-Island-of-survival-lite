@@ -133,6 +133,7 @@ def main():
         result = inspect(args.procroot, args.container_init_host_pid, args.guest_pid)
         result["attempts_used"] = attempt
         result["observed_host_unix_ns"] = time.time_ns()
+        result["observed_host_boot_ns"] = time.clock_gettime_ns(time.CLOCK_BOOTTIME)
         if result["status"] == "ORIGINAL_ANDROID_HOST_NSPID_MAPPING_PROVEN":
             break
         if attempt < args.attempts:

@@ -102,25 +102,25 @@ BEGIN
 tracepoint:syscalls:sys_enter_kill
 /args->sig == 9/
 {
-  printf("KERNEL_SIGKILL syscall=kill host_sender=%d host_tid=%d target_pid=%d signal=%d comm=%s\n",
-         pid, tid, args->pid, args->sig, comm);
+  printf("KERNEL_SIGKILL syscall=kill host_sender=%d host_tid=%d target_pid=%d signal=%d comm=%s boot_ns=%llu\n",
+         pid, tid, args->pid, args->sig, comm, nsecs);
 }
 tracepoint:syscalls:sys_enter_tgkill
 /args->sig == 9/
 {
-  printf("KERNEL_SIGKILL syscall=tgkill host_sender=%d host_tid=%d target_tgid=%d target_tid=%d signal=%d comm=%s\n",
-         pid, tid, args->tgid, args->pid, args->sig, comm);
+  printf("KERNEL_SIGKILL syscall=tgkill host_sender=%d host_tid=%d target_tgid=%d target_tid=%d signal=%d comm=%s boot_ns=%llu\n",
+         pid, tid, args->tgid, args->pid, args->sig, comm, nsecs);
 }
 tracepoint:syscalls:sys_enter_rt_sigqueueinfo
 /args->sig == 9/
 {
-  printf("KERNEL_SIGKILL syscall=rt_sigqueueinfo host_sender=%d host_tid=%d target_pid=%d signal=%d comm=%s\n",
-         pid, tid, args->pid, args->sig, comm);
+  printf("KERNEL_SIGKILL syscall=rt_sigqueueinfo host_sender=%d host_tid=%d target_pid=%d signal=%d comm=%s boot_ns=%llu\n",
+         pid, tid, args->pid, args->sig, comm, nsecs);
 }
 BT
     # bpftrace can take >5s to compile probes on GitHub ARM runners.
-    # BEGIN executes only after probes attach; line buffering makes readiness
-    # observable BEFORE we start the original game, never inferred afterward.
+    # BEGIN prints a startup marker; the controlled SIGKILL below independently
+    # verifies probes are actually active BEFORE launching the original game.
     sudo -n stdbuf -oL -eL timeout --signal=INT 95s \
       bpftrace "$DIR/original_kernel_sigkill.bt" \
       > "$DIR/kernel_sigkill_trace.txt" 2>&1 &

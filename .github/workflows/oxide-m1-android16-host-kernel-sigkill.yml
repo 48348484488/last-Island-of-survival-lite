@@ -143,9 +143,11 @@ jobs:
           assert (root/"kernel_trace_preflight.txt").read_text().strip()=="KERNEL_TRACE_ATTACHED_BEFORE_ORIGINAL_ACTIVITY"
           verdict=json.loads((root/"same_run_kernel_namespace_original_verdict.json").read_text())
           mapping=json.loads((root/"host_pid_namespace.json").read_text())
-          assert verdict["status"]=="SAME_RUN_HOST_KERNEL_GUEST_ORIGINAL_SELF_SIGKILL_PROVEN",verdict
+          assert verdict["status"]=="SAME_RUN_TIMESTAMPED_HOST_KERNEL_GUEST_SELF_SIGKILL_PROVEN",verdict
           assert verdict["live_namespace_mapping_verified"] is True,verdict
           assert verdict["matching_real_original_kernel_kill_syscalls"]>=1,verdict
+          assert verdict["kernel_clock_temporal_window_verified"] is True,verdict
+          assert 0 <= verdict["first_matched_event_after_host_pid_sample_ms"] <= 15000,verdict
           assert verdict["android_original_activity_finish_before_self_signal"] is True,verdict
           assert verdict["self_sigkill_exit_info_status9"] is True,verdict
           assert verdict["linux_host_pid"]==mapping["host_pid"],verdict

@@ -7,6 +7,7 @@ Read-only, no injected hooks or game modifications.
 """
 import argparse
 import json
+import re
 from pathlib import Path
 
 from correlate_kernel_sigkill import extract_events
@@ -27,6 +28,7 @@ def prove(mapping, trace, forensic, exit_info):
     ) if type(guest) is int and guest > 0 else False
     chain = mapping.get("nspid_chain", [])
     host = mapping.get("host_pid")
+    sample_boot_ns = mapping.get("observed_host_boot_ns")
     namespace_ok = (
         mapping.get("status") == "ORIGINAL_ANDROID_HOST_NSPID_MAPPING_PROVEN"
         and type(host) is int and host > 1
@@ -36,8 +38,17 @@ def prove(mapping, trace, forensic, exit_info):
         and mapping.get("original_process_cmdline") == GAME
         and type(mapping.get("host_start_ticks")) is int
         and mapping["host_start_ticks"] > 0
+        and type(sample_boot_ns) is int and sample_boot_ns > 0
     )
     events = extract_events(trace)
+    for item in events:
+        match = re.search(r"\\bboot_ns=(\\d+)", item["comm"])
+        item["kernel_boot_ns"] = int(match.group(1)) if match else None
+        if match:
+            item["comm"] = item["comm"].split(" boot_ns=", 1)[0].strip()
+        delta = ((item["kernel_boot_ns"] - sample_boot_ns) / 1_000_000
+                 if namespace_ok and item["kernel_boot_ns"] is not None else None)
+        item["milliseconds_after_pid_sample"] = round(delta, 3) if delta is not None else None
     matches = [
         item for item in events
         if namespace_ok and original_exit
@@ -46,9 +57,11 @@ def prove(mapping, trace, forensic, exit_info):
         # Validate independent kernel process/thread name, not a random
         # SIGKILL from ActivityManager or another host process.
         and "esurvivalisland" in item["comm"].lower()
+        and item["milliseconds_after_pid_sample"] is not None
+        and 0 <= item["milliseconds_after_pid_sample"] <= 15000
     ]
-    status = ("SAME_RUN_HOST_KERNEL_GUEST_ORIGINAL_SELF_SIGKILL_PROVEN"
-              if len(matches) >= 1 else "SAME_RUN_KERNEL_SENDER_NOT_PROVEN")
+    status = ("SAME_RUN_TIMESTAMPED_HOST_KERNEL_GUEST_SELF_SIGKILL_PROVEN"
+              if len(matches) >= 1 else "SAME_RUN_TIMESTAMPED_KERNEL_SENDER_NOT_PROVEN")
     return {
         "status": status,
         "android_activity_guest_pid": guest,
@@ -59,13 +72,19 @@ def prove(mapping, trace, forensic, exit_info):
         "kernel_syscall_event_count": len(events),
         "matching_real_original_kernel_kill_syscalls": len(matches),
         "matched_syscalls": matches,
+        "kernel_clock_temporal_window_verified": bool(matches),
+        "first_matched_event_after_host_pid_sample_ms": (
+            min(item["milliseconds_after_pid_sample"] for item in matches)
+            if matches else None
+        ),
         "self_sigkill_exit_info_status9": bool(original_exit),
         "activity_finish_requester_identified": False,
         "original_security_reason": "UNKNOWN",
         "playable_game_verified": False,
         "real_player_esp_verified": False,
         "limitations": [
-            "The Linux kernel confirmed kill(SIGKILL) emitter and target in the same run.",
+            "On success, kernel kill(SIGKILL) sender and target match the original same-run NSpid.",
+            "Temporal requirement: CLOCK_BOOTTIME event must be 0-15s after the live host mapping.",
             "This does not recover who requested Activity.finish() or the C++ kill caller.",
             "Host NSpid evidence was collected before process death; concurrent API reads are not atomic.",
             "The Android image, game APKs and integrity systems were not patched, bypassed or spoofed.",
@@ -86,7 +105,7 @@ def main():
     (root / "same_run_kernel_namespace_original_verdict.json").write_text(
         json.dumps(result, indent=2) + "\n")
     print(json.dumps(result, indent=2))
-    return 0 if result["status"] == "SAME_RUN_HOST_KERNEL_GUEST_ORIGINAL_SELF_SIGKILL_PROVEN" else 1
+    return 0 if result["status"] == "SAME_RUN_TIMESTAMPED_HOST_KERNEL_GUEST_SELF_SIGKILL_PROVEN" else 1
 
 
 if __name__ == "__main__":
