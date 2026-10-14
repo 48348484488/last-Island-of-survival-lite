@@ -21,7 +21,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-for VERSION in 12 14; do
+for VERSION in ${OXIDE_ANDROID_VERSIONS:-12 14}; do
+  case "$VERSION" in 12|13|14) ;; *) echo "Unsupported virtual Android: $VERSION" >&2; exit 64;; esac
   DIR="$OUT/android_$VERSION"; mkdir -p "$DIR"
   IMAGE="redroid/redroid:$VERSION.0.0_64only-latest"
   cleanup
@@ -83,14 +84,27 @@ for VERSION in 12 14; do
   adb -s "$SERIAL" shell am force-stop "$GAME" > "$DIR/force_stop.txt" 2>&1 || true
   adb -s "$SERIAL" logcat -b all -v threadtime > "$DIR/all_buffers.txt" 2>&1 &
   LOG_PID=$!
+  # Start rapid read-only PID observation BEFORE launching the original Activity.
+  # This avoids relying only on am_proc_start events, which Android 12 can lose.
+  (
+    for sample in $(seq 1 70); do
+      pids="$(timeout 3 adb -s "$SERIAL" shell pidof "$GAME" 2>/dev/null | tr -d '\r' || true)"
+      printf 'sample=%s utc=%s pid=%s\n' "$sample" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${pids:-none}"
+      sleep 0.12
+    done
+  ) > "$DIR/pid_trace.txt" 2>&1 &
+  TRACE_PID=$!
   adb -s "$SERIAL" shell am start -W -n "$GAME/$ACTIVITY" \
     > "$DIR/activity_start.txt" 2>&1 || true
+  adb -s "$SERIAL" shell dumpsys activity activities \
+    > "$DIR/activities_early.txt" 2>&1 || true
   adb -s "$SERIAL" exec-out screencap -p \
     > "$DIR/screen_early.png" 2>/dev/null || true
   sleep 2
   adb -s "$SERIAL" exec-out screencap -p \
     > "$DIR/screen_2s.png" 2>/dev/null || true
   sleep 8
+  wait "$TRACE_PID" 2>/dev/null || true
   adb -s "$SERIAL" shell pidof "$GAME" > "$DIR/pid_10s.txt" 2>&1 || true
   adb -s "$SERIAL" shell dumpsys activity activities \
     > "$DIR/activities_10s.txt" 2>&1 || true
@@ -103,15 +117,17 @@ for VERSION in 12 14; do
   echo OBSERVATION_COMPLETE > "$DIR/experiment_phase.txt"
   python3 "$ROOT/tools/diagnose_original_exit.py" "$DIR" \
     > "$DIR/forensic_stdout.txt" 2>&1 || true
+  python3 "$ROOT/tools/diagnose_virtual_activity_pid.py" "$DIR" \
+    > "$DIR/lifecycle_recovery_stdout.txt" 2>&1 || true
   docker logs oxide-virtual-version > "$DIR/container_log.txt" 2>&1 || true
 done
 
-python3 - "$OUT" <<'PY'
+python3 - "$OUT" "${OXIDE_ANDROID_VERSIONS:-12 14}" <<'PY'
 import json,sys
 from pathlib import Path
 root=Path(sys.argv[1])
 result={}
-for version in ("12","14"):
+for version in sys.argv[2].split():
     folder=root/("android_"+version)
     def read(name):
         p=folder/name
@@ -120,6 +136,7 @@ for version in ("12","14"):
         try: return json.loads(read(name))
         except (ValueError,TypeError): return {}
     foren=load("forensic_summary.json")
+    lifecycle=load("lifecycle_recovery.json")
     pids={x for x in read("pid_10s.txt").split() if x.isdecimal()}
     pid=foren.get("initial_activity_pid")
     activities=read("activities_10s.txt")
@@ -138,11 +155,34 @@ for version in ("12","14"):
         "initial_pid_alive_10s":pid is not None and str(pid) in pids,
         "activity_resumed_10s":resumed,
         "forensic":foren,
+        "lifecycle_recovery":lifecycle,
         "play_services":"PRESENT" if "package:com.google.android.gms" in gms.splitlines() else
                         "NOT_FOUND" if gms or read("experiment_phase.txt")=="OBSERVATION_COMPLETE" else "NOT_MEASURED",
         "experiment_phase":read("experiment_phase.txt"),
     }
 (root/"raw_version_states.json").write_text(json.dumps(result,indent=2)+"\n")
 PY
-python3 "$ROOT/tools/compare_virtual_redroid_versions.py" \
-  "$OUT/raw_version_states.json" --out "$OUT"
+if [[ "${OXIDE_ANDROID_VERSIONS:-12 14}" == "12 14" ]]; then
+  python3 "$ROOT/tools/compare_virtual_redroid_versions.py" \
+    "$OUT/raw_version_states.json" --out "$OUT"
+else
+  python3 - "$OUT" <<'PY'
+import json,sys
+from pathlib import Path
+out=Path(sys.argv[1])
+data=json.loads((out/"raw_version_states.json").read_text())
+for version,item in data.items():
+    lifecycle=item.get("lifecycle_recovery",{})
+    lines=["# Virtual-only Oxide "+version+" process recovery","",
+           "Android guest boot: "+item["boot"],
+           "Original APK installation: "+item["install"],
+           "am_proc_start baseline: "+item["forensic"].get("classification","NOT_MEASURED"),
+           "PID recovery: "+lifecycle.get("status","NOT_MEASURED"),
+           "Recovered PID source: "+lifecycle.get("pid_source","NOT_MEASURED"),
+           "App self-SIGKILL: "+str(lifecycle.get("android_process_self_sigkill_logged_for_selected_pid",False)),
+           "Activity PID attribution: "+str(lifecycle.get("pid_confirms_activity_process",False)),
+           "", "No game protection modification or multiplayer/ESP verification."]
+    (out/"virtual_lifecycle_retest.md").write_text("\n".join(lines)+"\n")
+    print("\n".join(lines))
+PY
+fi
