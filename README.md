@@ -3,6 +3,32 @@
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
 
+### Diagnóstico de ambiente do Oxide original — execução virtual
+
+A [reanálise dos logs reais das duas inicializações ARM64 (#38489350263)](../../actions/runs/38489350263)
+passou **10 testes**. Nos PIDs originais 2197 e 2578 houve avisos
+persistentes de API nativa para ro.build.fingerprint (comprimento 113),
+falta de serviços Google, falhas de GraphicBuffer e sensores. A Unity e
+o IL2CPP iniciaram antes do SIGKILL emitido pelo próprio jogo em ambas
+as tentativas. **Esses erros são observações correlacionadas; não foi
+identificada qual verificação causou o aviso.**
+
+A frase Security Threat Detected by App também aparece na documentação
+de ferramentas comerciais de proteção móvel, mas a [varredura dos três
+APKs originais menores (#38489575666)](../../actions/runs/38489575666),
+com 4 testes aprovados, não encontrou indicadores explícitos de marca
+Appdome, ONEShield ou Fusion Set. **O fornecedor da proteção do Oxide
+não está confirmado.**
+
+[Relatório completo](reports/1.14.11949-virtual-preexit-security-evidence.md) |
+[Comparador de eventos por PID](tools/compare_original_preexit.py) |
+[Auditoria passiva dos APKs](tools/scan_original_security_vendor.py).
+
+A execução segue 100% virtual e sem mudanças nos APKs originais; o
+aviso de segurança e o autoencerramento continuam sem solução.
+
+
+
 ### Android 12 ARM64: PID original e encerramento comprovados
 
 A [nova execução 100% virtual #38488270142](../../actions/runs/38488270142)
