@@ -1,0 +1,105 @@
+name: Oxide full original UnityFS block LZ4HC audit - read only 100 percent virtual
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-unityfs-internal-audit.yml"
+      - "tools/audit_original_unityfs_blocks.py"
+      - "tests/test_audit_original_unityfs_blocks.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-unityfs-bounded-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+            tools
+            tests
+      - name: Install only standalone LZ4 raw-block library
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check 'lz4==4.4.4'
+      - name: Test synthetic UnityFS LZ4HC directories, block boundaries and scan limits
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_audit_original_unityfs_blocks.py' -v
+          python3 -m unittest discover -s tests -p 'test_inventory_original_asset_containers.py' -v
+          python3 -m unittest discover -s tests -p 'test_verify_original_splits.py' -v
+      - name: Download original Unity 867 MB assets and verify every original split
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p unityfs-audit
+          curl --fail --location --retry 4 --retry-all-errors \
+            --connect-timeout 30 --max-time 1200 --silent --show-error \
+            --output split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          python3 tools/verify_original_splits.py . \
+            --output unityfs-audit/all_four_original_sha256.json
+      - name: Decode bounded original UnityFS metadata, data blocks and literal asset text
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/audit_original_unityfs_blocks.py \
+            base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk \
+            split_UnityDataAssetPack.apk --out unityfs-audit
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("unityfs-audit/unityfs_internal_scan.json").read_text())
+          assert d["all_original_apk_splits"], d
+          assert len(d["verified_original_apks"])==4, d
+          assert d["unityfs_bundles_detected"]==277,d
+          assert d["game_modified"] is False, d
+          assert d["security_rejection_trigger"]=="UNKNOWN", d
+          assert d["playable_game_or_real_player_esp_verified"] is False, d
+          print("REAL_ORIGINAL_UNITYFS_DIRECTORY_AND_BLOCK_SCAN=COMPLETED")
+          print("BUNDLES_FULLY_SCANNED="+str(d["complete_bundle_scans"]))
+          print("BUNDLES_INCOMPLETE="+str(d["incomplete_bundle_scans"]))
+          print("DECODED_DATA_BYTES="+str(d["data_decoded_bytes"]))
+          print("RAW_LITERAL_MATCHES="+str(len(d["literal_matches"])))
+          PY
+      - name: Publish exact block-level coverage and independent scope
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Oxide 1.14.11949 original UnityFS inner resource block decoding"
+            echo "100% virtual/offline read-only research; no original app boot or security bypass."
+            if [ -s unityfs-audit/unityfs_internal_scan.md ]; then
+              cat unityfs-audit/unityfs_internal_scan.md
+            else
+              echo "No validated decoded-block report; see failed stage."
+            fi
+            echo "No matching asset literal is not proof a dynamic/toast string does not exist."
+            echo "No real player data, gameplay or ESP proven."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive only JSON/Markdown metrics, not original game resources
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-unityfs-internal-bounded-scan
+          path: unityfs-audit/*.json
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Archive readable findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-unityfs-internal-readable-report
+          path: unityfs-audit/*.md
+          retention-days: 14
+          if-no-files-found: warn
