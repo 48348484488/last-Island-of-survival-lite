@@ -10,6 +10,7 @@ on:
       - "tools/edgeai_arm64_cfg.py"
       - "tools/edgeai_arm64_indirect_audit.py"
       - "tools/edgeai_arm64_dispatch_bounds.py"
+      - "tools/edgeai_arm64_table_entries.py"
       - "tools/edgeai_arm64_unity_exports.py"
       - "tools/edgeai_arm64_llvm_crosscheck.py"
       - "tools/edgeai_arm64_symbol_triage.py"
@@ -18,6 +19,7 @@ on:
       - "tests/test_edgeai_arm64_cfg.py"
       - "tests/test_edgeai_arm64_indirect_audit.py"
       - "tests/test_edgeai_arm64_dispatch_bounds.py"
+      - "tests/test_edgeai_arm64_table_entries.py"
       - "tests/test_edgeai_arm64_unity_exports.py"
       - "tests/test_edgeai_arm64_llvm_crosscheck.py"
       - "tests/test_edgeai_arm64_symbol_triage.py"
@@ -42,6 +44,7 @@ jobs:
             tools/edgeai_arm64_cfg.py
             tools/edgeai_arm64_indirect_audit.py
             tools/edgeai_arm64_dispatch_bounds.py
+            tools/edgeai_arm64_table_entries.py
             tools/edgeai_arm64_unity_exports.py
             tools/edgeai_arm64_llvm_crosscheck.py
             tools/edgeai_arm64_symbol_triage.py
@@ -50,6 +53,7 @@ jobs:
             tests/test_edgeai_arm64_cfg.py
             tests/test_edgeai_arm64_indirect_audit.py
             tests/test_edgeai_arm64_dispatch_bounds.py
+            tests/test_edgeai_arm64_table_entries.py
             tests/test_edgeai_arm64_unity_exports.py
             tests/test_edgeai_arm64_llvm_crosscheck.py
             tests/test_edgeai_arm64_symbol_triage.py
@@ -68,6 +72,7 @@ jobs:
           python3 -m unittest discover -s tests -p test_edgeai_arm64_cfg.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_indirect_audit.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_dispatch_bounds.py -v
+          python3 -m unittest discover -s tests -p test_edgeai_arm64_table_entries.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_unity_exports.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_llvm_crosscheck.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_symbol_triage.py -v
@@ -316,6 +321,27 @@ jobs:
           assert d["direct_target_comparisons"]>20,d
           assert not d["original_code_executed"],d
           print("EDGEAI_ORIGINAL_LOADER_117_BRANCH_OPCODE_AND_TARGETS_MATCH")
+          PY
+      - name: Read guarded ARM64 relative jump-table bytes from original ELF, only with checked bounds
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/edgeai_arm64_table_entries.py \
+            split_config.arm64_v8a.apk \
+            edgeai-static-evidence/loader-jni-indirect-patterns.json \
+            edgeai-static-evidence/loader-jni-local-guard-evidence.json \
+            edgeai-static-evidence/loader-jni-llvm-disasm.txt \
+            --function-size 4524 \
+            --output edgeai-static-evidence/loader-jni-bounded-table-targets.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path("edgeai-static-evidence/loader-jni-bounded-table-targets.json").read_text())
+          assert x["function"]=="JNI_OnLoad" and x["site_count"]==8,x
+          assert x["table_sites_with_static_candidates"]>=1,x
+          assert all(1<=len(s["candidate_entries"])<=64 for s in x["sites"] if s["status"]=="STATIC_CANDIDATES"),x
+          assert not x["game_executed"] and not x["all_runtime_targets_confirmed"],x
+          print("EDGEAI_ORIGINAL_LOADER_BOUNDED_TABLE_BYTES_CHECK_PASS")
           PY
       - name: Upload audit logs, no game executables
         if: always()
