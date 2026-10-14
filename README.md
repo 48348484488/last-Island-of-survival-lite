@@ -2,6 +2,38 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### Alimentacao externa de amostras no overlay — validada no Android virtual
+
+A [execucao real #38549001618](../../actions/runs/38549001618)
+passou os **dois jobs** (compilacao e execucao ARM64 Redroid Android 13),
+com **24 testes no build** e **9 verificacoes positivas na
+prova de entrada externa**. O proprio shell do Android virtual
+enviou dados sinteticos por comandos ADB, para o **mesmo**
+servico e PID. A tela foi medida com screenshots reais:
+
+| Comando | Centro X da caixa | Pixels verdes |
+|---|---:|---:|
+| Inicio | 359,5 | 2112 |
+| Pacote 1: movido | 431,5 | 2112 |
+| Pacote 2: dados vencidos | — | 0 |
+| Replay do pacote 2, rejeitado | — | **0** |
+| Pacote 3: restaurado | 287,5 | 2112 |
+| Pacote 4: parar | — | 0 |
+
+O receptor de laboratorio requer permissao Android DUMP (shell
+privilegiado), e o serviço valida sequencia monotônica, idade e
+limites dos dados antes da projecao JNI.
+
+[Relatorio completo](reports/1.14.11949-virtual-external-synthetic-feed.md) |
+[Workflow virtual](../../actions/workflows/oxide-virtual-overlay-states.yml) |
+[Protocolo ADB sintetico](esp_core/android_probe/virtual_overlay_feed.sh) |
+[Artefatos reais](../../actions/runs/38549001618/artifacts/11885558390).
+
+**Importante:** comprovamos atualizacao dinamica do *overlay isolado*,
+sem instalar o Oxide original. Nao houve partida multiplayer,
+leitura de jogadores reais ou desativacao de protecoes.
+
+
 ### Overlay JNI dinamico funcionando no Android virtual ARM64
 
 A [execucao real #38543062941](../../actions/runs/38543062941)
