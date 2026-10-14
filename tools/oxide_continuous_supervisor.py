@@ -20,6 +20,11 @@ SOURCES = {
     "oxide-m3-android16-boot-diagnostics.yml": 3,
     "oxide-m3-android15-original-smoke.yml": 4,
     "oxide-virtual-overlay-android15.yml": 5,
+    "oxide-m3-android16-ashmem-prereqs.yml": 3,
+    "oxide-m3-ashmem617-build-only.yml": 3,
+    "oxide-m3-android16-ashmem-real-boot.yml": 3,
+    "oxide-m3-android16-original-ashmem.yml": 4,
+
 }
 NEXT = {3: "oxide-native-google-play-discovery.yml",
         4: "redroid-original-smoke.yml",
