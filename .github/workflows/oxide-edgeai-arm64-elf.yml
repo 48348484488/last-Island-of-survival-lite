@@ -6,7 +6,9 @@ on:
     paths:
       - "tools/edgeai_elf_inspect.py"
       - "tools/edgeai_inspect_arm64_split.py"
+      - "tools/edgeai_arm64_branch_map.py"
       - "tests/test_edgeai_arm64_split.py"
+      - "tests/test_edgeai_arm64_branch_map.py"
       - ".github/workflows/oxide-edgeai-arm64-elf.yml"
   workflow_dispatch:
 
@@ -24,7 +26,9 @@ jobs:
           sparse-checkout: |
             tools/edgeai_elf_inspect.py
             tools/edgeai_inspect_arm64_split.py
+            tools/edgeai_arm64_branch_map.py
             tests/test_edgeai_arm64_split.py
+            tests/test_edgeai_arm64_branch_map.py
             split_config.arm64_v8a.apk
           sparse-checkout-cone-mode: false
       - name: Install LLVM for real AArch64 shared object test fixture
@@ -34,7 +38,9 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends clang lld
       - name: Regression test on compiler-produced ARM64 ELF, fail on corrupt headers
-        run: python3 -m unittest discover -s tests -p test_edgeai_arm64_split.py -v
+        run: |
+          python3 -m unittest discover -s tests -p test_edgeai_arm64_split.py -v
+          python3 -m unittest discover -s tests -p test_edgeai_arm64_branch_map.py -v
       - name: Audit unmodified 80MB APK and 236MB IL2CPP library read-only
         shell: bash
         run: |
@@ -55,6 +61,22 @@ jobs:
           assert all(lib["architecture"]=="AArch64" for lib in libs.values())
           assert not data["game_executed"] and not data["runtime_player_coordinates_verified"]
           print("EDGEAI_ELF64_REAL_OXIDE_LIBRARY_AUDIT_PASS")
+          PY
+      - name: Map AArch64 direct branches within real loader JNI_OnLoad
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/edgeai_arm64_branch_map.py split_config.arm64_v8a.apk             --library libloader.so --function JNI_OnLoad             --output edgeai-static-evidence/loader-jni-arm64-control-transfers.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('edgeai-static-evidence/loader-jni-arm64-control-transfers.json')
+          d=json.loads(p.read_text())
+          assert d["function"]=="JNI_OnLoad" and d["architecture"]=="AArch64",d
+          assert d["entry"]=="0x4e91f4" and d["size_bytes"]==4524,d
+          assert d["decoded_control_transfers"]>0,d
+          assert not d["code_executed"]
+          print("EDGEAI_NATIVE_ARM64_LOADER_CONTROL_TRANSFER_MAP_PASS")
           PY
       - name: Upload audit logs, no game executables
         if: always()
