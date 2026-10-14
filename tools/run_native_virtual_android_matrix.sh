@@ -90,6 +90,42 @@ for VERSION in ${OXIDE_ANDROID_VERSIONS:-12 14}; do
   adb -s "$SERIAL" shell am force-stop "$GAME" > "$DIR/force_stop.txt" 2>&1 || true
   adb -s "$SERIAL" logcat -b all -v threadtime > "$DIR/all_buffers.txt" 2>&1 &
   LOG_PID=$!
+  # Optional kernel syscall trace, entirely outside the unmodified Android app.
+  # Start it BEFORE launching the Activity and keep output per experiment.
+  if [[ "${OXIDE_CAPTURE_KERNEL_SIGKILL:-0}" == "1" ]]; then
+    command -v bpftrace >/dev/null || { echo HOST_BPFTRACE_MISSING >&2; exit 71; }
+    cat > "$DIR/original_kernel_sigkill.bt" <<'BT'
+tracepoint:syscalls:sys_enter_kill
+/args->sig == 9/
+{
+  printf("KERNEL_SIGKILL syscall=kill host_sender=%d host_tid=%d target_pid=%d signal=%d comm=%s\n",
+         pid, tid, args->pid, args->sig, comm);
+}
+tracepoint:syscalls:sys_enter_tgkill
+/args->sig == 9/
+{
+  printf("KERNEL_SIGKILL syscall=tgkill host_sender=%d host_tid=%d target_tgid=%d target_tid=%d signal=%d comm=%s\n",
+         pid, tid, args->tgid, args->pid, args->sig, comm);
+}
+tracepoint:syscalls:sys_enter_rt_sigqueueinfo
+/args->sig == 9/
+{
+  printf("KERNEL_SIGKILL syscall=rt_sigqueueinfo host_sender=%d host_tid=%d target_pid=%d signal=%d comm=%s\n",
+         pid, tid, args->pid, args->sig, comm);
+}
+BT
+    sudo -n timeout --signal=INT 44s bpftrace "$DIR/original_kernel_sigkill.bt" \
+      > "$DIR/kernel_sigkill_trace.txt" 2>&1 &
+    KERNEL_TRACE_PID=$!
+    sleep 5
+    if ! kill -0 "$KERNEL_TRACE_PID" 2>/dev/null; then
+      echo "KERNEL_TRACE_EARLY_EXIT" > "$DIR/kernel_trace_preflight.txt"
+    elif grep -q 'Attaching 3 probes' "$DIR/kernel_sigkill_trace.txt"; then
+      echo "KERNEL_TRACE_ATTACHED_BEFORE_ORIGINAL_ACTIVITY" > "$DIR/kernel_trace_preflight.txt"
+    else
+      echo "KERNEL_TRACE_ATTACH_NOT_CONFIRMED" > "$DIR/kernel_trace_preflight.txt"
+    fi
+  fi
   # Start rapid read-only PID observation BEFORE launching the original Activity.
   # This avoids relying only on am_proc_start events, which Android 12 can lose.
   (
@@ -158,6 +194,9 @@ for VERSION in ${OXIDE_ANDROID_VERSIONS:-12 14}; do
     > "$DIR/crash_buffer.txt" 2>&1 || true
   kill "$LOG_PID" 2>/dev/null || true
   wait "$LOG_PID" 2>/dev/null || true
+  if [[ "${OXIDE_CAPTURE_KERNEL_SIGKILL:-0}" == "1" ]]; then
+    wait "$KERNEL_TRACE_PID" 2>/dev/null || true
+  fi
   echo OBSERVATION_COMPLETE > "$DIR/experiment_phase.txt"
   python3 "$ROOT/tools/diagnose_original_exit.py" "$DIR" \
     > "$DIR/forensic_stdout.txt" 2>&1 || true
@@ -176,6 +215,11 @@ verdict=crosscheck(mapping,forensic)
 (root/"host_pid_exit_chain.json").write_text(json.dumps(verdict,indent=2)+"\n")
 print(json.dumps(verdict,indent=2))
 PY
+  fi
+  if [[ "${OXIDE_CAPTURE_KERNEL_SIGKILL:-0}" == "1" ]]; then
+    PYTHONPATH="$ROOT/tools" python3 \
+      "$ROOT/tools/corroborate_original_kernel_and_namespace.py" "$DIR" \
+      > "$DIR/same_run_kernel_namespace_stdout.txt" 2>&1 || true
   fi
   python3 "$ROOT/tools/diagnose_virtual_activity_pid.py" "$DIR" \
     > "$DIR/lifecycle_recovery_stdout.txt" 2>&1 || true
