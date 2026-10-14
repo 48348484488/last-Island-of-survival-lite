@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Locate exact security-warning text inside ORIGINAL signed Oxide APK entries.
 
-Read-only, chunked ZIP entry scanning (ASCII/UTF-8 and UTF-16LE). Designed
+Read-only, bounded-memory ZIP entry scanning (UTF-8, UTF-16LE, UTF-16BE). Designed
 to identify which asset owns a diagnostic UI string, NOT to patch or
 suppress protections, locate security code paths, or infer why a check ran.
 
@@ -22,14 +22,14 @@ TERMS = (
     "5600:AA4C",
 )
 CHUNK = 1024 * 1024
-MAX_ENTRY = 1024 * 1024 * 1024
+MAX_ENTRY = 4 * 1024 * 1024 * 1024
 MAX_MATCHES_PER_TERM_PER_ENTRY = 12
 
 
 def patterns(terms=TERMS):
     result = []
     for term in terms:
-        for encoding in ("utf-8", "utf-16le"):
+        for encoding in ("utf-8", "utf-16le", "utf-16be"):
             result.append((term, encoding, term.encode(encoding)))
     return result
 
@@ -71,6 +71,7 @@ def inspect(apks, expected=None):
     hashed = {}
     entry_count = 0
     bytes_scanned = 0
+    bytes_skipped = 0
     skipped = []
     for apk in apks:
         name = apk.name
@@ -86,7 +87,9 @@ def inspect(apks, expected=None):
                     continue
                 entry_count += 1
                 if member.file_size > MAX_ENTRY:
+                    bytes_skipped += member.file_size
                     skipped.append({"apk": name, "entry": member.filename,
+                                    "uncompressed_bytes": member.file_size,
                                     "reason": "MAX_ENTRY_LIMIT"})
                     continue
                 with archive.open(member) as stream:
@@ -105,6 +108,10 @@ def inspect(apks, expected=None):
         "apks_scanned": hashed,
         "entries_seen": entry_count,
         "decompressed_bytes_scanned": bytes_scanned,
+        "uncompressed_bytes_not_scanned": bytes_skipped,
+        "max_entry_bytes": MAX_ENTRY,
+        "scanned_all_four_original_splits": set(hashed) == set(EXPECTED_SHA256),
+        "full_plaintext_member_coverage": not skipped and set(hashed) == set(EXPECTED_SHA256),
         "skipped_entries": skipped,
         "matched_entries": matches,
         "interpretation": (
@@ -134,6 +141,9 @@ def main():
         "Entries scanned: "+str(result["entries_seen"]),
         "Decompressed bytes scanned: "+str(result["decompressed_bytes_scanned"]),
         "Skipped oversized entries: "+str(len(result["skipped_entries"])),
+        "Uncompressed bytes omitted: "+str(result["uncompressed_bytes_not_scanned"]),
+        "All four original splits checked: "+str(result["scanned_all_four_original_splits"]),
+        "Full ZIP-member plaintext coverage: "+str(result["full_plaintext_member_coverage"]),
         "", "## Matching entries", "",
     ]
     for hit in result["matched_entries"]:
