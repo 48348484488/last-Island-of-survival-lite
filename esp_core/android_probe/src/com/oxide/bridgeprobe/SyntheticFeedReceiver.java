@@ -33,6 +33,36 @@ public final class SyntheticFeedReceiver extends BroadcastReceiver {
             }
             seq=intent.getLongExtra("seq",-1);
             stop=intent.getBooleanExtra("stop",false);
+            // Typed batched protocol: caller supplies the complete matrix,
+            // entity IDs and 3D head/feet coordinates in a single snapshot.
+            // Legacy x/x2 single-target messages continue unchanged.
+            boolean batch=!stop && (extras.containsKey("batch_ids") ||
+                    extras.containsKey("batch_xyz") || extras.containsKey("batch_ages") ||
+                    extras.containsKey("batch_camera"));
+            if(batch) {
+                if(!(extras.get("batch_ids") instanceof long[]) ||
+                        !(extras.get("batch_xyz") instanceof float[]) ||
+                        !(extras.get("batch_ages") instanceof long[]) ||
+                        !(extras.get("batch_camera") instanceof float[]) ||
+                        !(extras.get("batch_camera_age") instanceof Long) ||
+                        !(extras.get("batch_width") instanceof Integer) ||
+                        !(extras.get("batch_height") instanceof Integer) ||
+                        (extras.containsKey("batch_flags") &&
+                         !(extras.get("batch_flags") instanceof Integer))) {
+                    Log.w(TAG,"RESULT=DROP MALFORMED_BATCH");
+                    return;
+                }
+                OverlayProbeService.supplySyntheticBatch(
+                        seq,intent.getFloatArrayExtra("batch_camera"),
+                        intent.getIntExtra("batch_width",0),
+                        intent.getIntExtra("batch_height",0),
+                        intent.getIntExtra("batch_flags",0),
+                        intent.getLongExtra("batch_camera_age",-1),
+                        intent.getLongArrayExtra("batch_ids"),
+                        intent.getFloatArrayExtra("batch_xyz"),
+                        intent.getLongArrayExtra("batch_ages"));
+                return;
+            }
             if(!stop && (!intent.hasExtra("x") || !intent.hasExtra("age_ms"))) {
                 Log.w(TAG,"RESULT=DROP MISSING_REQUIRED_FIELDS SEQ="+seq);
                 return;

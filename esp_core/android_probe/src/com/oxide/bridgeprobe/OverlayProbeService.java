@@ -190,6 +190,60 @@ public final class OverlayProbeService extends Service {
         }
     }
 
+    /**
+     * Controlled ADB-shell batch, not a game-memory reader. Receiver enforces
+     * strict Android types; native code validates camera, duplicates and bounds.
+     */
+    static void supplySyntheticBatch(long seq, float[] matrix, int width, int height,
+                                     int flags, long cameraAge, long[] ids,
+                                     float[] xyz, long[] ages) {
+        OverlayProbeService service=activeFeed;
+        if(service==null || !service.feedEnabled || service.view==null) {
+            Log.w(TAG,"RESULT=DROP FEED_NOT_ACTIVE");
+            return;
+        }
+        if(seq<0 || seq<=service.lastFeedSequence) {
+            Log.w(TAG,"RESULT=DROP REPLAY_OR_OUT_OF_ORDER SEQ="+seq);
+            return;
+        }
+        if(matrix==null || matrix.length!=16 || ids==null || xyz==null ||
+                ages==null || ids.length<1 || ids.length>256 ||
+                xyz.length!=ids.length*6 || ages.length!=ids.length ||
+                width<=0 || width>16384 || height<=0 || height>16384 ||
+                cameraAge<0 || cameraAge>250) {
+            Log.w(TAG,"RESULT=DROP INVALID_BATCH_SHAPE SEQ="+seq);
+            return;
+        }
+        final long now=SystemClock.elapsedRealtime();
+        if(now<cameraAge) {
+            Log.w(TAG,"RESULT=DROP INVALID_BATCH_TIME SEQ="+seq);
+            return;
+        }
+        long[] sampled=new long[ages.length];
+        for(int i=0;i<ages.length;i++) {
+            if(ids[i]<=0 || ages[i]<0 || ages[i]>10000 || ages[i]>now) {
+                Log.w(TAG,"RESULT=DROP INVALID_BATCH_ENTITY SEQ="+seq);
+                return;
+            }
+            sampled[i]=now-ages[i];
+        }
+        float[] result=MainActivity.nativeProjectSnapshot(
+                matrix,width,height,now,now-cameraAge,250,flags,
+                ids,xyz,sampled);
+        if(result==null || result.length%4!=0 || result.length>ids.length*4) {
+            // A bad camera/matrix, duplicate IDs, or malformed player
+            // geometry must not replace the last valid snapshot.
+            Log.w(TAG,"RESULT=DROP INVALID_BATCH_PROJECTION SEQ="+seq);
+            return;
+        }
+        service.lastFeedSequence=seq;
+        service.view.setRects(result,width,height);
+        service.resetFeedExpiry();
+        Log.i(TAG,"RESULT=PASS FEED_BATCH_SEQ="+seq+" INPUT_COUNT="+
+                  ids.length+" RECT_COUNT="+(result.length/4)+
+                  " SOURCE=SYNTHETIC_JNI");
+    }
+
     private void projectSequence(String phase, float x, boolean stale) {
         if (!sequenceEnabled || view==null) return;
         final long now=SystemClock.elapsedRealtime();
@@ -225,17 +279,25 @@ public final class OverlayProbeService extends Service {
 
     private final class OverlayView extends View {
         private float[] coords;
+        private int projectionWidth=1080;
+        private int projectionHeight=1920;
         private final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
         OverlayView(float[] c) { super(OverlayProbeService.this);coords=c.clone(); }
         void setRects(float[] updated) {
             coords=updated.clone();
             invalidate();
         }
+        void setRects(float[] updated, int width, int height) {
+            projectionWidth=width;
+            projectionHeight=height;
+            setRects(updated);
+        }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
             if(coords.length%4!=0 || coords.length>256*4) return;
             canvas.save();
-            canvas.scale(getWidth()/1080f,getHeight()/1920f);
+            canvas.scale(getWidth()/(float)projectionWidth,
+                         getHeight()/(float)projectionHeight);
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(5);
             paint.setColor(Color.rgb(38,255,110));
