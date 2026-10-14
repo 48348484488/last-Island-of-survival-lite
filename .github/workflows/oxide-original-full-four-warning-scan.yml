@@ -7,6 +7,8 @@ on:
       - ".github/workflows/oxide-original-full-four-warning-scan.yml"
       - "tools/scan_original_warning_literals.py"
       - "tests/test_scan_original_warning_literals.py"
+      - "tools/inventory_original_asset_containers.py"
+      - "tests/test_inventory_original_asset_containers.py"
   workflow_dispatch:
 
 permissions:
@@ -31,6 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m unittest discover -s tests -p 'test_scan_original_warning_literals.py' -v
+          python3 -m unittest discover -s tests -p 'test_inventory_original_asset_containers.py' -v
           python3 -m unittest discover -s tests -p 'test_verify_original_splits.py' -v
       - name: Fetch 867 MB Unity split, verify exact original SHA256
         shell: bash
@@ -66,6 +69,28 @@ jobs:
           print("WARNINGS_MATCHED="+str(len(result["matched_entries"])))
           print("PROTECTION_TRIGGER_CAUSATION=NOT_PROVEN")
           PY
+      - name: Inventory original Unity asset ZIP metadata and embedded format headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/inventory_original_asset_containers.py \
+            base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk \
+            split_UnityDataAssetPack.apk --out full-warning-audit
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          o=Path("full-warning-audit")
+          meta=json.loads((o/"original_asset_containers.json").read_text())
+          scan=json.loads((o/"warning_origin.json").read_text())
+          assert meta["all_original_splits_included"],meta
+          assert meta["members_total"]==scan["entries_seen"],(meta,scan)
+          assert meta["apks_sha256_verified"]==scan["apks_scanned"],(meta,scan)
+          assert meta["original_game_modified"] is False,meta
+          assert meta["app_security_root_cause_proven"] is False,meta
+          print("APK_ZIP_MEMBERS_AND_FORMATS=INVENTORIED")
+          print("MATCHING_ALL_FOUR_ORIGINAL_APK_MEMBERS="+str(meta["members_total"]))
+          print("NESTED_CONTENT_HEADER_TYPES="+str(meta["identified_header_kinds"]))
+          PY
       - name: Summarize exact evidence scope; never infer bypass or cause
         if: always()
         shell: bash
@@ -75,6 +100,9 @@ jobs:
             echo "No device, emulator game runtime, protection tampering or APK modifications."
             if [ -s full-warning-audit/warning_origin.md ]; then
               cat full-warning-audit/warning_origin.md
+              if [ -s full-warning-audit/original_asset_containers.md ]; then
+                cat full-warning-audit/original_asset_containers.md
+              fi
             else
               echo "No valid full scan verdict; see earlier steps."
             fi
