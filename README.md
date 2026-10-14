@@ -2,6 +2,31 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### Sequência de saída do Oxide original confirmada em Android virtual
+
+O [workflow #38491070005](../../actions/runs/38491070005) passou **10 testes**
+e reconstruiu a cronologia de duas inicializações do **APK original**
+no Android 13 ARM64 virtual. A janela generica de Toast do sistema apareceu
+entre 652 e 860 ms apos o evento de criacao do processo. A Activity
+terminou apos 4604/4842 ms; o proprio PID do Oxide enviou SIGKILL
+apos 4649/4895 ms. Em ambas as tentativas, o Android registrou
+em seguida a morte do processo e a limpeza de um Toast pertencente
+ao pacote do Oxide.
+
+O registro de criacao da janela Toast nao identifica, isoladamente,
+qual pacote a criou; o Android identifica o pacote no registro posterior
+de limpeza. O texto especifico do Toast vem das capturas de tela,
+**nao** desses logs. Nenhuma dessas evidencias determina qual
+verificacao provocou a resposta de seguranca do jogo.
+
+[Relatorio detalhado](reports/1.14.11949-virtual-toast-activity-sigkill-timeline.md) |
+[Analisador reproduzivel](tools/analyze_original_toast_timeline.py) |
+[Workflow virtual](../../actions/workflows/oxide-original-virtual-toast-timeline.yml).
+
+Nao foi usado aparelho fisico, nem modificacao de APK, nem desbloqueio
+de protecoes. Ainda nao ha partida multiplayer ou ESP de jogadores reais.
+
+
 ### Compatibilidade grafica medida em Android virtual ARM64 (12, 13, 14)
 
 As execucoes [#38490256931](../../actions/runs/38490256931) e
