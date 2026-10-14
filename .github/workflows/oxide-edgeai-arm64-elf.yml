@@ -10,12 +10,14 @@ on:
       - "tools/edgeai_arm64_cfg.py"
       - "tools/edgeai_arm64_indirect_audit.py"
       - "tools/edgeai_arm64_dispatch_bounds.py"
+      - "tools/edgeai_arm64_unity_exports.py"
       - "tools/edgeai_arm64_symbol_triage.py"
       - "tests/test_edgeai_arm64_split.py"
       - "tests/test_edgeai_arm64_branch_map.py"
       - "tests/test_edgeai_arm64_cfg.py"
       - "tests/test_edgeai_arm64_indirect_audit.py"
       - "tests/test_edgeai_arm64_dispatch_bounds.py"
+      - "tests/test_edgeai_arm64_unity_exports.py"
       - "tests/test_edgeai_arm64_symbol_triage.py"
       - ".github/workflows/oxide-edgeai-arm64-elf.yml"
   workflow_dispatch:
@@ -38,12 +40,14 @@ jobs:
             tools/edgeai_arm64_cfg.py
             tools/edgeai_arm64_indirect_audit.py
             tools/edgeai_arm64_dispatch_bounds.py
+            tools/edgeai_arm64_unity_exports.py
             tools/edgeai_arm64_symbol_triage.py
             tests/test_edgeai_arm64_split.py
             tests/test_edgeai_arm64_branch_map.py
             tests/test_edgeai_arm64_cfg.py
             tests/test_edgeai_arm64_indirect_audit.py
             tests/test_edgeai_arm64_dispatch_bounds.py
+            tests/test_edgeai_arm64_unity_exports.py
             tests/test_edgeai_arm64_symbol_triage.py
             split_config.arm64_v8a.apk
           sparse-checkout-cone-mode: false
@@ -60,6 +64,7 @@ jobs:
           python3 -m unittest discover -s tests -p test_edgeai_arm64_cfg.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_indirect_audit.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_dispatch_bounds.py -v
+          python3 -m unittest discover -s tests -p test_edgeai_arm64_unity_exports.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_symbol_triage.py -v
       - name: Audit unmodified 80MB APK and 236MB IL2CPP library read-only
         shell: bash
@@ -230,6 +235,24 @@ jobs:
           assert d["gameplay_functions_confirmed"]==0 and d["runtime_offsets_confirmed"]==0
           assert not d["code_executed"]
           print("EDGEAI_ORIGINAL_OXIDE_1747_SYMBOL_NAME_TRIAGE_PASS")
+          PY
+      - name: Inventory original Unity engine exports using EdgeAI AArch64 CFG
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/edgeai_arm64_unity_exports.py split_config.arm64_v8a.apk \
+            --output edgeai-static-evidence/oxide-unity-engine-export-cfg.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("edgeai-static-evidence/oxide-unity-engine-export-cfg.json").read_text())
+          assert d["status"]=="AARCH64_UNITY_ENGINE_STATIC_EXPORTS_PASS",d
+          assert d["library"]=="libunity.so" and d["function_count"]==4,d
+          sizes={"UnitySendMessage":92,"UnityInitialize":504,"UnityShutdown":48,"JNI_OnLoad":196}
+          assert {x["name"]:x["size_bytes"] for x in d["functions"]}==sizes,d
+          assert all(x["candidate_blocks"]>=1 for x in d["functions"]),d
+          assert not d["executed_original_game"] and not d["unity_camera_located"] and not d["player_positions_located"],d
+          print("EDGEAI_ORIGINAL_UNITY_ENGINE_EXPORTS_STATIC_PASS")
           PY
       - name: Upload audit logs, no game executables
         if: always()
