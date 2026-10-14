@@ -2,6 +2,16 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### Oito entidades sinteticas e camera externa — 100% virtual, confirmado
+
+O [teste #38557203468](../../actions/runs/38557203468) concluiu os **dois jobs com sucesso** em Android 13 ARM64 Redroid. Um unico Service/JNI recebeu **oito alvos sinteticos simultaneos** em lotes tipados, incluindo matriz 4x4 de camera fornecida pelo remetente. O verificador das capturas reais aprovou **16 verificacoes**, incluindo quatro caixas expiradas independentemente, alteracao de camera, rejeicao de replay, arrays incorretos e IDs duplicados, mesmo PID e limpeza por timeout.
+
+A captura inicial registrou **572 pixels verdes por alvo** em oito faixas da tela; apos expiracao alternada, quatro faixas ficaram com 572 pixels e quatro com **zero**. [Capturas e JSON do Android virtual](../../actions/runs/38557203468/artifacts/11890314399) | [Relatorio detalhado](reports/1.14.11949-virtual-eight-entity-batch.md) | [Codigo do teste](esp_core/android_probe/virtual_overlay_feed_batch.sh).
+
+**Limite:** o APK original Oxide nao foi instalado ou executado nesta validacao. Nao sao jogadores reais; o fluxo de posicoes e a camera continuam controlados pelo laboratorio.
+
+
+
 
 ### Duas caixas sinteticas independentes validadas no Android virtual ARM64
 
