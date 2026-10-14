@@ -5,7 +5,11 @@ name: Oxide M5 - Original Oxide and standalone JNI overlay on native Android 16 
 on:
   push:
     branches: [main]
-    paths: [".github/workflows/oxide-m5-android16-original-overlay.yml"]
+    paths:
+      - ".github/workflows/oxide-m5-android16-original-overlay.yml"
+      - "esp_core/android_probe/original_overlay_smoke.sh"
+      - "esp_core/android_probe/check_original_game_artwork_overlay.py"
+      - "esp_core/android_probe/tests/test_original_game_artwork_overlay.py"
   workflow_dispatch:
 
 permissions:
@@ -148,6 +152,14 @@ jobs:
             -p 'test_original_overlay_pixels.py' -v
           python3 esp_core/android_probe/check_original_overlay_pixels.py \
             oxide-overlay-evidence | tee oxide-overlay-evidence/loading_overlay_validation.txt
+          python3 -m unittest discover -s esp_core/android_probe/tests \
+            -p 'test_original_game_artwork_overlay.py' -v
+          python3 -m unittest discover -s tests \
+            -p 'test_check_original_overlay_overlap.py' -v
+          python3 tools/check_original_overlay_overlap.py oxide-overlay-evidence \
+            | tee oxide-overlay-evidence/same_capture_pid_validation.txt
+          python3 esp_core/android_probe/check_original_game_artwork_overlay.py \
+            oxide-overlay-evidence | tee oxide-overlay-evidence/game_artwork_with_overlay_validation.txt
       - name: Preserve non-proprietary evidence even on failure
         if: always()
         uses: actions/upload-artifact@v4
@@ -173,6 +185,14 @@ jobs:
             echo "M5 loading-screen proof does NOT mean M4 playable game or 35s survival."
             echo "Results must distinguish pixel proof from original-game process termination."
             echo "Even success is NOT a playable game ESP, player-coordinate extraction, or a security bypass."
+            if [ -f oxide-overlay-evidence/game_artwork_with_overlay_validation.txt ]; then
+              echo '#### Strict same-PNG artwork plus green JNI marker'
+              cat oxide-overlay-evidence/game_artwork_with_overlay_validation.txt
+            fi
+            if [ -f oxide-overlay-evidence/same_capture_pid_validation.txt ]; then
+              echo '#### Original Oxide Activity PID still foreground at marker capture'
+              cat oxide-overlay-evidence/same_capture_pid_validation.txt
+            fi
             if [ -f oxide-overlay-evidence/loading_overlay_validation.txt ]; then
               echo '#### Native pixel and Activity validation'
               cat oxide-overlay-evidence/loading_overlay_validation.txt
