@@ -10,7 +10,8 @@ import argparse
 import json
 import re
 from pathlib import Path
-from diagnose_virtual_activity_pid import PACKAGE, ACTIVITY, parse_trace
+from diagnose_original_exit import PACKAGE, ACTIVITY
+from diagnose_virtual_activity_pid import parse_trace
 
 HISTORY = re.compile(
     r"\*\s*Hist\s*#\d+:\s*ActivityRecord\{[^\n]*" +
