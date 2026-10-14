@@ -169,3 +169,14 @@ Para habilitar o dispositivo remoto (uma unica configuracao do provedor), adicio
 [Instrucoes e limites](reports/1.14.11949-remote-physical-adb-integration.md) | [Workflow](../../actions/workflows/oxide-remote-physical-arm64.yml)
 
 **Privacidade:** logs completos, capturas e identificadores do aparelho nao sao publicados automaticamente nos artefatos. ADB sideload dos quatro splits nao garante licenciamento Play ou um veredito de integridade positivo.
+
+
+## Novos resultados reais: Android 12/14 virtual ARM64 (13/10/2026)
+
+A [execucao virtual ARM64 Android 12 vs 14 #38487286930](../../actions/runs/38487286930) terminou com infraestrutura aprovada. **Os dois Androids virtuais iniciaram e instalaram os quatro APKs originais com sucesso, sem modificar o jogo.** O pacote grande foi baixado apenas uma vez, e 13 testes de regressao passaram.
+
+As capturas reais de ambos os Androids mostram a tela de carregamento original do Oxide com a mensagem Security Threat Detected by App. Portanto, o jogo **tambem carregou a interface no Android 12**, mesmo que o parser nao tenha encontrado o evento am_proc_start nesta versao. Em Android 14, o PID original 1876 terminou por SIGKILL emitido pelo proprio processo.
+
+[Relatorio detalhado e explicacao dos limites](reports/1.14.11949-native-virtual-arm64-12-14.md) | [Screenshots e dados reais da CI](../../actions/runs/38487286930/artifacts/11859419695).
+
+**Escopo exclusivamente virtual:** nao e preciso aparelho fisico. A limitacao restante e o aviso de seguranca e encerramento do APK original nestes ambientes, sem causa especifica comprovada. Nenhum ESP de jogadores reais ou partida multiplayer foi validado.
