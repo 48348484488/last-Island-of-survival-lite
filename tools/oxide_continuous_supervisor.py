@@ -89,9 +89,9 @@ def maybe_handoff(api, run):
     api.api("/actions/workflows/" + workflow + "/dispatches",
             "POST", {"ref": "main"})
     api.record(1, marker,
-               "**Etapa leve iniciada automaticamente por evento**\\n\\n"
-               "Execucao anterior: https://github.com/%s/actions/runs/%d\\n"
-               "Workflow seguinte: `%s`.\\n"
+               "**Etapa leve iniciada automaticamente por evento**\n\n"
+               "Execucao anterior: https://github.com/%s/actions/runs/%d\n"
+               "Workflow seguinte: `%s`.\n"
                "Nenhum APK foi alterado ou executado nesta transicao; "
                "a meta continua aberta ate comprovacao separada." % (REPO, source_id, workflow))
 
