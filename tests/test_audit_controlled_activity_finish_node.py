@@ -75,7 +75,7 @@ class Tests(unittest.TestCase):
 
     def test_settings_code_after_calibration_window_rejected(self):
         r=self.fixture();p=r/"kernel_sigkill_trace.txt"
-        p.write_text(p.read_text().replace("boot_ns=11180000000","boot_ns=14000000000"))
+        p.write_text(p.read_text().replace("boot_ns=11180000000","boot_ns=16000000000"))
         self.assertFalse(assess(r)["shared_binder_endpoint_node_correlated"])
 
     def test_original_code_too_early_rejected(self):
