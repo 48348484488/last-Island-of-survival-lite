@@ -62,7 +62,6 @@ def plan_next(closed, states):
 # expensive original APK (~867 MB) or a potential security-sensitive experiment.
 ON_SUCCESS = {
     "oxide-arm64-signal-observability.yml": "oxide-kernel-signal-replay.yml",
-    "oxide-kernel-signal-replay.yml": "oxide-original-launch-milestones.yml",
 }
 
 def lightweight_handoff(source, issue_state):
