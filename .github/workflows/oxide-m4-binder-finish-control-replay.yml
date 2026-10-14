@@ -1,0 +1,100 @@
+name: "Oxide M4 - Independent replay of original finishActivity Binder endpoint versus stock Settings control"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m4-binder-finish-control-replay.yml"
+      - "tools/audit_controlled_activity_finish_node.py"
+      - "tests/test_audit_controlled_activity_finish_node.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  real-android16-binder-endpoint-node-identity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - name: Checkout read-only Binder endpoint comparison auditor
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Run 8 independent fail-closed synthetic regressions for node, source, time and interface assumptions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p test_audit_controlled_activity_finish_node.py -v
+          python3 -m unittest discover -s tests -p test_audit_original_binder_finish_window.py -v
+          python3 -m py_compile tools/audit_controlled_activity_finish_node.py
+      - name: Retrieve unchanged real Oxide Android16 plus controlled Android Settings BACK kernel proof
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38645776428
+          name: oxide-original-android16-arm64-binder-finish-ipc-window
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: binder-original-and-settings-proof
+      - name: Confirm exact SAME Binder target node and code, not simply adjacent timestamps
+        shell: bash
+        run: |
+          set -euo pipefail
+          d="binder-original-and-settings-proof/android_16"
+          test -s "$d/settings_back_window.json"
+          test -s "$d/host_settings_namespace.json"
+          test -s "$d/kernel_sigkill_trace.txt"
+          test -s "$d/all_buffers.txt"
+          python3 tools/audit_controlled_activity_finish_node.py "$d" \
+            | tee controlled_original_finish_node_stdout.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          d=Path("binder-original-and-settings-proof/android_16")
+          x=json.loads((d/"original_finish_binder_endpoint_control.json").read_text())
+          assert x["status"]=="CONTROLLED_SETTINGS_FINISH_BINDER_NODE_MATCHES_ORIGINAL_FINAL_CODE15",x
+          assert x["original_host_pid"]==12488,x
+          assert x["original_guest_pid"]==2161,x
+          assert x["android_settings_host_pid"]==11166,x
+          assert x["system_server_host_pid"]==10514,x
+          assert x["settings_activity_finish_logged"] is True,x
+          assert x["original_kernel_sigkill_verified"] is True,x
+          assert x["shared_binder_endpoint_node_correlated"] is True,x
+          assert x["settings_controlled_binder_code15_nodes"]==[11600],x
+          assert x["original_last20ms_binder_code15_nodes"]==[11600],x
+          assert len(x["original_last20ms_code15_events"])==1,x
+          assert 4.0<=x["original_last20ms_code15_events"][0]["milliseconds_before_game_sigkill"]<=5.0,x
+          assert x["interface_descriptor_read_from_transaction"] is False,x
+          assert x["original_application_finish_caller_identified"] is False,x
+          assert x["reason_for_activity_finish"]=="UNKNOWN",x
+          assert x["gameplay_verified"] is False,x
+          print("STOCK_ANDROID_SETTINGS_FINISH_AND_ORIGINAL_OXIDE_CODE15_SAME_BINDER_NODE=CONFIRMED")
+          print("INTERNAL_ORIGINAL_CALLER_AND_SECURITY_CAUSE_REMAIN_UNKNOWN")
+          PY
+      - name: Publish exact findings and limits
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original Oxide + stock Android Settings: Binder finish endpoint comparison"
+            if [ -s binder-original-and-settings-proof/android_16/original_finish_binder_endpoint_control.json ]; then
+              cat binder-original-and-settings-proof/android_16/original_finish_binder_endpoint_control.json
+            else
+              echo "NOT_PROVEN; no caller or interface identity must be inferred."
+            fi
+            echo "Kernel node equality and control Activity finish are not an internal game call stack."
+            echo "No original APK changes, Play Integrity modification, device spoofing, playable game or real ESP."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive independent numeric endpoint verdict, without APKs or original large logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-android16-binder-finish-node-vs-settings-control-replay
+          path: |
+            binder-original-and-settings-proof/android_16/original_finish_binder_endpoint_control.json
+            controlled_original_finish_node_stdout.txt
+          if-no-files-found: warn
+          retention-days: 14
