@@ -141,7 +141,14 @@ public final class MainActivity extends Activity {
         Log.i(TAG, "RESULT=" + verdict + " CODE=" + result + " MODE=" + mode);
         setContentView(new NativeRectView(this, rects, mode));
         if (getIntent().getBooleanExtra("overlay_probe",false)) {
-            startService(new Intent(this,OverlayProbeService.class));
+            // Test only synthetic snapshots. Native renderer and overlay
+            // Service must BOTH clear markers for stale/missing samples.
+            Intent service=new Intent(this,OverlayProbeService.class);
+            service.putExtra("overlay_no_boxes",
+                    getIntent().getBooleanExtra("overlay_no_boxes",false));
+            service.putExtra("overlay_stale_boxes",
+                    getIntent().getBooleanExtra("overlay_stale_boxes",false));
+            startService(service);
             finish(); // Return to home: overlay is independent of the activity.
         }
     }
