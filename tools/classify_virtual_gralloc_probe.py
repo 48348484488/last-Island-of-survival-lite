@@ -49,7 +49,7 @@ def classify(text):
                     "failure":match.group(6),
                 })
         if tag=="GraphicBufferAllocator" and "Failed to allocate (4 x 4)" in msg:
-            gfx.append({"pid":pid, "format":int(v) if (v:=re.search(r"format (\d+)",msg)) else None})
+            gfx.append({"pid":pid, "format":int(v.group(1)) if (v:=re.search(r"format (\d+)",msg)) else None})
     pid=starts[-1] if starts else None
     trials=[x for x in candidates if x["pid"]==pid] if pid else []
     names=[x["name"] for x in trials]
