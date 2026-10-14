@@ -1,0 +1,91 @@
+name: Oxide original full 4-split Unity security-warning literal audit (virtual-only)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-original-full-four-warning-scan.yml"
+      - "tools/scan_original_warning_literals.py"
+      - "tests/test_scan_original_warning_literals.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-readonly-original-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+            tools
+            tests
+      - name: Test warning scanner cross-boundary offsets, formats and hash gating
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_scan_original_warning_literals.py' -v
+          python3 -m unittest discover -s tests -p 'test_verify_original_splits.py' -v
+      - name: Fetch 867 MB Unity split, verify exact original SHA256
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p full-warning-audit
+          curl --fail --location --retry 4 --retry-all-errors \
+            --connect-timeout 30 --max-time 1200 --silent --show-error \
+            --output split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          python3 tools/verify_original_splits.py . \
+            --output full-warning-audit/original_four_sha256.json
+      - name: Streaming read-only scan of every ZIP member across ALL FOUR original signed APKs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/scan_original_warning_literals.py \
+            base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk \
+            split_UnityDataAssetPack.apk --out full-warning-audit
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          result=json.loads(Path("full-warning-audit/warning_origin.json").read_text())
+          assert result["scanned_all_four_original_splits"], result
+          assert result["game_modified"] is False, result
+          assert result["runtime_test_performed"] is False, result
+          assert result["specific_security_trigger_identified"] is False, result
+          assert result["entries_seen"]>=1454, result
+          print("FOUR_UNMODIFIED_SPLITS_SHA256_VERIFIED=TRUE")
+          print("ZIP_MEMBERS_SCANNED="+str(result["entries_seen"]))
+          print("ZIP_MEMBER_UNCOMPRESSED_BYTES_SCANNED="+str(result["decompressed_bytes_scanned"]))
+          print("ALL_ORIGINAL_ZIP_MEMBER_CONTENTS_EXAMINED="+str(result["full_plaintext_member_coverage"]))
+          print("WARNINGS_MATCHED="+str(len(result["matched_entries"])))
+          print("PROTECTION_TRIGGER_CAUSATION=NOT_PROVEN")
+          PY
+      - name: Summarize exact evidence scope; never infer bypass or cause
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original Oxide 1.14.11949 — all four signed APK ZIP members"
+            echo "No device, emulator game runtime, protection tampering or APK modifications."
+            if [ -s full-warning-audit/warning_origin.md ]; then
+              cat full-warning-audit/warning_origin.md
+            else
+              echo "No valid full scan verdict; see earlier steps."
+            fi
+            echo "Literal matching does NOT establish the origin of a dynamically constructed notice or app security rejection trigger."
+            echo "No game launch, multiplayer session, real player positions or ESP proved."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save compact textual/JSON reports only (no original game data)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-all-four-warning-literal-scan
+          path: full-warning-audit/
+          if-no-files-found: warn
+          retention-days: 14
