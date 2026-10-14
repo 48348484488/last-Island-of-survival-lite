@@ -1,0 +1,119 @@
+name: Oxide M1-M4 - Original Activity finish self-SIGKILL independent three-version proof
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-original-exit-order-3-versions.yml"
+      - "tools/audit_original_exit_order.py"
+      - "tests/test_audit_original_exit_order.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  archived-original-app-exit-proof:
+    name: Independently audit actual original game Android 13 15 and 16 ARM64
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - name: Checkout forensic-only parser and unit tests
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Run fail-closed unit tests and Python syntax gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p test_audit_original_exit_order.py -v
+          python3 -m py_compile tools/audit_original_exit_order.py
+      - name: Retrieve real, unchanged original Android 13 ARM64 run evidence
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38599474610
+          name: oxide-original-native-arm64-smoke
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: original/android13
+      - name: Retrieve actual original Android 15 ARM64 Activity observation
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38610951671
+          name: oxide-original-android15-native-arm64-35s-observations
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: original/android15
+      - name: Retrieve real original Android 16 ARM64 host-ashmem game run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38614441183
+          name: oxide-original-android16-arm64-ashmem-35s-proof
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: original/android16
+      - name: Verify ORIGINAL Activity PID, finish, self-signal and system exit status 9
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in \
+            original/android13/all_buffers.txt \
+            original/android13/exit_info.txt \
+            original/android15/android_15/all_buffers.txt \
+            original/android15/android_15/exit_info.txt \
+            original/android16/android_16/all_buffers.txt \
+            original/android16/android_16/exit_info.txt; do
+            test -s "$file"
+          done
+          python3 tools/audit_original_exit_order.py \
+            --android13 original/android13 \
+            --android15 original/android15/android_15 \
+            --android16 original/android16/android_16 \
+            --out original-analysis
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          result=json.loads(Path("original-analysis/original_exit_order.json").read_text())
+          assert result["status"]=="THREE_REAL_NATIVE_ANDROID_VERSIONS_CONFIRMED",result
+          assert result["all_application_exit_info_records_signal_9"] is True,result
+          assert result["all_original_activities_finish_before_self_sigkill"] is True,result
+          assert result["requester_identified"] is False,result
+          assert result["root_cause_proven"] is False,result
+          assert result["gameplay_proven"] is False,result
+          expected={"13":(2232,45,4980),"15":(1983,2,4619),"16":(2099,3,4556)}
+          for version,(pid,gap,elapsed) in expected.items():
+              item=result["versions"][version]
+              assert item["original_activity_pid"]==pid,item
+              assert item["finish_to_self_sigkill_ms"]==gap,item
+              assert item["events_ms_after_start"]["original_self_sigkill_ms"]==elapsed,item
+              assert item["application_exit_info"]["exact_original_pid_found"],item
+              assert item["application_exit_info"]["signal_9_recorded"],item
+              assert item["original_pid_java_fatal_markers"]==0,item
+              assert item["original_pid_native_fatal_6_or_11_markers"]==0,item
+          print("THREE_ACTUAL_ORIGINAL_ANDROID_PID_EXIT_CHAINS_CORROBORATED")
+          print("ACTIVITY_FINISH_REQUESTER_UNKNOWN")
+          print("SECURITY_CAUSE_AND_PLAYABLE_GAME_NOT_ESTABLISHED")
+          PY
+      - name: Report exact limitations before claiming any cause
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Oxide original: Android 13/15/16 read-only exit chain"
+            if [ -s original-analysis/original_exit_order.md ]; then
+              cat original-analysis/original_exit_order.md
+            else
+              echo "Incomplete analysis: no conclusion."
+            fi
+            echo "The original application security reason remains NOT IDENTIFIED."
+            echo "No Android phones, APK patch, hook, device/identity modification or ESP."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive only aggregated forensic proof, not the game APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-android13-15-16-finish-self-sigkill-corroboration
+          path: original-analysis/
+          if-no-files-found: warn
+          retention-days: 14
