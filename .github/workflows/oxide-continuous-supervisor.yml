@@ -11,6 +11,7 @@ on:
       - "Oxide M3 - Native virtual Android 15 and 16 boot compatibility"
       - "Oxide M3 - Android 16 ARM64 real boot failure diagnostics"
       - "Oxide M3-M4 - Original unchanged game on native virtual Android 15"
+      - "Oxide virtual-only ARM64 Android 15 standalone overlay compatibility"
       - "Oxide original APK on native ARM64 Android container"
       - "Native Apple Silicon ARM64 Google Play Android emulator boot probe"
       - "Official native ARM64 Google Play image and host availability audit"
