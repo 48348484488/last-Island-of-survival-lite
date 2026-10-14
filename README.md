@@ -2,6 +2,14 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### EdgeAI testada contra as bibliotecas ARM64 originais do Oxide
+
+A [execucao #38559496820](../../actions/runs/38559496820) usou o parser ELF da **EdgeAI Engine**, adaptado para bibliotecas grandes por `mmap`, e analisou o split ARM64 original sem executar o jogo. **Quatro testes de regressao** passaram. As tres bibliotecas foram identificadas com SHA-256 verificado: `libil2cpp.so` (236 MB, **1.747 simbolos de funcao nomeados**), `libunity.so` (25 MB, 7 simbolos) e `libloader.so` (10 MB, 1 simbolo).
+
+Isso **comprova utilidade pratica da EdgeAI para inventario ELF64**, nao para extrair automaticamente posicoes de jogadores ou acessar a camera do jogo. Muitos nomes encontrados sao genericos ou opacos. [Relatorio](reports/1.14.11949-edgeai-arm64-audit.md) | [Artefato JSON do teste](../../actions/runs/38559496820/artifacts/11891702226).
+
+
+
 ### Oito entidades sinteticas e camera externa — 100% virtual, confirmado
 
 O [teste #38557203468](../../actions/runs/38557203468) concluiu os **dois jobs com sucesso** em Android 13 ARM64 Redroid. Um unico Service/JNI recebeu **oito alvos sinteticos simultaneos** em lotes tipados, incluindo matriz 4x4 de camera fornecida pelo remetente. O verificador das capturas reais aprovou **16 verificacoes**, incluindo quatro caixas expiradas independentemente, alteracao de camera, rejeicao de replay, arrays incorretos e IDs duplicados, mesmo PID e limpeza por timeout.
