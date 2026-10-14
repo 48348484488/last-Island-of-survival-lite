@@ -17,7 +17,7 @@ try:
 except ImportError:
     lz4=None
 
-def build_bundle(parts,*,meta_at_end=False,block_codecs=None):
+def build_bundle(parts,*,meta_at_end=False,block_codecs=None,version=6):
     block_codecs=block_codecs or [3]*len(parts)
     packed=[]
     for part,codec in zip(parts,block_codecs):
@@ -30,7 +30,7 @@ def build_bundle(parts,*,meta_at_end=False,block_codecs=None):
     raw_meta+=struct.pack(">IQQI",1,0,sum(map(len,parts)),4)+b"asset\x00"
     compressed_meta=lz4.block.compress(raw_meta,mode="high_compression",
                                         store_size=False)
-    prefix=(b"UnityFS\x00"+struct.pack(">I",6)+
+    prefix=(b"UnityFS\x00"+struct.pack(">I",version)+
             b"2021.3.11f1\x00"+b"2021.3.11f1\x00")
     flags=0x43 | (0x80 if meta_at_end else 0)
     hlen=len(prefix)+20
@@ -61,6 +61,30 @@ class UnityFSReader(unittest.TestCase):
         self.assertEqual(out["data_block_codecs"],{"NONE":1})
         self.assertTrue(out["data_scan_complete"],out)
         self.assertFalse(out["pattern_offsets"])
+    def test_real_format8_monoscripts_suffix_mismatch_16_allowed_only_if_physically_safe(self):
+        original=build_bundle([b"Unity plain decoded asset"],version=8)
+        prefix_len=len(b"UnityFS\x00")+4+len(b"2021.3.11f1\x00")*2
+        modified=bytearray(original)
+        struct.pack_into(">Q",modified,prefix_len,len(original)+16)
+        bundle=bytes(modified)
+        meta=scan_bundle(io.BytesIO(bundle),len(bundle),100000)
+        self.assertTrue(meta["data_scan_complete"],meta)
+        self.assertEqual(meta["declared_minus_physical_bytes"],16)
+        self.assertIn("16_BYTE",meta["size_exception"])
+    def test_suffix_mismatch_17_still_fails_closed(self):
+        original=build_bundle([b"sample"],version=8)
+        prefix_len=len(b"UnityFS\x00")+4+len(b"2021.3.11f1\x00")*2
+        modified=bytearray(original)
+        struct.pack_into(">Q",modified,prefix_len,len(original)+17)
+        with self.assertRaisesRegex(ValueError,"INVALID_UNITYFS_DECLARED_SIZE"):
+            scan_bundle(io.BytesIO(modified),len(modified),100000)
+    def test_data_at_end_never_allowed_to_claim_missing_suffix(self):
+        original=build_bundle([b"sample"],version=8,meta_at_end=True)
+        prefix_len=len(b"UnityFS\x00")+4+len(b"2021.3.11f1\x00")*2
+        modified=bytearray(original)
+        struct.pack_into(">Q",modified,prefix_len,len(original)+16)
+        with self.assertRaisesRegex(ValueError,"INVALID_UNITYFS_DECLARED_SIZE"):
+            scan_bundle(io.BytesIO(modified),len(modified),100000)
     def test_global_budget_rejected_before_allocating_bundle(self):
         payload=build_bundle([b"sample"],meta_at_end=True)
         with self.assertRaisesRegex(ValueError,"GLOBAL_DECOMPRESSION_LIMIT"):
