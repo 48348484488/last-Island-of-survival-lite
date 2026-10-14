@@ -1,0 +1,150 @@
+name: "Oxide M3 - Validate stock Android 16 ARM64 boot with upstream ashmem"
+
+# Isolated, disposable GitHub ARM64 virtual host; original game APK absent.
+# An exact reviewed upstream module source commit is used without editing
+# SurfaceFlinger, Android boot properties, signatures, security, or integrity.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m3-android16-ashmem-real-boot.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stock-android16-boot:
+    name: ARM64 stock Android 16 real boot with ashmem module
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 35
+    steps:
+      - name: Prepare ephemeral ARM64 host, Binder, headers and ashmem build
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p android16-ashmem-proof
+          uname -m | tee android16-ashmem-proof/host_arch.txt
+          uname -r | tee android16-ashmem-proof/host_kernel.txt
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            git gcc make kmod adb "linux-headers-$(uname -r)" \
+            "linux-modules-extra-$(uname -r)"
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          sudo chmod a+rw /dev/binderfs/binder || true
+          test -e /dev/binderfs/binder
+      - name: Build and load exact upstream ashmem compatibility module in temporary runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init --quiet upstream-module
+          git -C upstream-module remote add origin https://github.com/remote-android/redroid-modules.git
+          timeout 180 git -C upstream-module fetch --depth=1 origin refs/pull/23/head
+          SHA="$(git -C upstream-module rev-parse FETCH_HEAD)"
+          echo "$SHA" > android16-ashmem-proof/upstream_commit.txt
+          test "$SHA" = "f55e1e7515a6dd5f8e0f9569ea79148c08f60816"
+          git -C upstream-module checkout --quiet --detach FETCH_HEAD
+          make -C upstream-module/ashmem all > android16-ashmem-proof/ashmem_build.txt 2>&1
+          test -s upstream-module/ashmem/ashmem_linux.ko
+          modinfo upstream-module/ashmem/ashmem_linux.ko \
+            > android16-ashmem-proof/modinfo.txt
+          grep -q "^vermagic: *$(uname -r)" android16-ashmem-proof/modinfo.txt
+          sudo insmod upstream-module/ashmem/ashmem_linux.ko \
+            > android16-ashmem-proof/insmod_stdout.txt \
+            2> android16-ashmem-proof/insmod_stderr.txt
+          if [ ! -c /dev/ashmem ]; then
+            # /proc/misc records the assigned minor for registered misc devices.
+            minor="$(awk '$2=="ashmem" {print $1}' /proc/misc)"
+            if [ -n "$minor" ]; then
+              sudo mknod /dev/ashmem c 10 "$minor"
+            fi
+          fi
+          test -c /dev/ashmem
+          ls -l /dev/ashmem | tee android16-ashmem-proof/ashmem_device.txt
+          cat /proc/misc > android16-ashmem-proof/misc_devices.txt
+          sudo chmod a+rw /dev/ashmem
+          echo ASHMEM_KERNEL_MODULE_LOADED > android16-ashmem-proof/ashmem_status.txt
+      - name: Boot unchanged upstream Android 16 ARM64 with legitimate host ashmem
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="redroid/redroid:16.0.0_64only-latest"
+          echo "$IMAGE" > android16-ashmem-proof/image.txt
+          timeout 600 docker pull "$IMAGE" > android16-ashmem-proof/docker_pull.txt 2>&1
+          docker image inspect --format '{{.Architecture}}' "$IMAGE" \
+            | tee android16-ashmem-proof/image_arch.txt
+          test "$(cat android16-ashmem-proof/image_arch.txt)" = arm64
+          docker run -d --privileged --name oxide-stock-android16-ashmem \
+            -p 127.0.0.1:5555:5555 \
+            -v /dev/binderfs:/dev/binderfs \
+            --device /dev/ashmem:/dev/ashmem \
+            "$IMAGE" \
+            androidboot.redroid_gpu_mode=guest \
+            androidboot.redroid_width=720 \
+            androidboot.redroid_height=1280 \
+            androidboot.redroid_dpi=320 \
+            > android16-ashmem-proof/container_id.txt
+          echo BOOT_ATTEMPT_STARTED > android16-ashmem-proof/status.txt
+          for i in $(seq 1 75); do
+            STATE="$(docker inspect --format '{{.State.Status}}' oxide-stock-android16-ashmem || echo MISSING)"
+            if [ "$STATE" != running ]; then
+              echo "CONTAINER_EXITED=$STATE" >> android16-ashmem-proof/status.txt
+              break
+            fi
+            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+            completed="$(timeout 5 adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+            if [ "$completed" = 1 ]; then
+              echo ANDROID16_BOOT_COMPLETED >> android16-ashmem-proof/status.txt
+              break
+            fi
+            sleep 4
+          done
+      - name: Preserve kernel/container/Android evidence even if boot fails
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          mkdir -p android16-ashmem-proof
+          docker inspect --format '{{json .State}}' oxide-stock-android16-ashmem \
+            > android16-ashmem-proof/container_state.json 2>&1
+          docker logs oxide-stock-android16-ashmem \
+            > android16-ashmem-proof/container_log.txt 2>&1
+          for prop in sys.boot_completed ro.build.version.release ro.product.cpu.abilist init.svc.zygote init.svc.surfaceflinger init.svc.bootanim; do
+            val="$(timeout 8 adb -s 127.0.0.1:5555 shell getprop "$prop" 2>/dev/null | tr -d '\r' | head -n1)"
+            printf '%s=%s\n' "$prop" "$val"
+          done > android16-ashmem-proof/guest_props.txt
+          timeout 12 adb -s 127.0.0.1:5555 shell dumpsys activity activities \
+            > android16-ashmem-proof/activity_manager.txt 2>&1
+          timeout 12 adb -s 127.0.0.1:5555 logcat -b all -d -t 450 -v threadtime \
+            > android16-ashmem-proof/guest_logcat.txt 2>&1
+          sudo dmesg --ctime | tail -n 550 > android16-ashmem-proof/host_kernel_tail.txt 2>&1
+          {
+            echo '## Native ARM64 Android16 boot with host ashmem'
+            echo "Kernel: $(cat android16-ashmem-proof/host_kernel.txt 2>/dev/null || echo UNKNOWN)"
+            echo "Module: $(cat android16-ashmem-proof/ashmem_status.txt 2>/dev/null || echo UNKNOWN)"
+            echo "State: $(cat android16-ashmem-proof/status.txt 2>/dev/null || echo UNKNOWN)"
+            cat android16-ashmem-proof/guest_props.txt 2>/dev/null || true
+            echo 'No Oxide APK installed, no patched Android library and no certification spoofing.'
+          } >> "$GITHUB_STEP_SUMMARY"
+          docker rm -f oxide-stock-android16-ashmem >/dev/null 2>&1 || true
+      - name: Require actual stock guest boot and ARM64 identity, not process existence
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -qx ANDROID16_BOOT_COMPLETED android16-ashmem-proof/status.txt
+          grep -qx 'sys.boot_completed=1' android16-ashmem-proof/guest_props.txt
+          grep -qx 'ro.build.version.release=16' android16-ashmem-proof/guest_props.txt
+          grep -q '^ro.product.cpu.abilist=.*arm64-v8a' android16-ashmem-proof/guest_props.txt
+          test -s android16-ashmem-proof/activity_manager.txt
+          echo STOCK_ANDROID16_ARM64_HOST_ASHMEM_BOOT_VERIFIED
+      - name: Archive read-only proof and exact failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-android16-arm64-ashmem-stock-boot-proof
+          path: android16-ashmem-proof/
+          if-no-files-found: warn
+          retention-days: 14
