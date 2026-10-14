@@ -77,11 +77,24 @@ class RealLoadingArtworkOverlap(unittest.TestCase):
 
     def test_original_pid_must_correlate_with_final_capture(self):
         d = mod.assess(self.evidence(sample=False))
-        self.assertFalse(d["checks"]["original_activity_pid_and_overlay_matched_capture3"])
+        self.assertFalse(d["checks"]["original_activity_pid_and_overlay_matched_selected_capture"])
 
     def test_service_stop_must_remove_marker(self):
         d = mod.assess(self.evidence(cleared=False))
         self.assertFalse(d["checks"]["marker_removed_when_standalone_service_stopped"])
+
+    def test_fourth_capture_after_dialog_fade_can_pass(self):
+        folder = self.evidence(marker=False)
+        artwork().save(folder / "overlay_on_game_4.png")
+        (folder / "original_overlay_overlap_verdict.json").write_text(
+            json.dumps({"capture_samples": [
+                {"capture": "overlay_on_game_3.png", "sample_correlates": False},
+                {"capture": "overlay_on_game_4.png", "sample_correlates": True},
+            ]}))
+        result = mod.assess(folder)
+        self.assertEqual(result["status"], "ORIGINAL_LOADING_ARTWORK_WITH_SYNTHETIC_OVERLAY_VISIBLE")
+        self.assertEqual(result["selected_capture"], "overlay_on_game_4.png")
+        self.assertEqual(len(result["capture_attempts"]), 2)
 
     def test_original_activity_must_have_foreground_evidence(self):
         d = mod.assess(self.evidence(foreground=False))

@@ -84,7 +84,16 @@ sleep 0.25
 adb -s "$SERIAL" shell pidof "$GAME" > "$OUTPUT/game_pid_capture_3.txt" 2>&1 || true
 adb -s "$SERIAL" shell dumpsys activity activities > "$OUTPUT/activities_capture_3.txt" 2>&1 || true
 adb -s "$SERIAL" exec-out screencap -p > "$OUTPUT/overlay_on_game_3.png" 2>/dev/null || true
-sleep 6
+# Android's built-in fullscreen onboarding animates opacity after a normal
+# Got it tap. Preserve extra snapshots while the original PID remains alive,
+# rather than assume a fixed 250 ms delay proves unobstructed composition.
+for frame in 4 5; do
+  sleep 0.22
+  adb -s "$SERIAL" shell pidof "$GAME" > "$OUTPUT/game_pid_capture_$frame.txt" 2>&1 || true
+  adb -s "$SERIAL" shell dumpsys activity activities > "$OUTPUT/activities_capture_$frame.txt" 2>&1 || true
+  adb -s "$SERIAL" exec-out screencap -p > "$OUTPUT/overlay_on_game_$frame.png" 2>/dev/null || true
+done
+sleep 5
 adb -s "$SERIAL" shell dumpsys activity exit-info "$GAME" > "$OUTPUT/game_exit_info.txt" 2>&1 || true
 
 # Verify that all overlay pixels disappear when the diagnostic app is stopped.

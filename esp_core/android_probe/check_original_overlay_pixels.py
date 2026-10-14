@@ -48,8 +48,10 @@ def evaluate(directory):
     root = Path(directory)
     names = ["overlay_on_launcher.png", "overlay_on_game_1.png",
              "overlay_on_game_2.png", "overlay_removed.png"]
-    if (root / "overlay_on_game_3.png").is_file():
-        names.append("overlay_on_game_3.png")
+    for index in (3, 4, 5):
+        image = "overlay_on_game_" + str(index) + ".png"
+        if (root / image).is_file():
+            names.append(image)
     captures = {n: measure(root / n) for n in names}
     game_boxes = [name for name in names if name.startswith("overlay_on_game_")
                   and plausible_centered_box(captures[name])]

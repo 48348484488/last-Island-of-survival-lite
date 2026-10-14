@@ -23,7 +23,7 @@ def check(directory):
     if type(pid) is not int or pid <= 0:
         raise ValueError("Cannot attribute images to original Activity without verified PID")
     samples = []
-    for i in (1, 2, 3):
+    for i in (1, 2, 3, 4, 5):
         name = f"overlay_on_game_{i}.png"
         activity_path = folder / f"activities_capture_{i}.txt"
         pid_path = folder / f"game_pid_capture_{i}.txt"
