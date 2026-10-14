@@ -100,6 +100,33 @@ for VERSION in ${OXIDE_ANDROID_VERSIONS:-12 14}; do
     done
   ) > "$DIR/pid_trace.txt" 2>&1 &
   TRACE_PID=$!
+  # Extra host/guest PID-namespace mapping runs only when explicitly requested.
+  # It observes actual Linux /proc while the unchanged Activity is alive.
+  # No ptrace, app modifications, signal manipulation, or identity spoofing.
+  if [[ "${OXIDE_CAPTURE_HOST_PID_NAMESPACE:-0}" == "1" ]]; then
+    CONTAINER_INIT_HOST_PID="$(docker inspect -f '{{.State.Pid}}' oxide-virtual-version)"
+    test "$CONTAINER_INIT_HOST_PID" -gt 1
+    echo "$CONTAINER_INIT_HOST_PID" > "$DIR/container_init_host_pid.txt"
+    (
+      for attempt in $(seq 1 100); do
+        test -s "$DIR/host_pid_namespace.json" && break
+        original_pid="$(timeout 2 adb -s "$SERIAL" shell pidof "$GAME" 2>/dev/null | tr -d '\r' || true)"
+        if [[ "$original_pid" =~ ^[0-9]+$ ]]; then
+          if sudo -n python3 "$ROOT/tools/prove_original_host_pid_namespace.py" \
+            --container-init-host-pid "$CONTAINER_INIT_HOST_PID" \
+            --guest-pid "$original_pid" --attempts 2 --interval-ms 50 \
+            --out "$DIR/host_pid_namespace_probe.json" \
+            > "$DIR/host_pid_namespace_probe_stdout.txt" 2>&1; then
+            cp "$DIR/host_pid_namespace_probe.json" "$DIR/host_pid_namespace.json"
+            echo LIVE_ORIGINAL_NSPID_HOST_GUEST_MAPPING_OBSERVED
+            break
+          fi
+        fi
+        sleep 0.08
+      done
+    ) > "$DIR/host_pid_namespace_watcher_stdout.txt" 2>&1 &
+    HOSTMAP_PID=$!
+  fi
   adb -s "$SERIAL" shell am start -W -n "$GAME/$ACTIVITY" \
     > "$DIR/activity_start.txt" 2>&1 || true
   adb -s "$SERIAL" shell dumpsys activity activities \
@@ -111,6 +138,9 @@ for VERSION in ${OXIDE_ANDROID_VERSIONS:-12 14}; do
     > "$DIR/screen_2s.png" 2>/dev/null || true
   sleep 8
   wait "$TRACE_PID" 2>/dev/null || true
+  if [[ "${OXIDE_CAPTURE_HOST_PID_NAMESPACE:-0}" == "1" ]]; then
+    wait "$HOSTMAP_PID" 2>/dev/null || true
+  fi
   adb -s "$SERIAL" shell pidof "$GAME" > "$DIR/pid_10s.txt" 2>&1 || true
   adb -s "$SERIAL" shell dumpsys activity activities \
     > "$DIR/activities_10s.txt" 2>&1 || true
@@ -131,6 +161,22 @@ for VERSION in ${OXIDE_ANDROID_VERSIONS:-12 14}; do
   echo OBSERVATION_COMPLETE > "$DIR/experiment_phase.txt"
   python3 "$ROOT/tools/diagnose_original_exit.py" "$DIR" \
     > "$DIR/forensic_stdout.txt" 2>&1 || true
+  if [[ "${OXIDE_CAPTURE_HOST_PID_NAMESPACE:-0}" == "1" ]]; then
+    PYTHONPATH="$ROOT/tools" python3 - "$DIR" <<'PY' \
+      > "$DIR/host_pid_exit_chain_stdout.txt" 2>&1 || true
+import json,sys
+from pathlib import Path
+from prove_original_host_pid_namespace import crosscheck
+root=Path(sys.argv[1])
+mapping_path=root/"host_pid_namespace.json"
+mapping=json.loads(mapping_path.read_text()) if mapping_path.is_file() else {"status":"NOT_OBSERVED"}
+forensic_path=root/"forensic_summary.json"
+forensic=json.loads(forensic_path.read_text()) if forensic_path.is_file() else {}
+verdict=crosscheck(mapping,forensic)
+(root/"host_pid_exit_chain.json").write_text(json.dumps(verdict,indent=2)+"\n")
+print(json.dumps(verdict,indent=2))
+PY
+  fi
   python3 "$ROOT/tools/diagnose_virtual_activity_pid.py" "$DIR" \
     > "$DIR/lifecycle_recovery_stdout.txt" 2>&1 || true
   docker logs oxide-virtual-version > "$DIR/container_log.txt" 2>&1 || true
