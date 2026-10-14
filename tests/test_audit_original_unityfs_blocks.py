@@ -93,7 +93,7 @@ class UnityFSDirectoryValidation(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"DIRECTORY_TOO_SHORT"):
             parse_directory(b"short")
     def test_invalid_block_count(self):
-        raw=b"\x00"*16+struct.pack(">I",10000000)
+        raw=b"\x00"*16+struct.pack(">I",10000000)+b"\x00"*4
         with self.assertRaisesRegex(ValueError,"INVALID_BLOCK_COUNT"):
             parse_directory(raw)
     def test_unexpected_node_range(self):
