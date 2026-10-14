@@ -1,0 +1,120 @@
+name: "Oxide M3-M4 - Original unchanged game on native virtual Android 15"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m3-android15-original-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-android15:
+    name: Native ARM64 Android 15 original game with 35-second observation
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    env:
+      OXIDE_ANDROID_VERSIONS: "15"
+      OXIDE_CAPTURE_35S: "1"
+    steps:
+      - name: Checkout original, unchanged signed APK splits and diagnostic scripts
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+            tools
+            tests
+      - name: Validate diagnostic code and input APK checksum routines
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_audit_original_new_virtual_android.py' -v
+          python3 -m unittest discover -s tests -p 'test_verify_original_splits.py' -v
+          python3 -m unittest discover -s tests -p 'test_diagnose_original_exit.py' -v
+          bash -n tools/run_native_virtual_android_matrix.sh
+          test "$(uname -m)" = "aarch64"
+      - name: Configure native ARM64 Binder and adb for virtual-only Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          sudo chmod a+rw /dev/binderfs/binder || true
+          test -e /dev/binderfs/binder
+      - name: Download original Unity asset APK once and check exact SHA-256
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors \
+            --connect-timeout 30 --max-time 1200 \
+            --silent --show-error \
+            --output split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          echo "2f0f7f1be7d78d269f710edd471c40a9755a93a07481cae0c058356515e19834  split_UnityDataAssetPack.apk" | sha256sum --check
+          python3 tools/verify_original_splits.py . --output /tmp/oxide-original-splits-verification.json
+      - name: Real Android 15 ARM64 original game launch with unmodified APKs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p oxide-new-virtual-game
+          bash tools/run_native_virtual_android_matrix.sh . oxide-new-virtual-game
+      - name: Verify original game installation and classify 10/35-second Activity lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s oxide-new-virtual-game/raw_version_states.json
+          python3 tools/audit_original_new_virtual_android.py \
+            --version 15 --input oxide-new-virtual-game/raw_version_states.json \
+            --out oxide-new-virtual-game/original-lifecycle-audit
+          echo "ORIGINAL_APK_15_OBSERVATION_COMPLETE"
+      - name: Report limits of actual Android 15 experiment
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original Oxide APK, native virtual Android 15"
+            echo "Four original APK splits, no patches, no injected libraries or physical phones."
+            if [ -s oxide-new-virtual-game/original-lifecycle-audit/original_game_lifecycle.md ]; then
+              cat oxide-new-virtual-game/original-lifecycle-audit/original_game_lifecycle.md
+            else
+              echo "No conclusive Android 15 game lifecycle result; examine collected logs."
+            fi
+            echo "Android Activity surviving 35s would not establish actual multiplayer gameplay or ESP."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve non-APK diagnostics from real Android 15 game launch
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-android15-native-arm64-35s-observations
+          path: |
+            oxide-new-virtual-game/raw_version_states.json
+            oxide-new-virtual-game/virtual_lifecycle_retest.md
+            oxide-new-virtual-game/original-lifecycle-audit/
+            oxide-new-virtual-game/android_15/abi.txt
+            oxide-new-virtual-game/android_15/release.txt
+            oxide-new-virtual-game/android_15/sdk.txt
+            oxide-new-virtual-game/android_15/image.txt
+            oxide-new-virtual-game/android_15/experiment_phase.txt
+            oxide-new-virtual-game/android_15/install.txt
+            oxide-new-virtual-game/android_15/activity_start.txt
+            oxide-new-virtual-game/android_15/forensic_summary.json
+            oxide-new-virtual-game/android_15/lifecycle_recovery.json
+            oxide-new-virtual-game/android_15/pid_trace.txt
+            oxide-new-virtual-game/android_15/pid_10s.txt
+            oxide-new-virtual-game/android_15/pid_35s.txt
+            oxide-new-virtual-game/android_15/activities_10s.txt
+            oxide-new-virtual-game/android_15/activities_35s.txt
+            oxide-new-virtual-game/android_15/all_buffers.txt
+            oxide-new-virtual-game/android_15/exit_info.txt
+            oxide-new-virtual-game/android_15/screen_2s.png
+            oxide-new-virtual-game/android_15/container_log.txt
+          if-no-files-found: warn
+          retention-days: 14
