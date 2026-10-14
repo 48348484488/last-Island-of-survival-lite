@@ -3,6 +3,9 @@ name: "Oxide M5 - Independent original Activity screenshot/PID overlap audit"
 # React to the original+standalone-overaly virtual Android16 experiment.
 # When original proof fails or is incomplete, the audit itself must fail closed.
 on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/oxide-m5-overlay-overlap-replay.yml"]
   workflow_run:
     workflows:
       - "Oxide M5 - Original Oxide and standalone JNI overlay on native Android 16 ARM64"
