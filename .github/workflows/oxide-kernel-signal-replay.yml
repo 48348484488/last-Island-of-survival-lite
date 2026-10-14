@@ -1,4 +1,4 @@
-name: Oxide M1-M2: ARM64 signal evidence regression
+name: "Oxide M1-M2 - ARM64 signal evidence regression"
 
 # No APK downloads; weekly parser tests and one real-archive replay on changes.
 on:
