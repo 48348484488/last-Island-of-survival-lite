@@ -9,11 +9,13 @@ on:
       - "tools/edgeai_arm64_branch_map.py"
       - "tools/edgeai_arm64_cfg.py"
       - "tools/edgeai_arm64_indirect_audit.py"
+      - "tools/edgeai_arm64_dispatch_bounds.py"
       - "tools/edgeai_arm64_symbol_triage.py"
       - "tests/test_edgeai_arm64_split.py"
       - "tests/test_edgeai_arm64_branch_map.py"
       - "tests/test_edgeai_arm64_cfg.py"
       - "tests/test_edgeai_arm64_indirect_audit.py"
+      - "tests/test_edgeai_arm64_dispatch_bounds.py"
       - "tests/test_edgeai_arm64_symbol_triage.py"
       - ".github/workflows/oxide-edgeai-arm64-elf.yml"
   workflow_dispatch:
@@ -35,11 +37,13 @@ jobs:
             tools/edgeai_arm64_branch_map.py
             tools/edgeai_arm64_cfg.py
             tools/edgeai_arm64_indirect_audit.py
+            tools/edgeai_arm64_dispatch_bounds.py
             tools/edgeai_arm64_symbol_triage.py
             tests/test_edgeai_arm64_split.py
             tests/test_edgeai_arm64_branch_map.py
             tests/test_edgeai_arm64_cfg.py
             tests/test_edgeai_arm64_indirect_audit.py
+            tests/test_edgeai_arm64_dispatch_bounds.py
             tests/test_edgeai_arm64_symbol_triage.py
             split_config.arm64_v8a.apk
           sparse-checkout-cone-mode: false
@@ -55,6 +59,7 @@ jobs:
           python3 -m unittest discover -s tests -p test_edgeai_arm64_branch_map.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_cfg.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_indirect_audit.py -v
+          python3 -m unittest discover -s tests -p test_edgeai_arm64_dispatch_bounds.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_symbol_triage.py -v
       - name: Audit unmodified 80MB APK and 236MB IL2CPP library read-only
         shell: bash
@@ -184,6 +189,29 @@ jobs:
           assert not d['targets_resolved'] and not d['jump_table_contents_read']
           assert not d['code_executed']
           print('EDGEAI_ARM64_LOADER_7_UNRESOLVED_TABLE_DISPATCH_SITES_PASS')
+          PY
+      - name: Verify local unsigned jump-table guards against actual Oxide loader instructions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/edgeai_arm64_dispatch_bounds.py \
+            edgeai-static-evidence/loader-jni-indirect-patterns.json \
+            edgeai-static-evidence/loader-jni-llvm-disasm.txt \
+            --output edgeai-static-evidence/loader-jni-local-guard-evidence.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("edgeai-static-evidence/loader-jni-local-guard-evidence.json")
+          d=json.loads(p.read_text())
+          confirmed=[x for x in d["sites"] if x["local_guard"]=="unsigned_index_upper_bound_candidate"]
+          assert d["architecture"]=="AArch64" and d["function"]=="JNI_OnLoad",d
+          assert d["dispatch_site_count"]==8 and len(confirmed)==2,d
+          assert {x["pc"] for x in confirmed}=={"0x4ea134","0x4ea1f8"},d
+          assert all(x["local_unsigned_index_max_inclusive"]==7 for x in confirmed),d
+          assert not d["path_feasibility_proven"],d
+          assert not d["jump_table_bytes_read"] and not d["indirect_targets_resolved"],d
+          assert not d["original_game_executed"],d
+          print("EDGEAI_ARM64_TWO_LOCAL_GUARDS_ORIGINAL_OXIDE_PASS")
           PY
       - name: Classify real IL2CPP named ELF functions without assuming gameplay semantics
         shell: bash
