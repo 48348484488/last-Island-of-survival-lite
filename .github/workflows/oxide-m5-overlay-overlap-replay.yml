@@ -1,0 +1,83 @@
+name: "Oxide M5 - Independent original Activity screenshot/PID overlap audit"
+
+# React to the original+standalone-overaly virtual Android16 experiment.
+# When original proof fails or is incomplete, the audit itself must fail closed.
+on:
+  workflow_run:
+    workflows:
+      - "Oxide M5 - Original Oxide and standalone JNI overlay on native Android 16 ARM64"
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  actual-pid-screenshot-overlay-correlation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout read-only cross-capture auditor
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Test fail-closed original PID vs synthetic overlay overlap contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_check_original_overlay_overlap.py' -v
+          python3 -m py_compile tools/check_original_overlay_overlap.py
+      - name: Download actual native ARM64 game+overlay screenshots and PID captures
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || 38625329989 }}
+          name: oxide-original-android16-overlay-native-arm64-proof
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: actual-android16-visual-proof
+      - name: Ensure game activity PID, same-capture foreground and overlay all match
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/check_original_overlay_overlap.py actual-android16-visual-proof \
+            | tee original_overlay_overlap_stdout.txt
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("actual-android16-visual-proof/original_overlay_overlap_verdict.json").read_text())
+          assert d["status"]=="ORIGINAL_LOADING_ACTIVITY_AND_STANDALONE_OVERLAY_CORROBORATED",d
+          assert d["original_activity_pid"]>0,d
+          assert any(row["sample_correlates"] for row in d["capture_samples"]),d
+          assert d["diagnostic_overlay_removed_after_stop"] is True,d
+          assert d["synthetic_coordinates_only"] is True,d
+          assert not d["real_multiplayer_gameplay_verified"],d
+          assert not d["real_player_esp_verified"],d
+          print("SAME_CAPTURE_NATIVE_ARM64_ORIGINAL_ACTIVITY_AND_STANDALONE_OVERLAY=VERIFIED")
+          PY
+      - name: Report actual limited loading-screen proof
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original Oxide and synthetic overlay same-capture PID evidence"
+            if [ -s actual-android16-visual-proof/original_overlay_overlap_verdict.json ]; then
+              cat actual-android16-visual-proof/original_overlay_overlap_verdict.json
+            else
+              echo "No matched original Activity/overlay proof was obtained."
+            fi
+            echo "ActivityManager and pidof observations precede PNG by a small interval and are not atomic."
+            echo "A loading screen does not establish gameplay, real-player ESP, or security bypass."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish small screenshot correlation verdict and independent tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-m5-android16-original-overlay-same-capture-pid-verdict
+          path: |
+            actual-android16-visual-proof/original_overlay_overlap_verdict.json
+            original_overlay_overlap_stdout.txt
+          retention-days: 14
+          if-no-files-found: warn
