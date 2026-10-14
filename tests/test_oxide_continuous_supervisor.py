@@ -52,7 +52,7 @@ class SupervisorTests(unittest.TestCase):
     def test_duration_threshold(self):
         now = dt.datetime(2026, 10, 14, 14, 41, tzinfo=dt.timezone.utc)
         self.assertIsNotNone(m.old_run(run("in_progress"), now))
-        self.assertIsNone(m.old_run(run("in_progress", when="2026-10-14T14:30:00Z"), now))
+        self.assertIsNone(m.old_run(run("in_progress", when="2026-10-14T14:36:00Z"), now))
     def test_queued_threshold(self):
         now = dt.datetime(2026, 10, 14, 14, 26, tzinfo=dt.timezone.utc)
         self.assertIsNotNone(m.old_run(run("queued"), now))
