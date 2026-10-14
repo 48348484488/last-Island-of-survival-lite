@@ -7,6 +7,9 @@ on:
       - ".github/workflows/oxide-virtual-overlay-states.yml"
       - "esp_core/android_probe/src/com/oxide/bridgeprobe/**"
       - "esp_core/android_probe/virtual_overlay_states.sh"
+      - "esp_core/android_probe/virtual_overlay_sequence.sh"
+      - "esp_core/android_probe/check_virtual_overlay_sequence.py"
+      - "esp_core/android_probe/tests/test_virtual_overlay_sequence.py"
       - "esp_core/android_probe/check_virtual_overlay_states.py"
       - "esp_core/android_probe/tests/test_virtual_overlay_states.py"
   workflow_dispatch:
@@ -41,8 +44,10 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m unittest discover -s esp_core/android_probe/tests -p 'test_virtual_overlay_states.py' -v
+          python3 -m unittest discover -s esp_core/android_probe/tests -p 'test_virtual_overlay_sequence.py' -v
           python3 -m unittest discover -s esp_core/android_probe/tests -p 'test_original_overlay_pixels.py' -v
           bash -n esp_core/android_probe/virtual_overlay_states.sh
+          bash -n esp_core/android_probe/virtual_overlay_sequence.sh
       - name: Compile and sign independent JNI native ARM64 overlay
         shell: bash
         run: |
@@ -82,6 +87,8 @@ jobs:
             "linux-modules-extra-$(uname -r)" adb python3-pil
           python3 -m unittest discover -s esp_core/android_probe/tests \
             -p 'test_virtual_overlay_states.py' -v
+          python3 -m unittest discover -s esp_core/android_probe/tests \
+            -p 'test_virtual_overlay_sequence.py' -v
           sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
           sudo mkdir -p /dev/binderfs
           sudo mount -t binder binder /dev/binderfs
@@ -128,6 +135,25 @@ jobs:
           print("GAME_ORIGINAL_INSTALLED=NO")
           print("LIVE_MULTIPLAYER_OR_REAL_PLAYER_ESP=NOT_TESTED")
           PY
+      - name: Drive MOVED STALE RESTORED and STOPPED frames in ONE native ARM64 overlay service
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash esp_core/android_probe/virtual_overlay_sequence.sh \
+            127.0.0.1:5555 diagnostic-apk/oxide-bridge-jni-smoke.apk \
+            isolated-overlay-evidence
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          d=json.loads(Path("isolated-overlay-evidence/sequence_verdict.json").read_text())
+          assert d["status"]=="NATIVE_VIRTUAL_ARM64_CONTINUOUS_JNI_OVERLAY_PASS",d
+          assert all(d["checks"].values()),d
+          assert d["original_game_installed"] is False,d
+          assert d["original_game_executed"] is False,d
+          assert d["live_multiplayer_or_real_player_esp_verified"] is False,d
+          print("NATIVE_ANDROID_ONE_OVERLAY_LIVE_MOVEMENT_STALE_RECOVERY_AND_STOP=PASS")
+          print("ACTUAL_GAME_AND_PLAYER_DATA=NOT_USED")
+          PY
       - name: Report real screenshots and Android service logs, not fake gameplay
         if: always()
         shell: bash
@@ -139,6 +165,10 @@ jobs:
               cat isolated-overlay-evidence/overlay_runtime_verdict.txt
             else
               echo "No verified native Android runtime verdict."
+            fi
+            if [ -f isolated-overlay-evidence/sequence_runtime_verdict.txt ]; then
+              echo "#### One service continuously changing native JNI snapshots"
+              cat isolated-overlay-evidence/sequence_runtime_verdict.txt
             fi
             echo "Success is NOT a live multiplayer ESP or original game security bypass."
           } >> "$GITHUB_STEP_SUMMARY"
