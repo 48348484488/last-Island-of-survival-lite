@@ -71,6 +71,10 @@ capture REPLAY
 send_snapshot 3 -1.0 5
 wait_log 'RESULT=PASS FEED_SEQ=3 '
 capture RESTORED
+# Simulate the producer silently disconnecting. The overlay must clear by
+# its own watchdog, with NO incoming stale frame and the SAME app process.
+wait_log 'RESULT=PASS FEED_IDLE_TIMEOUT RECT_COUNT=0'
+capture SILENT
 adb -s "$SERIAL" shell am broadcast -a "$ACTION" -n "$RECEIVER" \
     --el seq 4 --ez stop true > "$OUT/feed_sent_4.txt"
 wait_log 'RESULT=PASS PHASE=STOPPED '
