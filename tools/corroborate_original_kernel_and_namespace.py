@@ -42,7 +42,7 @@ def prove(mapping, trace, forensic, exit_info):
     )
     events = extract_events(trace)
     for item in events:
-        match = re.search(r"\\bboot_ns=(\\d+)", item["comm"])
+        match = re.search(r"\bboot_ns=(\d+)", item["comm"])
         item["kernel_boot_ns"] = int(match.group(1)) if match else None
         if match:
             item["comm"] = item["comm"].split(" boot_ns=", 1)[0].strip()
