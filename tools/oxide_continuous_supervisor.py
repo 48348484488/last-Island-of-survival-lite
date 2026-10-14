@@ -24,6 +24,7 @@ SOURCES = {
     "oxide-m3-ashmem617-build-only.yml": 3,
     "oxide-m3-android16-ashmem-real-boot.yml": 3,
     "oxide-m3-android16-original-ashmem.yml": 4,
+    "oxide-original-exit-order-3-versions.yml": 1,
 
 }
 NEXT = {3: "oxide-native-google-play-discovery.yml",
