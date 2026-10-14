@@ -15,6 +15,10 @@ SOURCES = {
     "redroid-original-smoke.yml": 4,
     "original-overlay-native-arm64.yml": 5,
     "oxide-virtual-overlay-states.yml": 5,
+    "oxide-m3-archived-android-matrix.yml": 3,
+    "oxide-m3-android15-16-boot.yml": 3,
+    "oxide-m3-android16-boot-diagnostics.yml": 3,
+    "oxide-m3-android15-original-smoke.yml": 4,
 }
 NEXT = {3: "oxide-native-google-play-discovery.yml",
         4: "redroid-original-smoke.yml",
