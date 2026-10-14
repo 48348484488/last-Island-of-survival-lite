@@ -58,6 +58,43 @@ def plan_next(closed, states):
         return None
     return (pending, NEXT[pending]) if pending in NEXT else None
 
+# Only chain low-cost, read-only diagnostic workflows; never auto-launch the
+# expensive original APK (~867 MB) or a potential security-sensitive experiment.
+ON_SUCCESS = {
+    "oxide-arm64-signal-observability.yml": "oxide-kernel-signal-replay.yml",
+    "oxide-kernel-signal-replay.yml": "oxide-original-launch-milestones.yml",
+}
+
+def lightweight_handoff(source, issue_state):
+    """Choose a fixed, acyclic follow-up; no AI coding or milestone closure."""
+    if issue_state != "open":
+        return None
+    return ON_SUCCESS.get(source)
+
+def maybe_handoff(api, run):
+    workflow = lightweight_handoff(str(run.get("path", "")).rsplit("/", 1)[-1],
+                                  api.api("/issues/1").get("state"))
+    if workflow is None:
+        print("NO_AUTOMATIC_LIGHTWEIGHT_FOLLOWUP")
+        return
+    source_id = int(run["id"])
+    attempt = int(run.get("run_attempt") or 1)
+    marker = "oxide-auto:followup:%d:%d:%s" % (source_id, attempt, workflow)
+    comments = api.api("/issues/1/comments?per_page=100")
+    if any(marker in c.get("body", "") for c in comments):
+        print("FOLLOWUP_ALREADY_DISPATCHED", marker)
+        return
+    # workflow_dispatch can start a new run even when called from GITHUB_TOKEN.
+    # The follow-up workflow must still pass its own tests and cannot close an issue.
+    api.api("/actions/workflows/" + workflow + "/dispatches",
+            "POST", {"ref": "main"})
+    api.record(1, marker,
+               "**Etapa leve iniciada automaticamente por evento**\\n\\n"
+               "Execucao anterior: https://github.com/%s/actions/runs/%d\\n"
+               "Workflow seguinte: `%s`.\\n"
+               "Nenhum APK foi alterado ou executado nesta transicao; "
+               "a meta continua aberta ate comprovacao separada." % (REPO, source_id, workflow))
+
 class GitHub:
     def __init__(self, token):
         if not token:
@@ -100,6 +137,8 @@ def complete(api, event):
     api.record(issue, "oxide-auto:run:%s:%s" % (run_id, run.get("run_attempt", 1)),
                "**Continuacao automatica do Oxide**\n\nExecucao: " + link +
                "\nResultado: " + result + ".\n\n" + recommendation)
+    if result == "success" and issue == 1:
+        maybe_handoff(api, run)
 
 def closed_issue(api, event):
     if event.get("action") != "closed" or event.get("repository", {}).get("full_name") != REPO:
