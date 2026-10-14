@@ -9,10 +9,12 @@ on:
       - "tools/edgeai_arm64_branch_map.py"
       - "tools/edgeai_arm64_cfg.py"
       - "tools/edgeai_arm64_indirect_audit.py"
+      - "tools/edgeai_arm64_symbol_triage.py"
       - "tests/test_edgeai_arm64_split.py"
       - "tests/test_edgeai_arm64_branch_map.py"
       - "tests/test_edgeai_arm64_cfg.py"
       - "tests/test_edgeai_arm64_indirect_audit.py"
+      - "tests/test_edgeai_arm64_symbol_triage.py"
       - ".github/workflows/oxide-edgeai-arm64-elf.yml"
   workflow_dispatch:
 
@@ -33,10 +35,12 @@ jobs:
             tools/edgeai_arm64_branch_map.py
             tools/edgeai_arm64_cfg.py
             tools/edgeai_arm64_indirect_audit.py
+            tools/edgeai_arm64_symbol_triage.py
             tests/test_edgeai_arm64_split.py
             tests/test_edgeai_arm64_branch_map.py
             tests/test_edgeai_arm64_cfg.py
             tests/test_edgeai_arm64_indirect_audit.py
+            tests/test_edgeai_arm64_symbol_triage.py
             split_config.arm64_v8a.apk
           sparse-checkout-cone-mode: false
       - name: Install LLVM for real AArch64 shared object test fixture
@@ -51,6 +55,7 @@ jobs:
           python3 -m unittest discover -s tests -p test_edgeai_arm64_branch_map.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_cfg.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_indirect_audit.py -v
+          python3 -m unittest discover -s tests -p test_edgeai_arm64_symbol_triage.py -v
       - name: Audit unmodified 80MB APK and 236MB IL2CPP library read-only
         shell: bash
         run: |
@@ -179,6 +184,24 @@ jobs:
           assert not d['targets_resolved'] and not d['jump_table_contents_read']
           assert not d['code_executed']
           print('EDGEAI_ARM64_LOADER_7_UNRESOLVED_TABLE_DISPATCH_SITES_PASS')
+          PY
+      - name: Classify real IL2CPP named ELF functions without assuming gameplay semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/edgeai_arm64_symbol_triage.py split_config.arm64_v8a.apk \
+            --library libil2cpp.so --output edgeai-static-evidence/oxide-il2cpp-name-triage.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("edgeai-static-evidence/oxide-il2cpp-name-triage.json").read_text())
+          assert d["status"]=="ARM64_ELF_SYMBOL_NAME_TRIAGE_PASS",d
+          assert d["named_function_symbols"]==1747,d
+          assert d["library_bytes"]==236123768,d
+          assert d["sha256"]=="3343335d9575871138f6cda866c748edd97c68dd46db74df850d0318f4c145b4",d
+          assert d["gameplay_functions_confirmed"]==0 and d["runtime_offsets_confirmed"]==0
+          assert not d["code_executed"]
+          print("EDGEAI_ORIGINAL_OXIDE_1747_SYMBOL_NAME_TRIAGE_PASS")
           PY
       - name: Upload audit logs, no game executables
         if: always()
