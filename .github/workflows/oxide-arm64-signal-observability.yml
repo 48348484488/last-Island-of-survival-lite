@@ -95,38 +95,8 @@ jobs:
           test -s signal-preflight/probe_status.txt
           grep -qx 'syscalls/sys_enter_kill=VISIBLE' signal-preflight/tracepoints.txt
           grep -qx 'CONTROLLED_KERNEL_SIGNAL_OBSERVED' signal-preflight/probe_status.txt
-          grep -Eq '^OBSERVED_MATCHED_CONTROL_EVENTS=[6-9]$|^OBSERVED_MATCHED_CONTROL_EVENTS=[1-9][0-9]+          test -s signal-preflight/controlled_sender.txt
-          test -s signal-preflight/bpftrace_output.txt
-          echo 'CONTROLLED_ARM64_SIGNAL_CAPTURE=VERIFIED'
-
-      - name: Report exact capability and limitations
-        if: always()
-        shell: bash
-        run: |
-          {
-            echo "## ARM64 read-only host signal instrumentation preflight"
-            echo "Host: $(cat signal-preflight/arch.txt 2>/dev/null || echo UNKNOWN)"
-            echo "Verdict: $(cat signal-preflight/probe_status.txt 2>/dev/null || echo NOT_EXECUTED)"
-            echo "Control sender: $(sed -n 's/^SENDER_PID=//p' signal-preflight/controlled_sender.txt 2>/dev/null | head -n1)"
-            echo "Captured control event lines: $(grep -c 'OXIDE_SIGNAL_PROBE sender_host_pid=' signal-preflight/bpftrace_output.txt 2>/dev/null || true)"
-            echo '### Tracepoint visibility'
-            cat signal-preflight/tracepoints.txt 2>/dev/null || true
-            echo
-            echo "Only a synthetic Python SIGUSR1 was sent and observed, never a game process."
-            echo "Tracepoint presence alone is insufficient; a matching controlled kernel event is required."
-            echo "No Android game launched. No APK changed. No Play Integrity inference or bypass."
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Preserve non-sensitive kernel support and synthetic test evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: oxide-native-arm64-signal-preflight
-          path: |
-            signal-preflight/*.txt
-          if-no-files-found: warn
-          retention-days: 14
- signal-preflight/controlled_event_count.txt
+          test -s signal-preflight/controlled_event_count.txt
+          awk -F= '$1=="OBSERVED_MATCHED_CONTROL_EVENTS" && $2+0>=6 {ok=1} END {exit !ok}' signal-preflight/controlled_event_count.txt
           test -s signal-preflight/controlled_sender.txt
           test -s signal-preflight/bpftrace_output.txt
           echo 'CONTROLLED_ARM64_SIGNAL_CAPTURE=VERIFIED'
