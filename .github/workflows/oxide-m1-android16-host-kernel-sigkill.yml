@@ -1,0 +1,198 @@
+name: "Oxide M1 - Same-run original Android16 Linux NSpid and kernel kill syscall"
+
+# Runs four original signed APK splits unmodified on virtual native ARM64.
+# Uses a pinned upstream ashmem fix strictly for stock Android 16 boot.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m1-android16-host-kernel-sigkill.yml"
+      - "tools/corroborate_original_kernel_and_namespace.py"
+      - "tests/test_corroborate_original_kernel_and_namespace.py"
+      - "tools/prove_original_host_pid_namespace.py"
+      - "tests/test_prove_original_host_pid_namespace.py"
+      - "tools/run_native_virtual_android_matrix.sh"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  actual-game-android16:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 65
+    env:
+      OXIDE_ANDROID_VERSIONS: "16"
+      OXIDE_CAPTURE_35S: "1"
+      OXIDE_ATTACH_HOST_ASHMEM: "1"
+      OXIDE_CAPTURE_HOST_PID_NAMESPACE: "1"
+      OXIDE_CAPTURE_KERNEL_SIGKILL: "1"
+    steps:
+      - name: Checkout original verified splits and read-only diagnostics
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+            tools
+            tests
+      - name: Verify native host, parsers, install routines and script syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          python3 -m unittest discover -s tests -p test_audit_original_new_virtual_android.py -v
+          python3 -m unittest discover -s tests -p test_verify_original_splits.py -v
+          python3 -m unittest discover -s tests -p test_diagnose_original_exit.py -v
+          python3 -m unittest discover -s tests -p test_prove_original_host_pid_namespace.py -v
+          python3 -m unittest discover -s tests -p test_corroborate_original_kernel_and_namespace.py -v
+          python3 -m unittest discover -s tests -p test_correlate_kernel_sigkill.py -v
+          python3 -m py_compile tools/prove_original_host_pid_namespace.py tools/corroborate_original_kernel_and_namespace.py
+          bash -n tools/run_native_virtual_android_matrix.sh
+      - name: Prepare native ARM64 kernel Binder and compile-only validated ashmem source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p android16-host-nspid-proof
+          uname -m > android16-host-nspid-proof/host_arch.txt
+          uname -r > android16-host-nspid-proof/kernel.txt
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            git gcc make kmod adb bpftrace "linux-headers-$(uname -r)" \
+            "linux-modules-extra-$(uname -r)"
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          sudo chmod a+rw /dev/binderfs/binder || true
+          git init --quiet upstream-module
+          git -C upstream-module remote add origin https://github.com/remote-android/redroid-modules.git
+          timeout 180 git -C upstream-module fetch --depth=1 origin refs/pull/23/head
+          SHA="$(git -C upstream-module rev-parse FETCH_HEAD)"
+          echo "$SHA" > android16-host-nspid-proof/ashmem_source_sha.txt
+          test "$SHA" = "f55e1e7515a6dd5f8e0f9569ea79148c08f60816"
+          git -C upstream-module checkout --quiet --detach FETCH_HEAD
+          make -C upstream-module/ashmem all > android16-host-nspid-proof/build.txt 2>&1
+          test -s upstream-module/ashmem/ashmem_linux.ko
+          modinfo upstream-module/ashmem/ashmem_linux.ko > android16-host-nspid-proof/modinfo.txt
+          grep -q "^vermagic: *$(uname -r)" android16-host-nspid-proof/modinfo.txt
+          sudo insmod upstream-module/ashmem/ashmem_linux.ko
+          if [ ! -c /dev/ashmem ]; then
+            minor="$(awk '$2=="ashmem" {print $1}' /proc/misc)"
+            test -n "$minor"
+            sudo mknod /dev/ashmem c 10 "$minor"
+          fi
+          test -c /dev/ashmem
+          sudo chmod a+rw /dev/ashmem
+          echo ASHMEM_DEVICE_REAL > android16-host-nspid-proof/ashmem_status.txt
+      - name: Fetch exact original large Unity resource split, verify SHA256
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors --connect-timeout 30 \
+            --max-time 1200 --silent --show-error \
+            --output split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          echo "2f0f7f1be7d78d269f710edd471c40a9755a93a07481cae0c058356515e19834  split_UnityDataAssetPack.apk" | sha256sum --check
+          python3 tools/verify_original_splits.py . --output android16-host-nspid-proof/original_apk_sha256.json
+      - name: Observe SAME original Activity Linux host NSpid and host kernel kill(SIGKILL) tracepoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/run_native_virtual_android_matrix.sh . android16-host-nspid-proof
+      - name: Classify original Android16 process and Activity, not an analytics service
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s android16-host-nspid-proof/raw_version_states.json
+          python3 tools/audit_original_new_virtual_android.py \
+            --version 16 --input android16-host-nspid-proof/raw_version_states.json \
+            --out android16-host-nspid-proof/original-lifecycle-audit
+      - name: Prove host PID mapping belongs to this exact original Activity process that self-SIGKILLed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=Path("android16-host-nspid-proof/android_16")
+          mapping=json.loads((d/"host_pid_namespace.json").read_text())
+          result=json.loads((d/"host_pid_exit_chain.json").read_text())
+          assert mapping["status"]=="ORIGINAL_ANDROID_HOST_NSPID_MAPPING_PROVEN",mapping
+          assert result["status"]=="HOST_AND_GUEST_PID_LINKED_TO_ORIGINAL_SELF_SIGKILL",result
+          assert mapping["host_pid"]!=mapping["guest_pid"],mapping
+          assert len(mapping["nspid_chain"])>=2,mapping
+          assert mapping["nspid_chain"][0]==mapping["host_pid"],mapping
+          assert mapping["nspid_chain"][-1]==mapping["guest_pid"],mapping
+          assert result["linux_host_pid_for_same_original_process"]==mapping["host_pid"],result
+          assert result["original_guest_activity_pid"]==mapping["guest_pid"],result
+          assert result["host_kernel_signal_emitter_at_same_instant_observed"] is False,result
+          assert result["finish_activity_requester_identified"] is False,result
+          print("REAL_ANDROID16_ORIGINAL_PID_HOST_NSPID_MAPPING_AND_SELF_SIGKILL_EXIT_CHAIN_CONFIRMED")
+          print(json.dumps(result,indent=2))
+          PY
+      - name: Prove same-run host syscall sender and target equal original guest Android PID
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("android16-host-nspid-proof/android_16")
+          assert (root/"kernel_trace_preflight.txt").read_text().strip()=="KERNEL_TRACE_ATTACHED_BEFORE_ORIGINAL_ACTIVITY"
+          verdict=json.loads((root/"same_run_kernel_namespace_original_verdict.json").read_text())
+          mapping=json.loads((root/"host_pid_namespace.json").read_text())
+          assert verdict["status"]=="SAME_RUN_HOST_KERNEL_GUEST_ORIGINAL_SELF_SIGKILL_PROVEN",verdict
+          assert verdict["live_namespace_mapping_verified"] is True,verdict
+          assert verdict["matching_real_original_kernel_kill_syscalls"]>=1,verdict
+          assert verdict["android_original_activity_finish_before_self_signal"] is True,verdict
+          assert verdict["self_sigkill_exit_info_status9"] is True,verdict
+          assert verdict["linux_host_pid"]==mapping["host_pid"],verdict
+          assert verdict["android_activity_guest_pid"]==mapping["guest_pid"],verdict
+          assert verdict["activity_finish_requester_identified"] is False,verdict
+          assert verdict["original_security_reason"]=="UNKNOWN",verdict
+          assert verdict["playable_game_verified"] is False,verdict
+          print("SAME_RUN_REAL_LINUX_KERNEL_HOST_ANDROID_ORIGINAL_SELF_SIGKILL_PROVEN")
+          print(json.dumps(verdict,indent=2))
+          PY
+      - name: Report truthful original-game and virtual boot result
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original Oxide Android 16 ARM64: real host NSpid + kernel SIGKILL syscall in SAME RUN"
+            echo "Host ashmem status: $(cat android16-host-nspid-proof/ashmem_status.txt 2>/dev/null || echo UNKNOWN)"
+            if [ -s android16-host-nspid-proof/original-lifecycle-audit/original_game_lifecycle.md ]; then
+              cat android16-host-nspid-proof/original-lifecycle-audit/original_game_lifecycle.md
+            else
+              echo 'Incomplete game evidence; no original game survival or security cause proven.'
+            fi
+            if [ -s android16-host-nspid-proof/android_16/host_pid_exit_chain.json ]; then
+              cat android16-host-nspid-proof/android_16/host_pid_exit_chain.json
+            else
+              echo 'No live host/guest NSpid mapping verified.'
+            fi
+            if [ -s android16-host-nspid-proof/android_16/same_run_kernel_namespace_original_verdict.json ]; then
+              cat android16-host-nspid-proof/android_16/same_run_kernel_namespace_original_verdict.json
+            else
+              echo 'Same-run original kernel syscall event not verified.'
+            fi
+            echo 'Original APKs unchanged; virtual-only, no spoofing or integrity bypass.'
+            echo 'A CI job success is not proof of gameplay or real-player ESP.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep original-game process evidence, not signed APKs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-android16-arm64-same-run-kernel-nspid-sigkill
+          path: |
+            android16-host-nspid-proof/*.json
+            android16-host-nspid-proof/*.txt
+            android16-host-nspid-proof/*.md
+            android16-host-nspid-proof/original-lifecycle-audit/
+            android16-host-nspid-proof/android_16/*.txt
+            android16-host-nspid-proof/android_16/*.json
+            android16-host-nspid-proof/android_16/*.png
+          if-no-files-found: warn
+          retention-days: 14
