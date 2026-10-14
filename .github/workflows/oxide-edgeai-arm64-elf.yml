@@ -12,6 +12,7 @@ on:
       - "tools/edgeai_arm64_dispatch_bounds.py"
       - "tools/edgeai_arm64_table_entries.py"
       - "tools/edgeai_arm64_table_cfg.py"
+      - "tools/edgeai_arm64_table_provenance.py"
       - "tools/edgeai_arm64_unity_exports.py"
       - "tools/edgeai_arm64_llvm_crosscheck.py"
       - "tools/edgeai_arm64_arg_guards.py"
@@ -23,6 +24,7 @@ on:
       - "tests/test_edgeai_arm64_dispatch_bounds.py"
       - "tests/test_edgeai_arm64_table_entries.py"
       - "tests/test_edgeai_arm64_table_cfg.py"
+      - "tests/test_edgeai_arm64_table_provenance.py"
       - "tests/test_edgeai_arm64_unity_exports.py"
       - "tests/test_edgeai_arm64_llvm_crosscheck.py"
       - "tests/test_edgeai_arm64_arg_guards.py"
@@ -50,6 +52,7 @@ jobs:
             tools/edgeai_arm64_dispatch_bounds.py
             tools/edgeai_arm64_table_entries.py
             tools/edgeai_arm64_table_cfg.py
+            tools/edgeai_arm64_table_provenance.py
             tools/edgeai_arm64_unity_exports.py
             tools/edgeai_arm64_llvm_crosscheck.py
             tools/edgeai_arm64_arg_guards.py
@@ -61,6 +64,7 @@ jobs:
             tests/test_edgeai_arm64_dispatch_bounds.py
             tests/test_edgeai_arm64_table_entries.py
             tests/test_edgeai_arm64_table_cfg.py
+            tests/test_edgeai_arm64_table_provenance.py
             tests/test_edgeai_arm64_unity_exports.py
             tests/test_edgeai_arm64_llvm_crosscheck.py
             tests/test_edgeai_arm64_arg_guards.py
@@ -82,6 +86,7 @@ jobs:
           python3 -m unittest discover -s tests -p test_edgeai_arm64_dispatch_bounds.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_table_entries.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_table_cfg.py -v
+          python3 -m unittest discover -s tests -p test_edgeai_arm64_table_provenance.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_unity_exports.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_llvm_crosscheck.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_arg_guards.py -v
@@ -405,6 +410,30 @@ jobs:
           assert not obj["runtime_reachability_proven"] and not obj["game_executed"],obj
           assert all(not x["runtime_path_confirmed"] for x in obj["bounded_table_candidate_edges"])
           print("EDGEAI_REAL_OXIDE_GUARDED_TABLE_GRAPH_8_ENTRIES_6_EDGES_PASS")
+          PY
+      - name: Classify all indirect jump table base register origins and hazards in the original loader
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/edgeai_arm64_table_provenance.py \
+            edgeai-static-evidence/loader-jni-indirect-patterns.json \
+            edgeai-static-evidence/loader-jni-llvm-disasm.txt \
+            --output edgeai-static-evidence/loader-jni-lexical-table-provenance.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('edgeai-static-evidence/loader-jni-lexical-table-provenance.json').read_text())
+          expected={'0x4e9358':'0x870b0c','0x4e94a8':'0x870b28',
+                    '0x4e9524':'0x870ba0','0x4e98e0':'0x870bf0',
+                    '0x4ea084':'0x870b40','0x4ea134':'0x870b60',
+                    '0x4ea1f8':'0x870b80'}
+          actual={x['pc']:x['table_base_candidate'] for x in d['sites']
+                  if x['status']=='TEXTUAL_ADRP_ADD_CANDIDATE'}
+          assert actual==expected,(actual,expected)
+          assert d['site_count']==8 and d['textual_origins_found']==7,d
+          assert not d['indirect_targets_resolved'] and not d['table_bytes_read'],d
+          assert not d['control_flow_reaching_definitions_proven'] and not d['original_game_executed'],d
+          print('EDGEAI_ARM64_ORIGINAL_LOADER_ALL_7_TEXTUAL_TABLE_BASES_PASS')
           PY
       - name: Upload audit logs, no game executables
         if: always()
