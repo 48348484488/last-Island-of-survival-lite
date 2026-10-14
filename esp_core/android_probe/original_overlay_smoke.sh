@@ -74,7 +74,13 @@ adb -s "$SERIAL" exec-out screencap -p > "$OUTPUT/overlay_on_game_2.png" 2>/dev/
 # Redroid presents Android's own first-time immersive-mode tutorial ("GOT IT")
 # above the original app and above overlay pixels. Dismiss that standard prompt
 # with a user-equivalent touch; do not change security, system properties or APK.
-adb -s "$SERIAL" shell input tap 855 405 > "$OUTPUT/immersive_dialog_tap.txt" 2>&1 || true
+# Screenshot evidence from native Android16 (1280x720 landscape) locates
+# the standard system "Got it" button near x=1025, y=380. The previous
+# x=855 tap missed that button and left it covering the overlay marker.
+# This is ordinary interaction with Android UI, not the app's security alert.
+adb -s "$SERIAL" shell input tap "${OXIDE_TUTORIAL_GOT_IT_X:-1025}" "${OXIDE_TUTORIAL_GOT_IT_Y:-380}" \
+  > "$OUTPUT/immersive_dialog_tap.txt" 2>&1 || true
+sleep 0.25
 adb -s "$SERIAL" shell pidof "$GAME" > "$OUTPUT/game_pid_capture_3.txt" 2>&1 || true
 adb -s "$SERIAL" shell dumpsys activity activities > "$OUTPUT/activities_capture_3.txt" 2>&1 || true
 adb -s "$SERIAL" exec-out screencap -p > "$OUTPUT/overlay_on_game_3.png" 2>/dev/null || true
