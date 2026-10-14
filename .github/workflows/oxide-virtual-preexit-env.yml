@@ -1,0 +1,93 @@
+name: Oxide virtual ARM64 - original process environment before SIGKILL
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-virtual-preexit-env.yml"
+      - "tools/compare_original_preexit.py"
+      - "tests/test_compare_original_preexit.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  archived-android13-both-launches:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Test original PID attribution and warning classification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_compare_original_preexit.py' -v
+          python3 -m unittest discover -s tests -p 'test_diagnose_original_exit.py' -v
+      - name: Retrieve REAL Redroid ARM64 original game A/B evidence (no game assets)
+        uses: actions/download-artifact@v4
+        with:
+          name: oxide-original-permission-ab-evidence
+          run-id: 38478578089
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: historical-android
+      - name: Recompute PID-scope and audit persistent pre-exit events
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s historical-android/before/all_buffers.txt
+          test -s historical-android/after/all_buffers.txt
+          python3 tools/compare_original_preexit.py \
+            --before historical-android/before \
+            --after historical-android/after \
+            --out preexit-results
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          d=json.loads(Path("preexit-results/pid_scoped_preexit.json").read_text())
+          c=d["comparison"]
+          assert c["before_activity_pid"]==2197,c
+          assert c["after_activity_pid"]==2578,c
+          assert c["before_self_sigkill"] and c["after_self_sigkill"],c
+          for name in (
+              "native_build_fingerprint_api_overlength",
+              "google_play_store_missing",
+              "sensor_enumeration_failed",
+              "graphics_buffer_allocation_failed",
+              "unity_engine_initialized",
+          ):
+              item=next(x for x in c["process_scoped_event_comparison"] if x["event"]==name)
+              assert item["classification"]=="PERSISTENT_BOTH",item
+          assert d["before"]["fingerprint_reported_lengths"].get("113",0)>=1,d
+          assert d["after"]["fingerprint_reported_lengths"].get("113",0)>=1,d
+          assert not c["can_identify_specific_security_check"],c
+          print("REAL_ORIGINAL_PREEXIT_PID_SCOPED_WARNINGS=VERIFIED")
+          print("UNMODIFIED_GAME_CAUSAL_SECURITY_TRIGGER=UNKNOWN")
+          PY
+      - name: Report original game evidence without causation claims
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Oxide original ARM64 virtual pre-exit log comparison"
+            echo "Derived from two real original PID attempts, with no APK download or patch."
+            if [ -s preexit-results/pid_scoped_preexit.md ]; then
+              cat preexit-results/pid_scoped_preexit.md
+            else
+              echo "No validated comparison: inspect failed stage."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save derived classification only (not raw logs)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-virtual-pid-preexit-diagnostics
+          path: preexit-results/
+          retention-days: 14
+          if-no-files-found: warn
