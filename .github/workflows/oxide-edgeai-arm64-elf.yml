@@ -1,0 +1,66 @@
+name: Oxide ARM64 original binary static scan with EdgeAI parser
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/edgeai_elf_inspect.py"
+      - "tools/edgeai_inspect_arm64_split.py"
+      - "tests/test_edgeai_arm64_split.py"
+      - ".github/workflows/oxide-edgeai-arm64-elf.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  edgeai-elf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools/edgeai_elf_inspect.py
+            tools/edgeai_inspect_arm64_split.py
+            tests/test_edgeai_arm64_split.py
+            split_config.arm64_v8a.apk
+          sparse-checkout-cone-mode: false
+      - name: Install LLVM for real AArch64 shared object test fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends clang lld
+      - name: Regression test on compiler-produced ARM64 ELF, fail on corrupt headers
+        run: python3 -m unittest discover -s tests -p test_edgeai_arm64_split.py -v
+      - name: Audit unmodified 80MB APK and 236MB IL2CPP library read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p edgeai-static-evidence
+          echo '504c7e3ba1bff9fdc7e8a3f963f1a3eccb4b1bf93b093dc855c627d832dc931a  split_config.arm64_v8a.apk' | sha256sum -c -
+          python3 tools/edgeai_inspect_arm64_split.py split_config.arm64_v8a.apk \
+            --output edgeai-static-evidence/oxide_elf64_inventory.json \
+            | tee edgeai-static-evidence/oxide_elf64_summary.txt
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path("edgeai-static-evidence/oxide_elf64_inventory.json").read_text())
+          assert data["status"]=="ARM64_APK_STATIC_INVENTORY_PASS",data
+          libs={x["file"]:x for x in data["libraries"]}
+          assert set(libs)=={"libil2cpp.so","libunity.so","libloader.so"},data
+          assert libs["libil2cpp.so"]["bytes"]==236123768,data
+          assert all(lib["architecture"]=="AArch64" for lib in libs.values())
+          assert not data["game_executed"] and not data["runtime_player_coordinates_verified"]
+          print("EDGEAI_ELF64_REAL_OXIDE_LIBRARY_AUDIT_PASS")
+          PY
+      - name: Upload audit logs, no game executables
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-edgeai-elf64-static-audit
+          path: edgeai-static-evidence/*
+          if-no-files-found: warn
+          retention-days: 14
