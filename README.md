@@ -10,7 +10,7 @@
 [M6: telemetria legítima e validação final](../../issues/6).
 
 - **M1:** o Oxide original no Android ARM64 virtual registrou autossinal SIGKILL. O kernel capturou seis eventos, mas ainda faltam evidências NSpid que vinculem inequivocamente o PID do emissor host ao processo Android. [Captura original #38599474610](../../actions/runs/38599474610).
-- **M2:** o parser de sinais diferencia PID host/Android e falha fechado sem mapeamento. A [regressão #38601725784](../../actions/runs/38601725784) executou testes e reprocessou os seis eventos reais. O workflow também roda testes de regressão semanalmente, sem baixar o APK.
+- **M2 — concluída:** o parser de sinais diferencia PID host/Android e falha fechado sem mapeamento. A [regressão #38601989458](../../actions/runs/38601989458) aprovou os testes, incluindo casos truncados, e reprocessou os seis eventos reais. O workflow roda semanalmente sem baixar o APK; [issue #2 encerrada](../../issues/2).
 - **M3–M6:** ainda não concluídas. **Não há confirmação de menu jogável, gameplay, ESP real ou causa da proteção.** Somente ambientes virtuais; APK original preservado.
 
 As issues contêm os critérios de aceitação e evidências. Desenvolvimento futuro e atualizações devem seguir esses critérios e registrar honestamente bloqueios, sem afirmar sucesso apenas porque a CI passou.
