@@ -2,6 +2,13 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### Grafo AArch64 e desvios indiretos classificados pela EdgeAI
+
+[Prova no GitHub Actions #38562481574](../../actions/runs/38562481574): **18 testes aprovados** e validacao do `JNI_OnLoad` original com LLVM em `libloader.so`. A ferramenta identificou **117/117** instrucoes de transferencia de controle comparadas ao LLVM, organizou **147 blocos candidatos e 174 arestas** e classificou **7 desvios de tabela (ADR/LDRSW/ADD/BR)** mais **1 chamada indireta (BLR)**. Os destinos indiretos continuam intencionalmente desconhecidos; nao se pode inferir execucao ou alcancabilidade so com esse grafo.
+
+[Relatorio tecnico](reports/1.14.11949-edgeai-indirect-cfg.md) | [JSON e desassembly](../../actions/runs/38562481574/artifacts/11893301719).
+
+
 ### EdgeAI testada contra as bibliotecas ARM64 originais do Oxide
 
 A [execucao #38559496820](../../actions/runs/38559496820) usou o parser ELF da **EdgeAI Engine**, adaptado para bibliotecas grandes por `mmap`, e analisou o split ARM64 original sem executar o jogo. **Quatro testes de regressao** passaram. As tres bibliotecas foram identificadas com SHA-256 verificado: `libil2cpp.so` (236 MB, **1.747 simbolos de funcao nomeados**), `libunity.so` (25 MB, 7 simbolos) e `libloader.so` (10 MB, 1 simbolo).
