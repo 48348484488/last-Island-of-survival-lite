@@ -47,13 +47,44 @@ def screen_appearance(path):
         }
 
 
+def bright_stroke(path):
+    """Require the vivid synthetic JNI rectangle, not green-ish artwork.
+
+    This strict proof runs after dismissal of Android's fullscreen prompt;
+    green pixels dimmed by an active system dialog are not sufficient.
+    """
+    with Image.open(path) as screenshot:
+        im = screenshot.convert("RGB")
+        width, height = im.size
+        hits = []
+        for y in range(height * 35 // 100, height * 72 // 100):
+            for x in range(width * 32 // 100, width * 68 // 100):
+                r, g, b = im.getpixel((x, y))
+                if 15 <= r <= 110 and g >= 160 and b <= 160 and \
+                   g > r * 1.8 and g > b * 1.3:
+                    hits.append((x, y))
+        if not hits:
+            return {"pixels": 0, "bounds": None, "plausible": False}
+        left, top = min(x for x, _ in hits), min(y for _, y in hits)
+        right, bottom = max(x for x, _ in hits), max(y for _, y in hits)
+        center_x, center_y = (left + right) / 2, (top + bottom) / 2
+        plausible = (
+            len(hits) >= 500 and right - left >= 30 and bottom - top >= 30
+            and width * .38 <= center_x <= width * .62
+            and height * .30 <= center_y <= height * .76
+        )
+        return {"pixels": len(hits), "bounds": [left, top, right, bottom],
+                "plausible": plausible}
+
+
 def assess(folder):
     folder = Path(folder)
     base = evaluate(folder)
     screenshot = folder / "overlay_on_game_3.png"
     image = measure(screenshot)
     appearance = screen_appearance(screenshot)
-    game_marker = plausible_centered_box(image)
+    bright = bright_stroke(screenshot)
+    game_marker = bright["plausible"]
     foreground = (
         (folder / "original_foreground.txt").read_text().strip()
         == "ORIGINAL_ACTIVITY_RESUMED_DURING_CAPTURE=OBSERVED"
@@ -83,6 +114,7 @@ def assess(folder):
         if all(checks.values()) else "LOADING_ARTWORK_AND_OVERLAY_SIMULTANEITY_NOT_PROVEN",
         "checks": checks,
         "green_marker": image,
+        "synthetic_bright_stroke": bright,
         "screen_appearance": appearance,
         "gameplay_proven": False,
         "real_player_coordinates_proven": False,
