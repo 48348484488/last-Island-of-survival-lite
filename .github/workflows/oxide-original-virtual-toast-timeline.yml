@@ -1,0 +1,87 @@
+name: Oxide virtual Android - original Activity Toast timeline replay
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-original-virtual-toast-timeline.yml"
+      - "tools/analyze_original_toast_timeline.py"
+      - "tests/test_analyze_original_toast_timeline.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify-original-lifecycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Regression-test exact original PID and Toast phase separation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_analyze_original_toast_timeline.py' -v
+          python3 -m unittest discover -s tests -p 'test_diagnose_original_exit.py' -v
+      - name: Download REAL virtual ARM64 Android 13 original game before/after logcat archive
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38478578089
+          name: oxide-original-permission-ab-evidence
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: evidence
+      - name: Reconstruct two original process Toast-and-SIGKILL lifecycles
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s evidence/before/all_buffers.txt
+          test -s evidence/after/all_buffers.txt
+          python3 tools/analyze_original_toast_timeline.py \
+            --before evidence/before/all_buffers.txt \
+            --after evidence/after/all_buffers.txt \
+            --out original-toast-timeline
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          d=json.loads(Path("original-toast-timeline/activity_toast_sigkill_timeline.json").read_text())
+          assert d["comparison"]["status"]=="REPEATED_ACTIVITY_SELF_KILL_WITH_TOAST_WINDOW",d
+          assert (d["comparison"]["before_original_pid"],d["comparison"]["after_original_pid"])==(2197,2578),d
+          assert d["before"]["toast_window_specific_package_owner"]=="NOT_ATTESTED",d
+          assert d["after"]["toast_window_specific_package_owner"]=="NOT_ATTESTED",d
+          assert not d["before"]["toast_text_captured_in_logs"],d
+          assert not d["comparison"]["security_bypass_performed"],d
+          assert d["comparison"]["cause_of_protection_decision"]=="UNKNOWN",d
+          assert not d["comparison"]["gameplay_verified"],d
+          print("REAL_VIRTUAL_OXIDE_TOAST_WINDOW_ACTIVITY_SIGKILL_SEQUENCE=CONFIRMED")
+          print("SPECIFIC_SECURITY_TRIGGER=UNKNOWN")
+          PY
+      - name: Publish true evidence scope (not security causation)
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Oxide original ARM64 virtual Activity / Android Toast / SIGKILL timeline"
+            echo "Replayed two archived unmodified game executions; no game bytes downloaded."
+            if [ -s original-toast-timeline/activity_toast_sigkill_timeline.md ]; then
+              cat original-toast-timeline/activity_toast_sigkill_timeline.md
+            else
+              echo "No complete real game lifecycle proof: inspect failed stage."
+            fi
+            echo "Generic system Toast events are NOT proof of which app owns the window or its message."
+            echo "No security vendor/trigger inferred. No protection modifications or ESP claims."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save derived timestamps only (no APK, no raw logs)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-virtual-android-toast-lifecycle-evidence
+          path: original-toast-timeline/
+          retention-days: 14
+          if-no-files-found: warn
