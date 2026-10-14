@@ -86,19 +86,18 @@ class SupervisorTests(unittest.TestCase):
         self.assertEqual(
             m.lightweight_handoff("oxide-arm64-signal-observability.yml", "open"),
             "oxide-kernel-signal-replay.yml")
-        self.assertEqual(
-            m.lightweight_handoff("oxide-kernel-signal-replay.yml", "open"),
-            "oxide-original-launch-milestones.yml")
+        self.assertIsNone(m.lightweight_handoff("oxide-kernel-signal-replay.yml", "open"))
         self.assertIsNone(m.lightweight_handoff("oxide-original-launch-milestones.yml", "open"))
         self.assertIsNone(m.lightweight_handoff("redroid-original-smoke.yml", "open"))
 
     def test_followup_starts_only_on_success(self):
         api = FakeAPI()
         x = run()
+        x["path"] = ".github/workflows/oxide-arm64-signal-observability.yml"
         m.complete(api, {"action": "completed", "workflow_run": x})
         calls = [c for c in api.calls if c[1] == "POST"]
         self.assertEqual(len(calls), 1)
-        self.assertIn("oxide-original-launch-milestones.yml", calls[0][0])
+        self.assertIn("oxide-kernel-signal-replay.yml", calls[0][0])
         self.assertIn("oxide-auto:followup:", api.comments[-1][1])
 
     def test_failed_run_does_not_chain(self):
@@ -122,7 +121,8 @@ class SupervisorTests(unittest.TestCase):
     def test_handoff_idempotence_marker(self):
         api = FakeAPI()
         x = run()
-        marker = "oxide-auto:followup:12345:1:oxide-original-launch-milestones.yml"
+        x["path"] = ".github/workflows/oxide-arm64-signal-observability.yml"
+        marker = "oxide-auto:followup:12345:1:oxide-kernel-signal-replay.yml"
         original = api.api
         def custom(endpoint, method="GET", payload=None):
             if endpoint == "/issues/1/comments?per_page=100":
