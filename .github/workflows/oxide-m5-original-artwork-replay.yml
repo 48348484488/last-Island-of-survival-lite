@@ -3,7 +3,10 @@ name: "Oxide M5 - Replay real Android16 original artwork with synthetic JNI mark
 on:
   push:
     branches: [main]
-    paths: [".github/workflows/oxide-m5-original-artwork-replay.yml"]
+    paths:
+      - ".github/workflows/oxide-m5-original-artwork-replay.yml"
+      - "esp_core/android_probe/check_original_game_artwork_overlay.py"
+      - "esp_core/android_probe/tests/test_original_game_artwork_overlay.py"
   workflow_dispatch:
 
 permissions:
