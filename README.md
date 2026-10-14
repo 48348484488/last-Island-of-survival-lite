@@ -2,6 +2,26 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+
+### Android 12 ARM64: PID original e encerramento comprovados
+
+A [nova execução 100% virtual #38488270142](../../actions/runs/38488270142)
+e a [reanalise dos artefatos #38488773446](../../actions/runs/38488773446)
+resolveram a falha do analisador antigo: a Activity do Oxide
+estava em primeiro plano e associada ao **PID 1829**, visto em 31
+amostras consecutivas e depois encerrado por **SIGKILL**. O Android
+registrou o mesmo PID no historico de saida com status **9**.
+Sao **29 testes de regressao aprovados nas duas execucoes** (16+13);
+nenhum aparelho fisico ou APK alterado foi utilizado.
+
+Com isso, os Androids virtuais ARM64 **12, 13 e 14** possuem registros de
+inicializacao do Oxide seguidos de autoencerramento do processo.
+**O motivo especifico da mensagem de seguranca ainda e desconhecido**;
+nenhuma partida multiplayer ou ESP de jogadores reais foi validado.
+
+[Relatorio tecnicamente verificado](reports/1.14.11949-android12-virtual-pid-exit-confirmed.md).
+
+
 **Regra deste projeto:** os próximos testes do Oxide devem ocorrer em ambientes
 Android virtuais no GitHub Actions. Não será solicitado telefone pessoal,
 aluguel de aparelho físico, serviço de device farm nem credencial de ADB físico.
