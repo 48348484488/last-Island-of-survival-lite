@@ -1,0 +1,182 @@
+name: "Oxide M3 - Native virtual Android 15 and 16 boot compatibility"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m3-android15-16-boot.yml"
+      - "tools/assess_new_virtual_android_boot.py"
+      - "tests/test_assess_new_virtual_android_boot.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  latest-android-native-arm64:
+    name: Native ARM64 Android ${{ matrix.android }} virtual-only boot
+    strategy:
+      fail-fast: false
+      matrix:
+        android: ["15", "16"]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      TARGET_ANDROID: ${{ matrix.android }}
+    steps:
+      - name: Checkout independent boot verifier
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Run fail-closed synthetic boot regressions
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_assess_new_virtual_android_boot.py' -v
+          python3 -m py_compile tools/assess_new_virtual_android_boot.py
+      - name: Configure ARM64 virtual Android Binder support
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p latest-android-evidence
+          uname -m | tee latest-android-evidence/host_arch.txt
+          test "$(uname -m)" = "aarch64"
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          sudo chmod a+rw /dev/binderfs/binder || true
+          test -e /dev/binderfs/binder
+      - name: Boot actual upstream Redroid Android 15/16 ARM64 container
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="redroid/redroid:$TARGET_ANDROID.0.0_64only-latest"
+          echo "$IMAGE" > latest-android-evidence/image.txt
+          timeout 600 docker pull "$IMAGE" > latest-android-evidence/docker_pull.txt 2>&1
+          docker image inspect --format '{{.Architecture}}' "$IMAGE" \
+            | tee latest-android-evidence/container_arch.txt
+          test "$(cat latest-android-evidence/container_arch.txt)" = "arm64"
+          docker run -d --rm --privileged --name oxide-latest-arm64 \
+            -p 127.0.0.1:5555:5555 \
+            -v /dev/binderfs:/dev/binderfs \
+            "$IMAGE" \
+            androidboot.redroid_gpu_mode=guest \
+            androidboot.redroid_width=720 \
+            androidboot.redroid_height=1280 \
+            androidboot.redroid_dpi=320 \
+            > latest-android-evidence/container_id.txt
+          boot=0
+          for n in $(seq 1 90); do
+            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+            if timeout 5 adb -s 127.0.0.1:5555 shell getprop sys.boot_completed \
+                  2>/dev/null | tr -d '\r' | grep -qx 1; then
+              boot=1
+              break
+            fi
+            sleep 4
+          done
+          echo "$boot" > latest-android-evidence/boot_completed.txt
+          test "$boot" = "1"
+      - name: Inspect genuine Android guest, no APK installed
+        shell: bash
+        run: |
+          set -euo pipefail
+          SERIAL=127.0.0.1:5555
+          adb -s "$SERIAL" shell getprop ro.product.cpu.abilist \
+            | tr -d '\r' > latest-android-evidence/guest_abi.txt
+          adb -s "$SERIAL" shell getprop ro.build.version.release \
+            | tr -d '\r' > latest-android-evidence/android_release.txt
+          if adb -s "$SERIAL" shell 'echo OXIDE_ADB_OK' 2>/dev/null \
+            | tr -d '\r' | grep -qx OXIDE_ADB_OK; then
+            echo PASS > latest-android-evidence/adb_shell.txt
+          else
+            echo FAIL > latest-android-evidence/adb_shell.txt
+          fi
+          if timeout 15 adb -s "$SERIAL" shell dumpsys activity activities \
+                > latest-android-evidence/activity_manager.txt 2>&1 \
+                && test -s latest-android-evidence/activity_manager.txt; then
+            echo PASS > latest-android-evidence/activity_manager_status.txt
+          else
+            echo FAIL > latest-android-evidence/activity_manager_status.txt
+          fi
+          adb -s "$SERIAL" shell pm list packages com.google.android.gms \
+            > latest-android-evidence/gms_packages.txt 2>&1 || true
+          adb -s "$SERIAL" shell dumpsys SurfaceFlinger \
+            > latest-android-evidence/surfaceflinger.txt 2>&1 || true
+          adb -s "$SERIAL" exec-out screencap -p \
+            > latest-android-evidence/virtual_screen.png 2>/dev/null || true
+      - name: Evaluate boot from observations and keep hard failure on incomplete evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, os, re
+          root = Path("latest-android-evidence")
+          def read(name):
+              path = root / name
+              return path.read_text(errors="replace").strip() if path.is_file() else ""
+          gms = "PRESENT" if "package:com.google.android.gms" in read("gms_packages.txt").splitlines() else "NOT_FOUND"
+          gles = next((m.group(1).strip() for x in read("surfaceflinger.txt").splitlines()
+                       if (m := re.search(r"\bGLES\s*:\s*(.*)",x,re.I))), "UNKNOWN")
+          data = {
+              "host_arch": read("host_arch.txt"),
+              "container_arch": read("container_arch.txt"),
+              "guest_abi": read("guest_abi.txt"),
+              "android_release": read("android_release.txt"),
+              "boot_completed": read("boot_completed.txt"),
+              "rendering_mode": "guest",
+              "adb_shell": read("adb_shell.txt"),
+              "activity_manager": read("activity_manager_status.txt"),
+              "google_play_services": gms,
+              "surfaceflinger_gles": gles,
+          }
+          (root / "raw_boot_evidence.json").write_text(json.dumps(data, indent=2)+"\n")
+          PY
+          python3 tools/assess_new_virtual_android_boot.py \
+            --version "$TARGET_ANDROID" \
+            --input latest-android-evidence/raw_boot_evidence.json \
+            --out latest-android-evidence
+      - name: Summarize real virtual Android compatibility results
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Native Android $TARGET_ANDROID independent virtual boot"
+            if [ -s latest-android-evidence/virtual_android_boot_verdict.md ]; then
+              cat latest-android-evidence/virtual_android_boot_verdict.md
+            else
+              echo "Boot NOT independently verified, or test interrupted."
+            fi
+            echo "No original Oxide APK installed or executed in this discovery job."
+            echo "Android boot is NOT a Play Integrity or gameplay verdict."
+          } >> "$GITHUB_STEP_SUMMARY"
+          docker logs oxide-latest-arm64 > latest-android-evidence/container_log.txt 2>&1 || true
+          docker rm -f oxide-latest-arm64 >/dev/null 2>&1 || true
+      - name: Archive limited independent test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-native-android-${{ matrix.android }}-boot-capability
+          path: |
+            latest-android-evidence/host_arch.txt
+            latest-android-evidence/container_arch.txt
+            latest-android-evidence/image.txt
+            latest-android-evidence/guest_abi.txt
+            latest-android-evidence/android_release.txt
+            latest-android-evidence/boot_completed.txt
+            latest-android-evidence/adb_shell.txt
+            latest-android-evidence/activity_manager_status.txt
+            latest-android-evidence/gms_packages.txt
+            latest-android-evidence/raw_boot_evidence.json
+            latest-android-evidence/virtual_android_boot_verdict.json
+            latest-android-evidence/virtual_android_boot_verdict.md
+            latest-android-evidence/container_log.txt
+            latest-android-evidence/docker_pull.txt
+            latest-android-evidence/virtual_screen.png
+          if-no-files-found: warn
+          retention-days: 14
