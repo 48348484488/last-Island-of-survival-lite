@@ -14,7 +14,7 @@ on:
 
 permissions:
   contents: read
-  actions: read
+  actions: write
 
 jobs:
   original-signal-replay:
@@ -86,3 +86,19 @@ jobs:
           path: signal-replay/
           if-no-files-found: ignore
           retention-days: 14
+
+      - name: Hand off completed replay to the next read-only milestone audit
+        if: ${{ success() && github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location \
+            -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/48348484488/oxide/actions/workflows/oxide-original-launch-milestones.yml/dispatches" \
+            -d '{"ref":"main"}'
+          echo 'AUTOMATIC_READ_ONLY_MILESTONE_HANDOFF=DISPATCHED'
