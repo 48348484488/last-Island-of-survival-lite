@@ -1,0 +1,81 @@
+name: "Oxide M3 - Android 16 ARM64 host ashmem prerequisite diagnosis"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m3-android16-ashmem-prereqs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-arm64-host-memory-support:
+    name: Verify host ashmem before any Android 16 boot attempt
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 9
+    steps:
+      - name: Collect native ARM64 kernel and memory-driver state, no Android started
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ashmem-audit
+          uname -m > ashmem-audit/arch.txt
+          uname -r > ashmem-audit/kernel.txt
+          test "$(cat ashmem-audit/arch.txt)" = "aarch64"
+          cat /proc/filesystems > ashmem-audit/filesystems.txt
+          cat /proc/misc > ashmem-audit/misc_devices.txt
+          cat /proc/cgroups > ashmem-audit/cgroups.txt
+          if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
+            cat /sys/fs/cgroup/cgroup.controllers > ashmem-audit/cgroup_controllers.txt
+          fi
+          if [ -e /dev/ashmem ]; then
+            ls -l /dev/ashmem > ashmem-audit/ashmem_before.txt
+          else
+            echo ASHMEM_DEVICE_ABSENT > ashmem-audit/ashmem_before.txt
+          fi
+          lsmod > ashmem-audit/modules_before.txt
+          find /lib/modules/"$(uname -r)" -iname '*ashmem*' \
+            > ashmem-audit/ashmem_module_candidates.txt 2>&1 || true
+      - name: Try normal distribution ashmem module, never patch kernel or Android
+        shell: bash
+        run: |
+          set -u
+          sudo apt-get update -qq > ashmem-audit/apt_update.txt 2>&1
+          sudo apt-get install -y --no-install-recommends \
+            "linux-modules-extra-$(uname -r)" > ashmem-audit/apt_modules_extra.txt 2>&1
+          sudo modprobe ashmem_linux > ashmem-audit/modprobe_ashmem_stdout.txt \
+            2> ashmem-audit/modprobe_ashmem_stderr.txt
+          echo "$?" > ashmem-audit/modprobe_exit.txt
+          if [ -c /dev/ashmem ]; then
+            echo ASHMEM_CHAR_DEVICE_PRESENT > ashmem-audit/ashmem_status.txt
+          else
+            echo ASHMEM_CHAR_DEVICE_NOT_PRESENT > ashmem-audit/ashmem_status.txt
+          fi
+          lsmod > ashmem-audit/modules_after.txt
+          find /lib/modules/"$(uname -r)" -iname '*ashmem*' \
+            > ashmem-audit/ashmem_module_candidates_after.txt 2>&1 || true
+      - name: Record bounded interpretation of host prerequisites
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Android 16 ARM64 host ashmem prerequisite'
+            echo "Host: $(cat ashmem-audit/arch.txt 2>/dev/null || echo UNKNOWN)"
+            echo "Kernel: $(cat ashmem-audit/kernel.txt 2>/dev/null || echo UNKNOWN)"
+            echo "Ashmem before: $(cat ashmem-audit/ashmem_before.txt 2>/dev/null || echo UNKNOWN)"
+            echo "Ashmem after: $(cat ashmem-audit/ashmem_status.txt 2>/dev/null || echo UNKNOWN)"
+            echo "Modprobe exit: $(cat ashmem-audit/modprobe_exit.txt 2>/dev/null || echo UNKNOWN)"
+            echo 'Android 16 was not executed in this kernel-prerequisite test.'
+            echo 'Ashmem absence is consistent with a known Redroid 16 boot issue,'
+            echo 'but does not independently establish causality without retesting.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve small host diagnostics for reproducibility
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-android16-native-arm64-ashmem-host-evidence
+          path: ashmem-audit/
+          if-no-files-found: warn
+          retention-days: 14
