@@ -22,7 +22,7 @@ cleanup() {
 trap cleanup EXIT
 
 for VERSION in ${OXIDE_ANDROID_VERSIONS:-12 14}; do
-  case "$VERSION" in 12|13|14) ;; *) echo "Unsupported virtual Android: $VERSION" >&2; exit 64;; esac
+  case "$VERSION" in 12|13|14|15|16) ;; *) echo "Unsupported virtual Android: $VERSION" >&2; exit 64;; esac
   DIR="$OUT/android_$VERSION"; mkdir -p "$DIR"
   IMAGE="redroid/redroid:$VERSION.0.0_64only-latest"
   cleanup
@@ -108,6 +108,14 @@ for VERSION in ${OXIDE_ANDROID_VERSIONS:-12 14}; do
   adb -s "$SERIAL" shell pidof "$GAME" > "$DIR/pid_10s.txt" 2>&1 || true
   adb -s "$SERIAL" shell dumpsys activity activities \
     > "$DIR/activities_10s.txt" 2>&1 || true
+  if [[ "${OXIDE_CAPTURE_35S:-0}" == "1" ]]; then
+    # Read-only continuity proof: package PID alone is not enough, also
+    # require the ORIGINAL Activity to remain resumed at 35 seconds.
+    sleep 25
+    adb -s "$SERIAL" shell pidof "$GAME" > "$DIR/pid_35s.txt" 2>&1 || true
+    adb -s "$SERIAL" shell dumpsys activity activities \
+      > "$DIR/activities_35s.txt" 2>&1 || true
+  fi
   adb -s "$SERIAL" shell dumpsys activity exit-info "$GAME" \
     > "$DIR/exit_info.txt" 2>&1 || true
   adb -s "$SERIAL" logcat -b crash -d -v threadtime \
@@ -139,6 +147,14 @@ for version in sys.argv[2].split():
     lifecycle=load("lifecycle_recovery.json")
     pids={x for x in read("pid_10s.txt").split() if x.isdecimal()}
     pid=foren.get("initial_activity_pid")
+    if (not isinstance(pid,int) or isinstance(pid,bool) or pid <= 0) and lifecycle.get("pid_confirms_activity_process") is True:
+        pid=lifecycle.get("selected_pid")
+    pids35={x for x in read("pid_35s.txt").split() if x.isdecimal()}
+    activities35=read("activities_35s.txt")
+    resumed35=any(
+        "OxideActivity" in x and "com.catsbit.oxidesurvivalisland/" in x
+        and ("topResumedActivity" in x or "mResumedActivity" in x)
+        for x in activities35.splitlines())
     activities=read("activities_10s.txt")
     resumed=any(
         "OxideActivity" in x and "com.catsbit.oxidesurvivalisland/" in x
@@ -152,8 +168,11 @@ for version in sys.argv[2].split():
             ("BOOT_PASS","ORIGINAL_INSTALL_FAILED","ORIGINAL_INSTALL_NOT_CONFIRMED",
              "ORIGINAL_INSTALL_SUCCESS","OBSERVATION_COMPLETE") else "FAIL",
         "install":"SUCCESS" if read("install.txt").startswith("Success") else "NOT_CONFIRMED",
+        "initial_activity_pid_selected":pid,
         "initial_pid_alive_10s":pid is not None and str(pid) in pids,
         "activity_resumed_10s":resumed,
+        "initial_pid_alive_35s":pid is not None and str(pid) in pids35,
+        "activity_resumed_35s":resumed35,
         "forensic":foren,
         "lifecycle_recovery":lifecycle,
         "play_services":"PRESENT" if "package:com.google.android.gms" in gms.splitlines() else
