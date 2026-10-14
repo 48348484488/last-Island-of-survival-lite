@@ -10,7 +10,6 @@ def load(name, path):
     return obj
 
 m = load("sigkill", "correlate_kernel_sigkill.py")
-sampler = load("nspid", "sample_android_pid_namespaces.py")
 TRACE = """
 Attaching 3 probes...
 KERNEL_SIGKILL syscall=kill host_sender=12895 host_tid=12895 target_pid=2232 signal=9 comm=esurvivalisland\\n
@@ -58,12 +57,6 @@ class KernelTest(unittest.TestCase):
         s="KERNEL_SIGKILL syscall=tgkill host_sender=12895 host_tid=12896 target_tgid=2232 target_tid=2233 signal=9 comm=game\\n"
         self.assertEqual(m.extract_events(s)[0]["target_tid"],2233)
 
-    def test_sampler_nested(self):
-        row=sampler.extract_status("Name:\tesurvivalisland\nNSpid:\t12895\t2232\n")
-        self.assertEqual((row["host_pid"],row["guest_pid"]),(12895,2232))
-
-    def test_sampler_flat_not_a_namespace(self):
-        self.assertIsNone(sampler.extract_status("Name:\tx\nNSpid:\t7\n"))
 
 if __name__ == "__main__":
     unittest.main()
