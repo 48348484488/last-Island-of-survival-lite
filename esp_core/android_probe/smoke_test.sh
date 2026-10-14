@@ -12,9 +12,37 @@ adb logcat -c || true
 adb install -r android-probe-out/oxide-bridge-jni-smoke.apk 2>&1 | tee android-probe-out/install.log
 
 # First scene: only explicitly labeled controlled test geometry is drawn.
+# Some Android 15 software-renderer boots acknowledge Activity launch before
+# its first composed frame. Capture bounded real screenshots instead of
+# treating an empty first frame as an immediate JNI failure.
 adb shell am start -W -n com.oxide.bridgeprobe/.MainActivity 2>&1 | tee android-probe-out/start.log
-sleep 3
-adb exec-out screencap -p > android-probe-out/screen.png
+projection_visible=0
+for attempt in 1 2 3 4 5; do
+  sleep 2
+  adb exec-out screencap -p > android-probe-out/screen.png
+  if python3 - "$attempt" <<'PY'
+import sys
+from pathlib import Path
+sys.path.insert(0, "esp_core/android_probe")
+from check_render import green_bounds
+found=green_bounds(Path("android-probe-out/screen.png"))
+print("PROJECTION_CAPTURE_ATTEMPT",sys.argv[1],found)
+sys.exit(0 if found["pixels"]>=300 else 1)
+PY
+  then
+    projection_visible=1
+    echo "PROJECTION_SCREEN_VISIBLE_ATTEMPT=$attempt" > android-probe-out/projection_capture.txt
+    break
+  fi
+  adb shell dumpsys activity activities > "android-probe-out/activity_attempt_${attempt}.txt" || true
+  # Explicitly foreground the same independent app; no game is involved.
+  adb shell am start -W -n com.oxide.bridgeprobe/.MainActivity     >> android-probe-out/start.log 2>&1 || true
+done
+if [ "$projection_visible" -ne 1 ]; then
+  echo "PROJECTION_SCREEN_NOT_VISIBLE_AFTER_FIVE_REAL_CAPTURE_ATTEMPTS" |
+    tee android-probe-out/projection_capture.txt
+  adb shell dumpsys window > android-probe-out/window_after_failed_capture.txt || true
+fi
 adb shell pidof com.oxide.bridgeprobe > android-probe-out/pid.txt || true
 
 # Second scene: no samples, no box. A process that keeps stale rectangles fails.
