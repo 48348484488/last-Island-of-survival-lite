@@ -1,0 +1,67 @@
+name: "Oxide - Auto-continue events and stuck-run watchdog"
+
+# Work completion is event-driven; only the watchdog is scheduled.
+# Workflow does not generate code and never touches proprietary APKs.
+on:
+  workflow_run:
+    workflows:
+      - "Oxide M1-M2 - ARM64 signal evidence regression"
+      - "Oxide original APK on native ARM64 Android container"
+      - "Native Apple Silicon ARM64 Google Play Android emulator boot probe"
+      - "Official native ARM64 Google Play image and host availability audit"
+      - "Oxide original ARM64 startup milestones - 3 archived runs"
+      - "Oxide original loading-screen overlay interop on native ARM64"
+    types: [completed]
+  issues:
+    types: [closed]
+  schedule:
+    - cron: "*/10 * * * *"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-continuous-supervisor.yml"
+      - "tools/oxide_continuous_supervisor.py"
+      - "tests/test_oxide_continuous_supervisor.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+  issues: write
+
+concurrency:
+  group: oxide-supervisor-${{ github.event_name }}-${{ github.event.workflow_run.id || github.event.issue.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  watchdog:
+    name: Observe completion / hand off safe tasks / detect stalled runs
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout exact supervisor implementation
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Unit-test event handling and fail-closed guards
+        run: python3 -m unittest discover -s tests -p 'test_oxide_continuous_supervisor.py' -v
+      - name: Process incoming workflow completion, issue transition, or watchdog scan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          python3 tools/oxide_continuous_supervisor.py
+      - name: Explain automation boundaries
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Oxide event-driven continuation"
+            echo "Trigger: $GITHUB_EVENT_NAME"
+            echo "A successful CI run does not establish playable Oxide or close a milestone."
+            echo "Watchdog only alerts when jobs appear stuck; never bypasses integrity/security checks."
+            echo "There is NO autonomously authenticated AI coding agent in this workflow."
+          } >> "$GITHUB_STEP_SUMMARY"
