@@ -95,6 +95,10 @@ for VERSION in ${OXIDE_ANDROID_VERSIONS:-12 14}; do
   if [[ "${OXIDE_CAPTURE_KERNEL_SIGKILL:-0}" == "1" ]]; then
     command -v bpftrace >/dev/null || { echo HOST_BPFTRACE_MISSING >&2; exit 71; }
     cat > "$DIR/original_kernel_sigkill.bt" <<'BT'
+BEGIN
+{
+  printf("OXIDE_KERNEL_TRACE_READY\n");
+}
 tracepoint:syscalls:sys_enter_kill
 /args->sig == 9/
 {
@@ -114,17 +118,47 @@ tracepoint:syscalls:sys_enter_rt_sigqueueinfo
          pid, tid, args->pid, args->sig, comm);
 }
 BT
-    sudo -n timeout --signal=INT 44s bpftrace "$DIR/original_kernel_sigkill.bt" \
+    # bpftrace can take >5s to compile probes on GitHub ARM runners.
+    # BEGIN executes only after probes attach; line buffering makes readiness
+    # observable BEFORE we start the original game, never inferred afterward.
+    sudo -n stdbuf -oL -eL timeout --signal=INT 95s \
+      bpftrace "$DIR/original_kernel_sigkill.bt" \
       > "$DIR/kernel_sigkill_trace.txt" 2>&1 &
     KERNEL_TRACE_PID=$!
-    sleep 5
-    if ! kill -0 "$KERNEL_TRACE_PID" 2>/dev/null; then
-      echo "KERNEL_TRACE_EARLY_EXIT" > "$DIR/kernel_trace_preflight.txt"
-    elif grep -q 'Attaching 3 probes' "$DIR/kernel_sigkill_trace.txt"; then
-      echo "KERNEL_TRACE_ATTACHED_BEFORE_ORIGINAL_ACTIVITY" > "$DIR/kernel_trace_preflight.txt"
-    else
-      echo "KERNEL_TRACE_ATTACH_NOT_CONFIRMED" > "$DIR/kernel_trace_preflight.txt"
+    KERNEL_READY=0
+    for poll in $(seq 1 55); do
+      if grep -Fq OXIDE_KERNEL_TRACE_READY "$DIR/kernel_sigkill_trace.txt"; then
+        KERNEL_READY=1
+        break
+      fi
+      if ! kill -0 "$KERNEL_TRACE_PID" 2>/dev/null; then break; fi
+      sleep 1
+    done
+    if [[ "$KERNEL_READY" != 1 ]]; then
+      echo KERNEL_TRACE_READY_BEFORE_GAME_NOT_CONFIRMED > "$DIR/kernel_trace_preflight.txt"
+      echo "No original game launched: kernel tracer not attached" >&2
+      exit 72
     fi
+    # Prove that the same live probe captures a CONTROLLED shell kill syscall.
+    # Only a disposable sleep child is terminated; the Oxide process is untouched.
+    sleep 90 &
+    KERNEL_CONTROL_PID=$!
+    kill -9 "$KERNEL_CONTROL_PID" 2>/dev/null || true
+    wait "$KERNEL_CONTROL_PID" 2>/dev/null || true
+    KERNEL_CONTROL_PASS=0
+    for poll in $(seq 1 12); do
+      if grep -Fq "target_pid=$KERNEL_CONTROL_PID signal=9" "$DIR/kernel_sigkill_trace.txt"; then
+        KERNEL_CONTROL_PASS=1
+        break
+      fi
+      sleep 0.25
+    done
+    if [[ "$KERNEL_CONTROL_PASS" != 1 ]]; then
+      echo KERNEL_SIGNAL_CONTROL_NOT_CAPTURED > "$DIR/kernel_trace_preflight.txt"
+      echo "No original game launched: controlled kernel signal missing" >&2
+      exit 73
+    fi
+    echo KERNEL_TRACE_ATTACHED_BEFORE_ORIGINAL_ACTIVITY > "$DIR/kernel_trace_preflight.txt"
   fi
   # Start rapid read-only PID observation BEFORE launching the original Activity.
   # This avoids relying only on am_proc_start events, which Android 12 can lose.
