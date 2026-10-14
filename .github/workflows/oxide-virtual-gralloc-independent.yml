@@ -1,0 +1,161 @@
+name: Virtual native ARM64 Android gralloc formats - independent exact probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-virtual-gralloc-independent.yml"
+      - "graphics_lab/**"
+      - "tools/build_virtual_gralloc_probe.sh"
+      - "tools/run_virtual_gralloc_probe.sh"
+      - "tools/classify_virtual_gralloc_probe.py"
+      - "tests/test_classify_virtual_gralloc_probe.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-standalone-java-apk:
+    name: Build separate Android format-43-56 allocation APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            graphics_lab
+            tools
+            tests
+      - name: Validate parser, source, and compile script
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_classify_virtual_gralloc_probe.py' -v
+          bash -n tools/build_virtual_gralloc_probe.sh
+          bash -n tools/run_virtual_gralloc_probe.sh
+          test ! -d ./base.apk
+          ! grep -R 'com.catsbit.oxidesurvivalisland' graphics_lab
+      - name: Ensure Android API 35 Java build tools are installed
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDKMGR="$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager"
+          if [ ! -x "$SDKMGR" ]; then
+            SDKMGR="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)"
+          fi
+          yes | "$SDKMGR" --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
+          "$SDKMGR" --sdk_root="$ANDROID_HOME" --install \
+            "platforms;android-35" "build-tools;35.0.0"
+      - name: Compile separately signed Java AHardwareBuffer diagnostic APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/build_virtual_gralloc_probe.sh gralloc-apk-build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oxide-independent-android-gralloc-probe-apk
+          path: gralloc-apk-build/gralloc-probe.apk
+          retention-days: 3
+          if-no-files-found: error
+
+  run-on-arm64-redroid:
+    name: Real native virtual ARM64 Android 13 graphics allocation experiment
+    needs: build-standalone-java-apk
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - uses: actions/download-artifact@v4
+        with:
+          name: oxide-independent-android-gralloc-probe-apk
+          path: independent-apk
+      - name: Verify parser regressions on native host
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_classify_virtual_gralloc_probe.py' -v
+          test "$(uname -m)" = aarch64
+      - name: Bring up guest-graphics ARM64 Android Binder environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p gralloc-evidence
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          sudo chmod a+rw /dev/binderfs/binder || true
+      - name: Start native Android 13 container; original game remains ABSENT
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 420 docker pull redroid/redroid:13.0.0_64only-latest
+          docker run -d --rm --privileged --name oxide-isolated-gralloc \
+            -p 127.0.0.1:5555:5555 \
+            -v /dev/binderfs:/dev/binderfs \
+            redroid/redroid:13.0.0_64only-latest \
+            androidboot.redroid_gpu_mode=guest \
+            > gralloc-evidence/container_id.txt
+          for i in $(seq 1 45); do
+            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+            if timeout 6 adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | grep -q '^1'; then
+              echo NATIVE_ARM64_ANDROID_13_READY | tee gralloc-evidence/boot.txt
+              break
+            fi
+            sleep 3
+          done
+          test -s gralloc-evidence/boot.txt
+      - name: Measure the same exact format/usage request without installing Oxide
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/run_virtual_gralloc_probe.sh \
+            127.0.0.1:5555 independent-apk/gralloc-probe.apk gralloc-evidence
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("gralloc-evidence/gralloc_probe_verdict.json").read_text())
+          assert r["probe_complete"],r
+          assert r["game_installed"] is False,r
+          assert r["security_check_rejection_cause_proven"] is False,r
+          print("REAL_NATIVE_VIRTUAL_GRALLOC_RESULTS="+r["status"])
+          for name,item in r["cases"].items():
+              print(name+" format="+str(item["format"])+" usage="+hex(item["usage"])+" allocated="+item["create"])
+          PY
+      - name: Archive classification and true interpretation
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Redroid Android 13 ARM64 independent 4x4 gralloc format reproduction"
+            echo "This is a separate unsigned-from-game, independently signed test APK."
+            echo "The original game is NOT downloaded, installed or executed."
+            if [ -f gralloc-evidence/gralloc_probe_verdict.json ]; then
+              cat gralloc-evidence/gralloc_probe_verdict.json
+            else
+              echo "No validated gralloc allocation outcome."
+            fi
+            echo "Even matching buffer errors cannot prove Oxide's security rejection reason."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save exact measurement only (no Android or game binaries)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-virtual-arm64-independent-hardwarebuffer-formats
+          path: |
+            gralloc-evidence/gralloc_probe_verdict.json
+            gralloc-evidence/abi.txt
+            gralloc-evidence/api.txt
+            gralloc-evidence/boot.txt
+            gralloc-evidence/start.txt
+            gralloc-evidence/install.txt
+          retention-days: 14
+          if-no-files-found: warn
