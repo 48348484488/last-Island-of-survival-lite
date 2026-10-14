@@ -2,6 +2,16 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### Execução original repetida e comparação de três PIDs no Android ARM64 virtual
+
+Na [reexecução real #38574879916](../../actions/runs/38574879916), os **quatro APKs originais** instalaram e o Oxide iniciou o Unity e o IL2CPP, mas o PID original **2168** registrou autossinal **SIGKILL** em **+4,648 segundos**, antes de um menu jogável. O workflow falhou intencionalmente o critério de jogo permanecer aberto; o artefato preserva screenshots e logcat originais.
+
+O [replay CI #38579150920](../../actions/runs/38579150920) aprovou **10 testes de regressão** e comprovou a mesma sequência em três execuções originais ARM64: PID 2197 (+4,895 s), PID 2578 (+4,649 s), PID 2168 (+4,648 s). A análise distingue logs do PID do jogo de erros gráficos emitidos por processos Android diferentes. **Não identifica a regra de segurança que provoca a saída**, nem confirma Play Integrity, gameplay ou ESP real.
+
+[Relatório dos três casos](reports/1.14.11949-original-3-virtual-launch-milestones.md) | [JSON do replay](../../actions/runs/38579150920/artifacts/11900654371)
+
+
+
 ### EdgeAI: tabela ARM64 real incorporada ao grafo do loader
 
 A [execucao #38570970178](../../actions/runs/38570970178) concluiu **65 testes aprovados**. Usando o `libloader.so` ARM64 original em modo somente leitura, a EdgeAI leu uma tabela com **8 entradas** em `0x870B80` (indice local 0..7) e recuperou **6 destinos distintos** para o despacho `0x4EA1F8`. A ferramenta confirmou que os destinos estao em regioes executaveis, dentro do simbolo `JNI_OnLoad` e em limites de blocos basicos previamente identificados. O grafo passou de **174 para 180 arestas candidatas**; o numero de blocos alcançaveis no modelo parcial a partir da entrada continua em **4 de 147**.
