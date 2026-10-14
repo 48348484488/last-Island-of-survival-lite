@@ -1,0 +1,119 @@
+name: Oxide native virtual Android 12 and 14 hardware buffer compatibility
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-virtual-gralloc-versions.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  compare-virtual-redroid:
+    strategy:
+      fail-fast: false
+      matrix:
+        android: [12, 14]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    name: Native virtual Android ${{ matrix.android }} — independent 4x4 gralloc
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Download same independently signed diagnostic APK from validated build
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38490256931
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: oxide-independent-android-gralloc-probe-apk
+          path: independent
+      - name: Validate exact 6-case results parser, arm64 host and probe artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test -s independent/gralloc-probe.apk
+          python3 -m unittest discover -s tests -p 'test_classify_virtual_gralloc_probe.py' -v
+          bash -n tools/run_virtual_gralloc_probe.sh
+      - name: Configure ARM64 containerized Android binder
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p gralloc-version-evidence
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          sudo chmod a+rw /dev/binderfs/binder || true
+      - name: Start native ARM64 Redroid Android ${{ matrix.android }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="redroid/redroid:${{ matrix.android }}.0.0_64only-latest"
+          timeout 420 docker pull "$IMAGE"
+          docker run -d --rm --privileged \
+            --name oxide-gralloc-version-${{ matrix.android }} \
+            -p 127.0.0.1:5555:5555 \
+            -v /dev/binderfs:/dev/binderfs \
+            "$IMAGE" androidboot.redroid_gpu_mode=guest \
+            > gralloc-version-evidence/container.txt
+          for i in $(seq 1 45); do
+            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+            if timeout 6 adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | grep -q '^1'; then
+              echo BOOT_PASS | tee gralloc-version-evidence/boot.txt
+              break
+            fi
+            sleep 3
+          done
+          test -s gralloc-version-evidence/boot.txt
+      - name: Run original-format buffer allocations; Oxide absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/run_virtual_gralloc_probe.sh \
+            127.0.0.1:5555 independent/gralloc-probe.apk gralloc-version-evidence
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          d=json.loads(Path("gralloc-version-evidence/gralloc_probe_verdict.json").read_text())
+          assert d["probe_complete"],d
+          assert d["game_installed"] is False,d
+          assert not d["security_check_rejection_cause_proven"],d
+          print("ORIGINAL_GAME_APK_INSTALLED=FALSE")
+          print("BUFFER_ALLOCATION_CLASSIFICATION="+d["status"])
+          for name,item in d["cases"].items():
+              print(name+"="+item["create"])
+          PY
+      - name: Real virtual compatibility result, not gameplay inference
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Android ${{ matrix.android }} ARM64 virtual, independent HardwareBuffer allocation"
+            echo "Original log parameters format 43/56 and control 1, usage 0xb00 vs 0x300."
+            if [ -s gralloc-version-evidence/gralloc_probe_verdict.json ]; then
+              cat gralloc-version-evidence/gralloc_probe_verdict.json
+            else
+              echo "No valid runtime verdict."
+            fi
+            echo "No original Oxide installed, no gameplay, no security check modified."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: oxide-independent-gralloc-native-android-${{ matrix.android }}
+          path: |
+            gralloc-version-evidence/gralloc_probe_verdict.json
+            gralloc-version-evidence/abi.txt
+            gralloc-version-evidence/api.txt
+            gralloc-version-evidence/boot.txt
+          retention-days: 14
+          if-no-files-found: warn
