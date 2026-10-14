@@ -1,0 +1,159 @@
+name: Oxide native ARM64 virtual - real overlay fresh empty stale cleanup
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-virtual-overlay-states.yml"
+      - "esp_core/android_probe/src/com/oxide/bridgeprobe/**"
+      - "esp_core/android_probe/virtual_overlay_states.sh"
+      - "esp_core/android_probe/check_virtual_overlay_states.py"
+      - "esp_core/android_probe/tests/test_virtual_overlay_states.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-isolated-overlay:
+    name: Compile Android ARM64 JNI diagnostic APK and pixel tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: esp_core
+      - name: Install Android build SDK and NDK without modifying Oxide
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDKMGR="$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager"
+          if [ ! -x "$SDKMGR" ]; then
+            SDKMGR="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)"
+          fi
+          yes | "$SDKMGR" --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
+          "$SDKMGR" --sdk_root="$ANDROID_HOME" --install \
+            "ndk;27.2.12479018" "platforms;android-35" "build-tools;35.0.0"
+          python3 -m pip install --user "Pillow>=10,<13"
+      - name: Synthetic regressions and script syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s esp_core/android_probe/tests -p 'test_virtual_overlay_states.py' -v
+          python3 -m unittest discover -s esp_core/android_probe/tests -p 'test_original_overlay_pixels.py' -v
+          bash -n esp_core/android_probe/virtual_overlay_states.sh
+      - name: Compile and sign independent JNI native ARM64 overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash esp_core/android_probe/build_smoke_apk.sh android-probe-out
+          test -s android-probe-out/oxide-bridge-jni-smoke.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oxide-independent-arm64-overlay-three-state-apk
+          path: android-probe-out/oxide-bridge-jni-smoke.apk
+          if-no-files-found: error
+          retention-days: 3
+
+  native-virtual-overlay:
+    name: Run real ARM64 Redroid - fresh, no players, stale, service stop
+    needs: build-isolated-overlay
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: esp_core
+      - uses: actions/download-artifact@v4
+        with:
+          name: oxide-independent-arm64-overlay-three-state-apk
+          path: diagnostic-apk
+      - name: Install screenshot validation dependency and assert no game APK checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test -s diagnostic-apk/oxide-bridge-jni-smoke.apk
+          test ! -e base.apk
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            "linux-modules-extra-$(uname -r)" adb python3-pil
+          python3 -m unittest discover -s esp_core/android_probe/tests \
+            -p 'test_virtual_overlay_states.py' -v
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          sudo chmod a+rw /dev/binderfs/binder || true
+      - name: Start native ARM64 Android 13 virtual guest, guest/software GPU
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p isolated-overlay-evidence
+          timeout 420 docker pull redroid/redroid:13.0.0_64only-latest
+          docker run -d --rm --privileged --name oxide-isolated-native-overlay \
+            -p 127.0.0.1:5555:5555 \
+            -v /dev/binderfs:/dev/binderfs \
+            redroid/redroid:13.0.0_64only-latest \
+            androidboot.redroid_gpu_mode=guest \
+            androidboot.redroid_width=720 androidboot.redroid_height=1280 \
+            androidboot.redroid_dpi=320 \
+            > isolated-overlay-evidence/container.txt
+          for i in $(seq 1 50); do
+            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+            if timeout 6 adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | grep -q '^1'; then
+              echo NATIVE_ARM64_ANDROID_13_BOOT=PASS | tee isolated-overlay-evidence/boot.txt
+              break
+            fi
+            sleep 3
+          done
+          test -s isolated-overlay-evidence/boot.txt
+      - name: Execute real native JNI overlay mode and screenshot transitions
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash esp_core/android_probe/virtual_overlay_states.sh \
+            127.0.0.1:5555 diagnostic-apk/oxide-bridge-jni-smoke.apk \
+            isolated-overlay-evidence
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("isolated-overlay-evidence/overlay_states_verdict.json").read_text())
+          assert r["result"]=="VIRTUAL_ARM64_ISOLATED_OVERLAY_3_STATES_AND_STOP_PASS",r
+          assert not r["original_game_executed"],r
+          assert not r["real_multiplayer_esp_verified"],r
+          assert all(r["checks"].values()),r
+          print("NATIVE_ARM64_OVERLAY_FRESH_EMPTY_STALE_STOP=PASS")
+          print("GAME_ORIGINAL_INSTALLED=NO")
+          print("LIVE_MULTIPLAYER_OR_REAL_PLAYER_ESP=NOT_TESTED")
+          PY
+      - name: Report real screenshots and Android service logs, not fake gameplay
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Android 13 native virtual ARM64 diagnostic overlay lifecycle"
+            echo "Tests actual WindowManager and JNI with controlled snapshots, no original Oxide installed."
+            if [ -f isolated-overlay-evidence/overlay_runtime_verdict.txt ]; then
+              cat isolated-overlay-evidence/overlay_runtime_verdict.txt
+            else
+              echo "No verified native Android runtime verdict."
+            fi
+            echo "Success is NOT a live multiplayer ESP or original game security bypass."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: oxide-native-virtual-arm64-overlay-lifecycle-screenshots
+          path: |
+            isolated-overlay-evidence/*.png
+            isolated-overlay-evidence/*.json
+            isolated-overlay-evidence/*verdict.txt
+            isolated-overlay-evidence/boot.txt
+            isolated-overlay-evidence/api.txt
+            isolated-overlay-evidence/abis.txt
+            isolated-overlay-evidence/window_*.txt
+            isolated-overlay-evidence/launch_*.txt
+          if-no-files-found: warn
+          retention-days: 14
