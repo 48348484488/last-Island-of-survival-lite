@@ -2,6 +2,13 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### Triagem real de simbolos IL2CPP pela EdgeAI
+
+O [workflow #38563095341](../../actions/runs/38563095341) **passou 21 testes** e pesquisou os 1.747 simbolos STT_FUNC nomeados do `libil2cpp.so` original ARM64. Os nomes contendo `camera`, `player`, `position`, `network` ou `entity` tiveram **zero correspondencias**. Os quatro nomes contendo `transform` sao funcoes `std::__ndk1::collate::do_transform`, nao `Unity Transform`. Isso delimita o valor da lista ELF sem provar que metodos de gameplay estejam ausentes do executavel.
+
+[Relatorio detalhado](reports/1.14.11949-edgeai-il2cpp-symbol-triage.md) | [JSON verificado](../../actions/runs/38563095341/artifacts/11892388554).
+
+
 ### Grafo AArch64 e desvios indiretos classificados pela EdgeAI
 
 [Prova no GitHub Actions #38562481574](../../actions/runs/38562481574): **18 testes aprovados** e validacao do `JNI_OnLoad` original com LLVM em `libloader.so`. A ferramenta identificou **117/117** instrucoes de transferencia de controle comparadas ao LLVM, organizou **147 blocos candidatos e 174 arestas** e classificou **7 desvios de tabela (ADR/LDRSW/ADD/BR)** mais **1 chamada indireta (BLR)**. Os destinos indiretos continuam intencionalmente desconhecidos; nao se pode inferir execucao ou alcancabilidade so com esse grafo.
