@@ -36,7 +36,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends clang lld
+          sudo apt-get install -y --no-install-recommends clang lld llvm
       - name: Regression test on compiler-produced ARM64 ELF, fail on corrupt headers
         run: |
           python3 -m unittest discover -s tests -p test_edgeai_arm64_split.py -v
@@ -77,6 +77,45 @@ jobs:
           assert d["decoded_control_transfers"]>0,d
           assert not d["code_executed"]
           print("EDGEAI_NATIVE_ARM64_LOADER_CONTROL_TRANSFER_MAP_PASS")
+          PY
+      - name: Cross-check EdgeAI native AArch64 branch candidates against LLVM disassembly
+        shell: bash
+        run: |
+          set -euo pipefail
+          tempdir="$(mktemp -d)"
+          trap 'rm -rf "$tempdir"' EXIT
+          unzip -p split_config.arm64_v8a.apk lib/arm64-v8a/libloader.so > "$tempdir/libloader.so"
+          llvm-objdump --disassemble-symbols=JNI_OnLoad --no-show-raw-insn "$tempdir/libloader.so" \
+            > edgeai-static-evidence/loader-jni-llvm-disasm.txt
+          python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+          d=json.loads(Path('edgeai-static-evidence/loader-jni-arm64-control-transfers.json').read_text())
+          text=Path('edgeai-static-evidence/loader-jni-llvm-disasm.txt').read_text()
+          table={'b':'B','bl':'BL','br':'BR','blr':'BLR','ret':'RET',
+                 'cbz':'CBZ','cbnz':'CBNZ','tbz':'TBZ','tbnz':'TBNZ'}
+          entries={}
+          for line in text.splitlines():
+              m=re.match(r'^\s*([0-9a-fA-F]+):\s+([a-zA-Z][a-zA-Z0-9.]*)\b',line)
+              if not m: continue
+              op=m[2].lower()
+              kind=table.get(op,'B.cond' if op.startswith('b.') and op!='b.al' else None)
+              if kind:
+                  entries[int(m[1],16)]=kind
+          ours={int(x['pc'],16):x['kind'] for x in d['control_transfer_candidates']}
+          matched={pc for pc,k in ours.items() if entries.get(pc)==k}
+          scanner_only={hex(pc):k for pc,k in ours.items() if entries.get(pc)!=k}
+          llvm_only={hex(pc):k for pc,k in entries.items() if ours.get(pc)!=k}
+          report={'scanner_candidates':len(ours),'llvm_decoded_control_transfers':len(entries),
+                  'agreed_address_and_opcode':len(matched),
+                  'scanner_only':scanner_only,'llvm_only':llvm_only,
+                  'source':'LLVM llvm-objdump on original unmodified ELF; static only',
+                  'code_executed':False}
+          Path('edgeai-static-evidence/loader-jni-llvm-comparison.json').write_text(
+              json.dumps(report,indent=2)+'\n')
+          print(json.dumps({k:v for k,v in report.items() if k not in ('scanner_only','llvm_only')},indent=2))
+          assert len(matched)>=20,report
           PY
       - name: Upload audit logs, no game executables
         if: always()
