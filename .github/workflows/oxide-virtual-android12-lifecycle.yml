@@ -1,0 +1,115 @@
+name: Oxide virtual Android 12 - recover real Activity process evidence
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-virtual-android12-lifecycle.yml"
+      - "tools/diagnose_virtual_activity_pid.py"
+      - "tests/test_diagnose_virtual_activity_pid.py"
+      - "tools/run_native_virtual_android_matrix.sh"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android12-native-pid-recovery:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    name: Android 12 ARM64 virtual — precise original app process tracing
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+            tools
+            tests
+      - name: Verify PID recovery regression tests and script syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_diagnose_virtual_activity_pid.py' -v
+          python3 -m unittest discover -s tests -p 'test_diagnose_original_exit.py' -v
+          python3 -m unittest discover -s tests -p 'test_verify_original_splits.py' -v
+          bash -n tools/run_native_virtual_android_matrix.sh
+          test "$(uname -m)" = aarch64
+      - name: Configure native ARM64 Android Binder, no x86 translation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p android12-lifecycle
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          sudo chmod a+rw /dev/binderfs/binder || true
+          test -e /dev/binderfs/binder
+      - name: Download exact original asset only after test environment is configured
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors \
+            --connect-timeout 30 --max-time 1200 --silent --show-error \
+            --output split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          python3 tools/verify_original_splits.py . \
+            --output android12-lifecycle/original_hashes.json
+      - name: Run real original Oxide on Android 12 ARM64 and sample PID before launch
+        shell: bash
+        env:
+          OXIDE_ANDROID_VERSIONS: "12"
+        run: |
+          set -euo pipefail
+          bash tools/run_native_virtual_android_matrix.sh . android12-lifecycle
+          test -f android12-lifecycle/android_12/pid_trace.txt
+          test -f android12-lifecycle/android_12/lifecycle_recovery.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("android12-lifecycle")
+          meta=json.loads((root/"android_12/lifecycle_recovery.json").read_text())
+          assert meta["observed_pid_trace_samples"]>0,meta
+          assert meta["gameplay_verified"] is False,meta
+          assert meta["security_rejection_root_cause"]=="NOT_DETERMINED",meta
+          print("REAL_VIRTUAL_ANDROID12_PID_SAMPLING=COMPLETED")
+          print("ORIGINAL_GAME_ACTIVITY_PID_EVIDENCE="+meta["pid_source"])
+          print("GAMEPLAY=NOT_VERIFIED")
+          PY
+      - name: Present evidence and avoid treating virtual security rejection as success
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Oxide unchanged APK: Android 12 native ARM64 virtual process recovery"
+            echo "100% virtual. No physical phone or Android identity/protection changes."
+            if [ -f android12-lifecycle/virtual_lifecycle_retest.md ]; then
+              cat android12-lifecycle/virtual_lifecycle_retest.md
+            else
+              echo "No verified original game process reconstruction; inspect logs."
+            fi
+            echo "Even recovered PIDs or Unity loading screenshot do not establish multiplayer or ESP."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve bounded game process evidence, not raw Android logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-virtual-android12-precise-lifecycle
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            android12-lifecycle/*.md
+            android12-lifecycle/*.json
+            android12-lifecycle/android_12/experiment_phase.txt
+            android12-lifecycle/android_12/forensic_summary.json
+            android12-lifecycle/android_12/lifecycle_recovery.json
+            android12-lifecycle/android_12/lifecycle_recovery.md
+            android12-lifecycle/android_12/pid_trace.txt
+            android12-lifecycle/android_12/activities_early.txt
+            android12-lifecycle/android_12/activity_start.txt
+            android12-lifecycle/android_12/exit_info.txt
+            android12-lifecycle/android_12/screen_2s.png
