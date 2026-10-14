@@ -30,6 +30,8 @@ class FakeAPI:
             return [{"number": 1, "state": "closed"},
                     {"number": 2, "state": "closed"},
                     {"number": 3, "state": "open"}]
+        if endpoint == "/issues/1":
+            return {"state": getattr(self, "issue_state", "open")}
         if endpoint.endswith("/comments?per_page=100"):
             return []
         if endpoint.startswith("/actions/runs?"):
@@ -79,6 +81,56 @@ class SupervisorTests(unittest.TestCase):
     def test_closed_workflow_not_stale(self):
         now = dt.datetime.now(dt.timezone.utc)
         self.assertIsNone(m.old_run(run("completed"), now))
+
+    def test_lightweight_sequence_is_acyclic(self):
+        self.assertEqual(
+            m.lightweight_handoff("oxide-arm64-signal-observability.yml", "open"),
+            "oxide-kernel-signal-replay.yml")
+        self.assertEqual(
+            m.lightweight_handoff("oxide-kernel-signal-replay.yml", "open"),
+            "oxide-original-launch-milestones.yml")
+        self.assertIsNone(m.lightweight_handoff("oxide-original-launch-milestones.yml", "open"))
+        self.assertIsNone(m.lightweight_handoff("redroid-original-smoke.yml", "open"))
+
+    def test_followup_starts_only_on_success(self):
+        api = FakeAPI()
+        x = run()
+        m.complete(api, {"action": "completed", "workflow_run": x})
+        calls = [c for c in api.calls if c[1] == "POST"]
+        self.assertEqual(len(calls), 1)
+        self.assertIn("oxide-original-launch-milestones.yml", calls[0][0])
+        self.assertIn("oxide-auto:followup:", api.comments[-1][1])
+
+    def test_failed_run_does_not_chain(self):
+        api = FakeAPI()
+        m.complete(api, {"action": "completed", "workflow_run": run(conclusion="failure")})
+        self.assertFalse(any(c[1] == "POST" for c in api.calls))
+
+    def test_handoff_blocks_closed_m1(self):
+        api = FakeAPI()
+        api.issue_state = "closed"
+        m.complete(api, {"action": "completed", "workflow_run": run()})
+        self.assertFalse(any(c[1] == "POST" for c in api.calls))
+
+    def test_handoff_rejects_untrusted_source(self):
+        api = FakeAPI()
+        x = run()
+        x["path"] = ".github/workflows/redroid-original-smoke.yml"
+        m.complete(api, {"action": "completed", "workflow_run": x})
+        self.assertFalse(any(c[1] == "POST" for c in api.calls))
+
+    def test_handoff_idempotence_marker(self):
+        api = FakeAPI()
+        x = run()
+        marker = "oxide-auto:followup:12345:1:oxide-original-launch-milestones.yml"
+        original = api.api
+        def custom(endpoint, method="GET", payload=None):
+            if endpoint == "/issues/1/comments?per_page=100":
+                return [{"body": "<!-- " + marker + " -->"}]
+            return original(endpoint, method, payload)
+        api.api = custom
+        m.complete(api, {"action": "completed", "workflow_run": x})
+        self.assertFalse(any(c[1] == "POST" for c in api.calls))
 
 if __name__ == "__main__":
     unittest.main()
