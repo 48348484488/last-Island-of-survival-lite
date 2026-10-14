@@ -118,6 +118,48 @@ tracepoint:syscalls:sys_enter_rt_sigqueueinfo
          pid, tid, args->pid, args->sig, comm, nsecs);
 }
 BT
+    if [[ "${OXIDE_CAPTURE_BINDER_FINISH_WINDOW:-0}" == "1" ]]; then
+      # Capture only the stock Android system_server destination; generic
+      # Binder numeric code is NOT proof of a particular AIDL method.
+      if [ ! -r /sys/kernel/tracing/events/binder/binder_transaction/id ]; then
+        echo BINDER_TRANSACTION_TRACEPOINT_NOT_PRESENT > "$DIR/binder_preflight.txt"
+        exit 74
+      fi
+      SERVER_GUEST_PID="$(timeout 8 adb -s "$SERIAL" shell pidof system_server | tr -d '\r')"
+      [[ "$SERVER_GUEST_PID" =~ ^[0-9]+$ ]] || { echo INVALID_ANDROID_SYSTEM_SERVER_PID >&2; exit 75; }
+      CONTAINER_SERVER_INIT="$(docker inspect -f '{{.State.Pid}}' oxide-virtual-version)"
+      # Verify system_server is in the SAME container PID namespace.
+      sudo -n python3 - "$ROOT" "$CONTAINER_SERVER_INIT" "$SERVER_GUEST_PID" \
+        "$DIR/host_system_server_namespace.json" <<'PY'
+import json,sys
+from pathlib import Path
+sys.path.insert(0,str(Path(sys.argv[1])/"tools"))
+from prove_original_host_pid_namespace import inspect
+result=inspect(Path("/proc"),int(sys.argv[2]),int(sys.argv[3]),package="system_server")
+Path(sys.argv[4]).write_text(json.dumps(result,indent=2)+"\n")
+print(result)
+if result.get("status") != "ORIGINAL_ANDROID_HOST_NSPID_MAPPING_PROVEN":
+    raise SystemExit(1)
+PY
+      SERVER_HOST_PID="$(python3 - "$DIR/host_system_server_namespace.json" <<'PY'
+import json,sys
+x=json.load(open(sys.argv[1]))
+print(x["host_pid"])
+PY
+)"
+      [[ "$SERVER_HOST_PID" =~ ^[0-9]+$ ]] || exit 76
+      cat >> "$DIR/original_kernel_sigkill.bt" <<'BTB'
+tracepoint:binder:binder_transaction
+/args->to_proc == __ANDROID_SYSTEM_SERVER_HOST_PID__ && args->reply == 0/
+{
+  printf("ANDROID_BINDER host_sender=%d host_tid=%d dest_proc=%d dest_thread=%d transaction=%d code=%d reply=%d flags=%d comm=%s boot_ns=%llu\n",
+    pid,tid,args->to_proc,args->to_thread,args->debug_id,args->code,args->reply,args->flags,comm,nsecs);
+}
+BTB
+      sed -i "s/__ANDROID_SYSTEM_SERVER_HOST_PID__/$SERVER_HOST_PID/g" \
+        "$DIR/original_kernel_sigkill.bt"
+      echo "SYSTEM_SERVER_HOST_PID=$SERVER_HOST_PID GUEST_PID=$SERVER_GUEST_PID" > "$DIR/binder_preflight.txt"
+    fi
     # bpftrace can take >5s to compile probes on GitHub ARM runners.
     # BEGIN prints a startup marker; the controlled SIGKILL below independently
     # verifies probes are actually active BEFORE launching the original game.
@@ -254,6 +296,11 @@ PY
     PYTHONPATH="$ROOT/tools" python3 \
       "$ROOT/tools/corroborate_original_kernel_and_namespace.py" "$DIR" \
       > "$DIR/same_run_kernel_namespace_stdout.txt" 2>&1 || true
+  fi
+  if [[ "${OXIDE_CAPTURE_BINDER_FINISH_WINDOW:-0}" == "1" ]]; then
+    PYTHONPATH="$ROOT/tools" python3 \
+      "$ROOT/tools/audit_original_binder_finish_window.py" "$DIR" \
+      > "$DIR/original_binder_finish_window_stdout.txt" 2>&1 || true
   fi
   python3 "$ROOT/tools/diagnose_virtual_activity_pid.py" "$DIR" \
     > "$DIR/lifecycle_recovery_stdout.txt" 2>&1 || true
