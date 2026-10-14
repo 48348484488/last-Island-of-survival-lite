@@ -19,6 +19,21 @@ class SecurityWarningOrigin(unittest.TestCase):
         items=scan_entry(io.BytesIO(txt),len(txt),chunk_size=7)
         found=[x for x in items if x["term"]=="Security Threat" and x["encoding"]=="utf-16le"]
         self.assertEqual(found[0]["offsets"],[10])
+    def test_utf16be_across_chunk_boundary(self):
+        txt=b"abc"+"Security Threat Detected by App".encode("utf-16be")+b"tail"
+        items=scan_entry(io.BytesIO(txt),len(txt),chunk_size=11)
+        matches=[m for m in items if m["term"]=="Security Threat Detected by App"
+                 and m["encoding"]=="utf-16be"]
+        self.assertEqual(matches[0]["offsets"],[3])
+    def test_all_four_coverage_requires_all_four_files(self):
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/"base.apk"
+            with zipfile.ZipFile(path,"w") as z:z.writestr("asset",b"nothing")
+            digest=hashlib.sha256(path.read_bytes()).hexdigest()
+            r=inspect([path],{"base.apk":digest})
+            self.assertFalse(r["scanned_all_four_original_splits"])
+            self.assertFalse(r["full_plaintext_member_coverage"])
+            self.assertEqual(r["uncompressed_bytes_not_scanned"],0)
     def test_hash_gate_and_zip_member(self):
         with tempfile.TemporaryDirectory() as d:
             path=Path(d)/"base.apk"
