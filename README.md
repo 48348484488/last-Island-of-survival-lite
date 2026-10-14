@@ -2,6 +2,12 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### SIGKILL original comprovado tambem pelo kernel ARM64 virtual
+
+A [execucao #38599474610](../../actions/runs/38599474610) observou o APK original inalterado no Redroid Android 13 ARM64 e capturou **a chamada real de `kill(SIGKILL)` no kernel**: emissor host PID **12895** (`esurvivalisland`), alvo PID Android **2232**, sinal **9**. O `logcat` do mesmo processo tambem registra o autossinal. A Activity encerrou em **16:37:45.101 UTC** e o sinal ocorreu em **16:37:45.146 UTC**; o jogo nao continuou aberto.
+
+O preflight [#38599133014](../../actions/runs/38599133014) havia confirmado seis eventos controlados na instrumentacao. O kernel so recuperou `kill+8` na pilha: **a funcao chamadora e o motivo permanecem desconhecidos**. Nao se comprovou gameplay, ESP ou causa especifica de protecao. [Relatorio e evidencia](reports/1.14.11949-original-kernel-self-sigkill-arm64.md).
+
 ### Execução original repetida e comparação de três PIDs no Android ARM64 virtual
 
 Na [reexecução real #38574879916](../../actions/runs/38574879916), os **quatro APKs originais** instalaram e o Oxide iniciou o Unity e o IL2CPP, mas o PID original **2168** registrou autossinal **SIGKILL** em **+4,648 segundos**, antes de um menu jogável. O workflow falhou intencionalmente o critério de jogo permanecer aberto; o artefato preserva screenshots e logcat originais.
