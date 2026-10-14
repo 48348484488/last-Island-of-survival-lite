@@ -31,7 +31,15 @@ def old_run(run, now):
     status = run.get("status")
     if issue is None or status not in ("queued", "in_progress"):
         return None
-    threshold = 40 if status == "in_progress" else 25
+    expected_runtime = {"redroid-original-smoke.yml": 27,
+                        "oxide-kernel-signal-replay.yml": 10,
+                        "oxide-original-launch-milestones.yml": 10,
+                        "oxide-arm64-signal-observability.yml": 12,
+                        "oxide-native-google-play-discovery.yml": 11,
+                        "original-overlay-native-arm64.yml": 40,
+                        "oxide-virtual-overlay-states.yml": 30}
+    wf = str(run.get("path", "")).rsplit("/", 1)[-1]
+    threshold = expected_runtime.get(wf, 25) if status == "in_progress" else 25
     field = "run_started_at" if status == "in_progress" else "created_at"
     when = run.get(field)
     if not when:
