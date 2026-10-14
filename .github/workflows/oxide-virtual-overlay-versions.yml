@@ -1,0 +1,107 @@
+name: Oxide virtual-only ARM64 Android 12 and 14 overlay state comparison
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/oxide-virtual-overlay-versions.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  arm64-guest:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        android: [12, 14]
+    name: Android ${{ matrix.android }} ARM64 virtual - original-free JNI overlay states
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: esp_core
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 38542414642
+          name: oxide-independent-arm64-overlay-three-state-apk
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: standalone
+      - name: Native ARM64 Python image regressions and Binder environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test -s standalone/oxide-bridge-jni-smoke.apk
+          mkdir -p virtual-evidence
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb python3-pil
+          python3 -m unittest discover -s esp_core/android_probe/tests -p test_virtual_overlay_states.py -v
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          sudo chmod a+rw /dev/binderfs/binder || true
+      - name: Boot unmodified Redroid Android ${{ matrix.android }} 64-only virtual Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="redroid/redroid:${{ matrix.android }}.0.0_64only-latest"
+          timeout 420 docker pull "$IMAGE"
+          docker run -d --rm --privileged --name oxide-overlay-version-${{ matrix.android }} \
+            -p 127.0.0.1:5555:5555 -v /dev/binderfs:/dev/binderfs \
+            "$IMAGE" androidboot.redroid_gpu_mode=guest \
+            androidboot.redroid_width=720 androidboot.redroid_height=1280 \
+            androidboot.redroid_dpi=320 > virtual-evidence/container.txt
+          for attempt in $(seq 1 50); do
+            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+            if timeout 6 adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | grep -qx 1; then
+              echo BOOT_PASS > virtual-evidence/boot.txt
+              break
+            fi
+            sleep 3
+          done
+          test -s virtual-evidence/boot.txt
+      - name: Test actual JNI projection, WindowManager and screen captures
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash esp_core/android_probe/virtual_overlay_states.sh \
+            127.0.0.1:5555 standalone/oxide-bridge-jni-smoke.apk virtual-evidence
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("virtual-evidence/overlay_states_verdict.json").read_text())
+          assert d["result"]=="VIRTUAL_ARM64_ISOLATED_OVERLAY_3_STATES_AND_STOP_PASS",d
+          assert d["original_game_installed"] is False,d
+          assert not d["real_multiplayer_esp_verified"],d
+          assert all(d["checks"].values()),d
+          print("REAL_ARM64_VIRTUAL_ANDROID_${{ matrix.android }}_OVERLAY_STATES=PASS")
+          print("ORIGINAL_GAME_NOT_INSTALLED=TRUE")
+          PY
+      - name: Exact evidence and scope
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Native ARM64 virtual Android ${{ matrix.android }} overlay"
+            echo "Only stand-alone native JNI and synthetic inputs. No Oxide installed."
+            if [ -s virtual-evidence/overlay_runtime_verdict.txt ]; then
+              cat virtual-evidence/overlay_runtime_verdict.txt
+            else
+              echo "No successful runtime verdict."
+            fi
+            echo "No security bypass, live player position, or real ESP proven."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: oxide-virtual-arm64-android-${{ matrix.android }}-overlay-state-pixels
+          path: |
+            virtual-evidence/*.json
+            virtual-evidence/*.png
+            virtual-evidence/*verdict.txt
+            virtual-evidence/boot.txt
+            virtual-evidence/abis.txt
+            virtual-evidence/api.txt
+          if-no-files-found: warn
+          retention-days: 14
