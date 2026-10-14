@@ -4,6 +4,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.graphics.Canvas;
@@ -22,7 +24,9 @@ import android.view.WindowManager;
 public final class OverlayProbeService extends Service {
     private static final String TAG="OXIDE_BRIDGE_OVERLAY";
     private WindowManager manager;
-    private View view;
+    private OverlayView view;
+    private final Handler sequenceHandler = new Handler(Looper.getMainLooper());
+    private boolean sequenceEnabled;
 
     @Override public IBinder onBind(Intent intent) { return null; }
 
@@ -40,7 +44,8 @@ public final class OverlayProbeService extends Service {
                 intent.getBooleanExtra("overlay_no_boxes",false);
         final boolean staleSamples=intent!=null &&
                 intent.getBooleanExtra("overlay_stale_boxes",false);
-        if (noSamples && staleSamples) {
+        sequenceEnabled=intent!=null && intent.getBooleanExtra("overlay_sequence",false);
+        if ((noSamples && staleSamples) || (sequenceEnabled && (noSamples || staleSamples))) {
             Log.e(TAG,"RESULT=FAIL CONTRADICTORY_TEST_MODES");
             stopSelf(startId);
             return START_NOT_STICKY;
@@ -80,6 +85,16 @@ public final class OverlayProbeService extends Service {
             manager.addView(view,p);
             Log.i(TAG,"RESULT=PASS MODE="+mode+" RECT_COUNT="+
                   (coords.length/4)+" SOURCE=CONTROLLED_SYNTHETIC_ONLY");
+            if(sequenceEnabled) {
+                Log.i(TAG,"RESULT=PASS PHASE=INITIAL RECT_COUNT=1 SOURCE=SYNTHETIC_JNI");
+                sequenceHandler.postDelayed(() -> projectSequence("MOVED",1f,false),3000);
+                sequenceHandler.postDelayed(() -> projectSequence("STALE",1f,true),6000);
+                sequenceHandler.postDelayed(() -> projectSequence("RESTORED",-1f,false),9000);
+                sequenceHandler.postDelayed(() -> {
+                    Log.i(TAG,"PHASE=STOP_REQUEST SOURCE=SYNTHETIC_JNI");
+                    stopSelf();
+                },12000);
+            }
         } catch (RuntimeException e) {
             Log.e(TAG,"RESULT=FAIL ADD_VIEW "+e.getClass().getSimpleName());
             view=null;
@@ -88,20 +103,45 @@ public final class OverlayProbeService extends Service {
         return START_NOT_STICKY;
     }
 
+    private void projectSequence(String phase, float x, boolean stale) {
+        if (!sequenceEnabled || view==null) return;
+        final long now=SystemClock.elapsedRealtime();
+        final float[] result=MainActivity.nativeProjectSnapshot(
+                MainActivity.testCamera(),1080,1920,now,now-5,250,0,
+                new long[]{1},
+                new float[]{x,1,-5,x,-1,-5},
+                new long[]{now-(stale?600:5)});
+        if (result==null || result.length!=(stale?0:4)) {
+            Log.e(TAG,"RESULT=FAIL PHASE="+phase+" INVALID_NATIVE_SNAPSHOT");
+            stopSelf();
+            return;
+        }
+        view.setRects(result);
+        Log.i(TAG,"RESULT=PASS PHASE="+phase+" RECT_COUNT="+
+              (result.length/4)+" SOURCE=SYNTHETIC_JNI");
+    }
+
     @Override public void onDestroy() {
+        sequenceHandler.removeCallbacksAndMessages(null);
         if(manager!=null && view!=null) {
             try { manager.removeViewImmediate(view); }
             catch(RuntimeException e) { Log.w(TAG,"REMOVE_VIEW_ERROR",e); }
         }
         manager=null;
         view=null;
+        if(sequenceEnabled) Log.i(TAG,"RESULT=PASS PHASE=STOPPED RECT_COUNT=0 WINDOW_REMOVED=TRUE");
+        sequenceEnabled=false;
         super.onDestroy();
     }
 
     private final class OverlayView extends View {
-        private final float[] coords;
+        private float[] coords;
         private final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
         OverlayView(float[] c) { super(OverlayProbeService.this);coords=c.clone(); }
+        void setRects(float[] updated) {
+            coords=updated.clone();
+            invalidate();
+        }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
             if(coords.length!=4) return;
