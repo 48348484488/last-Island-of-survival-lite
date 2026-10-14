@@ -1,0 +1,183 @@
+name: Oxide M5 - Original Oxide and standalone JNI overlay on native Android 16 ARM64
+
+# Native ARM64 only; original signed game remains unchanged. Android16 host ashmem
+# allows original stock Redroid to boot. The app may exit in ~4.5s.
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/oxide-m5-android16-original-overlay.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-isolated-probe:
+    name: Build standalone ARM64 overlay diagnostic APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: esp_core
+      - name: Install Android NDK and build SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$ANDROID_HOME"
+          SDKMGR="$ROOT/cmdline-tools/16.0/bin/sdkmanager"
+          if [ ! -x "$SDKMGR" ]; then
+            SDKMGR="$(find "$ROOT/cmdline-tools" -type f -name sdkmanager | head -n1)"
+          fi
+          yes | "$SDKMGR" --sdk_root="$ROOT" --licenses >/dev/null || true
+          "$SDKMGR" --sdk_root="$ROOT" --install "ndk;27.2.12479018" "platforms;android-35" "build-tools;35.0.0"
+      - name: Build isolated signed JNI diagnostic app, not game APK
+        run: bash esp_core/android_probe/build_smoke_apk.sh android-probe-out
+      - name: Transfer isolated diagnostic APK to ARM64 runner
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-isolated-arm64-overlay-probe
+          path: android-probe-out/oxide-bridge-jni-smoke.apk
+          if-no-files-found: error
+          retention-days: 3
+
+  original-and-overlay:
+    name: Unmodified Oxide and overlay sharing same native ARM64 screen
+    needs: build-isolated-probe
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - name: Checkout only original signed splits and diagnostic scripts
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+            tools
+            esp_core
+      - uses: actions/download-artifact@v4
+        with:
+          name: oxide-isolated-arm64-overlay-probe
+          path: overlay-probe
+      - name: Set up native ARM64 Android16 binder, upstream ashmem and screenshot inspection
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p oxide-overlay-evidence
+          uname -a | tee oxide-overlay-evidence/host.txt
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" "linux-headers-$(uname -r)" adb python3-pil git gcc make kmod
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          test -e /dev/binderfs/binder
+          sudo chmod a+rw /dev/binderfs/binder || true
+          git init --quiet upstream-ashmem
+          git -C upstream-ashmem remote add origin https://github.com/remote-android/redroid-modules.git
+          timeout 180 git -C upstream-ashmem fetch --depth=1 origin refs/pull/23/head
+          ASHMEM_SHA="$(git -C upstream-ashmem rev-parse FETCH_HEAD)"
+          echo "$ASHMEM_SHA" > oxide-overlay-evidence/ashmem_source_sha.txt
+          test "$ASHMEM_SHA" = "f55e1e7515a6dd5f8e0f9569ea79148c08f60816"
+          git -C upstream-ashmem checkout --quiet --detach FETCH_HEAD
+          make -C upstream-ashmem/ashmem all > oxide-overlay-evidence/ashmem_build.log 2>&1
+          test -s upstream-ashmem/ashmem/ashmem_linux.ko
+          modinfo upstream-ashmem/ashmem/ashmem_linux.ko > oxide-overlay-evidence/ashmem_module.txt
+          grep -q "^vermagic: *$(uname -r)" oxide-overlay-evidence/ashmem_module.txt
+          sudo insmod upstream-ashmem/ashmem/ashmem_linux.ko
+          if [ ! -c /dev/ashmem ]; then
+            minor="$(awk '$2=="ashmem" {print $1}' /proc/misc)"
+            test -n "$minor"
+            sudo mknod /dev/ashmem c 10 "$minor"
+          fi
+          test -c /dev/ashmem
+          sudo chmod a+rw /dev/ashmem
+          echo ASHMEM_DEVICE_PRESENT > oxide-overlay-evidence/ashmem_status.txt
+          python3 -c 'from PIL import Image; print("PIL available")'
+      - name: Boot stock Android 16 ARM64 with actual host ashmem, without game patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 420 docker pull redroid/redroid:16.0.0_64only-latest
+          sudo chmod a+rw /dev/binderfs/binder || true
+          mkdir -p /tmp/oxide-native-overlay-data
+          docker run -d --rm --privileged --name oxide-native-overlay \
+            -p 127.0.0.1:5555:5555 -v /dev/binderfs:/dev/binderfs \
+            --device /dev/ashmem:/dev/ashmem \
+            -v /tmp/oxide-native-overlay-data:/data \
+            redroid/redroid:16.0.0_64only-latest androidboot.redroid_gpu_mode=guest \
+            | tee oxide-overlay-evidence/container_id.txt
+          for i in $(seq 1 50); do
+            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+            if timeout 5 adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' | grep -qx '1'; then
+              echo ANDROID_BOOT_COMPLETED | tee oxide-overlay-evidence/boot.txt
+              break
+            fi
+            sleep 4
+          done
+          test -s oxide-overlay-evidence/boot.txt
+          adb -s 127.0.0.1:5555 shell getprop ro.product.cpu.abilist | tee oxide-overlay-evidence/abis.txt
+          grep -q arm64-v8a oxide-overlay-evidence/abis.txt
+          adb -s 127.0.0.1:5555 shell getprop ro.build.version.release | tr -d '\r' | tee oxide-overlay-evidence/android_release.txt
+          grep -qx 16 oxide-overlay-evidence/android_release.txt
+      - name: Fetch the exact original 867 MB split without changing it
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors --connect-timeout 30 \
+            --max-time 1200 --silent --show-error \
+            --output split_UnityDataAssetPack.apk \
+            "https://github.com/48348484488/oxide/releases/download/v1.0.0/split_UnityDataAssetPack.apk"
+          echo '2f0f7f1be7d78d269f710edd471c40a9755a93a07481cae0c058356515e19834  split_UnityDataAssetPack.apk' | sha256sum --check
+          python3 tools/verify_original_splits.py . \
+            --output oxide-overlay-evidence/original_hashes.json
+      - name: Start diagnostic overlay, launch original, capture real screen and logs
+        shell: bash
+        run: |
+          bash esp_core/android_probe/original_overlay_smoke.sh \
+            127.0.0.1:5555 . overlay-probe/oxide-bridge-jni-smoke.apk \
+            oxide-overlay-evidence
+      - name: Validate dimmed/bright diagnostic overlay with real Activity foreground evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s esp_core/android_probe/tests \
+            -p 'test_original_overlay_pixels.py' -v
+          python3 esp_core/android_probe/check_original_overlay_pixels.py \
+            oxide-overlay-evidence | tee oxide-overlay-evidence/loading_overlay_validation.txt
+      - name: Preserve non-proprietary evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-android16-overlay-native-arm64-proof
+          path: |
+            oxide-overlay-evidence/*.txt
+            oxide-overlay-evidence/*.json
+            oxide-overlay-evidence/*.png
+            oxide-overlay-evidence/*.log
+            oxide-overlay-evidence/ashmem_source_sha.txt
+            oxide-overlay-evidence/ashmem_status.txt
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Label this limited integration proof
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### Native ARM64 Android 16 original loading-screen overlay experiment"
+            echo "Game original: unchanged signed 4-split Oxide 1.14.11949."
+            echo "Overlay: standalone diagnostic package using supplied synthetic points. Host ashmem loaded, Android16 stock."
+            echo "M5 loading-screen proof does NOT mean M4 playable game or 35s survival."
+            echo "Results must distinguish pixel proof from original-game process termination."
+            echo "Even success is NOT a playable game ESP, player-coordinate extraction, or a security bypass."
+            if [ -f oxide-overlay-evidence/loading_overlay_validation.txt ]; then
+              echo '#### Native pixel and Activity validation'
+              cat oxide-overlay-evidence/loading_overlay_validation.txt
+            fi
+            if [ -f oxide-overlay-evidence/original_foreground.txt ]; then
+              cat oxide-overlay-evidence/original_foreground.txt
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
