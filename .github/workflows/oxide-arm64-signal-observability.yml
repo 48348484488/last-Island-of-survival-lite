@@ -102,6 +102,8 @@ jobs:
             echo "## ARM64 read-only host signal instrumentation preflight"
             echo "Host: $(cat signal-preflight/arch.txt 2>/dev/null || echo UNKNOWN)"
             echo "Verdict: $(cat signal-preflight/probe_status.txt 2>/dev/null || echo NOT_EXECUTED)"
+            echo "Control sender: $(sed -n 's/^SENDER_PID=//p' signal-preflight/controlled_sender.txt 2>/dev/null | head -n1)"
+            echo "Captured control event lines: $(grep -c 'OXIDE_SIGNAL_PROBE sender_host_pid=' signal-preflight/bpftrace_output.txt 2>/dev/null || true)"
             echo '### Tracepoint visibility'
             cat signal-preflight/tracepoints.txt 2>/dev/null || true
             echo
