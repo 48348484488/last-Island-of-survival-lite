@@ -2,6 +2,12 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### EdgeAI: tabela ARM64 real incorporada ao grafo do loader
+
+A [execucao #38570970178](../../actions/runs/38570970178) concluiu **65 testes aprovados**. Usando o `libloader.so` ARM64 original em modo somente leitura, a EdgeAI leu uma tabela com **8 entradas** em `0x870B80` (indice local 0..7) e recuperou **6 destinos distintos** para o despacho `0x4EA1F8`. A ferramenta confirmou que os destinos estao em regioes executaveis, dentro do simbolo `JNI_OnLoad` e em limites de blocos basicos previamente identificados. O grafo passou de **174 para 180 arestas candidatas**; o numero de blocos alcançaveis no modelo parcial a partir da entrada continua em **4 de 147**.
+
+A comparacao com LLVM na [execucao #38569211341](../../actions/runs/38569211341) confirmou **108/108 destinos diretos** de saltos/chamadas na `libloader.so`. As 6 novas arestas sao **candidatas por dados da tabela**: nao sao caminhos executados comprovados e nao recuperam os estados de jogador e camera. [Relatorio tecnico](reports/1.14.11949-edgeai-bounded-jumptable.md) | [JSON e evidencias](../../actions/runs/38570970178/artifacts/11898425583).
+
 ### EdgeAI: comparação de argumento recuperada em UnityInitialize real
 
 O [teste #38570345080](../../actions/runs/38570345080) aprovou **59 regressões** e recuperou, sem executar o jogo, uma condição ARM64 verificável em `libunity.so`: `0x935B08: MOV W21,W1` → `0x935B54: CMP W21,#0x2E0` → `0x935B58: B.NE 0x935C6C`. A EdgeAI classifica isso como **segundo argumento diferente de 736**, apoiando-se na preservação do registrador `W21` definida pelo ABI AAPCS64. A análise rejeita sequências com escrita ou efeito desconhecido no registrador e desvios que entrem no meio do intervalo acompanhado.
