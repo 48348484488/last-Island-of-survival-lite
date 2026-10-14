@@ -1,0 +1,92 @@
+name: "Oxide M5 - Replay real Android16 original artwork with synthetic JNI marker in one PNG"
+
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/oxide-m5-original-artwork-replay.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  real-original-android16-visual-artwork-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - name: Checkout exact read-only PNG and PID validators
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+            esp_core
+      - name: Install screenshot examination dependency and run strict regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends python3-pil
+          python3 -m unittest discover -s esp_core/android_probe/tests \
+            -p test_original_overlay_pixels.py -v
+          python3 -m unittest discover -s esp_core/android_probe/tests \
+            -p test_original_game_artwork_overlay.py -v
+          python3 -m unittest discover -s tests \
+            -p test_check_original_overlay_overlap.py -v
+      - name: Download original unmodified game+overlay virtual Android16 PNGs
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38626740958
+          name: oxide-original-android16-overlay-native-arm64-proof
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: oxide-real-loading-artwork
+      - name: Correlate same capture Android Activity PID and green overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/check_original_overlay_overlap.py \
+            oxide-real-loading-artwork | tee oxide-same-capture-proof.txt
+          python3 esp_core/android_probe/check_original_game_artwork_overlay.py \
+            oxide-real-loading-artwork | tee oxide-artwork-same-png-proof.txt
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path("oxide-real-loading-artwork/original_overlay_overlap_verdict.json").read_text())
+          b=json.loads(Path("oxide-real-loading-artwork/original_artwork_overlay_verdict.json").read_text())
+          assert a["original_activity_pid"]==2211,a
+          assert a["status"]=="ORIGINAL_LOADING_ACTIVITY_AND_STANDALONE_OVERLAY_CORROBORATED",a
+          assert b["status"]=="ORIGINAL_LOADING_ARTWORK_WITH_SYNTHETIC_OVERLAY_VISIBLE",b
+          assert all(b["checks"].values()),b
+          assert b["synthetic_bright_stroke"]["pixels"]>=500,b
+          assert b["screen_appearance"]["image_contains_nonuniform_artwork"],b
+          assert not b["gameplay_proven"] and not b["real_player_coordinates_proven"],b
+          print("STOCK_ANDROID16_UNMODIFIED_ORIGINAL_GAME_LOADING_ARTWORK_PLUS_SYNTHETIC_OVERLAY=PROVEN")
+          PY
+      - name: Explain limited visual proof in workflow summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Native Android 16 real game loading ARTWORK + green diagnostic rectangle'
+            if [ -f oxide-real-loading-artwork/original_artwork_overlay_verdict.json ]; then
+              cat oxide-real-loading-artwork/original_artwork_overlay_verdict.json
+            else
+              echo 'Not proven.'
+            fi
+            echo 'Original game PID 2211 and screenshot proof are archived read-only.'
+            echo 'The screenshot is during loading, not actual gameplay. No game modification or real player ESP.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive only independent evidence verdicts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-m5-original-android16-artwork-and-jni-overlap
+          path: |
+            oxide-real-loading-artwork/original_artwork_overlay_verdict.json
+            oxide-real-loading-artwork/original_overlay_overlap_verdict.json
+            oxide-artwork-same-png-proof.txt
+            oxide-same-capture-proof.txt
+          if-no-files-found: warn
+          retention-days: 14
