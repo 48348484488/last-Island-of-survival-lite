@@ -32,7 +32,13 @@ for VERSION in ${OXIDE_ANDROID_VERSIONS:-12 14}; do
     echo IMAGE_PULL_FAILED > "$DIR/experiment_phase.txt"
     continue
   fi
+  DOCKER_DEVICE_ARGS=()
+  if [[ "${OXIDE_ATTACH_HOST_ASHMEM:-0}" == "1" ]]; then
+    test -c /dev/ashmem || { echo HOST_ASHMEM_DEVICE_MISSING >&2; exit 70; }
+    DOCKER_DEVICE_ARGS=(--device /dev/ashmem:/dev/ashmem)
+  fi
   docker run -d --rm --privileged --name oxide-virtual-version \
+    "${DOCKER_DEVICE_ARGS[@]}" \
     -p 127.0.0.1:5555:5555 -v /dev/binderfs:/dev/binderfs \
     -v "/tmp/oxide-virtual-$VERSION-data:/data" \
     "$IMAGE" \
