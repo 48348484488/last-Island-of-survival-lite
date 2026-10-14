@@ -88,6 +88,7 @@ jobs:
         run: |
           set -euo pipefail
           test -s signal-preflight/probe_status.txt
+          grep -qx 'syscalls/sys_enter_kill=VISIBLE' signal-preflight/tracepoints.txt
           grep -qx 'CONTROLLED_KERNEL_SIGNAL_OBSERVED' signal-preflight/probe_status.txt
           test -s signal-preflight/controlled_sender.txt
           test -s signal-preflight/bpftrace_output.txt
