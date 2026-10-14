@@ -7,6 +7,10 @@ on:
     workflows:
       - "Oxide native ARM64 virtual signal observability preflight"
       - "Oxide M1-M2 - ARM64 signal evidence regression"
+      - "Oxide M3 - Compare original native ARM64 Android 12-14 archived evidence"
+      - "Oxide M3 - Native virtual Android 15 and 16 boot compatibility"
+      - "Oxide M3 - Android 16 ARM64 real boot failure diagnostics"
+      - "Oxide M3-M4 - Original unchanged game on native virtual Android 15"
       - "Oxide original APK on native ARM64 Android container"
       - "Native Apple Silicon ARM64 Google Play Android emulator boot probe"
       - "Official native ARM64 Google Play image and host availability audit"
