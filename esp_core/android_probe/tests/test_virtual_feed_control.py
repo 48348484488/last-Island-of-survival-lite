@@ -16,6 +16,7 @@ def fixture(root,replay_visible=False,omitted=None,bad_sequence=False):
         "10-14 10:00:06.100 1234 1234 I OXIDE_BRIDGE_OVERLAY: RESULT=PASS FEED_SEQ=3 AGE_MS=5 RECT_COUNT=1 SYNTHETIC_ONLY",
         "10-14 10:00:07.100 1234 1234 I OXIDE_BRIDGE_OVERLAY: RESULT=PASS FEED_STOP_REQUEST SEQ=4"
     ]
+    records.append("10-14 10:00:09.100 1234 1234 I OXIDE_BRIDGE_OVERLAY: RESULT=PASS FEED_IDLE_TIMEOUT RECT_COUNT=0")
     if bad_sequence:
         records[4]=records[4].replace("FEED_SEQ=3","FEED_SEQ=2")
     if omitted:
@@ -26,6 +27,8 @@ def fixture(root,replay_visible=False,omitted=None,bad_sequence=False):
         ImageDraw.Draw(im).rectangle((330,450,480,750),
                                       outline=(38,255,110),width=6)
     im.save(root/"sequence_replay.png")
+    Image.new("RGB",(720,1280),(12,16,23)).save(root/"sequence_silent.png")
+    (root/"sequence_pid_silent.txt").write_text("1234")
 
 class ExternalSyntheticFeedTests(unittest.TestCase):
     def run_case(self,**kw):
@@ -49,6 +52,9 @@ class ExternalSyntheticFeedTests(unittest.TestCase):
     def test_older_accepted_seq_fails(self):
         self.assertFalse(self.run_case(bad_sequence=True)
                          ["checks"]["exact_external_sequences_accepted"])
+    def test_missing_idle_expiry_log_rejected(self):
+        self.assertFalse(self.run_case(omitted="FEED_IDLE_TIMEOUT")
+                         ["checks"]["idle_watchdog_triggered_once_without_new_input"])
     def test_missing_shutdown_rejected(self):
         self.assertFalse(self.run_case(omitted="FEED_STOP_REQUEST")
                          ["checks"]["service_stopped_via_next_accepted_sequence"])
