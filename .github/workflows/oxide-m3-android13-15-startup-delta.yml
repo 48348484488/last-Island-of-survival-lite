@@ -1,0 +1,95 @@
+name: "Oxide M3 - Original Android 13 vs 15 PID-scoped startup delta"
+
+# Read-only comparison of two independently executed ORIGINAL game launches.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m3-android13-15-startup-delta.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  genuine-original-startups:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Verify strict original-PID timeline parsing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_audit_original_launch_stages.py' -v
+          python3 -m unittest discover -s tests -p 'test_diagnose_original_exit.py' -v
+      - name: Retrieve genuine original Android 13 ARM64 process evidence
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38599474610
+          name: oxide-original-native-arm64-smoke
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: original-android13
+      - name: Retrieve genuine original Android 15 ARM64 process evidence
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38610951671
+          name: oxide-original-android15-native-arm64-35s-observations
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: original-android15
+      - name: Compare the TWO actual unmodified Oxide Activity lifetimes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s original-android13/all_buffers.txt
+          test -s original-android15/android_15/all_buffers.txt
+          python3 tools/audit_original_launch_stages.py \
+            --before original-android13 \
+            --latest original-android15/android_15 \
+            --out real-original-13-15-compare
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("real-original-13-15-compare/original_stage_milestones.json")
+          d=json.loads(p.read_text())
+          assert d["before"]["activity_pid"]==2232,d
+          assert d["latest"]["activity_pid"]==1983,d
+          assert d["comparison"]["both_original_processes_self_sigkill"],d
+          assert d["before"]["self_sigkill_observed"],d
+          assert d["latest"]["self_sigkill_observed"],d
+          assert d["comparison"]["root_cause_proven"] is False,d
+          assert d["comparison"]["playable_game_proven"] is False,d
+          assert d["comparison"]["before_ms_to_self_sigkill"]==4980,d
+          assert d["comparison"]["after_ms_to_self_sigkill"]==4619,d
+          print("REAL_ORIGINAL_ANDROID_13_15_EARLY_EXIT_COMPARISON=VERIFIED")
+          print("ANDROID15_MINUS_ANDROID13_MS=-361")
+          print("SECURITY_CAUSE_AND_GAMEPLAY=NOT_PROVEN")
+          PY
+      - name: Publish PID-scoped result without attributing a cause
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Original Oxide Android 13 and 15 ARM64'
+            echo 'Two genuine original APK runs replayed without installing APKs.'
+            if [ -s real-original-13-15-compare/original_stage_milestones.json ]; then
+              cat real-original-13-15-compare/original_stage_milestones.json
+            else
+              echo 'Audit missing or failed: no version comparison claimed.'
+            fi
+            echo 'Early exit timing is not evidence of a specific anti-cheat or integrity cause.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive audited original-game timeline delta
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-android13-15-native-arm64-timeline-delta
+          path: real-original-13-15-compare/
+          if-no-files-found: warn
+          retention-days: 14
