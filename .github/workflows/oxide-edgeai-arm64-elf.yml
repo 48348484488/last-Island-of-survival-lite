@@ -11,6 +11,7 @@ on:
       - "tools/edgeai_arm64_indirect_audit.py"
       - "tools/edgeai_arm64_dispatch_bounds.py"
       - "tools/edgeai_arm64_table_entries.py"
+      - "tools/edgeai_arm64_table_cfg.py"
       - "tools/edgeai_arm64_unity_exports.py"
       - "tools/edgeai_arm64_llvm_crosscheck.py"
       - "tools/edgeai_arm64_arg_guards.py"
@@ -21,6 +22,7 @@ on:
       - "tests/test_edgeai_arm64_indirect_audit.py"
       - "tests/test_edgeai_arm64_dispatch_bounds.py"
       - "tests/test_edgeai_arm64_table_entries.py"
+      - "tests/test_edgeai_arm64_table_cfg.py"
       - "tests/test_edgeai_arm64_unity_exports.py"
       - "tests/test_edgeai_arm64_llvm_crosscheck.py"
       - "tests/test_edgeai_arm64_arg_guards.py"
@@ -47,6 +49,7 @@ jobs:
             tools/edgeai_arm64_indirect_audit.py
             tools/edgeai_arm64_dispatch_bounds.py
             tools/edgeai_arm64_table_entries.py
+            tools/edgeai_arm64_table_cfg.py
             tools/edgeai_arm64_unity_exports.py
             tools/edgeai_arm64_llvm_crosscheck.py
             tools/edgeai_arm64_arg_guards.py
@@ -57,6 +60,7 @@ jobs:
             tests/test_edgeai_arm64_indirect_audit.py
             tests/test_edgeai_arm64_dispatch_bounds.py
             tests/test_edgeai_arm64_table_entries.py
+            tests/test_edgeai_arm64_table_cfg.py
             tests/test_edgeai_arm64_unity_exports.py
             tests/test_edgeai_arm64_llvm_crosscheck.py
             tests/test_edgeai_arm64_arg_guards.py
@@ -77,6 +81,7 @@ jobs:
           python3 -m unittest discover -s tests -p test_edgeai_arm64_indirect_audit.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_dispatch_bounds.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_table_entries.py -v
+          python3 -m unittest discover -s tests -p test_edgeai_arm64_table_cfg.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_unity_exports.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_llvm_crosscheck.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_arg_guards.py -v
@@ -378,6 +383,28 @@ jobs:
           p.write_text(json.dumps(evidence,indent=2)+"\n")
           print("EDGEAI_REAL_UNITY_INITIALIZE_ARG1_COMPARE_736_PASS")
           print(json.dumps(target,indent=2))
+          PY
+      - name: Merge verified table candidates into annotated original ARM64 CFG without runtime claims
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/edgeai_arm64_table_cfg.py \
+            edgeai-static-evidence/loader-jni-arm64-candidate-cfg.json \
+            edgeai-static-evidence/loader-jni-bounded-table-targets.json \
+            --output edgeai-static-evidence/loader-jni-augmented-candidate-cfg.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          obj=json.loads(Path("edgeai-static-evidence/loader-jni-augmented-candidate-cfg.json").read_text())
+          assert obj["status"]=="EDGEAI_AARCH64_STATIC_TABLE_GRAPH_ENRICHED",obj
+          assert obj["original_candidate_edge_count"]==174,obj
+          assert obj["guarded_table_entry_count"]==8,obj
+          assert obj["guarded_table_distinct_edge_count"]==6,obj
+          assert obj["augmented_candidate_edge_count"]==180,obj
+          assert obj["entry_reachable_under_augmented_partial_model"]==4,obj
+          assert not obj["runtime_reachability_proven"] and not obj["game_executed"],obj
+          assert all(not x["runtime_path_confirmed"] for x in obj["bounded_table_candidate_edges"])
+          print("EDGEAI_REAL_OXIDE_GUARDED_TABLE_GRAPH_8_ENTRIES_6_EDGES_PASS")
           PY
       - name: Upload audit logs, no game executables
         if: always()
