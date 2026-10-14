@@ -1,0 +1,113 @@
+name: "Oxide M3 - Android 16 ARM64 real boot failure diagnostics"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m3-android16-boot-diagnostics.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  boot-android16:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    steps:
+      - name: Prepare native ARM64 kernel Binder and ADB
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p android16-boot-debug
+          uname -m | tee android16-boot-debug/host_arch.txt
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
+          sudo mkdir -p /dev/binderfs
+          sudo mount -t binder binder /dev/binderfs
+          sudo chmod a+rw /dev/binderfs/binder || true
+          ls -la /dev/binderfs > android16-boot-debug/binderfs.txt
+      - name: Launch upstream Android 16 without --rm to preserve failed container logs
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="redroid/redroid:16.0.0_64only-latest"
+          echo "$IMAGE" > android16-boot-debug/image.txt
+          timeout 600 docker pull "$IMAGE" > android16-boot-debug/docker_pull.txt 2>&1
+          docker image inspect --format '{{.Architecture}}' "$IMAGE" | tee android16-boot-debug/image_arch.txt
+          test "$(cat android16-boot-debug/image_arch.txt)" = arm64
+          docker run -d --privileged --name oxide-android16-failproof \
+            -p 127.0.0.1:5555:5555 \
+            -v /dev/binderfs:/dev/binderfs \
+            "$IMAGE" \
+            androidboot.redroid_gpu_mode=guest \
+            androidboot.redroid_width=720 \
+            androidboot.redroid_height=1280 \
+            androidboot.redroid_dpi=320 \
+            > android16-boot-debug/container_id.txt
+          echo RUN_STARTED > android16-boot-debug/status.txt
+          for i in $(seq 1 50); do
+            state="$(docker inspect --format '{{.State.Status}}' oxide-android16-failproof 2>/dev/null || echo NOT_FOUND)"
+            if [ "$state" != running ]; then
+              echo "CONTAINER_EARLY_EXIT=$state" >> android16-boot-debug/status.txt
+              break
+            fi
+            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+            if timeout 5 adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null \
+                | tr -d '\r' | grep -qx 1; then
+              echo ANDROID16_BOOT_COMPLETED >> android16-boot-debug/status.txt
+              break
+            fi
+            sleep 4
+          done
+      - name: Preserve guest/host state even if Android 16 never boots
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          mkdir -p android16-boot-debug
+          docker ps -a --no-trunc > android16-boot-debug/docker_ps.txt 2>&1
+          docker inspect --format '{{json .State}}' oxide-android16-failproof \
+            > android16-boot-debug/container_state.json 2>&1
+          docker logs oxide-android16-failproof \
+            > android16-boot-debug/container_stdout_stderr.txt 2>&1
+          adb devices -l > android16-boot-debug/adb_devices.txt 2>&1
+          for prop in sys.boot_completed ro.build.version.release ro.product.cpu.abilist init.svc.zygote init.svc.surfaceflinger init.svc.bootanim; do
+            val="$(timeout 8 adb -s 127.0.0.1:5555 shell getprop "$prop" 2>/dev/null | tr -d '\r' | head -n1)"
+            printf '%s=%s\n' "$prop" "$val"
+          done > android16-boot-debug/guest_props.txt
+          timeout 10 adb -s 127.0.0.1:5555 shell ps -A \
+            > android16-boot-debug/guest_processes.txt 2>&1
+          timeout 12 adb -s 127.0.0.1:5555 logcat -b all -d -t 400 -v threadtime \
+            > android16-boot-debug/guest_logcat_tail.txt 2>&1
+          timeout 10 adb -s 127.0.0.1:5555 shell dumpsys activity activities \
+            > android16-boot-debug/activity_manager.txt 2>&1
+          sudo dmesg --ctime | tail -n 400 > android16-boot-debug/host_kernel_tail.txt 2>&1
+          {
+            echo '## Android 16 ARM64 upstream boot observability'
+            echo 'Android sys.boot_completed:'
+            grep '^sys.boot_completed=' android16-boot-debug/guest_props.txt || true
+            echo 'Container status (not game process):'
+            head -c 1200 android16-boot-debug/container_state.json || true
+            echo
+            echo 'No game, third-party APK or protection mechanisms were involved.'
+          } >> "$GITHUB_STEP_SUMMARY"
+          docker rm -f oxide-android16-failproof >/dev/null 2>&1 || true
+      - name: Require proven Android 16 boot, not just container creation
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -qx ANDROID16_BOOT_COMPLETED android16-boot-debug/status.txt
+          grep -qx 'sys.boot_completed=1' android16-boot-debug/guest_props.txt
+          grep -q 'ro.product.cpu.abilist=.*arm64-v8a' android16-boot-debug/guest_props.txt
+          echo ANDROID16_NATIVE_ARM64_BOOT_PROVEN
+      - name: Upload diagnosis even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-android16-arm64-boot-host-guest-debug
+          path: android16-boot-debug/
+          retention-days: 14
+          if-no-files-found: warn
