@@ -60,7 +60,7 @@ def bright_stroke(path):
         for y in range(height * 35 // 100, height * 72 // 100):
             for x in range(width * 32 // 100, width * 68 // 100):
                 r, g, b = im.getpixel((x, y))
-                if 15 <= r <= 110 and g >= 160 and b <= 160 and \
+                if 15 <= r <= 110 and g >= 200 and b <= 160 and \
                    g > r * 1.8 and g > b * 1.3:
                     hits.append((x, y))
         if not hits:
