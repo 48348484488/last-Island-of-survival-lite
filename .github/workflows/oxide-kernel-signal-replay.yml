@@ -1,0 +1,88 @@
+name: Oxide M1-M2: ARM64 signal evidence regression
+
+# No APK downloads; weekly parser tests and one real-archive replay on changes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-kernel-signal-replay.yml"
+      - "tools/correlate_kernel_sigkill.py"
+      - "tests/test_correlate_kernel_sigkill.py"
+  workflow_dispatch:
+  schedule:
+    - cron: "17 9 * * 1"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  original-signal-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Test fail-closed PID namespace and SIGKILL classifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_correlate_kernel_sigkill.py' -v
+          python3 -m py_compile tools/correlate_kernel_sigkill.py
+      - name: Retrieve actual original-game trace from ARM64 Android virtual
+        if: github.event_name != 'schedule'
+        uses: actions/download-artifact@v4
+        with:
+          name: oxide-original-native-arm64-smoke
+          run-id: 38599474610
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: original-android
+      - name: Replay evidence of real original Oxide self SIGKILL
+        if: github.event_name != 'schedule'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s original-android/kernel_sigkill_trace.txt
+          test -s original-android/forensic_summary.json
+          python3 tools/correlate_kernel_sigkill.py \
+            --trace original-android/kernel_sigkill_trace.txt \
+            --forensic original-android/forensic_summary.json \
+            --out signal-replay
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('signal-replay/kernel_sigkill_correlation.json').read_text())
+          assert d['game_activity_guest_pid']==2232,d
+          assert d['captured_kernel_sigkill_event_count']==6,d
+          assert d['status']=='GAME_SELF_SIGKILL_LOGCAT_ONLY',d
+          assert not d['host_guest_pid_mapping_confirmed'],d
+          assert not d['specific_security_cause_proven'],d
+          assert not d['gameplay_verified'],d
+          print('REAL_OXIDE_SIGNAL_TRACE_REPLAY_VERIFIED')
+          print('HOST_PID_MAPPING=NOT_YET_CONFIRMED')
+          PY
+      - name: Summarize verified evidence vs unresolved root cause
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Original Oxide native ARM64 evidence regression'
+            if [ -s signal-replay/kernel_sigkill_correlation.md ]; then
+              cat signal-replay/kernel_sigkill_correlation.md
+            else
+              echo 'Unit tests / scheduled parser checks only, or incomplete replay.'
+            fi
+            echo 'APK unchanged. No in-game security bypass or proof of multiplayer ESP.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save derived non-proprietary JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-m1-m2-kernel-replay
+          path: signal-replay/
+          if-no-files-found: ignore
+          retention-days: 14
