@@ -1,0 +1,93 @@
+name: "Oxide M4 - Inventory stock Linux ARM64 Binder observability without launching game"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m4-binder-host-capabilities.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  binder-observability-without-game:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 12
+    steps:
+      - name: Inspect kernel and binder_linux dynamic trace capabilities
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p binder-preflight
+          uname -a > binder-preflight/host.txt
+          test "$(uname -m)" = aarch64
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder \
+            > binder-preflight/module_load.txt 2>&1 || true
+          lsmod > binder-preflight/modules.txt
+          cat /proc/filesystems > binder-preflight/filesystems.txt
+          cat /proc/mounts > binder-preflight/mounts_before.txt
+          sudo mkdir -p /sys/kernel/tracing /sys/kernel/debug
+          if ! mountpoint -q /sys/kernel/tracing; then
+            sudo mount -t tracefs tracefs /sys/kernel/tracing \
+              > binder-preflight/tracefs_mount.txt 2>&1 || true
+          fi
+          if ! mountpoint -q /sys/kernel/debug; then
+            sudo mount -t debugfs debugfs /sys/kernel/debug \
+              > binder-preflight/debugfs_mount.txt 2>&1 || true
+          fi
+          cat /proc/mounts > binder-preflight/mounts_after.txt
+          for path in \
+            /sys/kernel/tracing/events/binder/binder_transaction/format \
+            /sys/kernel/tracing/events/binder/binder_transaction/id \
+            /sys/kernel/debug/tracing/events/binder/binder_transaction/format \
+            /sys/kernel/debug/tracing/events/binder/binder_transaction/id; do
+            if sudo test -e "$path"; then
+              echo "PRESENT $path" >> binder-preflight/tracepoints.txt
+              sudo cat "$path" >> binder-preflight/tracepoint_formats.txt || true
+            else
+              echo "MISSING $path" >> binder-preflight/tracepoints.txt
+            fi
+          done
+          for path in \
+            /sys/kernel/tracing/events \
+            /sys/kernel/debug/tracing/events; do
+            if sudo test -d "$path"; then
+              sudo find "$path" -maxdepth 2 -iname '*binder*' -print \
+                >> binder-preflight/binder_event_tree.txt || true
+            fi
+          done
+          if sudo test -r /sys/kernel/tracing/available_filter_functions; then
+            sudo grep -i binder /sys/kernel/tracing/available_filter_functions \
+              > binder-preflight/available_binder_ftrace_functions.txt || true
+          fi
+          if sudo test -r /proc/kallsyms; then
+            sudo grep -Ei '(^| )binder_transaction(_|$)|binder_ioctl|binder_thread_write' \
+              /proc/kallsyms | head -100 > binder-preflight/binder_symbols.txt || true
+          fi
+          if sudo test -r /boot/config-$(uname -r); then
+            sudo grep -E 'CONFIG_(ANDROID_BINDER|TRACEPOINTS|FTRACE|KPROBE|BPF)=' \
+              /boot/config-$(uname -r) > binder-preflight/kernel_config.txt || true
+          fi
+          cat binder-preflight/tracepoints.txt
+          echo 'NO_APK_LAUNCHED_NO_GAME_TRACE_OR_MODIFICATION'
+      - name: Preserve exact observability result and caveats
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Native Linux ARM64 Binder kernel observability"
+            cat binder-preflight/tracepoints.txt 2>/dev/null || true
+            echo "### Available binder ftrace functions"
+            head -35 binder-preflight/available_binder_ftrace_functions.txt 2>/dev/null || true
+            echo "The test only inspects host metadata and binder_linux. No game APK or process was accessed."
+            echo "A missing tracepoint does not prove no Binder IPC occurred during original game execution."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive environment facts only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-native-arm64-host-binder-capability-inventory
+          path: binder-preflight/
+          if-no-files-found: warn
+          retention-days: 14
