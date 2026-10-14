@@ -7,8 +7,10 @@ on:
       - "tools/edgeai_elf_inspect.py"
       - "tools/edgeai_inspect_arm64_split.py"
       - "tools/edgeai_arm64_branch_map.py"
+      - "tools/edgeai_arm64_cfg.py"
       - "tests/test_edgeai_arm64_split.py"
       - "tests/test_edgeai_arm64_branch_map.py"
+      - "tests/test_edgeai_arm64_cfg.py"
       - ".github/workflows/oxide-edgeai-arm64-elf.yml"
   workflow_dispatch:
 
@@ -27,8 +29,10 @@ jobs:
             tools/edgeai_elf_inspect.py
             tools/edgeai_inspect_arm64_split.py
             tools/edgeai_arm64_branch_map.py
+            tools/edgeai_arm64_cfg.py
             tests/test_edgeai_arm64_split.py
             tests/test_edgeai_arm64_branch_map.py
+            tests/test_edgeai_arm64_cfg.py
             split_config.arm64_v8a.apk
           sparse-checkout-cone-mode: false
       - name: Install LLVM for real AArch64 shared object test fixture
@@ -41,6 +45,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p test_edgeai_arm64_split.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_branch_map.py -v
+          python3 -m unittest discover -s tests -p test_edgeai_arm64_cfg.py -v
       - name: Audit unmodified 80MB APK and 236MB IL2CPP library read-only
         shell: bash
         run: |
@@ -125,6 +130,29 @@ jobs:
           print(json.dumps({k:v for k,v in report.items() if k not in ('scanner_only','llvm_only')},indent=2))
           assert 20 <= len(entries) <= d['size_bytes']//4,report
           assert len(matched)==len(ours) and not llvm_only,report
+          PY
+      - name: Verify bounded EdgeAI candidate basic-block CFG on original Oxide JNI_OnLoad
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/edgeai_arm64_cfg.py split_config.arm64_v8a.apk \
+            --library libloader.so --function JNI_OnLoad \
+            --output edgeai-static-evidence/loader-jni-arm64-candidate-cfg.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          graph=json.loads(Path("edgeai-static-evidence/loader-jni-arm64-candidate-cfg.json").read_text())
+          controls=json.loads(Path("edgeai-static-evidence/loader-jni-arm64-control-transfers.json").read_text())
+          assert graph["architecture"]=="AArch64"
+          assert graph["function"]=="JNI_OnLoad"
+          assert graph["entry"]==controls["entry"]
+          assert graph["symbol_size_bytes"]==controls["size_bytes"]==4524
+          assert graph["block_count"]>10
+          assert graph["edge_kind_counts"].get("direct_call_site",0)==9
+          assert not graph["code_executed"] and not graph["reachability_proven"]
+          assert not graph["loop_iteration_count_proven"]
+          assert all(x["evidence"]=="decoded_static_candidate" for x in graph["edges"])
+          print("EDGEAI_ARM64_CANDIDATE_CFG_ORIGINAL_LOADER_PASS")
           PY
       - name: Upload audit logs, no game executables
         if: always()
