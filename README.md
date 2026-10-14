@@ -3,6 +3,15 @@
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
 
+### Duas caixas sinteticas independentes validadas no Android virtual ARM64
+
+A [execucao #38554025039](../../actions/runs/38554025039) aprovou ambos os jobs, inclusive **13 checagens reais de screenshot** no Redroid Android 13 ARM64. Duas caixas receberam coordenadas sinteticas diferentes e foram desenhadas pelo mesmo Service/JNI: **1.878 pixels verdes por caixa**, depois **1.878 + 0** quando uma expirou e **0 + 0** quando ambas expiraram. Ambas reapareceram ao receber novas amostras; replay e campos malformados foram rejeitados, sem troca de PID ou crash registrado.
+
+[Capturas e veredito em JSON](../../actions/runs/38554025039/artifacts/11888845975) |
+[Relatorio tecnico](reports/1.14.11949-virtual-multi-target-overlay.md).
+
+**Nao e ESP real:** o teste usa um APK diagnostico independente, sem Oxide instalado e sem posicoes reais de jogadores. A falha separada de screenshot no emulador Android 15 x86_64 permanece sob investigacao.
+
 ### Recuperacao automatica quando o feed do overlay para
 
 O teste [#38549706831](../../actions/runs/38549706831) passou
