@@ -29,7 +29,7 @@ def evaluate(folder):
     log=(folder/"logcat.txt").read_text(errors="replace")
     matched=list(LOG.finditer(log))
     occurrences={mode:sum(x.group(1)==marker and
-                          int(x.group(2))==(4 if mode=="fresh" else 0)
+                          int(x.group(2))==(1 if mode=="fresh" else 0)
                           for x in matched) for mode,marker in MARKERS.items()}
     fresh,empty,stale,removed=(shots[k] for k in
                                ("fresh","empty","stale","removed"))
