@@ -58,5 +58,26 @@ class KernelTest(unittest.TestCase):
         self.assertEqual(m.extract_events(s)[0]["target_tid"],2233)
 
 
+    def test_truncated_kernel_event_fails_closed(self):
+        broken = "KERNEL_SIGKILL syscall=kill host_sender=12895 host_tid=12895 target_pid="
+        self.assertEqual(m.extract_events(broken), [])
+        self.assertEqual(m.audit(broken, FORENSIC)["game_self_kill_kernel_event_count"], 0)
+
+    def test_whitespace_and_unrelated_process(self):
+        unrelated = "KERNEL_SIGKILL   syscall=kill   host_sender=100   host_tid=100   target_pid=200 signal=9 comm=init\\n"
+        self.assertEqual(len(m.extract_events(unrelated)), 1)
+        self.assertEqual(m.audit(unrelated, FORENSIC, MAP)["game_self_kill_kernel_event_count"], 0)
+
+    def test_malformed_namespace_chain_is_ignored(self):
+        invalid = dict(samples=[dict(host_pid=12895, guest_pid=2232,
+                                     nspid=[12895,88], name="esurvivalisland")])
+        self.assertFalse(m.audit(TRACE, FORENSIC, invalid)["host_guest_pid_mapping_confirmed"])
+
+    def test_no_activity_pid_is_not_guessed(self):
+        result = m.audit(TRACE, {"classification":"UNKNOWN"}, MAP)
+        self.assertIsNone(result["game_activity_guest_pid"])
+        self.assertFalse(result["host_guest_pid_mapping_confirmed"])
+
+
 if __name__ == "__main__":
     unittest.main()
