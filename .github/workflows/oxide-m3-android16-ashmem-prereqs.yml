@@ -45,9 +45,12 @@ jobs:
           sudo apt-get update -qq > ashmem-audit/apt_update.txt 2>&1
           sudo apt-get install -y --no-install-recommends \
             "linux-modules-extra-$(uname -r)" > ashmem-audit/apt_modules_extra.txt 2>&1
-          sudo modprobe ashmem_linux > ashmem-audit/modprobe_ashmem_stdout.txt \
-            2> ashmem-audit/modprobe_ashmem_stderr.txt
-          echo "$?" > ashmem-audit/modprobe_exit.txt
+          if sudo modprobe ashmem_linux > ashmem-audit/modprobe_ashmem_stdout.txt \
+               2> ashmem-audit/modprobe_ashmem_stderr.txt; then
+            echo 0 > ashmem-audit/modprobe_exit.txt
+          else
+            echo "$?" > ashmem-audit/modprobe_exit.txt
+          fi
           if [ -c /dev/ashmem ]; then
             echo ASHMEM_CHAR_DEVICE_PRESENT > ashmem-audit/ashmem_status.txt
           else
