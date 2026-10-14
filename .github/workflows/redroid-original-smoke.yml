@@ -44,7 +44,7 @@ jobs:
           echo "$(uname -a)" | tee oxide-original-arm64/host.txt
           test "$(uname -m)" = aarch64
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb bpftrace
           sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
           sudo mkdir -p /dev/binderfs
           sudo mount -t binder binder /dev/binderfs
@@ -114,6 +114,36 @@ jobs:
           adb -s "$SERIAL" shell cat /proc/meminfo \
             > oxide-original-arm64/meminfo_before.txt 2>&1 || true
           adb -s "$SERIAL" shell am force-stop "$PKG" || true
+          # Kernel trace is OUTSIDE Android userspace: no ptrace, injected library
+          # or APK modifications. Capture all SIGKILL syscalls, then match
+          # their target/emitters against the original game PID in logcat.
+          cat > oxide-original-arm64/kernel_sigkill.bt <<'BT'
+          tracepoint:syscalls:sys_enter_kill
+          /args->sig == 9/
+          {
+            printf("KERNEL_SIGKILL syscall=kill host_sender=%d host_tid=%d target_pid=%d signal=%d comm=%s\\n",
+                   pid, tid, args->pid, args->sig, comm);
+            print(ustack(16));
+          }
+          tracepoint:syscalls:sys_enter_tgkill
+          /args->sig == 9/
+          {
+            printf("KERNEL_SIGKILL syscall=tgkill host_sender=%d host_tid=%d target_tgid=%d target_tid=%d signal=%d comm=%s\\n",
+                   pid, tid, args->tgid, args->pid, args->sig, comm);
+            print(ustack(16));
+          }
+          tracepoint:syscalls:sys_enter_rt_sigqueueinfo
+          /args->sig == 9/
+          {
+            printf("KERNEL_SIGKILL syscall=rt_sigqueueinfo host_sender=%d host_tid=%d target_pid=%d signal=%d comm=%s\\n",
+                   pid, tid, args->pid, args->sig, comm);
+            print(ustack(16));
+          }
+          BT
+          sudo timeout --signal=INT 27s bpftrace oxide-original-arm64/kernel_sigkill.bt \
+            > oxide-original-arm64/kernel_sigkill_trace.txt 2>&1 &
+          KERNEL_TRACE_PID=$!
+          sleep 5
           adb -s "$SERIAL" shell cmd package resolve-activity --brief -c android.intent.category.LAUNCHER "$PKG" \
             > oxide-original-arm64/resolved_launcher.txt 2>&1 || true
           # Monkey exits with -5 on redroid before starting the game.
@@ -164,6 +194,7 @@ jobs:
           adb -s "$SERIAL" logcat -b all -d -v threadtime > oxide-original-arm64/all_buffers.txt 2>&1 || true
           kill "$LOGCAT_PID" 2>/dev/null || true
           wait "$LOGCAT_PID" 2>/dev/null || true
+          wait "$KERNEL_TRACE_PID" 2>/dev/null || true
           adb -s "$SERIAL" shell cat /proc/meminfo > oxide-original-arm64/meminfo_after.txt 2>&1 || true
           adb -s "$SERIAL" shell dumpsys meminfo "$PKG" > oxide-original-arm64/app_meminfo.txt 2>&1 || true
           sudo dmesg --ctime | tail -n 500 > oxide-original-arm64/host_kernel_tail.txt 2>&1 || true
@@ -195,6 +226,8 @@ jobs:
             RESULT="ORIGINAL_ACTIVITY_NOT_CONFIRMED"
           fi
           echo "$RESULT" | tee oxide-original-arm64/status.txt
+          grep -E "Attaching [0-9]+ probes|KERNEL_SIGKILL|ERROR|failed" oxide-original-arm64/kernel_sigkill_trace.txt | head -n 80 \
+            > oxide-original-arm64/kernel_signal_event_digest.txt || true
           {
             echo "Oxide original ARM64 process/exit diagnostic (non-invasive)"
             echo "RESULT=$RESULT"
@@ -216,6 +249,7 @@ jobs:
             else
               echo "HOST_OOM_LOG=NO_MATCHES_IN_TAIL_NOT_PROOF_OF_ABSENCE"
             fi
+            echo "KERNEL_SIGKILL_EVENTS=$(grep -c KERNEL_SIGKILL oxide-original-arm64/kernel_sigkill_trace.txt || true)"
             echo "ROOT_CAUSE=UNDETERMINED"
             echo "A security-warning screenshot, SIGKILL, or host OOM keyword alone does not prove the signal sender."
             echo "Review all_buffers.txt, live_logcat.txt, exit_info.txt, kill_evidence.txt, and host_kernel_tail.txt."
