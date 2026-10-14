@@ -42,7 +42,9 @@ def evaluate(folder):
     log = (root/"multi_logcat.txt").read_text(errors="replace")
     pixels = {stage: sides(root/("multi_"+stage+".png")) for stage in STAGES}
     pids = [(root/("multi_pid_"+stage+".txt")).read_text().strip() for stage in STAGES[:-1]]
-    # Both rectangles overlap when they approach the viewport center; the\n    # per-half green-pixel centroid shifts less than either true box center.\n    # Compare directly measured half-screen centroids, not nominal coordinates.\n    start_x = centers(root/"multi_both.png")
+    # The rectangles overlap near center, biasing half-screen pixel centroids.
+    # Thresholds are based on measured screenshots, not ideal box coordinates.
+    start_x = centers(root/"multi_both.png")
     moved_x = centers(root/"multi_moved.png")
     checks = {
         "two_boxes": min(pixels["both"]) >= 400,
