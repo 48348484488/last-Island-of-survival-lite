@@ -37,6 +37,7 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" adb python3-pil
           python3 -m unittest discover -s esp_core/android_probe/tests -p test_virtual_overlay_states.py -v
+          python3 -m unittest discover -s esp_core/android_probe/tests -p test_virtual_feed_stress.py -v
           sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
           sudo mkdir -p /dev/binderfs
           sudo mount -t binder binder /dev/binderfs
@@ -78,6 +79,26 @@ jobs:
           print("REAL_ARM64_VIRTUAL_ANDROID_${{ matrix.android }}_OVERLAY_STATES=PASS")
           print("ORIGINAL_GAME_NOT_INSTALLED=TRUE")
           PY
+      - name: Stress 64 external synthetic snapshots in one Android 15 JNI overlay service
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p feed-stress-evidence
+          bash esp_core/android_probe/virtual_overlay_feed_stress.sh \
+            127.0.0.1:5555 standalone/oxide-bridge-jni-smoke.apk feed-stress-evidence
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path("feed-stress-evidence/stress_verdict.json").read_text())
+          assert data["status"]=="NATIVE_ARM64_VIRTUAL_64_SNAPSHOT_FEED_STRESS_PASS",data
+          assert all(data["checks"].values()),data
+          assert data["accepted_snapshot_count"]==67,data
+          assert data["same_android_service_pid"],data
+          assert not data["real_player_coordinates_proven"],data
+          assert not data["original_game_security_altered"],data
+          print("REAL_NATIVE_ARM64_ANDROID15_JNI_64_FRAME_STRESS=PASS")
+          print("ORIGINAL_GAME_AND_REAL_ESP=NOT_VERIFIED")
+          PY
       - name: Exact evidence and scope
         if: always()
         shell: bash
@@ -103,5 +124,8 @@ jobs:
             virtual-evidence/boot.txt
             virtual-evidence/abis.txt
             virtual-evidence/api.txt
+            feed-stress-evidence/*.png
+            feed-stress-evidence/*.json
+            feed-stress-evidence/*verdict.txt
           if-no-files-found: warn
           retention-days: 14
