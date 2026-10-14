@@ -34,12 +34,28 @@ public final class OverlayProbeService extends Service {
             return START_NOT_STICKY;
         }
 
+        // Deterministic test modes exercise the actual overlay Service,
+        // not just MainActivity's canvas. No other app data is read.
+        final boolean noSamples=intent!=null &&
+                intent.getBooleanExtra("overlay_no_boxes",false);
+        final boolean staleSamples=intent!=null &&
+                intent.getBooleanExtra("overlay_stale_boxes",false);
+        if (noSamples && staleSamples) {
+            Log.e(TAG,"RESULT=FAIL CONTRADICTORY_TEST_MODES");
+            stopSelf(startId);
+            return START_NOT_STICKY;
+        }
+        final String mode=noSamples?"OVERLAY_NO_SAMPLES":
+                staleSamples?"OVERLAY_STALE_SAMPLES":"OVERLAY_DIAGNOSTIC";
         long now=SystemClock.elapsedRealtime();
         float[] coords=MainActivity.nativeProjectSnapshot(
                 MainActivity.testCamera(),1080,1920,now,now-5,250,0,
-                new long[]{1},new float[]{0,1,-5,0,-1,-5},new long[]{now-5});
-        if (coords==null || coords.length!=4) {
-            Log.e(TAG,"RESULT=FAIL NATIVE_PROJECTION");
+                noSamples?new long[0]:new long[]{1},
+                noSamples?new float[0]:new float[]{0,1,-5,0,-1,-5},
+                noSamples?new long[0]:new long[]{now-(staleSamples?600:5)});
+        final int expectedCount=(noSamples || staleSamples)?0:4;
+        if (coords==null || coords.length!=expectedCount) {
+            Log.e(TAG,"RESULT=FAIL NATIVE_PROJECTION MODE="+mode);
             stopSelf(startId);
             return START_NOT_STICKY;
         }
@@ -62,7 +78,8 @@ public final class OverlayProbeService extends Service {
         }
         try {
             manager.addView(view,p);
-            Log.i(TAG,"RESULT=PASS MODE=OVERLAY_DIAGNOSTIC");
+            Log.i(TAG,"RESULT=PASS MODE="+mode+" RECT_COUNT="+
+                  (coords.length/4)+" SOURCE=CONTROLLED_SYNTHETIC_ONLY");
         } catch (RuntimeException e) {
             Log.e(TAG,"RESULT=FAIL ADD_VIEW "+e.getClass().getSimpleName());
             view=null;
