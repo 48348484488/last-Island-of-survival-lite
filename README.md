@@ -17,6 +17,10 @@
 
 **Pipeline automático validado (14/10):** sinal ARM64 [#38607509257](../../actions/runs/38607509257) → replay de SIGKILL [#38607625417](../../actions/runs/38607625417) → marcos da Activity [#38607658290](../../actions/runs/38607658290) → matriz Android 12–14 [#38607691912](../../actions/runs/38607691912). As quatro execuções terminaram com sucesso, e a sequência foi acionada sem intervenção entre os jobs. São auditorias de evidência existente; **não** corrigem o encerramento do jogo, não executam código novo autonomamente e não comprovam gameplay. O supervisor separado registra falhas e possíveis travamentos.
 
+**M3 — Android 16 ARM64 nativo foi destravado:** o host GitHub ARM64 kernel 6.17 não tinha `/dev/ashmem`. A revisão fixa do módulo upstream ([compilação #38613318778](../../actions/runs/38613318778)) foi carregada apenas no executor descartável e o Android 16 original iniciou normalmente: `sys.boot_completed=1`, `zygote` e `surfaceflinger` ativos ([boot #38613931053](../../actions/runs/38613931053)). A [execução real com os quatro APKs originais #38614441183](../../actions/runs/38614441183) comprovou PID 2099 e autossinal SIGKILL em **+4.556 ms**, ausente aos 10/35 s — **não há gameplay**. O módulo ainda provém de um PR upstream aberto; [relatório detalhado](reports/1.14.11949-original-android16-ashmem-arm64.md). A correção foi do boot do Android, não da decisão do Oxide de sair.
+
+**M5 — overlay JNI independente no Android 15:** [teste real #38613786301](../../actions/runs/38613786301) validou 64 atualizações externas sintéticas e 67 snapshots aceitos no total, o mesmo PID do serviço, rejeições/replay, limpeza stale e remoção da janela. **Não houve dados reais do jogo**.
+
 As issues contêm os critérios de aceitação e evidências. Desenvolvimento futuro e atualizações devem seguir esses critérios e registrar honestamente bloqueios, sem afirmar sucesso apenas porque a CI passou.
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
