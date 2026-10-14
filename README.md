@@ -2,6 +2,30 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### Overlay real no Android ARM64 virtual: dados validos, vazios, antigos e remocao
+
+A [execucao #38542414642](../../actions/runs/38542414642) instalou
+**somente o APK independente de diagnostico** em um Android 13
+Redroid nativo ARM64. O codigo C++ foi executado pelo JNI e a janela
+transparente foi adicionada pelo WindowManager real do Android.
+
+Os screenshots comprovam **2.112 pixels do marcador sintetico**
+quando ha dados validos, e **0 pixels** com dados ausentes, antigos,
+ou apos encerrar o servico. Os testes de regressao passaram,
+a Activity iniciou nos tres cenarios e nao houve crash do aplicativo
+de diagnostico observado no intervalo de teste.
+
+[Relatorio tecnico e limites](reports/1.14.11949-native-virtual-overlay-3state-validation.md) |
+[Capturas reais](../../actions/runs/38542414642/artifacts/11883116492) |
+[Codigo do servico](esp_core/android_probe/src/com/oxide/bridgeprobe/OverlayProbeService.java) |
+[Workflow de validacao](../../actions/workflows/oxide-virtual-overlay-states.yml).
+
+A validacao foi **100% virtual**, sem aparelho fisico e sem instalar
+o Oxide original nessa execucao. Ainda **nao** comprova ESP com
+jogadores reais ou uma partida multiplayer; o bloqueio de seguranca
+do APK original continua separado.
+
+
 ### UnityFS interno decodificado: 277/277 pacotes, somente ambiente virtual
 
 A [execucao real #38539788069](../../actions/runs/38539788069)
