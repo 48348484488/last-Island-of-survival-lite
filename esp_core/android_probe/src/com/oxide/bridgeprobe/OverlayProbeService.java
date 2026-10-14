@@ -27,6 +27,9 @@ public final class OverlayProbeService extends Service {
     private OverlayView view;
     private final Handler sequenceHandler = new Handler(Looper.getMainLooper());
     private boolean sequenceEnabled;
+    private boolean feedEnabled;
+    private long lastFeedSequence=-1;
+    private static OverlayProbeService activeFeed;
 
     @Override public IBinder onBind(Intent intent) { return null; }
 
@@ -45,6 +48,12 @@ public final class OverlayProbeService extends Service {
         final boolean staleSamples=intent!=null &&
                 intent.getBooleanExtra("overlay_stale_boxes",false);
         sequenceEnabled=intent!=null && intent.getBooleanExtra("overlay_sequence",false);
+        feedEnabled=intent!=null && intent.getBooleanExtra("overlay_feed",false);
+        if(sequenceEnabled && feedEnabled) {
+            Log.e(TAG,"RESULT=FAIL CONFLICTING_OVERLAY_SEQUENCE_AND_FEED");
+            stopSelf(startId);
+            return START_NOT_STICKY;
+        }
         if ((noSamples && staleSamples) || (sequenceEnabled && (noSamples || staleSamples))) {
             Log.e(TAG,"RESULT=FAIL CONTRADICTORY_TEST_MODES");
             stopSelf(startId);
@@ -85,8 +94,15 @@ public final class OverlayProbeService extends Service {
             manager.addView(view,p);
             Log.i(TAG,"RESULT=PASS MODE="+mode+" RECT_COUNT="+
                   (coords.length/4)+" SOURCE=CONTROLLED_SYNTHETIC_ONLY");
-            if(sequenceEnabled) {
+            if(sequenceEnabled || feedEnabled) {
                 Log.i(TAG,"RESULT=PASS PHASE=INITIAL RECT_COUNT=1 SOURCE=SYNTHETIC_JNI");
+            }
+            if(feedEnabled) {
+                activeFeed=this;
+                lastFeedSequence=-1;
+                Log.i(TAG,"RESULT=PASS FEED_READY SYNTHETIC_SHELL_ONLY");
+            }
+            if(sequenceEnabled) {
                 sequenceHandler.postDelayed(() -> projectSequence("MOVED",1f,false),3000);
                 sequenceHandler.postDelayed(() -> projectSequence("STALE",1f,true),6000);
                 sequenceHandler.postDelayed(() -> projectSequence("RESTORED",-1f,false),9000);
@@ -101,6 +117,53 @@ public final class OverlayProbeService extends Service {
             stopSelf(startId);
         }
         return START_NOT_STICKY;
+    }
+
+    static void supplySyntheticFeed(long sequence, float x, long ageMs, boolean stop) {
+        OverlayProbeService service=activeFeed;
+        if(service==null || !service.feedEnabled || service.view==null) {
+            Log.w(TAG,"RESULT=DROP FEED_NOT_ACTIVE");
+            return;
+        }
+        // The diagnostic receiver is permission-restricted to Android DUMP
+        // (ADB shell / privileged callers). These are NEVER real game players.
+        if(sequence<0 || sequence<=service.lastFeedSequence) {
+            Log.w(TAG,"RESULT=DROP REPLAY_OR_OUT_OF_ORDER SEQ="+sequence);
+            return;
+        }
+        if(stop) {
+            service.lastFeedSequence=sequence;
+            Log.i(TAG,"RESULT=PASS FEED_STOP_REQUEST SEQ="+sequence);
+            service.stopSelf();
+            return;
+        }
+        if(!Float.isFinite(x) || x < -1.5f || x > 1.5f ||
+                ageMs<0 || ageMs>10000) {
+            Log.w(TAG,"RESULT=DROP INVALID_INPUT SEQ="+sequence);
+            return;
+        }
+        final long now=SystemClock.elapsedRealtime();
+        if(now<ageMs+10) {
+            Log.w(TAG,"RESULT=DROP CLOCK_UNDERFLOW SEQ="+sequence);
+            return;
+        }
+        final float[] result=MainActivity.nativeProjectSnapshot(
+                MainActivity.testCamera(),1080,1920,now,now-5,250,0,
+                new long[]{1},
+                new float[]{x,1,-5,x,-1,-5},
+                new long[]{now-ageMs});
+        if(result==null || result.length!=(ageMs>250?0:4)) {
+            Log.e(TAG,"RESULT=FAIL FEED_INVALID_PROJECTION SEQ="+sequence);
+            return;
+        }
+        service.lastFeedSequence=sequence;
+        service.view.setRects(result);
+        final String phase=ageMs>250?"STALE":
+                           sequence==1?"MOVED":"RESTORED";
+        Log.i(TAG,"RESULT=PASS PHASE="+phase+" RECT_COUNT="+
+              (result.length/4)+" SOURCE=SYNTHETIC_JNI");
+        Log.i(TAG,"RESULT=PASS FEED_SEQ="+sequence+" AGE_MS="+ageMs+
+                   " RECT_COUNT="+(result.length/4)+" SYNTHETIC_ONLY");
     }
 
     private void projectSequence(String phase, float x, boolean stale) {
@@ -123,13 +186,15 @@ public final class OverlayProbeService extends Service {
 
     @Override public void onDestroy() {
         sequenceHandler.removeCallbacksAndMessages(null);
+        if(activeFeed==this) activeFeed=null;
         if(manager!=null && view!=null) {
             try { manager.removeViewImmediate(view); }
             catch(RuntimeException e) { Log.w(TAG,"REMOVE_VIEW_ERROR",e); }
         }
         manager=null;
         view=null;
-        if(sequenceEnabled) Log.i(TAG,"RESULT=PASS PHASE=STOPPED RECT_COUNT=0 WINDOW_REMOVED=TRUE");
+        if(sequenceEnabled || feedEnabled) Log.i(TAG,"RESULT=PASS PHASE=STOPPED RECT_COUNT=0 WINDOW_REMOVED=TRUE");
+        feedEnabled=false;
         sequenceEnabled=false;
         super.onDestroy();
     }
