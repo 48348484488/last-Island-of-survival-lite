@@ -2,6 +2,27 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+
+### Recuperacao automatica quando o feed do overlay para
+
+O teste [#38549706831](../../actions/runs/38549706831) passou
+na execucao real Android 13 ARM64 virtual. Agora, quando a fonte
+de dados sinteticos **para de enviar mensagens durante quatro
+segundos**, o proprio Service apaga a caixa, mesmo sem chegar um
+novo pacote. A captura SILENT registrou **zero pixels verdes** e
+o PID permaneceu o mesmo. Continuam funcionais as validacoes de
+idade, sequencia crescente, rejeicao de replay, restauracao
+com dados novos e parada da janela.
+
+[Capturas e registros da execucao](../../actions/runs/38549706831/artifacts/11885992963) |
+[Relatorio tecnico atualizado](reports/1.14.11949-virtual-external-synthetic-feed.md).
+
+Tudo isso e validacao do **overlay independente em Android virtual
+com dados controlados**. A partida no Oxide original e o ESP de
+jogadores reais ainda **nao** foram comprovados; o jogo continua
+encerrando ao exibir seu aviso de seguranca.
+
+
 ### Alimentacao externa de amostras no overlay — validada no Android virtual
 
 A [execucao real #38549001618](../../actions/runs/38549001618)
