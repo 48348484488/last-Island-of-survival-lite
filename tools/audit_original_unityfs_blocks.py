@@ -64,8 +64,17 @@ def get_reader_bounds(stream,member_size):
     if not 6 <= header["bundle_format_version"] <= 9:
         raise ValueError("UNSUPPORTED_UNITYFS_VERSION")
     total=header["bundle_declared_size"]
-    if total>member_size or total<64:
+    at_end=header["blocks_info_at_file_end"]
+    # A genuine Unity 6000 format-8 monoscripts bundle declares exactly
+    # 16 more bytes than its STORED ZIP member. For non-tail metadata only,
+    # permit this documented mismatch if *all actual indexed data ranges*
+    # also fit inside the physical member; never read beyond ZIP data.
+    permitted_suffix_mismatch=(header["bundle_format_version"]>=7 and
+                               not at_end and total-member_size==16)
+    if total<64 or (total>member_size and not permitted_suffix_mismatch):
         raise ValueError("INVALID_UNITYFS_DECLARED_SIZE")
+    header["declared_minus_physical_bytes"]=total-member_size
+    header["size_exception_pending_block_validation"]=permitted_suffix_mismatch
     pos=header["header_size"]
     version=header["unity_revision"]
     # UnityPy documents version>=7 or Unity 2019.4.15+ header alignment
@@ -78,18 +87,17 @@ def get_reader_bounds(stream,member_size):
     unpacked=header["blocks_info_uncompressed_bytes"]
     if not 0<compressed<=MAX_DIR_BYTES or not 0<unpacked<=MAX_DIR_BYTES:
         raise ValueError("BLOCK_DIRECTORY_SIZE_LIMIT")
-    at_end=header["blocks_info_at_file_end"]
     directory_offset=total-compressed if at_end else pos
     data_offset=pos if at_end else pos+compressed
     if header["raw_flags"] & 0x200:
         data_offset=align(data_offset)
-    if directory_offset<pos or directory_offset+compressed>total:
+    if directory_offset<pos or directory_offset+compressed>member_size:
         raise ValueError("BLOCK_DIRECTORY_OUT_OF_BOUNDS")
     stream.seek(directory_offset)
     directory_compressed=read_exact(stream,compressed)
     codec=header["raw_flags"] & 0x3f
     directory=decode_content(directory_compressed,unpacked,codec)
-    return header,directory,data_offset, (directory_offset if at_end else total)
+    return header,directory,data_offset, (directory_offset if at_end else member_size)
 
 def parse_directory(directory):
     # 16 hash bytes, big-endian signed block count, fixed 10-byte block rows,
@@ -158,6 +166,9 @@ def scan_bundle(stream,member_size,budget):
             {0:"NONE",1:"LZMA",2:"LZ4",3:"LZ4HC"}.get(x["codec"],"UNKNOWN") for x in blocks)),
         "uncompressed_block_bytes":total_unpacked,
         "compressed_block_bytes":packed_sum,
+        "declared_minus_physical_bytes":h["declared_minus_physical_bytes"],
+        "size_exception":("FORMAT8_16_BYTE_DECLARED_SUFFIX_ONLY_CHECKED_PHYSICAL_BOUNDS"
+                          if h["size_exception_pending_block_validation"] else "NONE"),
         "data_scan_complete":False,
     }
     # Stop with a categorized, not thrown-away, partial summary on blocks
