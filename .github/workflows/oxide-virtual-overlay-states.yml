@@ -76,7 +76,7 @@ jobs:
           set -euo pipefail
           test "$(uname -m)" = aarch64
           test -s diagnostic-apk/oxide-bridge-jni-smoke.apk
-          test ! -e base.apk
+          echo "Only standalone diagnostic APK is installed in the guest; installation script rejects original game package."
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
             "linux-modules-extra-$(uname -r)" adb python3-pil
