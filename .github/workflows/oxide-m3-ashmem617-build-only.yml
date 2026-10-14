@@ -1,0 +1,82 @@
+name: "Oxide M3 - Compile-only ashmem Linux 6.17 ARM64 compatibility proof"
+
+# No third-party game, no kernel module loading, and no virtual Android run.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m3-ashmem617-build-only.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile-upstream-ashmem:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 18
+    steps:
+      - name: Prepare native ARM64 Linux kernel headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ashmem-build-evidence
+          uname -m | tee ashmem-build-evidence/arch.txt
+          uname -r | tee ashmem-build-evidence/kernel.txt
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            git gcc make kmod "linux-headers-$(uname -r)"
+          test -d "/lib/modules/$(uname -r)/build"
+          test ! -e /dev/ashmem
+      - name: Fetch exact unmerged public upstream module commit for compile-only verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init --quiet upstream-module
+          git -C upstream-module remote add origin https://github.com/remote-android/redroid-modules.git
+          timeout 180 git -C upstream-module fetch --depth=1 origin refs/pull/23/head
+          SHA="$(git -C upstream-module rev-parse FETCH_HEAD)"
+          echo "$SHA" > ashmem-build-evidence/upstream_commit.txt
+          test "$SHA" = "f55e1e7515a6dd5f8e0f9569ea79148c08f60816"
+          git -C upstream-module checkout --quiet --detach FETCH_HEAD
+          test -s upstream-module/ashmem/ashmem.c
+          test -s upstream-module/ashmem/deps.c
+      - name: Build ashmem_linux against EXACT current ARM64 runner kernel (not insert)
+        shell: bash
+        run: |
+          set -euo pipefail
+          make -C upstream-module/ashmem all > ashmem-build-evidence/build.log 2>&1 || {
+            tail -n 100 ashmem-build-evidence/build.log
+            echo ASHMEM_COMPILE_FAILED > ashmem-build-evidence/status.txt
+            exit 1
+          }
+          test -s upstream-module/ashmem/ashmem_linux.ko
+          modinfo upstream-module/ashmem/ashmem_linux.ko \
+            > ashmem-build-evidence/modinfo.txt
+          grep -q "^vermagic: *$(uname -r)" ashmem-build-evidence/modinfo.txt
+          sha256sum upstream-module/ashmem/ashmem_linux.ko \
+            > ashmem-build-evidence/module_sha256.txt
+          echo ARM64_ASHMEM_MODULE_COMPILED_NOT_LOADED \
+            > ashmem-build-evidence/status.txt
+          test ! -e /dev/ashmem
+      - name: Preserve exact compile verdict and boundaries
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Native ARM64 Linux 6.17 ashmem compile-only preflight"
+            echo "Host: $(cat ashmem-build-evidence/kernel.txt 2>/dev/null || echo UNKNOWN)"
+            echo "Commit: $(cat ashmem-build-evidence/upstream_commit.txt 2>/dev/null || echo UNKNOWN)"
+            echo "Result: $(cat ashmem-build-evidence/status.txt 2>/dev/null || echo INCOMPLETE)"
+            echo "The module was NOT loaded. No Android guest, game APK or security checks were changed."
+            echo "Compile-only is not a verified Redroid16 boot fix."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive build diagnostics without distributing unreviewed kernel binaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-m3-ashmem-arm64-617-compilation-evidence
+          path: ashmem-build-evidence/
+          if-no-files-found: warn
+          retention-days: 14
