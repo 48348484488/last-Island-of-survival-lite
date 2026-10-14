@@ -150,6 +150,8 @@ public final class MainActivity extends Activity {
                     getIntent().getBooleanExtra("overlay_stale_boxes",false));
             service.putExtra("overlay_sequence",
                     getIntent().getBooleanExtra("overlay_sequence",false));
+            service.putExtra("overlay_feed",
+                    getIntent().getBooleanExtra("overlay_feed",false));
             startService(service);
             finish(); // Return to home: overlay is independent of the activity.
         }
