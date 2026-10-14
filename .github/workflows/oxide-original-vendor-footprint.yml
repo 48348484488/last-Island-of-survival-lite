@@ -1,0 +1,68 @@
+name: Oxide original security vendor footprint - passive APK brand audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-original-vendor-footprint.yml"
+      - "tools/scan_original_security_vendor.py"
+      - "tests/test_scan_original_security_vendor.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-original-brand-indicators:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+            tools
+            tests
+      - name: Test vendor versus generic toast distinction
+        run: python3 -m unittest discover -s tests -p 'test_scan_original_security_vendor.py' -v
+      - name: Scan only verified, original three smaller APK splits, no game execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/scan_original_security_vendor.py \
+            base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk \
+            --out vendor-audit
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("vendor-audit/vendor_footprint.json").read_text())
+          assert len(d["original_apks_verified_sha256"])==3,d
+          assert not d["vendor_identity_confirmed"] and not d["original_game_modified"],d
+          assert not d["specific_security_rule_identified"],d
+          print("PASSIVE_ORIGINAL_APK_VENDOR_AUDIT=COMPLETE")
+          PY
+      - name: Explain limits of protection attribution
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original Oxide 1.14.11949 public security vendor footprint"
+            if [ -f vendor-audit/vendor_footprint.md ]; then
+              cat vendor-audit/vendor_footprint.md
+            else
+              echo "No completed scan; see job logs."
+            fi
+            echo "A shared warning phrase is NOT proof of Appdome, nor the specific anti-virtualization rule."
+            echo "No game binaries, protections or Android properties were changed."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save brief indicators only, no original APK bytes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-security-brand-footprint
+          path: vendor-audit/
+          if-no-files-found: warn
+          retention-days: 14
