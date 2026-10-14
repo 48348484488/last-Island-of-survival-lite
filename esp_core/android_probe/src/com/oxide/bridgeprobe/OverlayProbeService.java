@@ -131,7 +131,8 @@ public final class OverlayProbeService extends Service {
         return START_NOT_STICKY;
     }
 
-    static void supplySyntheticFeed(long sequence, float x, long ageMs, boolean stop) {
+    static void supplySyntheticFeed(long sequence, float x, long ageMs, boolean stop,
+                                    boolean hasSecond, float x2, long age2Ms) {
         OverlayProbeService service=activeFeed;
         if(service==null || !service.feedEnabled || service.view==null) {
             Log.w(TAG,"RESULT=DROP FEED_NOT_ACTIVE");
@@ -150,21 +151,27 @@ public final class OverlayProbeService extends Service {
             return;
         }
         if(!Float.isFinite(x) || x < -1.5f || x > 1.5f ||
-                ageMs<0 || ageMs>10000) {
+                ageMs<0 || ageMs>10000 ||
+                (hasSecond && (!Float.isFinite(x2) || x2 < -1.5f || x2 > 1.5f ||
+                               age2Ms<0 || age2Ms>10000))) {
             Log.w(TAG,"RESULT=DROP INVALID_INPUT SEQ="+sequence);
             return;
         }
         final long now=SystemClock.elapsedRealtime();
-        if(now<ageMs+10) {
+        if(now<ageMs+10 || (hasSecond && now<age2Ms+10)) {
             Log.w(TAG,"RESULT=DROP CLOCK_UNDERFLOW SEQ="+sequence);
             return;
         }
         final float[] result=MainActivity.nativeProjectSnapshot(
                 MainActivity.testCamera(),1080,1920,now,now-5,250,0,
-                new long[]{1},
-                new float[]{x,1,-5,x,-1,-5},
-                new long[]{now-ageMs});
-        if(result==null || result.length!=(ageMs>250?0:4)) {
+                hasSecond?new long[]{1,2}:new long[]{1},
+                hasSecond?new float[]{x,1,-5,x,-1,-5,
+                                      x2,1,-5,x2,-1,-5}
+                         :new float[]{x,1,-5,x,-1,-5},
+                hasSecond?new long[]{now-ageMs,now-age2Ms}
+                         :new long[]{now-ageMs});
+        final int expected=(ageMs>250?0:4)+(hasSecond && age2Ms<=250?4:0);
+        if(result==null || result.length!=expected) {
             Log.e(TAG,"RESULT=FAIL FEED_INVALID_PROJECTION SEQ="+sequence);
             return;
         }
@@ -177,6 +184,10 @@ public final class OverlayProbeService extends Service {
               (result.length/4)+" SOURCE=SYNTHETIC_JNI");
         Log.i(TAG,"RESULT=PASS FEED_SEQ="+sequence+" AGE_MS="+ageMs+
                    " RECT_COUNT="+(result.length/4)+" SYNTHETIC_ONLY");
+        if(hasSecond) {
+            Log.i(TAG,"RESULT=PASS FEED_MULTI_SEQ="+sequence+
+                      " RECT_COUNT="+(result.length/4)+" SYNTHETIC_ONLY");
+        }
     }
 
     private void projectSequence(String phase, float x, boolean stale) {
@@ -222,13 +233,15 @@ public final class OverlayProbeService extends Service {
         }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
-            if(coords.length!=4) return;
+            if(coords.length%4!=0 || coords.length>256*4) return;
             canvas.save();
             canvas.scale(getWidth()/1080f,getHeight()/1920f);
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(5);
             paint.setColor(Color.rgb(38,255,110));
-            canvas.drawRect(coords[0],coords[1],coords[2],coords[3],paint);
+            for(int i=0;i<coords.length;i+=4) {
+                canvas.drawRect(coords[i],coords[i+1],coords[i+2],coords[i+3],paint);
+            }
             paint.setStyle(Paint.Style.FILL);
             paint.setColor(Color.WHITE);
             paint.setTextSize(28);

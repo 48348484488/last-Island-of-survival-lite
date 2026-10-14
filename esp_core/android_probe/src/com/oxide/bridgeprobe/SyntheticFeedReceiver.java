@@ -21,6 +21,9 @@ public final class SyntheticFeedReceiver extends BroadcastReceiver {
         final boolean stop;
         final float x;
         final long age;
+        final boolean second;
+        final float x2;
+        final long age2;
         try {
             Bundle extras=intent.getExtras();
             if(extras==null || !(extras.get("seq") instanceof Long) ||
@@ -39,13 +42,21 @@ public final class SyntheticFeedReceiver extends BroadcastReceiver {
                 Log.w(TAG,"RESULT=DROP MALFORMED_FIELDS");
                 return;
             }
+            second=!stop && (extras.containsKey("x2") || extras.containsKey("age2_ms"));
+            if(second && (!(extras.get("x2") instanceof Float) ||
+                    !(extras.get("age2_ms") instanceof Long))) {
+                Log.w(TAG,"RESULT=DROP MALFORMED_SECOND_TARGET");
+                return;
+            }
             x=stop?0f:intent.getFloatExtra("x",Float.NaN);
             age=stop?0L:intent.getLongExtra("age_ms",-1L);
+            x2=second?intent.getFloatExtra("x2",Float.NaN):0f;
+            age2=second?intent.getLongExtra("age2_ms",-1L):0L;
         } catch (ClassCastException | IllegalArgumentException e) {
             // A malformed broadcast cannot crash our diagnostic Service.
             Log.w(TAG,"RESULT=DROP MALFORMED_FIELDS");
             return;
         }
-        OverlayProbeService.supplySyntheticFeed(seq,x,age,stop);
+        OverlayProbeService.supplySyntheticFeed(seq,x,age,stop,second,x2,age2);
     }
 }
