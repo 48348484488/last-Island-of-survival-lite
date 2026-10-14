@@ -2,6 +2,34 @@
 
 ## Direção atual: execução 100% virtual, sem aparelhos físicos
 
+### Overlay JNI dinamico funcionando no Android virtual ARM64
+
+A [execucao real #38543062941](../../actions/runs/38543062941)
+concluiu o teste do aplicativo de diagnostico no Redroid Android 13
+ARM64: **mesmo Service e mesmo PID**, sem reiniciar a janela.
+Foram comprovados por **capturas reais, pixels e logs JNI**
+os estados de caixa inicial, movimento, dados vencidos,
+restauracao com nova posicao e remocao da janela.
+
+| Estado | Centro X | Pixels verdes |
+|---|---:|---:|
+| Inicial | 359,5 | 2.112 |
+| Movido | 431,5 | 2.112 |
+| Dados vencidos | sem caixa | 0 |
+| Restaurado | 287,5 | 2.112 |
+| Servico encerrado | sem caixa | 0 |
+
+**Os 18 testes da compilacao passaram**, e o job Android ARM64
+verificou os testes anteriores e a nova sequencia. Nenhum crash
+foi registrado. O jogo original **nao foi instalado ou
+executado** neste experimento: os dados sao sinteticos e
+nao comprovam ESP multiplayer real.
+
+[Relatorio completo](reports/1.14.11949-virtual-continuous-esp-overlay.md) |
+[Workflow com capturas reais](../../actions/workflows/oxide-virtual-overlay-states.yml) |
+[Codigo do overlay dinamico](esp_core/android_probe/src/com/oxide/bridgeprobe/OverlayProbeService.java).
+
+
 ### Overlay JNI funcionando nos Androids virtuais ARM64 12, 13 e 14
 
 Os testes reais no Redroid provaram o overlay **independente** com o
