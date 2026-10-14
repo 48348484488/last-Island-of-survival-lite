@@ -53,26 +53,31 @@ jobs:
           fi
           cat > signal-preflight/controlled_kill.bt <<'BT'
           tracepoint:syscalls:sys_enter_kill
-          /comm == "python3" && args->sig == 10/
+          /args->sig == 10/
           {
             printf("OXIDE_SIGNAL_PROBE sender_host_pid=%d target_pid=%d sig=%d\\n", pid, args->pid, args->sig);
           }
           BT
-          sudo timeout --signal=INT 16s bpftrace signal-preflight/controlled_kill.bt             > signal-preflight/bpftrace_output.txt 2>&1 &
+          sudo timeout --signal=INT 24s bpftrace signal-preflight/controlled_kill.bt \
+            > signal-preflight/bpftrace_output.txt 2>&1 &
           tracer=$!
           sleep 5
           python3 - <<'PY' > signal-preflight/controlled_sender.txt
           import os
           import signal
+          import time
           signal.signal(signal.SIGUSR1, lambda signum, frame: None)
           print("SENDER_PID="+str(os.getpid()), flush=True)
-          os.kill(os.getpid(), signal.SIGUSR1)
-          print("CONTROL_SIGNAL_SENT", flush=True)
+          for i in range(6):
+              os.kill(os.getpid(), signal.SIGUSR1)
+              print("CONTROL_SIGNAL_SENT_"+str(i), flush=True)
+              time.sleep(1)
           PY
           sleep 3
           sudo pkill -INT -f '^bpftrace signal-preflight/controlled_kill.bt$' 2>/dev/null || true
           wait "$tracer" || true
-          if grep -q 'OXIDE_SIGNAL_PROBE sender_host_pid=' signal-preflight/bpftrace_output.txt; then
+          sender_pid=$(sed -n 's/^SENDER_PID=//p' signal-preflight/controlled_sender.txt | head -n1)
+          if [ -n "$sender_pid" ] && grep -q "OXIDE_SIGNAL_PROBE sender_host_pid=$sender_pid " signal-preflight/bpftrace_output.txt; then
             echo CONTROLLED_KERNEL_SIGNAL_OBSERVED > signal-preflight/probe_status.txt
           else
             echo KERNEL_SIGNAL_NOT_OBSERVED > signal-preflight/probe_status.txt
