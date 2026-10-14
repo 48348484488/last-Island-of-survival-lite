@@ -62,6 +62,8 @@ def parse_unityfs_header(header):
         "blocks_info_uncompressed_bytes":unpacked,
         "blocks_info_compression":compression,
         "blocks_info_at_file_end":bool(flags&0x80),
+        "raw_flags":flags,
+        "header_size":pos+20,
     }
 
 def inventory(paths,expected=None):
