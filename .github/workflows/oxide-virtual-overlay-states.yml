@@ -10,6 +10,9 @@ on:
       - "esp_core/android_probe/virtual_overlay_sequence.sh"
       - "esp_core/android_probe/check_virtual_overlay_sequence.py"
       - "esp_core/android_probe/tests/test_virtual_overlay_sequence.py"
+      - "esp_core/android_probe/check_virtual_feed_control.py"
+      - "esp_core/android_probe/virtual_overlay_feed.sh"
+      - "esp_core/android_probe/tests/test_virtual_feed_control.py"
       - "esp_core/android_probe/check_virtual_overlay_states.py"
       - "esp_core/android_probe/tests/test_virtual_overlay_states.py"
   workflow_dispatch:
@@ -45,9 +48,11 @@ jobs:
           set -euo pipefail
           python3 -m unittest discover -s esp_core/android_probe/tests -p 'test_virtual_overlay_states.py' -v
           python3 -m unittest discover -s esp_core/android_probe/tests -p 'test_virtual_overlay_sequence.py' -v
+          python3 -m unittest discover -s esp_core/android_probe/tests -p 'test_virtual_feed_control.py' -v
           python3 -m unittest discover -s esp_core/android_probe/tests -p 'test_original_overlay_pixels.py' -v
           bash -n esp_core/android_probe/virtual_overlay_states.sh
           bash -n esp_core/android_probe/virtual_overlay_sequence.sh
+          bash -n esp_core/android_probe/virtual_overlay_feed.sh
       - name: Compile and sign independent JNI native ARM64 overlay
         shell: bash
         run: |
@@ -89,6 +94,8 @@ jobs:
             -p 'test_virtual_overlay_states.py' -v
           python3 -m unittest discover -s esp_core/android_probe/tests \
             -p 'test_virtual_overlay_sequence.py' -v
+          python3 -m unittest discover -s esp_core/android_probe/tests \
+            -p 'test_virtual_feed_control.py' -v
           sudo modprobe binder_linux devices=binder,hwbinder,vndbinder
           sudo mkdir -p /dev/binderfs
           sudo mount -t binder binder /dev/binderfs
@@ -154,6 +161,25 @@ jobs:
           print("NATIVE_ANDROID_ONE_OVERLAY_LIVE_MOVEMENT_STALE_RECOVERY_AND_STOP=PASS")
           print("ACTUAL_GAME_AND_PLAYER_DATA=NOT_USED")
           PY
+      - name: Send external synthetic snapshots to one running native Android overlay via ADB shell
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p external-feed-evidence
+          bash esp_core/android_probe/virtual_overlay_feed.sh \
+            127.0.0.1:5555 diagnostic-apk/oxide-bridge-jni-smoke.apk \
+            external-feed-evidence
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          d=json.loads(Path("external-feed-evidence/feed_verdict.json").read_text())
+          assert d["status"]=="NATIVE_ARM64_ADB_FEED_REPLAY_SAFE_PASS",d
+          assert all(d["checks"].values()),d
+          assert d["real_player_data_used"] is False,d
+          assert d["game_protection_modified"] is False,d
+          print("REAL_ANDROID_VIRTUAL_EXTERNAL_SYNTHETIC_FEED_REPLAY_AND_STALE_TEST=PASS")
+          print("LIVE_GAME_ESP=NOT_VERIFIED")
+          PY
       - name: Report real screenshots and Android service logs, not fake gameplay
         if: always()
         shell: bash
@@ -185,5 +211,8 @@ jobs:
             isolated-overlay-evidence/abis.txt
             isolated-overlay-evidence/window_*.txt
             isolated-overlay-evidence/launch_*.txt
+            external-feed-evidence/*.png
+            external-feed-evidence/*.json
+            external-feed-evidence/*verdict.txt
           if-no-files-found: warn
           retention-days: 14
