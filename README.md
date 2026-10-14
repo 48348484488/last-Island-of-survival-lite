@@ -11,7 +11,8 @@
 
 - **M1:** o Oxide original no Android ARM64 virtual registrou autossinal SIGKILL. O kernel capturou seis eventos, mas ainda faltam evidências NSpid que vinculem inequivocamente o PID do emissor host ao processo Android. [Captura original #38599474610](../../actions/runs/38599474610).
 - **M2 — concluída:** o parser de sinais diferencia PID host/Android e falha fechado sem mapeamento. A [regressão #38601989458](../../actions/runs/38601989458) aprovou os testes, incluindo casos truncados, e reprocessou os seis eventos reais. O workflow roda semanalmente sem baixar o APK; [issue #2 encerrada](../../issues/2).
-- **M3–M6:** ainda não concluídas. **Não há confirmação de menu jogável, gameplay, ESP real ou causa da proteção.** Somente ambientes virtuais; APK original preservado.
+- **M3 — comparação de versões verificada:** [replay #38606700050](../../actions/runs/38606700050) validou a Activity original em Android ARM64 virtual 12 (PID 1829), 13 (2232) e 14 (1876). Os três apresentaram autossinal SIGKILL; [matriz reproduzível](reports/1.14.11949-m3-original-android12-13-14-matrix.md). A meta continua aberta até encontrar/validar outro ambiente virtual legítimo; trocar só a versão do Redroid não resolveu.
+- **M4–M6:** ainda não concluídas. **Não há confirmação de menu jogável, gameplay, ESP real ou causa da proteção.** Somente ambientes virtuais; APK original preservado.
 
 As issues contêm os critérios de aceitação e evidências. Desenvolvimento futuro e atualizações devem seguir esses critérios e registrar honestamente bloqueios, sem afirmar sucesso apenas porque a CI passou.
 
