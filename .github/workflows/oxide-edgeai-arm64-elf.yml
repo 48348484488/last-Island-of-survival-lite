@@ -8,9 +8,11 @@ on:
       - "tools/edgeai_inspect_arm64_split.py"
       - "tools/edgeai_arm64_branch_map.py"
       - "tools/edgeai_arm64_cfg.py"
+      - "tools/edgeai_arm64_indirect_audit.py"
       - "tests/test_edgeai_arm64_split.py"
       - "tests/test_edgeai_arm64_branch_map.py"
       - "tests/test_edgeai_arm64_cfg.py"
+      - "tests/test_edgeai_arm64_indirect_audit.py"
       - ".github/workflows/oxide-edgeai-arm64-elf.yml"
   workflow_dispatch:
 
@@ -30,9 +32,11 @@ jobs:
             tools/edgeai_inspect_arm64_split.py
             tools/edgeai_arm64_branch_map.py
             tools/edgeai_arm64_cfg.py
+            tools/edgeai_arm64_indirect_audit.py
             tests/test_edgeai_arm64_split.py
             tests/test_edgeai_arm64_branch_map.py
             tests/test_edgeai_arm64_cfg.py
+            tests/test_edgeai_arm64_indirect_audit.py
             split_config.arm64_v8a.apk
           sparse-checkout-cone-mode: false
       - name: Install LLVM for real AArch64 shared object test fixture
@@ -46,6 +50,7 @@ jobs:
           python3 -m unittest discover -s tests -p test_edgeai_arm64_split.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_branch_map.py -v
           python3 -m unittest discover -s tests -p test_edgeai_arm64_cfg.py -v
+          python3 -m unittest discover -s tests -p test_edgeai_arm64_indirect_audit.py -v
       - name: Audit unmodified 80MB APK and 236MB IL2CPP library read-only
         shell: bash
         run: |
@@ -153,6 +158,27 @@ jobs:
           assert not graph["loop_iteration_count_proven"]
           assert all(x["evidence"]=="decoded_static_candidate" for x in graph["edges"])
           print("EDGEAI_ARM64_CANDIDATE_CFG_ORIGINAL_LOADER_PASS")
+          PY
+      - name: Classify loader unresolved indirect dispatch patterns without guessing targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/edgeai_arm64_indirect_audit.py \
+            edgeai-static-evidence/loader-jni-arm64-control-transfers.json \
+            edgeai-static-evidence/loader-jni-llvm-disasm.txt \
+            --output edgeai-static-evidence/loader-jni-indirect-patterns.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('edgeai-static-evidence/loader-jni-indirect-patterns.json').read_text())
+          assert d['function']=='JNI_OnLoad'
+          assert d['architecture']=='AArch64'
+          assert d['indirect_site_count']==8
+          assert d['pattern_counts'].get('pc_relative_indexed_table_dispatch_candidate')==7
+          assert d['pattern_counts'].get('unresolved_indirect_call')==1
+          assert not d['targets_resolved'] and not d['jump_table_contents_read']
+          assert not d['code_executed']
+          print('EDGEAI_ARM64_LOADER_7_UNRESOLVED_TABLE_DISPATCH_SITES_PASS')
           PY
       - name: Upload audit logs, no game executables
         if: always()
