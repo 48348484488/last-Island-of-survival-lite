@@ -11,6 +11,7 @@ import json
 from collections import Counter
 from pathlib import Path
 import zipfile
+import struct
 from verify_original_splits import EXPECTED_SHA256, sha256_file
 
 CONTAINER_MAGIC = (
@@ -30,11 +31,46 @@ def identify(header):
             return description
     return "NOT_IDENTIFIED_BY_SIGNATURE"
 
+def parse_unityfs_header(header):
+    """Read only UnityFS version/block-info compression flags; do not decode data."""
+    if not header.startswith(bytes((85,110,105,116,121,70,83,0))):
+        return None
+    if len(header) < 20:
+        return {"status":"INCOMPLETE_HEADER"}
+    version=struct.unpack_from(">I",header,8)[0]
+    pos=12
+    names=[]
+    for _ in range(2):
+        end=header.find(bytes((0,)),pos)
+        if end==-1 or end-pos>90:
+            return {"status":"INCOMPLETE_HEADER","bundle_format_version":version}
+        names.append(header[pos:end].decode("utf-8",errors="replace"))
+        pos=end+1
+    if len(header)<pos+20:
+        return {"status":"INCOMPLETE_HEADER","bundle_format_version":version}
+    total_size,packed,unpacked,flags=struct.unpack_from(">QIII",header,pos)
+    compression_code=flags&0x3f
+    compression={0:"NONE",1:"LZMA",2:"LZ4",3:"LZ4HC"}.get(
+        compression_code,"UNKNOWN_"+str(compression_code))
+    return {
+        "status":"HEADER_READ",
+        "bundle_format_version":version,
+        "unity_version":names[0],
+        "unity_revision":names[1],
+        "bundle_declared_size":total_size,
+        "blocks_info_compressed_bytes":packed,
+        "blocks_info_uncompressed_bytes":unpacked,
+        "blocks_info_compression":compression,
+        "blocks_info_at_file_end":bool(flags&0x80),
+    }
+
 def inventory(paths,expected=None):
     expected=expected or EXPECTED_SHA256
     actual={}
     member_totals=Counter()
     format_totals=Counter()
+    unityfs_compression_totals=Counter()
+    unityfs_format_versions=Counter()
     method_totals=Counter()
     by_split={}
     signature_examples=[]
@@ -53,8 +89,14 @@ def inventory(paths,expected=None):
                     continue
                 with archive.open(member) as handle:
                     # Reading the initial 64B is bounded, even for giant Unity assets.
-                    header=handle.read(64)
+                    header=handle.read(512)
                 kind=identify(header)
+                unity_header=parse_unityfs_header(header) if kind=="UNITY_FS_ASSET_BUNDLE" else None
+                if unity_header:
+                    unityfs_compression_totals[unity_header.get("blocks_info_compression",
+                                                 "INCOMPLETE_HEADER")]+=1
+                    unityfs_format_versions[str(unity_header.get("bundle_format_version",
+                                                "UNKNOWN"))]+=1
                 method=ZIP_METHODS.get(member.compress_type,
                         "UNKNOWN_METHOD_"+str(member.compress_type))
                 method_totals[method]+=1
@@ -67,6 +109,8 @@ def inventory(paths,expected=None):
                         "header_kind":kind}
                 largest.append(record)
                 if kind!="NOT_IDENTIFIED_BY_SIGNATURE":
+                    if unity_header is not None:
+                        record["unityfs_header"]=unity_header
                     signature_examples.append(record)
                 records.append(record)
         by_split[path.name]={
@@ -85,6 +129,8 @@ def inventory(paths,expected=None):
         "by_split":by_split,
         "zip_compression_methods":dict(method_totals),
         "identified_header_kinds":dict(format_totals),
+        "unityfs_block_info_compression":dict(unityfs_compression_totals),
+        "unityfs_format_versions":dict(unityfs_format_versions),
         "recognized_nested_container_examples":signature_examples[:75],
         "largest_members_by_uncompressed_size":largest[:20],
         "limitations":[
@@ -117,6 +163,9 @@ def main():
         lines.append("- "+key+": "+str(val))
     lines+=["","## Identified nested content magic headers",""]
     for key,val in result["identified_header_kinds"].items():
+        lines.append("- "+key+": "+str(val))
+    lines+=["","## UnityFS block-directory compression (header flags only)",""]
+    for key,val in result["unityfs_block_info_compression"].items():
         lines.append("- "+key+": "+str(val))
     lines+=["","## By split","",
             "| Split | Members | Expanded bytes | In-ZIP bytes |",
