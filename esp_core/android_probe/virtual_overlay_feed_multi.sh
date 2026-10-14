@@ -64,8 +64,14 @@ capture empty
 feed 4 5 5
 wait_log 'RESULT=PASS FEED_MULTI_SEQ=4 RECT_COUNT=2'
 capture restored
+# Move the two synthetic targets toward each other, without restarting Service.
 adb -s "$S" shell am broadcast -a "$ACTION" -n "$RX" \
-  --el seq 5 --ez stop true >/dev/null
+  --el seq 5 --ef x -0.3 --el age_ms 5 \
+  --ef x2 0.3 --el age2_ms 5 >/dev/null
+wait_log 'RESULT=PASS FEED_MULTI_SEQ=5 RECT_COUNT=2'
+capture moved
+adb -s "$S" shell am broadcast -a "$ACTION" -n "$RX" \
+  --el seq 6 --ez stop true >/dev/null
 wait_log 'RESULT=PASS PHASE=STOPPED RECT_COUNT=0 WINDOW_REMOVED=TRUE'
 capture stopped
 adb -s "$S" logcat -b all -v threadtime -d > "$OUT/multi_logcat.txt"
