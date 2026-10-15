@@ -19,6 +19,12 @@ jobs:
           sudo modprobe binder_linux devices=binder,hwbinder,vndbinder || true
           sudo modprobe ashmem_linux || true
           ls -l /dev/binder* /dev/ashmem /dev/kvm 2>&1 || true
+          mkdir -p reports
+          uname -a > reports/kernel.txt
+          lsmod > reports/kernel-modules.txt || true
+          cat /proc/filesystems > reports/filesystems.txt
+          ls -la /dev/binder* /dev/ashmem /dev/kvm > reports/android-devices.txt 2>&1 || true
+          mount | grep -E 'binder|ashmem' > reports/android-mounts.txt || true
       - name: Download unmodified fourth APK
         env:
           GH_TOKEN: ${{ github.token }}
@@ -30,8 +36,8 @@ jobs:
         run: |
           mkdir -p reports
           docker info > reports/docker-info.txt 2>&1 || true
-          docker pull redroid/redroid:13.0.0-latest > reports/pull.log 2>&1 || true
-          docker run -d --name oxide-android --privileged -p 5555:5555 redroid/redroid:13.0.0-latest androidboot.redroid_width=720 androidboot.redroid_height=1280 androidboot.redroid_dpi=320 > reports/container-id.txt 2> reports/container-error.txt || true
+          docker pull redroid/redroid:13.0.0-latest > reports/pull.log 2>&1 || { cat reports/pull.log; exit 1; }
+          docker run -d --name oxide-android --privileged -p 5555:5555 redroid/redroid:13.0.0-latest androidboot.redroid_width=720 androidboot.redroid_height=1280 androidboot.redroid_dpi=320 > reports/container-id.txt 2> reports/container-error.txt || { cat reports/container-error.txt; exit 1; }
           for i in $(seq 1 45); do
             adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
             if adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | grep -q 1; then break; fi
@@ -67,6 +73,10 @@ jobs:
           mkdir -p reports
           docker logs oxide-android > reports/container.log 2>&1 || true
           docker ps -a > reports/containers.txt 2>&1 || true
+          echo "::group::Android virtual host diagnosis"
+          cat reports/android-devices.txt reports/android-mounts.txt reports/container-error.txt reports/containers.txt reports/verdict.txt 2>/dev/null || true
+          tail -n 100 reports/container.log 2>/dev/null || true
+          echo "::endgroup::"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
