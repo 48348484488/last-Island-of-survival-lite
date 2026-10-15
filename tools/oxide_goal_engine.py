@@ -12,8 +12,10 @@ from pathlib import Path
 
 if __package__:
     from .oxide_capture_timing_gate import verify_capture_timing
+    from .oxide_activity_binding import original_resumed_activity_pid
 else:
     from oxide_capture_timing_gate import verify_capture_timing
+    from oxide_activity_binding import original_resumed_activity_pid
 
 GOAL_IDS = ("android_arm64_boot", "original_launch", "activity_35s", "menu_gameplay", "synthetic_overlay")
 ORIGINAL = "com.catsbit.oxidesurvivalisland/.OxideActivity"
@@ -46,7 +48,8 @@ def first_resumed_original(root):
     """
     for t in (0, 1, 2, 3, 4):
         pid = pid_value(read(root, f"pid-{t}.txt"))
-        if pid and resumed(read(root, f"activity-{t}.txt")):
+        owner_pid = original_resumed_activity_pid(read(root, f"activity-{t}.txt"))
+        if pid and owner_pid == pid:
             return {"checkpoint": t, "pid": pid}
     return None
 
@@ -63,7 +66,9 @@ def evidence_summary(root):
                 and initial is not None)
     stable_pid = launched and initial["pid"] == pids["10"] == pids["35"]
     timing = verify_capture_timing(root)
-    resumed_35s = (stable_pid and resumed(activity["10"]) and resumed(activity["35"])
+    resumed_35s = (stable_pid and initial is not None
+                   and original_resumed_activity_pid(activity["10"]) == initial["pid"]
+                   and original_resumed_activity_pid(activity["35"]) == initial["pid"]
                    and timing["verified"])
     screenshots = {}
     for t in (0, 10, 35):
@@ -132,6 +137,10 @@ def evidence_summary(root):
             "first_original_resumed_checkpoint": initial["checkpoint"] if initial else None,
             "first_original_resumed_pid": initial["pid"] if initial else None,
             "original_activity_resumed_at_10_and_35": bool(resumed_35s),
+            "activity_owners": {
+                str(t): original_resumed_activity_pid(read(root, f"activity-{t}.txt"))
+                for t in (0, 1, 2, 3, 4, 10, 35)
+            },
             "capture_timing": timing,
             "pids": pids,
             "screenshots_png_available": screenshots,
