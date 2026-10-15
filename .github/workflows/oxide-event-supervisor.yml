@@ -6,6 +6,8 @@ on:
       - Oxide Android 15 run
       - Oxide Android 16 run
       - Oxide virtual Android host candidates
+      - Oxide M3 official ARM64 Play Android software boot (no account)
+      - Oxide M4 original APK on verified official ARM64 TCG (one attempt)
     types: [completed]
 permissions:
   actions: write
@@ -46,13 +48,14 @@ jobs:
               for (const child of fs.readdirSync(dir, {withFileTypes: true})) {
                 const p = path.join(dir, child.name);
                 if (child.isDirectory()) walk(p);
-                else if (['verdict.txt', 'preflight.json', 'runtime-verdict.json', 'abi.txt'].includes(child.name)) files.push(p);
+                else if (['verdict.txt', 'preflight.json', 'runtime-verdict.json', 'abi.txt', 'status.txt', 'managed-arm64-gate.json', 'trial-stage.txt', 'oxide-exit-timeline.json'].includes(child.name)) files.push(p);
               }
             }
             walk('evidence');
             const observations = files.sort().map(p => {
               const content = fs.readFileSync(p, 'utf8').trim();
-              if (p.endsWith('preflight.json') || p.endsWith('runtime-verdict.json')) {
+              if (p.endsWith('preflight.json') || p.endsWith('runtime-verdict.json') ||
+                  p.endsWith('managed-arm64-gate.json') || p.endsWith('oxide-exit-timeline.json')) {
                 try {
                   const v = JSON.parse(content);
                   return p + ': ' + (v.status || v.next_action || 'unknown') +
@@ -66,7 +69,27 @@ jobs:
             const isRuntime = (run.path || '').endsWith('/oxide-115-arm64-runtime.yml') ||
               run.name === 'Oxide 1.15 ARM64 virtual runtime probe' ||
               run.name.startsWith('Oxide Android ');
-            if (isMatrix) {
+            const isOfficialBoot = run.name === 'Oxide M3 official ARM64 Play Android software boot (no account)';
+            const isOfficialGame = run.name === 'Oxide M4 original APK on verified official ARM64 TCG (one attempt)';
+            if (isOfficialBoot) {
+              const bootProof = observations.some(x => x.includes('status.txt: OFFICIAL_TCG_ARM64_BOOT_VERIFIED_NO_APK'));
+              const packageProof = observations.some(x => x.includes('ARM64_GOOGLE_PACKAGES_PRESENT_TRUST_UNVERIFIED'));
+              if (run.conclusion === 'success' && bootProof && packageProof) {
+                action = 'Official ARM64 Google Play AVD boot evidence confirmed. The separate event-driven original APK workflow handles the single next attempt; no duplicate dispatch here.';
+              } else {
+                action = 'Official ARM64 software boot NOT verified (runner ' + run.conclusion +
+                  '). Do not download Oxide or schedule endless expensive retries. Inspect emulator startup logs before another hypothesis.';
+              }
+            } else if (isOfficialGame) {
+              const stable = observations.some(x => x.includes('PID_STABLE_35S_MENU_NOT_YET_REVIEWED'));
+              const failed = observations.some(x => x.includes('FAILED_PID_STABILITY_35S') ||
+                x.includes('ORIGINAL_SELF_SIGKILL') || x.includes('TASK_CLOSE_PRECEDES_ORIGINAL_SELF_SIGKILL'));
+              action = stable ?
+                'Original Oxide PID and Activity survived checks, but menu/gameplay still require human visual evidence review. Do not count game or ESP as verified.' :
+                (failed ?
+                  'Original Oxide Activity failed lifecycle stability on official ARM64 emulator; inspect logcat and visuals, without bypass or retries.' :
+                  'Original Android APK trial did not prove 35-second stability. Review the stage and artifacts; do not rerun automatically.');
+            } else if (isMatrix) {
               const candidates = ['ubuntu-24.04-arm', 'ubuntu-22.04-arm'];
               const available = candidates.filter(runner =>
                 jobs.some(j => j.name === 'Probe ' + runner && j.conclusion === 'success'));
