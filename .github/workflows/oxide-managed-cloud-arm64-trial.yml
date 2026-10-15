@@ -114,10 +114,10 @@ jobs:
           grep -q '^Success' reports/install.txt
           adb -s "$CLOUD_ADB_SERIAL" shell am force-stop "$APP_PACKAGE" > reports/force-stop.txt 2>&1 || true
           adb -s "$CLOUD_ADB_SERIAL" logcat -c > reports/logcat-clear.txt 2>&1 || true
-          timeout 35 adb -s "$CLOUD_ADB_SERIAL" shell am start -W \
-            -n "$APP_PACKAGE/$APP_ACTIVITY" > reports/launch.txt 2>&1 || true
+          # Dispatch launch asynchronously and start monotonic early sampling immediately.
           python3 tools/oxide_capture_samples.py --reports reports \
-            --package "$APP_PACKAGE" --serial "$CLOUD_ADB_SERIAL"
+            --package "$APP_PACKAGE" --serial "$CLOUD_ADB_SERIAL" \
+            --launch-activity "$APP_PACKAGE/$APP_ACTIVITY"
           adb -s "$CLOUD_ADB_SERIAL" logcat -d -v threadtime > reports/logcat.txt 2>&1 || true
           python3 tools/oxide_exit_timeline.py reports/logcat.txt \
             --output reports/oxide-exit-timeline.json
