@@ -78,6 +78,56 @@ class ExitTimelineTests(unittest.TestCase):
         self.assertFalse(evidence["undeclared_install_packages_permission_exception"])
         self.assertIsNone(evidence["oversized_fingerprint_read_observed_length"])
 
+    def test_realistic_native_bridge_loader_sigill_not_called_unsupported_instruction(self):
+        log = "\n".join((
+            f"10-15 22:46:40.128   541  1109 I ActivityTaskManager: START u0 {{cmp={ACTIVITY}}} from uid 2000",
+            "10-15 22:46:40.465   541   575 I ActivityManager: Start proc 4426:com.catsbit.oxidesurvivalisland/u0a209 for next-top-activity",
+            "10-15 22:46:40.992  4426  4426 I berberis: Initialized Berberis (aarch64), version 0.2.3",
+            "10-15 22:46:43.186  4426  4426 F libc    : Fatal signal 4 (SIGILL), code -6 (SI_TKILL) in tid 4426 (esurvivalisland), pid 4426 (esurvivalisland)",
+            "10-15 22:46:44.166  4495  4495 F DEBUG   : pid: 4426, tid: 4426, name: esurvivalisland  >>> com.catsbit.oxidesurvivalisland <<<",
+            "10-15 22:46:44.166  4495  4495 F DEBUG   : signal 4 (SIGILL), code -6 (SI_TKILL), fault addr --------",
+            "10-15 22:46:44.186  4495  4495 F DEBUG   :       #00 pc 0000000000700a3c  /data/app/synthetic/lib/arm64/libloader.so",
+            "10-15 22:46:44.186  4495  4495 F DEBUG   :       #02 pc 000000000008b144  /system/bin/arm64/linker64 (__dl__ZN6soinfo17call_constructorsEv+604)",
+            "10-15 22:46:44.327   350   350 I Zygote  : Process 4426 exited due to signal 4 (Illegal instruction)",
+            "10-15 22:46:44.327   541   628 I ActivityManager: Process com.catsbit.oxidesurvivalisland (pid 4426) has died: fg TOP",
+        ))
+        result = assess(log)
+        self.assertEqual(result["status"], "ORIGINAL_SIGILL_DURING_ARM64_LIBLOADER_CONSTRUCTORS")
+        e = result["evidence"]
+        self.assertEqual(e["original_pid"], 4426)
+        self.assertTrue(e["original_fatal_sigill_observed"])
+        self.assertEqual(e["original_fatal_sigill_code"], -6)
+        self.assertEqual(e["original_fatal_sigill_origin"], "SI_TKILL")
+        self.assertEqual(e["start_to_sigill_ms"], 3058)
+        self.assertTrue(e["original_arm64_libloader_guest_frame"])
+        self.assertTrue(e["arm64_dynamic_linker_constructors_frame"])
+        self.assertTrue(e["original_zygote_signal4_exit_observed"])
+        self.assertFalse(result["gameplay_verified"])
+        self.assertEqual(result["security_trigger"], "UNKNOWN")
+
+    def test_sigill_from_another_pid_does_not_count_as_original(self):
+        log = "\n".join((
+            f"10-15 22:46:40.128 541 1109 I ActivityTaskManager: START u0 {{cmp={ACTIVITY}}}",
+            "10-15 22:46:40.465 541 575 I ActivityManager: Start proc 4426:com.catsbit.oxidesurvivalisland/u0a209",
+            "10-15 22:46:43.186 5555 5555 F libc: Fatal signal 4 (SIGILL), code -6 (SI_TKILL) in tid 5555 (other), pid 5555 (other)",
+            "10-15 22:46:44.327 350 350 I Zygote: Process 5555 exited due to signal 4 (Illegal instruction)",
+        ))
+        result = assess(log)
+        self.assertEqual(result["status"], "INSUFFICIENT_ORIGINAL_EXIT_EVIDENCE")
+        self.assertFalse(result["evidence"]["original_fatal_sigill_observed"])
+        self.assertEqual(result["evidence"]["original_pid"], 4426)
+
+    def test_sigill_without_native_stack_must_not_blame_libloader(self):
+        log = "\n".join((
+            f"10-15 22:46:40.128 541 1109 I ActivityTaskManager: START u0 {{cmp={ACTIVITY}}}",
+            "10-15 22:46:40.465 541 575 I ActivityManager: Start proc 4426:com.catsbit.oxidesurvivalisland/u0a209",
+            "10-15 22:46:43.186 4426 4426 F libc: Fatal signal 4 (SIGILL), code -6 (SI_TKILL) in tid 4426 (original), pid 4426 (original)",
+            "10-15 22:46:44.327 350 350 I Zygote: Process 4426 exited due to signal 4 (Illegal instruction)",
+        ))
+        result = assess(log)
+        self.assertEqual(result["status"], "ORIGINAL_SIGILL_NATIVE_BRIDGE_CAUSE_UNKNOWN")
+        self.assertFalse(result["evidence"]["original_arm64_libloader_guest_frame"])
+
     def test_invalid_year(self):
         with self.assertRaises(ValueError):
             assess(fixture(), 1999)
