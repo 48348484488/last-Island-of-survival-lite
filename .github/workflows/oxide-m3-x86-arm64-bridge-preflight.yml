@@ -21,6 +21,11 @@ jobs:
           set -euo pipefail
           mkdir -p reports
           uname -m > reports/host-arch.txt
+          if [ -c /dev/kvm ]; then
+            ls -l /dev/kvm > reports/kvm-permissions-before.txt
+            sudo chmod a+rw /dev/kvm
+            ls -l /dev/kvm > reports/kvm-permissions-after.txt
+          fi
           python3 - <<'PY'
           from pathlib import Path
           import fcntl, os, json
