@@ -1,0 +1,51 @@
+name: Oxide M3 ARM64 host-only KVM eligibility
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-m3-ubuntu26-arm64-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  host-eligibility:
+    runs-on: ubuntu-26.04-arm
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect native Linux ARM64 KVM without emulator or game APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          uname -a > reports/host-kernel.txt
+          python3 tools/oxide_virtual_host_gate.py --output reports/ubuntu26-arm64-gate.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('reports/ubuntu26-arm64-gate.json').read_text())
+          summary = [
+              "## Oxide M3 — host eligibility only",
+              "",
+              f"**Result:** {report['status']}",
+              f"**Host:** {report['host_os']} / {report['host_arch']}",
+              f"**KVM device:** {report['kvm_device_kind']}",
+              f"**KVM API:** {report['kvm_api_version']}",
+              "",
+              "**Android boot, Play Services, unchanged APKs and gameplay: NOT TESTED.**",
+              "",
+              "No emulator, game APK, Google service, device identity or security control was modified."
+          ]
+          print("\n".join(summary))
+          with open(__import__('os').environ['GITHUB_STEP_SUMMARY'], 'a') as out:
+              out.write("\n".join(summary) + "\n")
+          PY
+      - name: Retain machine-readable host preflight
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-m3-ubuntu26-arm64-host-only
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
