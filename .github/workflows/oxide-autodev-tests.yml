@@ -19,6 +19,7 @@ on:
       - 'tests/test_oxide_virtual_host_gate.py'
       - 'tests/test_oxide_managed_arm64_gate.py'
       - 'tests/test_oxide_original_hash_gate.py'
+      - 'tests/test_oxide_managed_trial_workflow.py'
       - 'tests/test_oxide_exit_timeline.py'
       - 'tests/test_oxide_capture_samples.py'
 permissions:
