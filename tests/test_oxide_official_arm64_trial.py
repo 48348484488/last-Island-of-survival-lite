@@ -36,11 +36,14 @@ class OfficialTrialTests(unittest.TestCase):
         self.assertIn("tools/oxide_capture_samples.py", self.script)
         self.assertIn("tools/oxide_runtime_assess.py", self.script)
 
-    def test_portable_timeout_used_for_macos(self):
+    def test_launch_is_asynchronous_with_portable_installer_timeout(self):
         self.assertIn("tools/oxide_process_timeout.py --seconds 300", self.script)
-        self.assertIn("tools/oxide_process_timeout.py --seconds 40", self.script)
+        self.assertIn("--launch-activity", self.script)
+        self.assertNotIn("tools/oxide_process_timeout.py --seconds 40", self.script)
         self.assertNotIn("timeout 300 ", self.script)
         self.assertNotIn("timeout 40 ", self.script)
+        self.assertLess(self.script.index("--launch-activity"),
+                        self.script.index("tools/oxide_exit_timeline.py"))
 
     def test_logcat_retained_on_failure(self):
         self.assertIn("trap collect_logcat EXIT", self.script)
