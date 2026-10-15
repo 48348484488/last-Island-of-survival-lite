@@ -1,0 +1,69 @@
+name: Oxide M4 historical original Activity PID replay - no APK
+on:
+  push:
+    paths:
+      - '.github/workflows/oxide-m4-activity-evidence-replay.yml'
+      - 'tools/oxide_activity_binding.py'
+      - 'tools/oxide_activity_binding_audit.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  original-pid-historical-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download only old diagnostic evidence, never APKs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p android15 android16 reports
+          gh run download 38789434979 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir android15
+          gh run download 38787025289 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir android16
+          test -f android15/reports/activity-0.txt
+          test -f android16/reports/activity-0.txt
+
+      - name: Replay owning ActivityRecord PID against Android 15 and 16 original captures
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/oxide_activity_binding_audit.py android15/reports \
+            --output reports/oxide-android15-activity-binding.json > /dev/null
+          python3 tools/oxide_activity_binding_audit.py android16/reports \
+            --output reports/oxide-android16-activity-binding.json > /dev/null
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          for version, expected in (("15", "2023"), ("16", "2108")):
+              evidence = json.loads(Path(
+                  f"reports/oxide-android{version}-activity-binding.json").read_text())
+              assert evidence["first_original_activity_pid"] == expected, evidence
+              assert evidence["checkpoints"][0]["resumed_original_activity_owner_pid"] == expected
+              assert evidence["checkpoints"][0]["pid_matches_original_activity_owner"] is True
+              for row in evidence["checkpoints"][-2:]:
+                  assert row["checkpoint"] in (10, 35), row
+                  assert row["pid_matches_original_activity_owner"] is False, row
+              assert evidence["status"] == "ORIGINAL_ACTIVITY_EXIT_OR_UNVERIFIED_35S"
+              assert evidence["same_original_activity_alive_35s"] is False
+              assert evidence["gameplay_verified"] is False
+              assert evidence["security_trigger"] == "UNKNOWN"
+              print(f"Android {version}: original owning PID {expected}; t10/t35 are NOT original Activity. No gameplay.")
+          PY
+
+      - name: Preserve compact machine-readable replay evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-activity-owner-replay-android15-16
+          path: reports/*.json
+          retention-days: 14
+          if-no-files-found: warn
