@@ -2,7 +2,7 @@
  * Exercise hv_vm_create, not just 'emulator -accel-check' availability.
  * Creates no guest code and downloads no Android or APK files.
  */
-#include <Hypervisor/hv.h>
+#include <Hypervisor/Hypervisor.h>
 #include <stdio.h>
 
 int main(void) {
