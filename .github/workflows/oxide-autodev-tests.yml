@@ -24,6 +24,7 @@ on:
       - 'tests/test_oxide_verified_boot_handoff.py'
       - '.github/workflows/oxide-m3-official-arm64-tcg-boot.yml'
       - '.github/workflows/oxide-m4-official-arm64-original-on-boot.yml'
+      - '.github/workflows/oxide-event-supervisor.yml'
       - 'tests/test_oxide_managed_arm64_gate.py'
       - 'tests/test_oxide_original_hash_gate.py'
       - 'tests/test_oxide_managed_trial_workflow.py'
