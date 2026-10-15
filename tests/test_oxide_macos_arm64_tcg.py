@@ -47,6 +47,15 @@ class MacArm64TcgTests(unittest.TestCase):
         self.assertIn("if: always()", self.boot)
         self.assertIn("oxide-macos-arm64-tcg-boot-evidence-no-apk", self.boot)
 
+    def test_supervisor_reports_android_only_without_claiming_gameplay(self):
+        supervisor = (ROOT / ".github/workflows/oxide-event-supervisor.yml").read_text()
+        self.assertIn("Oxide M3 macOS ARM64 official Android15 TCG boot only - one attempt", supervisor)
+        self.assertIn("OFFICIAL_MAC_ARM64_TCG_BOOT_SUCCEEDED_ORIGINAL_APK_NOT_INSTALLED", supervisor)
+        self.assertIn("attempt-stage.txt", supervisor)
+        self.assertIn("boot.txt: 1", supervisor)
+        self.assertIn("original Oxide APK and gameplay remain UNTESTED", supervisor)
+        self.assertIn("No original APK downloaded", supervisor)
+
     def test_preflight_does_not_claim_android_boot(self):
         self.assertIn('android_booted": False', self.preflight)
         self.assertIn('gameplay_verified": False', self.preflight)
