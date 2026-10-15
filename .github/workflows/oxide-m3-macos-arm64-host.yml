@@ -41,10 +41,10 @@ jobs:
               status="BLOCKED_NOT_NATIVE_MAC_ARM64"
           elif "EMULATOR_BINARY_NOT_FOUND" in accel:
               status="BLOCKED_NO_ANDROID_EMULATOR_BINARY"
-          elif hv != "1":
-              status="BLOCKED_HYPERVISOR_NOT_REPORTED"
+          elif "Hypervisor.Framework" not in accel or not __import__("re").search(r"(?m)^0$", accel):
+              status="BLOCKED_EMULATOR_ACCELERATION_UNAVAILABLE"
           else:
-              status="MAC_ARM64_HYPERVISOR_REPORTED_BOOT_UNTESTED"
+              status="MAC_ARM64_EMULATOR_HVF_ACCEL_AVAILABLE_BOOT_UNTESTED"
           result={
             "status":status,
             "host_os":platform.system(),
