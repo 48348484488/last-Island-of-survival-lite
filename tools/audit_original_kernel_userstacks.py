@@ -23,7 +23,7 @@ MAP = re.compile(
     r"^([0-9a-f]+)-([0-9a-f]+)\s+([rwxps-]+)\s+"
     r"([0-9a-f]+)\s+\S+\s+\d+\s*(.*)$"
 )
-PC = re.compile(r"^\s*(0x[0-9a-fA-F]{6,16})\s*$", re.M)
+PC = re.compile(r"^\s*((?:0x)?[0-9a-fA-F]{6,16})\s*$", re.M)
 
 
 def mappings(path):
@@ -75,6 +75,9 @@ def analyze(root):
                  for x in control_events}
     kernel_events = kernel.get("matched_syscalls") or []
     known_kill_ns = {x["kernel_boot_ns"] for x in kernel_events}
+    # Two independently attached tracepoints can fire microseconds apart on
+    # the exact same syscall. Match event identity AND a strict <200us window.
+    MAX_INDEPENDENT_PROBE_SKEW_NS = 200_000
     proven = (kernel.get("status") ==
               "SAME_RUN_TIMESTAMPED_HOST_KERNEL_GUEST_SELF_SIGKILL_PROVEN"
               and control.get("status") ==
@@ -94,10 +97,12 @@ def analyze(root):
             continue
         if kind == "binder":
             if ((int(code), int(target_node)) != (15, known_nodes[0])
-                or (int(transaction), ns) not in known_ids):
+                or not any(int(transaction)==txn and abs(ns-when)<=MAX_INDEPENDENT_PROBE_SKEW_NS
+                           for txn,when in known_ids)):
                 continue
         else:
-            if int(signal) != 9 or int(target_pid) != guest or ns not in known_kill_ns:
+            if (int(signal) != 9 or int(target_pid) != guest or
+                not any(abs(ns-when)<=MAX_INDEPENDENT_PROBE_SKEW_NS for when in known_kill_ns)):
                 continue
         pcs = [int(x,16) for x in PC.findall(stack_text)]
         frames = [resolve_frame(pc,memory) for pc in pcs if pc != 0]
@@ -133,6 +138,7 @@ def analyze(root):
         "sigkill_stack_events_attributed": len(kills),
         "attributed_stacks": captured,
         "both_stacks_contain_mapped_executable_pc": bool(both_mapped),
+        "independent_kernel_probe_time_skew_limit_ns": MAX_INDEPENDENT_PROBE_SKEW_NS,
         "internal_game_function_identified": False,
         "source_of_security_decision_identified": False,
         "android_activity_survived_35_seconds": False,
