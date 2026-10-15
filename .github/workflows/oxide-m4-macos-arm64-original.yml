@@ -35,6 +35,29 @@ jobs:
           grep -Eq '^0$' reports/emulator-accel-check.txt
           echo 'MAC_ARM64_NATIVE_HVF_ACCEL_CHECK_PASSED_BOOT_UNTESTED' > reports/trial-stage.txt
 
+      - name: Verify actual VM creation works before Android image download
+        shell: bash
+        run: |
+          set -euo pipefail
+          cc -arch arm64 -Wall -Wextra -Werror -framework Hypervisor \
+            tools/oxide_mac_hvf_vm_create.c -o "$RUNNER_TEMP/oxide-hvf-probe"
+          codesign --force --sign - \
+            --entitlements tools/oxide_mac_hvf_entitlements.plist \
+            "$RUNNER_TEMP/oxide-hvf-probe" > reports/hvf-codesign.txt 2>&1
+          codesign --verify "$RUNNER_TEMP/oxide-hvf-probe"
+          set +e
+          "$RUNNER_TEMP/oxide-hvf-probe" > reports/hvf-vm-create.txt 2>&1
+          rc=$?
+          set -e
+          cat reports/hvf-vm-create.txt
+          printf '%s\n' "$rc" > reports/hvf-create-exit-code.txt
+          if [ "$rc" -ne 0 ]; then
+            echo 'BLOCKED_HVF_VM_CREATE_NO_EMULATOR_OR_APK_DOWNLOAD' > reports/trial-stage.txt
+            echo "::error::Virtualization unavailable: don't download Android 1.8GB or Oxide APKs"
+            exit 2
+          fi
+          echo 'HOST_HVF_VM_CREATE_PASSED_ANDROID_BOOT_UNTESTED' > reports/trial-stage.txt
+
       - name: Boot official Android 15 ARM64 Google Play and run original Oxide once
         uses: reactivecircus/android-emulator-runner@v2
         with:
