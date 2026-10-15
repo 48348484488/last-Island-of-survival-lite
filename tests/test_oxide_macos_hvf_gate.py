@@ -47,6 +47,16 @@ class ActualHypervisorGateTests(unittest.TestCase):
         self.assertIn("BLOCKED_HVF_VM_CREATE_UNVERIFIED", self.probe)
         self.assertIn("HOST_HVF_VM_CREATE_PASSED_ANDROID_UNTESTED", self.probe)
 
+    def test_main_game_trial_gate_precedes_image_and_apk_download(self):
+        self.assertIn("Verify actual VM creation works before Android image download", self.trial)
+        self.assertLess(
+            self.trial.index("tools/oxide_mac_hvf_vm_create.c"),
+            self.trial.index("reactivecircus/android-emulator-runner@v2")
+        )
+        self.assertIn("BLOCKED_HVF_VM_CREATE_NO_EMULATOR_OR_APK_DOWNLOAD", self.trial)
+        self.assertIn("tools/oxide_mac_hvf_entitlements.plist", self.trial)
+        self.assertIn('exit 2', self.trial)
+
     def test_prober_source_exists_and_has_license_free_sdk_code(self):
         self.assertIn("#include <Hypervisor/Hypervisor.h>", self.c_code)
         self.assertNotIn("pm grant", self.c_code)
