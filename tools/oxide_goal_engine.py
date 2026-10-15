@@ -10,6 +10,11 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+if __package__:
+    from .oxide_capture_timing_gate import verify_capture_timing
+else:
+    from oxide_capture_timing_gate import verify_capture_timing
+
 GOAL_IDS = ("android_arm64_boot", "original_launch", "activity_35s", "menu_gameplay", "synthetic_overlay")
 ORIGINAL = "com.catsbit.oxidesurvivalisland/.OxideActivity"
 
@@ -42,7 +47,8 @@ def evidence_summary(root):
     launched = (installed and "Status: ok" in launch_log and ORIGINAL in launch_log
                 and bool(pids["0"]) and resumed(activity["0"]))
     stable_pid = launched and pids["0"] == pids["10"] == pids["35"]
-    resumed_35s = stable_pid and resumed(activity["10"]) and resumed(activity["35"])
+    timing = verify_capture_timing(root)
+    resumed_35s = stable_pid and resumed(activity["10"]) and resumed(activity["35"]) and timing["verified"]
     screenshots = {}
     for t in (0, 10, 35):
         path = root / f"screen-{t}.png"
@@ -104,6 +110,7 @@ def evidence_summary(root):
             "original_split_install_confirmed": installed,
             "original_activity_started": launched,
             "original_activity_resumed_at_10_and_35": bool(resumed_35s),
+            "capture_timing": timing,
             "pids": pids,
             "screenshots_png_available": screenshots,
             "initial_activity_self_sigkill_observed": sigkill,
