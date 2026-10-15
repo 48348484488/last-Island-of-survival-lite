@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 BOOT = ROOT / ".github/workflows/oxide-m3-official-arm64-tcg-boot.yml"
 FOLLOW = ROOT / ".github/workflows/oxide-m4-official-arm64-original-on-boot.yml"
+SUPERVISOR = ROOT / ".github/workflows/oxide-event-supervisor.yml"
 
 
 class VerifiedBootHandoffTests(unittest.TestCase):
@@ -12,6 +13,7 @@ class VerifiedBootHandoffTests(unittest.TestCase):
     def setUpClass(cls):
         cls.boot = BOOT.read_text(encoding="utf8")
         cls.follow = FOLLOW.read_text(encoding="utf8")
+        cls.supervisor = SUPERVISOR.read_text(encoding="utf8")
 
     def test_no_cron_or_repeated_automatic_boot(self):
         self.assertNotIn("schedule:", self.boot)
@@ -36,6 +38,19 @@ class VerifiedBootHandoffTests(unittest.TestCase):
             self.assertIn("arch: arm64-v8a", wf)
             self.assertIn("target: google_apis_playstore", wf)
             self.assertIn("disable-linux-hw-accel: true", wf)
+
+    def test_supervisor_tracks_official_boot_and_game_completion(self):
+        self.assertIn("      - Oxide M3 official ARM64 Play Android software boot (no account)", self.supervisor)
+        self.assertIn("      - Oxide M4 original APK on verified official ARM64 TCG (one attempt)", self.supervisor)
+        self.assertIn("managed-arm64-gate.json", self.supervisor)
+        self.assertIn("oxide-exit-timeline.json", self.supervisor)
+        self.assertIn("status.txt", self.supervisor)
+
+    def test_supervisor_does_not_duplicate_handoff_or_retry_official_boot(self):
+        self.assertIn("no duplicate dispatch here", self.supervisor)
+        self.assertIn("Do not download Oxide or schedule endless expensive retries", self.supervisor)
+        self.assertIn("Do not count game or ESP as verified", self.supervisor)
+        self.assertIn("Do not rerun automatically", self.supervisor)
 
     def test_only_original_hash_protected_game_trial(self):
         self.assertIn("oxide_official_arm64_game_trial.sh", self.follow)
