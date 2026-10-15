@@ -58,7 +58,7 @@ jobs:
           emulator-boot-timeout: 380
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: |
-            set -euo pipefail
+            set -eu
             adb shell getprop sys.boot_completed > reports/boot.txt
             adb shell getprop ro.product.cpu.abi > reports/abi.txt
             adb shell getprop ro.product.cpu.abilist > reports/abilist.txt
