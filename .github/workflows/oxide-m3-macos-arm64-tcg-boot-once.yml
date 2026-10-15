@@ -1,0 +1,62 @@
+name: Oxide M3 macOS ARM64 official Android15 TCG boot only - one attempt
+on:
+  push:
+    paths:
+      - '.github/workflows/oxide-m3-macos-arm64-tcg-boot-once.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oxide-macos-arm64-tcg-boot-one-shot
+  cancel-in-progress: false
+
+jobs:
+  official-arm64-tcg-boot:
+    runs-on: macos-15
+    timeout-minutes: 24
+    env:
+      ANDROID_I_WANT_MY_TCG: "yes"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm native arm64 and explicitly supported CLI software mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          test "$(uname -m)" = arm64
+          test -x "$ANDROID_HOME/emulator/emulator"
+          "$ANDROID_HOME/emulator/emulator" -help-accel > reports/emulator-accel-help.txt 2>&1
+          grep -Eq '^[[:space:]]*off[[:space:]]' reports/emulator-accel-help.txt
+          echo "MAC_ARM64_TCG_OPTION_PRESENT_BOOT_UNTESTED" > reports/attempt-stage.txt
+      - name: Boot unchanged official Google Play Android 15 ARM64 using TCG, no APK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis_playstore
+          arch: arm64-v8a
+          profile: pixel_7
+          cores: 2
+          ram-size: 3072M
+          heap-size: 512M
+          emulator-boot-timeout: 950
+          emulator-options: -no-window -gpu software -no-snapshot -noaudio -no-boot-anim -accel off
+          script: |
+            set -euo pipefail
+            mkdir -p reports
+            adb shell getprop sys.boot_completed > reports/boot.txt
+            adb shell getprop ro.product.cpu.abi > reports/abi.txt
+            adb shell getprop ro.build.version.release > reports/android-version.txt
+            adb shell pm path com.android.vending > reports/play-store-pm-path.txt 2>&1 || true
+            adb shell pm path com.google.android.gms > reports/play-services-pm-path.txt 2>&1 || true
+            python3 tools/oxide_managed_arm64_gate.py --reports reports
+            adb exec-out screencap -p > reports/boot-screen.png || true
+            echo "OFFICIAL_MAC_ARM64_TCG_BOOT_SUCCEEDED_ORIGINAL_APK_NOT_INSTALLED" > reports/attempt-stage.txt
+      - name: Save attempts and actual outcomes even on timeout
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-macos-arm64-tcg-boot-evidence-no-apk
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
