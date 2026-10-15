@@ -43,14 +43,14 @@ ACTIVITY="$(awk -F"'" '/^launchable-activity: name=/ {print $2; exit}' "$REPORTS
 test "$PACKAGE" = "$APP_PACKAGE"
 test "$ACTIVITY" = "$APP_ACTIVITY"
 
-timeout 300 "${ADB[@]}" install-multiple -r \
+python3 tools/oxide_process_timeout.py --seconds 300 -- "${ADB[@]}" install-multiple -r \
   base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk \
   split_UnityDataAssetPack.apk > "$REPORTS/install.txt" 2>&1
 grep -q '^Success' "$REPORTS/install.txt"
 echo "ORIGINAL_APK_INSTALLED" > "$REPORTS/trial-stage.txt"
 "${ADB[@]}" shell am force-stop "$APP_PACKAGE" || true
 "${ADB[@]}" logcat -c || true
-timeout 40 "${ADB[@]}" shell am start -W \
+python3 tools/oxide_process_timeout.py --seconds 40 -- "${ADB[@]}" shell am start -W \
   -n "$APP_PACKAGE/$APP_ACTIVITY" > "$REPORTS/launch.txt" 2>&1 || true
 python3 tools/oxide_capture_samples.py --reports "$REPORTS" \
   --package "$APP_PACKAGE" --serial "$SERIAL"
