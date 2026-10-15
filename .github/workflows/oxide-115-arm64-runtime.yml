@@ -1,4 +1,5 @@
 name: Oxide 1.15 ARM64 virtual runtime probe
+run-name: Oxide Android ${{ inputs.android_version || '15' }} run
 on:
   workflow_dispatch:
     inputs:
@@ -10,13 +11,23 @@ on:
         options:
           - ubuntu-24.04-arm
           - ubuntu-22.04-arm
+      android_version:
+        description: Native ARM64 Android guest version for compatibility comparison
+        required: true
+        type: choice
+        default: '15'
+        options:
+          - '15'
+          - '16'
   push:
     paths:
       - '.github/workflows/oxide-115-arm64-runtime.yml'
 jobs:
   runtime:
     runs-on: ${{ inputs.runner || 'ubuntu-24.04-arm' }}
-    timeout-minutes: 35
+    timeout-minutes: 50
+    env:
+      ANDROID_VERSION: ${{ inputs.android_version || '15' }}
     permissions:
       contents: read
     steps:
@@ -25,6 +36,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p reports
+          printf '%s\n' "$ANDROID_VERSION" > reports/android-version.txt
           uname -a > reports/kernel.txt
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" kmod
@@ -38,13 +50,47 @@ jobs:
             echo 'BLOCKED_HOST_BINDER: Redroid cannot boot on this hosted kernel' | tee reports/verdict.txt
             exit 1
           fi
-      - name: Boot proven Android 15 ARM64 host baseline without the original APK
+      - name: Prepare verified upstream host ashmem for stock Android 16
+        if: env.ANDROID_VERSION == '16'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends git gcc make kmod "linux-headers-$(uname -r)" "linux-modules-extra-$(uname -r)"
+          git init --quiet upstream-module
+          git -C upstream-module remote add origin https://github.com/remote-android/redroid-modules.git
+          timeout 180 git -C upstream-module fetch --depth=1 origin refs/pull/23/head
+          source_sha="$(git -C upstream-module rev-parse FETCH_HEAD)"
+          printf '%s\n' "$source_sha" > reports/ashmem-source-sha.txt
+          test "$source_sha" = f55e1e7515a6dd5f8e0f9569ea79148c08f60816
+          git -C upstream-module checkout --quiet --detach FETCH_HEAD
+          make -C upstream-module/ashmem all > reports/ashmem-build.txt 2>&1
+          test -s upstream-module/ashmem/ashmem_linux.ko
+          modinfo upstream-module/ashmem/ashmem_linux.ko > reports/ashmem-modinfo.txt
+          grep -q "^vermagic: *$(uname -r)" reports/ashmem-modinfo.txt
+          sudo insmod upstream-module/ashmem/ashmem_linux.ko
+          if [ ! -c /dev/ashmem ]; then
+            minor="$(awk '$2=="ashmem" {print $1}' /proc/misc)"
+            test -n "$minor"
+            sudo mknod /dev/ashmem c 10 "$minor"
+          fi
+          test -c /dev/ashmem
+          sudo chmod a+rw /dev/ashmem
+          printf 'ASHMEM_DRIVER_READY\n' > reports/ashmem-status.txt
+      - name: Boot native Android ARM64 before downloading original APK
         shell: bash
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq adb aapt
-          docker pull redroid/redroid:15.0.0_64only-latest > reports/pull.log 2>&1
-          docker run -d --name oxide-android --privileged -p 127.0.0.1:5555:5555 -v /dev/binderfs:/dev/binderfs redroid/redroid:15.0.0_64only-latest androidboot.redroid_width=720 androidboot.redroid_height=1280 androidboot.redroid_dpi=320 androidboot.redroid_gpu_mode=guest > reports/container-id.txt 2> reports/container-error.txt
+          image="redroid/redroid:${ANDROID_VERSION}.0.0_64only-latest"
+          printf '%s\n' "$image" > reports/android-image.txt
+          docker pull "$image" > reports/pull.log 2>&1
+          extra=()
+          if [ "$ANDROID_VERSION" = '16' ]; then
+            test -c /dev/ashmem
+            extra=(--device /dev/ashmem:/dev/ashmem)
+          fi
+          docker run -d --name oxide-android --privileged -p 127.0.0.1:5555:5555 -v /dev/binderfs:/dev/binderfs "${extra[@]}" "$image" androidboot.redroid_width=720 androidboot.redroid_height=1280 androidboot.redroid_dpi=320 androidboot.redroid_gpu_mode=guest > reports/container-id.txt 2> reports/container-error.txt
           for i in $(seq 1 36); do
             adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
             if adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' | grep -qx 1; then break; fi
