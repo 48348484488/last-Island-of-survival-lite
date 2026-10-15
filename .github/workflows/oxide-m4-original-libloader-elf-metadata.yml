@@ -1,0 +1,59 @@
+name: Oxide original native libloader ELF metadata offline - no Android
+on:
+  push:
+    paths:
+      - '.github/workflows/oxide-m4-original-libloader-elf-metadata.yml'
+      - 'tools/oxide_libloader_elf_metadata.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-unchanged-original-libloader:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check unchanged original APK SHA256 without downloading asset pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          from tools.oxide_original_hash_gate import EXPECTED
+          found = {}
+          for name in ("base.apk", "split_config.arm64_v8a.apk"):
+              h=hashlib.sha256()
+              with Path(name).open("rb") as f:
+                  for part in iter(lambda:f.read(1024*1024),b""):
+                      h.update(part)
+              found[name]=h.hexdigest()
+              assert found[name] == EXPECTED[name], f"Original APK mismatch: {name}"
+          Path("reports/original-two-apk-hashes.json").write_text(
+              json.dumps({"files":found, "originals_unchanged":True,
+                          "asset_pack_downloaded":False,
+                          "original_gameplay_verified":False},indent=2)+"\n")
+          print("Verified two committed original APK files; the large asset pack was NOT downloaded.")
+          PY
+      - name: Inspect only ELF headers/sections at native libloader crash PCs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/oxide_libloader_elf_metadata.py \
+            --directory . --output reports/libloader-elf-metadata.json \
+            > reports/libloader-summary.log
+          cat reports/libloader-summary.log
+      - name: Upload only text metadata, not original binary or APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-real-arm64-libloader-elf-pc-metadata-no-binary
+          path: |
+            reports/original-two-apk-hashes.json
+            reports/libloader-elf-metadata.json
+            reports/libloader-summary.log
+          retention-days: 14
+          if-no-files-found: warn
