@@ -16,6 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
       - name: Prepare Android SDK build tools, no system image or original APK
         shell: bash
         run: |
