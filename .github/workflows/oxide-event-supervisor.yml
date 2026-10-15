@@ -8,6 +8,7 @@ on:
       - Oxide virtual Android host candidates
       - Oxide M3 official ARM64 Play Android software boot (no account)
       - Oxide M4 original APK on verified official ARM64 TCG (one attempt)
+      - Oxide M4 original APK on macOS Apple Silicon Android ARM64 (one attempt)
     types: [completed]
 permissions:
   actions: write
@@ -70,7 +71,8 @@ jobs:
               run.name === 'Oxide 1.15 ARM64 virtual runtime probe' ||
               run.name.startsWith('Oxide Android ');
             const isOfficialBoot = run.name === 'Oxide M3 official ARM64 Play Android software boot (no account)';
-            const isOfficialGame = run.name === 'Oxide M4 original APK on verified official ARM64 TCG (one attempt)';
+            const isOfficialGame = run.name === 'Oxide M4 original APK on verified official ARM64 TCG (one attempt)' ||
+              run.name === 'Oxide M4 original APK on macOS Apple Silicon Android ARM64 (one attempt)';
             if (isOfficialBoot) {
               const bootProof = observations.some(x => x.includes('status.txt: OFFICIAL_TCG_ARM64_BOOT_VERIFIED_NO_APK'));
               const packageProof = observations.some(x => x.includes('ARM64_GOOGLE_PACKAGES_PRESENT_TRUST_UNVERIFIED'));
