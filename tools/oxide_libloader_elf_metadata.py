@@ -76,7 +76,11 @@ def inspect_elf(blob):
             "tombstone_pc": f"0x{pc:08x}",
             "mapped_load_segment": match is not None,
             "load_segment_executable": "X" in match["flags"] if match else False,
-            "elf_file_offset": (match["offset"] + pc - match["vaddr"])\n            if match and pc - match["vaddr"] < match["filesz"] else None,\n            "file_backed_executable": bool(match and "X" in match["flags"]\n                and pc - match["vaddr"] < match["filesz"]\n                and section and section["executable"]),
+            "elf_file_offset": (match["offset"] + pc - match["vaddr"]) 
+            if match and pc - match["vaddr"] < match["filesz"] else None, 
+            "file_backed_executable": bool(match and "X" in match["flags"] 
+                and pc - match["vaddr"] < match["filesz"] 
+                and section and section["executable"]),
             "section_name": section["name"] if section else None,
             "section_executable": section["executable"] if section else None,
         })
