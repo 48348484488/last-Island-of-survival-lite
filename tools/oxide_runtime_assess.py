@@ -9,9 +9,11 @@ from pathlib import Path
 if __package__:
     from .oxide_goal_engine import ORIGINAL, resumed, first_resumed_original
     from .oxide_capture_timing_gate import verify_capture_timing
+    from .oxide_activity_binding import original_resumed_activity_pid
 else:
     from oxide_goal_engine import ORIGINAL, resumed, first_resumed_original
     from oxide_capture_timing_gate import verify_capture_timing
+    from oxide_activity_binding import original_resumed_activity_pid
 
 
 def _value(directory, name):
@@ -60,8 +62,13 @@ def evaluate(directory):
     pngs = all(_valid_png(p) for p in screenshots)
     if not all(activities) or not pngs:
         return {"status": "PID_STABLE_MISSING_VISUAL_EVIDENCE", "pids": pids, "gameplay_confirmed": False}
-    if first is None or not all(resumed(activity) for activity in activities):
-        return {"status": "PID_STABLE_WITHOUT_ORIGINAL_RESUMED_ACTIVITY", "pids": pids, "gameplay_confirmed": False}
+    owners = [original_resumed_activity_pid(activity) for activity in activities]
+    # The original Activity can leave while a same-package analytics service
+    # remains. Bind each resumed ActivityRecord to its exact ProcessRecord PID.
+    if first is None or owners != [baseline_pid, baseline_pid]:
+        return {"status": "PID_STABLE_WITHOUT_ORIGINAL_RESUMED_ACTIVITY", "pids": pids,
+                "resumed_activity_owner_pids_at_10_35": owners,
+                "gameplay_confirmed": False}
     timing = verify_capture_timing(d)
     if not timing["verified"]:
         return {"status": "PID_STABLE_UNVERIFIED_35S_TIMING", "pids": pids,
@@ -74,6 +81,7 @@ def evaluate(directory):
         "original_activity_resumed_at_early_10_35": True,
         "first_original_resumed_checkpoint": first["checkpoint"],
         "first_original_resumed_pid": first["pid"],
+        "resumed_activity_owner_pids_at_10_35": owners,
         "original_activity_resumed_at_0_10_35": first["checkpoint"] == 0,
         "gameplay_confirmed": False,
         "note": "Matching original resumed Activity and PID do not prove rendered menu/gameplay.",
