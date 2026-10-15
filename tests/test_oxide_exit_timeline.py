@@ -57,6 +57,27 @@ class ExitTimelineTests(unittest.TestCase):
         self.assertEqual(r["status"], "INSUFFICIENT_ORIGINAL_EXIT_EVIDENCE")
         self.assertIsNone(r["evidence"]["original_pid"])
 
+    def test_app_pid_permission_and_fingerprint_warnings_are_not_security_verdicts(self):
+        warnings = "\n".join((
+            '10-15 18:55:51.531  2023  2163 W System.err: Caused by: java.lang.SecurityException: Need to declare android.permission.REQUEST_INSTALL_PACKAGES to call this api',
+            '10-15 18:55:51.561  2023  2158 E libc    : The property "ro.build.fingerprint" has a value with length 96 that is too large for __system_property_get()/__system_property_read(); use __system_property_read_callback() instead.',
+        ))
+        result = assess(fixture() + "\n" + warnings)
+        self.assertTrue(result["evidence"]["undeclared_install_packages_permission_exception"])
+        self.assertEqual(result["evidence"]["oversized_fingerprint_read_observed_length"], 96)
+        self.assertEqual(result["security_trigger"], "UNKNOWN")
+        self.assertEqual(result["play_integrity_verdict"], "NOT_OBSERVED")
+        self.assertFalse(result["gameplay_verified"])
+
+    def test_other_pid_warnings_are_not_attributed_to_game(self):
+        warnings = "\n".join((
+            '10-15 18:55:51.531  9999  9999 W System.err: Caused by: java.lang.SecurityException: Need to declare android.permission.REQUEST_INSTALL_PACKAGES to call this api',
+            '10-15 18:55:51.561  9999  9999 E libc    : The property "ro.build.fingerprint" has a value with length 96 that is too large for __system_property_get()/__system_property_read(); use __system_property_read_callback() instead.',
+        ))
+        evidence = assess(fixture() + "\n" + warnings)["evidence"]
+        self.assertFalse(evidence["undeclared_install_packages_permission_exception"])
+        self.assertIsNone(evidence["oversized_fingerprint_read_observed_length"])
+
     def test_invalid_year(self):
         with self.assertRaises(ValueError):
             assess(fixture(), 1999)
