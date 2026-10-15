@@ -68,7 +68,7 @@ jobs:
           aapt dump badging base.apk > reports/apk-badging.txt
           app_package=$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" reports/apk-badging.txt | head -n 1)
           test -n "$app_package"
-          app_activity=$(sed -n "s/^launchable-activity: name='\\([^']*\\)'.*/\\1/p" reports/apk-badging.txt | head -n 1)
+          app_activity=$(awk -F"'" '/^launchable-activity: name=/ {print $2; exit}' reports/apk-badging.txt)
           test -n "$app_activity"
           echo "APP_PACKAGE=$app_package" >> "$GITHUB_ENV"
           echo "APP_ACTIVITY=$app_activity" >> "$GITHUB_ENV"
