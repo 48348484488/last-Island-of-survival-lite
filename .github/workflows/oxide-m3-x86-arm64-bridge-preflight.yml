@@ -1,0 +1,100 @@
+name: Oxide M3 x86_64 Android15 ARM64 native-bridge preflight (no APK)
+on:
+  push:
+    paths:
+      - '.github/workflows/oxide-m3-x86-arm64-bridge-preflight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-bridge-readonly:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check KVM is real before downloading x86_64 Play image
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          uname -m > reports/host-arch.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import fcntl, os, json
+          status = {"host_arch": os.uname().machine, "kvm_api_version": None,
+                    "kvm_usable": False, "android_booted": False,
+                    "original_apk_downloaded": False, "gameplay_confirmed": False}
+          try:
+              fd = os.open("/dev/kvm", os.O_RDWR | os.O_CLOEXEC)
+              try:
+                  status["kvm_api_version"] = fcntl.ioctl(fd, 0xAE00, 0)
+              finally:
+                  os.close(fd)
+              status["kvm_usable"] = status["kvm_api_version"] == 12
+          except OSError as exc:
+              status["kvm_error"] = type(exc).__name__
+          Path("reports/kvm-gate.json").write_text(json.dumps(status, indent=2) + "\n")
+          print(json.dumps(status, sort_keys=True))
+          assert status["host_arch"] == "x86_64" and status["kvm_usable"], "BLOCKED_NO_KVM_BEFORE_AVD_DOWNLOAD"
+          PY
+
+      - name: Read official x86_64 Android 15 Google Play ABI and translation capabilities
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis_playstore
+          profile: pixel_7
+          cores: 2
+          ram-size: 2048M
+          emulator-boot-timeout: 380
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            set -euo pipefail
+            adb shell getprop sys.boot_completed > reports/boot.txt
+            adb shell getprop ro.product.cpu.abi > reports/abi.txt
+            adb shell getprop ro.product.cpu.abilist > reports/abilist.txt
+            adb shell getprop ro.product.cpu.abilist64 > reports/abilist64.txt
+            adb shell getprop ro.dalvik.vm.native.bridge > reports/native-bridge.txt
+            adb shell getprop ro.enable.native.bridge.exec64 > reports/bridge-exec64.txt
+            adb shell pm path com.android.vending > reports/play-store-pm-path.txt 2>&1 || true
+            adb shell pm path com.google.android.gms > reports/play-services-pm-path.txt 2>&1 || true
+            adb shell 'ls -l /system/lib64/*ndk_translat* /system/lib64/*houdini* /system/lib64/libnb.so /apex/*/lib64/*ndk_translat*' \
+              > reports/bridge-library-inventory.txt 2>&1 || true
+            python3 - <<'PY'
+            from pathlib import Path
+            import json
+            root=Path("reports")
+            read=lambda name:(root/name).read_text(errors="replace").strip()
+            abis=read("abilist64.txt").split(",")
+            bridge=read("native-bridge.txt")
+            paths=read("bridge-library-inventory.txt")
+            report={
+                "host_abi":read("abi.txt"),
+                "runtime_abis_64":abis,
+                "android_booted":read("boot.txt")=="1",
+                "arm64_advertised":"arm64-v8a" in abis,
+                "native_bridge_property":bridge,
+                "native_bridge_library_inventory":paths[:3000],
+                "arm64_translator_execution_verified":False,
+                "original_apk_downloaded":False,
+                "original_apk_installed":False,
+                "gameplay_verified":False,
+                "security_cause":"UNKNOWN",
+                "note":"An advertised ARM64 ABI and a library name are not proof of working native translation. Older x86 original APK trial SIGILL before Unity."
+            }
+            (root/"x86-arm64-native-bridge-preflight.json").write_text(json.dumps(report,indent=2)+"\n")
+            print(json.dumps(report,sort_keys=True))
+            PY
+
+      - name: Preserve host evidence without APK or Play account
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-android15-x86-play-arm64-native-bridge-preflight
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
