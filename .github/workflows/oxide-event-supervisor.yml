@@ -83,10 +83,13 @@ jobs:
                   '). Do not download Oxide or schedule endless expensive retries. Inspect emulator startup logs before another hypothesis.';
               }
             } else if (isOfficialGame) {
+              const hostBlocked = observations.some(x => x.includes('BLOCKED_HVF_VM_CREATE_NO_EMULATOR_OR_APK_DOWNLOAD'));
               const stable = observations.some(x => x.includes('PID_STABLE_35S_MENU_NOT_YET_REVIEWED'));
               const failed = observations.some(x => x.includes('FAILED_PID_STABILITY_35S') ||
                 x.includes('ORIGINAL_SELF_SIGKILL') || x.includes('TASK_CLOSE_PRECEDES_ORIGINAL_SELF_SIGKILL'));
-              action = stable ?
+              action = hostBlocked ?
+                'BLOCKED_HVF_UNSUPPORTED: native Apple Silicon GitHub VM cannot create nested Hypervisor VM. Android did not boot and no original APK was installed. No paid account or repeat heavy download.' :
+                stable ?
                 'Original Oxide PID and Activity survived checks, but menu/gameplay still require human visual evidence review. Do not count game or ESP as verified.' :
                 (failed ?
                   'Original Oxide Activity failed lifecycle stability on official ARM64 emulator; inspect logcat and visuals, without bypass or retries.' :
