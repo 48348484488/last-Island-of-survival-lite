@@ -1,0 +1,78 @@
+name: Oxide M4 Mac ARM64 TCG original APK - verified one-shot handoff
+on:
+  workflow_run:
+    workflows:
+      - "Oxide M3 macOS ARM64 official Android15 TCG boot only - one attempt"
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: oxide-m4-mac-arm64-tcg-original-one-shot
+  cancel-in-progress: false
+
+jobs:
+  unchanged-original-one-attempt:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.id == 38813694423 && github.event.workflow_run.head_repository.full_name == github.repository }}
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      ANDROID_I_WANT_MY_TCG: "yes"
+      ${{ github.token }}: GH_TOKEN
+      PREDECESSOR: ${{ github.event.workflow_run.id }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify precise predecessor boot proof before Android image or APK download
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports predecessor
+          test "$(uname -m)" = arm64
+          gh run download "$PREDECESSOR" --repo 48348484488/oxide \
+            --name oxide-macos-arm64-tcg-boot-evidence-no-apk \
+            --dir predecessor
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("predecessor")
+          expected = "OFFICIAL_MAC_ARM64_TCG_BOOT_SUCCEEDED_ORIGINAL_APK_NOT_INSTALLED"
+          assert (p / "attempt-stage.txt").read_text().strip() == expected
+          assert (p / "boot.txt").read_text().strip() == "1"
+          assert (p / "abi.txt").read_text().strip() == "arm64-v8a"
+          gate = json.loads((p / "managed-arm64-gate.json").read_text())
+          assert gate["status"] == "ARM64_GOOGLE_PACKAGES_PRESENT_TRUST_UNVERIFIED"
+          assert gate["proceed_with_original_apk_download"] is True
+          assert gate["gameplay_confirmed"] is False
+          Path("reports/predecessor-boot-proof.json").write_text(json.dumps({
+              "verified_boot_from_run": 38813694423,
+              "first_original_apk_trial": True,
+              "play_integrity_verdict": "NOT_OBSERVED",
+              "gameplay_confirmed": False,
+          }, indent=2) + "\n")
+          PY
+          echo "BOOT_PREDECESSOR_VERIFIED_APK_UNINSTALLED" > reports/trial-stage.txt
+
+      - name: Run all four unchanged original APK splits only after verified TCG boot
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis_playstore
+          arch: arm64-v8a
+          profile: pixel_7
+          cores: 2
+          ram-size: 3072M
+          heap-size: 512M
+          emulator-boot-timeout: 950
+          emulator-options: -no-window -gpu software -no-snapshot -noaudio -no-boot-anim -accel off
+          script: bash tools/oxide_official_arm64_game_trial.sh emulator-5554 reports
+
+      - name: Always preserve original Activity/PID, visual and logcat evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-apk-mac-arm64-tcg-evidence-one-shot
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
