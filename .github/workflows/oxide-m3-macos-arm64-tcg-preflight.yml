@@ -1,0 +1,64 @@
+name: Oxide M3 Apple Silicon ARM64 software emulation prerequisite
+on:
+  push:
+    paths:
+      - '.github/workflows/oxide-m3-macos-arm64-tcg-preflight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-arm64-tcg-inspect:
+    runs-on: macos-15
+    timeout-minutes: 5
+    env:
+      ANDROID_I_WANT_MY_TCG: "yes"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect QEMU software accelerator without Android image or APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          uname -a > reports/host.txt
+          echo "ANDROID_HOME=${ANDROID_HOME:-UNSET}" > reports/sdk-env.txt
+          test "$(uname -m)" = arm64
+          test -x "$ANDROID_HOME/emulator/emulator"
+          "$ANDROID_HOME/emulator/emulator" -version > reports/emulator-version.txt 2>&1
+          find "$ANDROID_HOME/emulator/qemu" -type f -name 'qemu-system-aarch64-headless'             > reports/qemu-paths.txt
+          test -s reports/qemu-paths.txt
+          qemu="$(head -n 1 reports/qemu-paths.txt)"
+          test -x "$qemu"
+          "$qemu" -accel help > reports/qemu-accelerators.txt 2>&1
+          cat reports/qemu-accelerators.txt
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data = Path("reports/qemu-accelerators.txt").read_text(errors="replace")
+          # Exact standalone 'tcg' token; listing is not a boot test.
+          tcg = "tcg" in [line.strip().lower() for line in data.splitlines()]
+          result = {
+              "status": ("NATIVE_MAC_ARM64_QEMU_TCG_PRESENT_BOOT_UNTESTED" if tcg
+                         else "BLOCKED_MAC_ARM64_QEMU_TCG_NOT_LISTED"),
+              "host_arch": "arm64",
+              "qemu_tcg_listed": tcg,
+              "android_image_downloaded": False,
+              "android_booted": False,
+              "original_apk_downloaded": False,
+              "gameplay_verified": False,
+              "note": "QEMU TCG listed does NOT prove Android ARM64 software boot can finish in GitHub Actions.",
+          }
+          Path("reports/tcg-prerequisite.json").write_text(json.dumps(result, indent=2) + "\n")
+          print(json.dumps(result))
+          if not tcg:
+              raise SystemExit(2)
+          PY
+      - name: Retain host-only evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-mac-arm64-tcg-binary-preflight
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
