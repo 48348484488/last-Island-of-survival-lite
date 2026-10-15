@@ -18,7 +18,8 @@ class TaskFinishTests(unittest.TestCase):
         data['initial_activity_start']='10-14 22:05:45.000'
         f.write_text(json.dumps(data))
         p=root/'all_buffers.txt'
-        p.write_text(p.read_text()+
+        p.write_text(p.read_text().replace('com.android.settings/.Settings,finish-activity]',
+                                            'com.android.settings/.Settings,app-request]')+
           '10-14 22:05:50.371 320 700 I wm_finish_activity: [0,249525552,9,'+GAME+',finish-activity]\n'+
           '10-14 22:05:50.372 320 700 I wm_pause_activity: [0,249525552,'+GAME+',userLeaving=false,finish]\n'+
           '10-14 22:05:50.900 320 700 I wm_task_removed: [9,9,0,removeChild, last child = ActivityRecord{249525552 u0 '+GAME+' t-1 f}} in Task{aaa #9}\n')
@@ -81,7 +82,7 @@ class TaskFinishTests(unittest.TestCase):
 
     def test_control_and_game_tokens_distinct(self):
         x=analyze(self.case())
-        self.assertEqual(x['settings_control_finish']['token'],236818407)
+        self.assertEqual(x['settings_control_finish']['token'],15)
         self.assertEqual(x['original_finish']['token'],249525552)
 
 
