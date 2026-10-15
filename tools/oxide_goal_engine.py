@@ -37,6 +37,20 @@ def pid_value(value):
     return value.strip() if re.fullmatch(r"[1-9][0-9]*", value.strip()) else ""
 
 
+def first_resumed_original(root):
+    """Find first original resumed Activity and its PID in the early exit window.
+
+    At t=0 the launch request may not yet have created the process. A late
+    background analytics PID, Activity history or mere package reference is
+    not acceptable. This is only an early lifecycle baseline.
+    """
+    for t in (0, 1, 2, 3, 4):
+        pid = pid_value(read(root, f"pid-{t}.txt"))
+        if pid and resumed(read(root, f"activity-{t}.txt")):
+            return {"checkpoint": t, "pid": pid}
+    return None
+
+
 def evidence_summary(root):
     root = Path(root)
     boot = read(root, "boot.txt") == "1" and read(root, "abi.txt") == "arm64-v8a"
@@ -44,11 +58,13 @@ def evidence_summary(root):
     launch_log = read(root, "launch.txt")
     pids = {str(t): pid_value(read(root, f"pid-{t}.txt")) for t in (0, 10, 35)}
     activity = {str(t): read(root, f"activity-{t}.txt") for t in (0, 10, 35)}
+    initial = first_resumed_original(root)
     launched = (installed and "Status: ok" in launch_log and ORIGINAL in launch_log
-                and bool(pids["0"]) and resumed(activity["0"]))
-    stable_pid = launched and pids["0"] == pids["10"] == pids["35"]
+                and initial is not None)
+    stable_pid = launched and initial["pid"] == pids["10"] == pids["35"]
     timing = verify_capture_timing(root)
-    resumed_35s = stable_pid and resumed(activity["10"]) and resumed(activity["35"]) and timing["verified"]
+    resumed_35s = (stable_pid and resumed(activity["10"]) and resumed(activity["35"])
+                   and timing["verified"])
     screenshots = {}
     for t in (0, 10, 35):
         path = root / f"screen-{t}.png"
@@ -109,6 +125,8 @@ def evidence_summary(root):
             "virtual_arm64_booted": boot,
             "original_split_install_confirmed": installed,
             "original_activity_started": launched,
+            "first_original_resumed_checkpoint": initial["checkpoint"] if initial else None,
+            "first_original_resumed_pid": initial["pid"] if initial else None,
             "original_activity_resumed_at_10_and_35": bool(resumed_35s),
             "capture_timing": timing,
             "pids": pids,
