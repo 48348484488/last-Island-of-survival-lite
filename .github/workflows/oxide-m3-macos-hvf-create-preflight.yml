@@ -1,0 +1,69 @@
+name: Oxide M3 Apple Silicon real HVF VM creation - no APK
+on:
+  push:
+    paths:
+      - '.github/workflows/oxide-m3-macos-hvf-create-preflight.yml'
+      - 'tools/oxide_mac_hvf_vm_create.c'
+      - 'tools/oxide_mac_hvf_entitlements.plist'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-hypervisor-create:
+    runs-on: macos-15
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and check actual hypervisor VM creation, no emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          uname -a > reports/macos-host.txt
+          test "$(uname -m)" = arm64
+          cc -arch arm64 -Wall -Wextra -Werror -framework Hypervisor \
+            tools/oxide_mac_hvf_vm_create.c -o "$RUNNER_TEMP/oxide-hvf-probe"
+          codesign --force --sign - \
+            --entitlements tools/oxide_mac_hvf_entitlements.plist \
+            "$RUNNER_TEMP/oxide-hvf-probe" > reports/codesign.txt 2>&1
+          codesign --verify "$RUNNER_TEMP/oxide-hvf-probe"
+          set +e
+          "$RUNNER_TEMP/oxide-hvf-probe" > reports/hvf-vm-create.txt 2>&1
+          rc=$?
+          set -e
+          printf '%s\n' "$rc" > reports/hvf-vm-create-exit.txt
+          cat reports/hvf-vm-create.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          r = Path("reports")
+          code = int((r/"hvf-vm-create-exit.txt").read_text().strip())
+          diagnostic = (r/"hvf-vm-create.txt").read_text(errors="replace").strip()
+          verified = code == 0 and diagnostic == "HVF_VM_CREATE_SUCCESS_ANDROID_BOOT_UNTESTED"
+          status = "HOST_HVF_VM_CREATE_PASSED_ANDROID_UNTESTED" if verified else (
+              "BLOCKED_HVF_UNSUPPORTED" if "BLOCKED_HVF_UNSUPPORTED" in diagnostic
+              else "BLOCKED_HVF_VM_CREATE_UNVERIFIED"
+          )
+          report = {
+              "status":status, "vm_create_exit_code":code,
+              "native_arm64_host":True,
+              "hypervisor_vm_create_verified":verified,
+              "android_booted":False,
+              "apk_downloaded":False,
+              "gameplay_verified":False,
+              "note":"Real hv_vm_create gate, not a Google Play or original Oxide runtime test."
+          }
+          (r/"hvf-gate.json").write_text(json.dumps(report,indent=2)+"\n")
+          print(json.dumps(report,sort_keys=True))
+          PY
+
+      - name: Upload lightweight host proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-mac-arm64-hvf-vm-create-only
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
