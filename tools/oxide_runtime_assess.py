@@ -2,12 +2,27 @@
 """Conservative, read-only evaluation of original Oxide runtime evidence."""
 import argparse
 import json
+import re
 from pathlib import Path
+
+from tools.oxide_goal_engine import ORIGINAL, resumed
 
 
 def _value(directory, name):
     p = directory / name
     return p.read_text(errors="replace").strip() if p.is_file() else ""
+
+
+def _original_pid(value):
+    """Reject multiple or non-numeric PID values from pidof."""
+    return bool(re.fullmatch(r"[1-9][0-9]*", value))
+
+
+def _valid_png(path):
+    if not path.is_file():
+        return False
+    with path.open("rb") as image:
+        return image.read(8) == b"\x89PNG\r\n\x1a\n"
 
 
 def evaluate(directory):
@@ -24,20 +39,26 @@ def evaluate(directory):
         return {"status": "BLOCKED_ORIGINAL_APK_INSTALL", "gameplay_confirmed": False}
 
     pids = [_value(d, f"pid-{t}.txt") for t in (0, 10, 35)]
-    stable = bool(pids[0]) and all(pid == pids[0] for pid in pids)
+    stable = _original_pid(pids[0]) and all(pid == pids[0] for pid in pids)
     if not stable:
         return {"status": "FAILED_PID_STABILITY_35S", "pids": pids, "gameplay_confirmed": False}
-    activities = [_value(d, f"activity-{t}.txt") for t in (10, 35)]
+    launch = _value(d, "launch.txt")
+    if "Status: ok" not in launch or ORIGINAL not in launch:
+        return {"status": "PID_STABLE_MISSING_ORIGINAL_LAUNCH", "pids": pids, "gameplay_confirmed": False}
+    activities = [_value(d, f"activity-{t}.txt") for t in (0, 10, 35)]
     screenshots = [d / f"screen-{t}.png" for t in (10, 35)]
-    pngs = all(p.is_file() and p.open("rb").read(8) == b"\x89PNG\r\n\x1a\n" for p in screenshots)
-    if not activities[0] or not activities[1] or not pngs:
+    pngs = all(_valid_png(p) for p in screenshots)
+    if not all(activities) or not pngs:
         return {"status": "PID_STABLE_MISSING_VISUAL_EVIDENCE", "pids": pids, "gameplay_confirmed": False}
+    if not all(resumed(activity) for activity in activities):
+        return {"status": "PID_STABLE_WITHOUT_ORIGINAL_RESUMED_ACTIVITY", "pids": pids, "gameplay_confirmed": False}
     return {
         "status": "PID_STABLE_35S_MENU_NOT_YET_REVIEWED",
         "pids": pids,
         "screenshots_available": True,
+        "original_activity_resumed_at_0_10_35": True,
         "gameplay_confirmed": False,
-        "note": "PID stability is not proof of actual rendered menu or playable game.",
+        "note": "Matching original resumed Activity and PID do not prove rendered menu/gameplay.",
     }
 
 
