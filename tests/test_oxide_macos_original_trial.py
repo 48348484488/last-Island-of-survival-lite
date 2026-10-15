@@ -28,7 +28,7 @@ class MacOriginalWorkflowTests(unittest.TestCase):
         self.assertIn("MAC_ARM64_EMULATOR_HVF_ACCEL_AVAILABLE_BOOT_UNTESTED", self.host)
         self.assertNotIn('elif hv != "1"', self.host)
         self.assertIn("grep -Fq 'Hypervisor.Framework'", self.trial)
-        self.assertIn("emulator -accel-check", self.trial)
+        self.assertIn('"$ANDROID_HOME/emulator/emulator" -accel-check', self.trial)
 
     def test_matching_official_arm64_play_image(self):
         self.assertIn("api-level: 35", self.trial)
