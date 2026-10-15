@@ -30,19 +30,45 @@ jobs:
           test -s reports/qemu-paths.txt
           qemu="$(head -n 1 reports/qemu-paths.txt)"
           test -x "$qemu"
+          set +e
           "$qemu" -accel help > reports/qemu-accelerators.txt 2>&1
+          raw_qemu_exit=$?
+          "$ANDROID_HOME/emulator/emulator" -help-accel > reports/android-accel-help.txt 2>&1
+          emulator_help_exit=$?
+          "$ANDROID_HOME/emulator/emulator" -avd oxide_empty_nonexistent_avd_tcg_probe \
+            -accel off -no-window -noaudio -no-boot-anim \
+            > reports/android-missing-avd-tcg-output.txt 2>&1
+          emulator_probe_exit=$?
+          set -e
+          printf '%s\\n' "$raw_qemu_exit" > reports/qemu-exit.txt
+          printf '%s\\n' "$emulator_help_exit" > reports/emulator-help-exit.txt
+          printf '%s\\n' "$emulator_probe_exit" > reports/emulator-probe-exit.txt
           cat reports/qemu-accelerators.txt
+          cat reports/android-accel-help.txt
+          cat reports/android-missing-avd-tcg-output.txt
           python3 - <<'PY'
           import json
           from pathlib import Path
           data = Path("reports/qemu-accelerators.txt").read_text(errors="replace")
-          # Exact standalone 'tcg' token; listing is not a boot test.
+          cli = Path("reports/android-accel-help.txt").read_text(errors="replace")
+          missing = Path("reports/android-missing-avd-tcg-output.txt").read_text(errors="replace")
+          # The Android-patched QEMU standalone binary may abort when invoked
+          # outside its launcher. Distinguish that from a real TCG rejection.
           tcg = "tcg" in [line.strip().lower() for line in data.splitlines()]
+          tcg_option = "off" in cli.lower() and "accel" in cli.lower()
+          missing_avd = "oxide_empty_nonexistent_avd_tcg_probe" in missing.lower()
+          definitely_blocked = "tcg" in missing.lower() and (
+              "not supported" in missing.lower() or "disabled" in missing.lower())
+          plausible = tcg or (tcg_option and missing_avd and not definitely_blocked)
           result = {
-              "status": ("NATIVE_MAC_ARM64_QEMU_TCG_PRESENT_BOOT_UNTESTED" if tcg
-                         else "BLOCKED_MAC_ARM64_QEMU_TCG_NOT_LISTED"),
+              "status": ("NATIVE_MAC_ARM64_TCG_BINARY_LISTED_BOOT_UNTESTED" if tcg
+                         else ("NATIVE_MAC_ARM64_TCG_CLI_POSSIBLE_BOOT_UNTESTED" if plausible
+                               else "BLOCKED_OR_UNVERIFIED_MAC_ARM64_TCG")),
               "host_arch": "arm64",
               "qemu_tcg_listed": tcg,
+              "android_emulator_off_option_observed": tcg_option,
+              "probe_reached_missing_avd": missing_avd,
+              "explicit_tcg_rejection_observed": definitely_blocked,
               "android_image_downloaded": False,
               "android_booted": False,
               "original_apk_downloaded": False,
@@ -51,7 +77,7 @@ jobs:
           }
           Path("reports/tcg-prerequisite.json").write_text(json.dumps(result, indent=2) + "\n")
           print(json.dumps(result))
-          if not tcg:
+          if not plausible:
               raise SystemExit(2)
           PY
       - name: Retain host-only evidence
