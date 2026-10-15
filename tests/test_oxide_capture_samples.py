@@ -35,10 +35,27 @@ class TestCapture(unittest.TestCase):
                          clock=self.clock, sleeper=self.sleep)
         self.assertEqual([r['target_seconds'] for r in result], list(CHECKPOINTS))
         self.assertEqual([r['elapsed_seconds'] for r in result], list(CHECKPOINTS))
-        self.assertTrue(all(r['valid_png'] for r in result))
+        self.assertEqual([r["target_seconds"] for r in result if r["valid_png"]], [2, 3, 4, 10, 35])
         self.assertEqual(sum('dumpsys' in x for x in self.calls), len(CHECKPOINTS))
+        self.assertEqual(sum('screencap' in x for x in self.calls), 5)
         self.assertEqual((self.reports / 'pid-35.txt').read_text(), '1234\n')
         self.assertEqual(len(json.loads((self.reports / 'capture-timing.json').read_text())['checkpoints']), 7)
+
+    def test_early_pid_and_activity_are_collected_before_first_png(self):
+        observed_timeouts = []
+        def runner(command, timeout):
+            observed_timeouts.append((command, timeout))
+            return self.runner(command, timeout)
+
+        capture(self.reports, 'com.example.game', runner=runner,
+                clock=self.clock, sleeper=self.sleep)
+        first_screenshot = next(i for i, (command, _) in enumerate(observed_timeouts)
+                                if 'screencap' in command)
+        self.assertEqual(sum('dumpsys' in cmd for cmd, _ in observed_timeouts[:first_screenshot]), 3)
+        early_shots = [t for cmd,t in observed_timeouts if 'screencap' in cmd]
+        self.assertEqual(early_shots, [3, 3, 3, 6, 6])
+        self.assertFalse((self.reports / 'screen-0.png').exists())
+        self.assertFalse((self.reports / 'screen-1.png').exists())
 
     def test_slow_adb_records_actual_time_not_fake_checkpoint(self):
         def slow_runner(command, timeout):
@@ -95,7 +112,8 @@ class TestCapture(unittest.TestCase):
         self.assertEqual(len(result), 3)
         self.assertEqual(result[2]['pid'], '1234')
         self.assertFalse(result[0]['valid_png'])
-        self.assertIn('screencap_timeout', result[0]['errors'])
+        self.assertNotIn('screencap_timeout', result[0]['errors'])
+        self.assertIn('screencap_timeout', result[1]['errors'])
         self.assertFalse((self.reports / 'screen-0.png').exists())
 if __name__ == '__main__':
     unittest.main()
