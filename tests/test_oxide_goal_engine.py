@@ -102,6 +102,23 @@ class TestGoals(unittest.TestCase):
         self.assertFalse(report["checks"]["original_activity_resumed_at_10_and_35"])
         self.assertEqual(report["goals"][2]["status"], "blocked")
 
+    def test_sigkill_correlates_first_original_pid_when_t0_empty(self):
+        self.boot_and_launch()
+        self.write("pid-0.txt", "")
+        self.write("activity-0.txt", "topResumedActivity=ActivityRecord{other u0 com.android.launcher/.Home t1}")
+        self.write("pid-2.txt", "2023")
+        self.write("activity-2.txt", "topResumedActivity=ActivityRecord{x u0 "+PKG+" t8}")
+        self.write("pid-10.txt", "2296")
+        self.write("pid-35.txt", "2296")
+        self.write("logcat.txt",
+            "10-15 18:55:51.207  287 735 I ActivityTaskManager: START u0 { cmp="+PKG+" }\\n"
+            "10-15 18:55:55.687 2023 2023 I Process: Sending signal. PID: 2023 SIG: 9\\n")
+        report = evidence_summary(self.d)
+        self.assertEqual(report["checks"]["first_original_resumed_pid"], "2023")
+        self.assertTrue(report["checks"]["initial_activity_self_sigkill_observed"])
+        self.assertEqual(report["checks"]["start_to_sigkill_seconds"], 4.48)
+        self.assertEqual(report["next_action"], "FORENSIC_APP_EXIT")
+
     def test_task_history_not_counted_as_resumed(self):
         self.assertFalse(resumed("* Hist #0: ActivityRecord{a u0 "+PKG+" t8}"))
 
