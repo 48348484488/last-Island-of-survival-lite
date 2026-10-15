@@ -1,0 +1,72 @@
+name: Oxide M3 macOS M1 ARM64 host eligibility - no APK
+on:
+  push:
+    paths:
+      - '.github/workflows/oxide-m3-macos-arm64-host.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mac-arm64-host-check:
+    runs-on: macos-15
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect Apple Silicon Android Emulator host without downloading images
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          uname -a > reports/uname.txt
+          sysctl -n hw.optional.arm64 > reports/arm64-sysctl.txt 2>&1 || true
+          sysctl -n kern.hv_support > reports/hv-support.txt 2>&1 || true
+          printf 'ANDROID_HOME=%s\n' "${ANDROID_HOME:-UNSET}" > reports/sdk-environment.txt
+          if [ -n "${ANDROID_HOME:-}" ] && [ -x "$ANDROID_HOME/emulator/emulator" ]; then
+            "$ANDROID_HOME/emulator/emulator" -version > reports/emulator-version.txt 2>&1 || true
+            "$ANDROID_HOME/emulator/emulator" -accel-check > reports/emulator-accel-check.txt 2>&1 || true
+          else
+            printf 'EMULATOR_BINARY_NOT_FOUND\n' > reports/emulator-accel-check.txt
+          fi
+          python3 - <<'PY'
+          import json
+          import platform
+          from pathlib import Path
+          r=Path("reports")
+          arch=platform.machine()
+          accel=(r/"emulator-accel-check.txt").read_text(errors="replace")
+          hv=(r/"hv-support.txt").read_text(errors="replace").strip()
+          if arch not in ("arm64","aarch64"):
+              status="BLOCKED_NOT_NATIVE_MAC_ARM64"
+          elif "EMULATOR_BINARY_NOT_FOUND" in accel:
+              status="BLOCKED_NO_ANDROID_EMULATOR_BINARY"
+          elif hv != "1":
+              status="BLOCKED_HYPERVISOR_NOT_REPORTED"
+          else:
+              status="MAC_ARM64_HYPERVISOR_REPORTED_BOOT_UNTESTED"
+          result={
+            "status":status,
+            "host_os":platform.system(),
+            "host_arch":arch,
+            "kern_hv_support":hv,
+            "emulator_acceleration_diagnostic":accel[:2500],
+            "sdk_image_installed":False,
+            "android_booted":False,
+            "google_play_available_verified":False,
+            "apk_original_installed":False,
+            "gameplay_verified":False,
+            "note":"Hypervisor availability does not prove the Android Emulator works on a GitHub VM."
+          }
+          (r/"mac-arm64-host-gate.json").write_text(json.dumps(result,indent=2)+"\n")
+          print(json.dumps(result,indent=2))
+          PY
+
+      - name: Retain free host preflight findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-macos-m1-arm64-host-preflight
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
