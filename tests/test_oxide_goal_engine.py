@@ -61,6 +61,47 @@ class TestGoals(unittest.TestCase):
         self.assertFalse(report['checks']['capture_timing']['verified'])
         self.assertFalse(report['gameplay_confirmed'])
 
+    def test_async_launch_initially_has_no_pid_but_original_resumes_at_second_two(self):
+        self.boot_and_launch()
+        self.write("pid-0.txt", "")
+        self.write("activity-0.txt", "topResumedActivity=ActivityRecord{other u0 com.android.launcher/.Home t1}")
+        self.write("pid-2.txt", "2018")
+        self.write("activity-2.txt", "topResumedActivity=ActivityRecord{x u0 "+PKG+" t8}")
+        for t in (10, 35):
+            self.write(f"pid-{t}.txt", "2018")
+            self.write(f"activity-{t}.txt", "topResumedActivity=ActivityRecord{x u0 "+PKG+" t8}")
+            (self.d / f"screen-{t}.png").write_bytes(b"\\x89PNG\\r\\n\\x1a\\n" + b"a"*200)
+        self.write("capture-timing.json", json.dumps({
+            "clock": "monotonic",
+            "reference": "adb_launch_dispatch",
+            "checkpoints": [
+                {"target_seconds": t, "elapsed_seconds": float(t),
+                 "finished_seconds": float(t)+0.2,
+                 "pid": "" if t == 0 else "2018",
+                 "activity_dump_captured": True}
+                for t in (0, 1, 2, 3, 4, 10, 35)
+            ],
+        }))
+        report = evidence_summary(self.d)
+        self.assertEqual(report["checks"]["first_original_resumed_checkpoint"], 2)
+        self.assertEqual(report["checks"]["first_original_resumed_pid"], "2018")
+        self.assertEqual(report["goals"][2]["status"], "complete")
+        self.assertFalse(report["gameplay_confirmed"])
+
+    def test_analytics_service_pid_does_not_replace_original_early_resumed_pid(self):
+        self.boot_and_launch()
+        self.write("pid-0.txt", "")
+        self.write("pid-2.txt", "2018")
+        self.write("activity-0.txt", "")
+        self.write("activity-2.txt", "topResumedActivity=ActivityRecord{x u0 "+PKG+" t8}")
+        for t in (10, 35):
+            self.write(f"pid-{t}.txt", "2296")
+            self.write(f"activity-{t}.txt", "topResumedActivity=ActivityRecord{x u0 "+PKG+" t8}")
+        report = evidence_summary(self.d)
+        self.assertEqual(report["checks"]["first_original_resumed_pid"], "2018")
+        self.assertFalse(report["checks"]["original_activity_resumed_at_10_and_35"])
+        self.assertEqual(report["goals"][2]["status"], "blocked")
+
     def test_task_history_not_counted_as_resumed(self):
         self.assertFalse(resumed("* Hist #0: ActivityRecord{a u0 "+PKG+" t8}"))
 
