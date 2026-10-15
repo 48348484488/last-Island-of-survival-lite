@@ -88,6 +88,11 @@ jobs:
                 action = 'No native ARM64 Redroid host was proven viable. Stopped automatically to avoid expensive endless retries. x86 results do not prove ARM64 game compatibility.';
               }
             } else if (isRuntime && run.conclusion === 'failure') {
+              const hostFailed = observations.some(x =>
+                x.includes('HOST_NO_BINDER') || x.includes('BLOCKED_HOST_BINDER') || x.includes('BLOCKED_ANDROID_BOOT'));
+              if (!hostFailed) {
+                action = 'Native Android already booted or host failure not established. Do not repeat kernel probes; analyze original app launch/logcat/Activity evidence instead.';
+              } else {
               const recent = await github.rest.actions.listWorkflowRuns({
                 owner, repo, workflow_id: 'oxide-host-matrix.yml', per_page: 20
               });
@@ -101,6 +106,7 @@ jobs:
                 action = 'Dispatched fresh host-compatibility matrix. Runtime APK is not retried on an unvalidated kernel.';
               } else {
                 action = 'Recent host matrix already exists: ' + (latest?.html_url || '') + '. No duplicate retries.';
+              }
               }
             } else if (isRuntime && run.conclusion === 'success') {
               action = 'Review screenshot/menu evidence; green CI or a stable PID alone is not proof of playable game or ESP.';
