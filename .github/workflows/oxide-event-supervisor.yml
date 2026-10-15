@@ -11,6 +11,8 @@ on:
       - Oxide M4 original APK on verified official ARM64 TCG (one attempt)
       - Oxide M4 original APK on macOS Apple Silicon Android ARM64 (one attempt)
       - Oxide M4 Mac ARM64 TCG original APK - verified one-shot handoff
+      - Oxide M3 official x86_64 AVD executes independent ARM64 JNI - one shot
+      - Oxide M4 original game on proven x86_64 ARM64 translator - one trial
     types: [completed]
 permissions:
   actions: write
@@ -51,7 +53,7 @@ jobs:
               for (const child of fs.readdirSync(dir, {withFileTypes: true})) {
                 const p = path.join(dir, child.name);
                 if (child.isDirectory()) walk(p);
-                else if (['verdict.txt', 'preflight.json', 'runtime-verdict.json', 'abi.txt', 'status.txt', 'managed-arm64-gate.json', 'trial-stage.txt', 'oxide-exit-timeline.json', 'attempt-stage.txt', 'boot.txt'].includes(child.name)) files.push(p);
+                else if (['verdict.txt', 'preflight.json', 'runtime-verdict.json', 'abi.txt', 'status.txt', 'managed-arm64-gate.json', 'trial-stage.txt', 'oxide-exit-timeline.json', 'attempt-stage.txt', 'boot.txt', 'nativebridge-jni-verdict.json', 'pre-install-bridge-gate.txt'].includes(child.name)) files.push(p);
               }
             }
             walk('evidence');
@@ -68,6 +70,8 @@ jobs:
               return p + ': ' + content.slice(0, 200);
             });
             let action = 'No safe automatic remediation is known; inspect the evidence and do not repeat identical failed tests.';
+            const isBridgeProbe = run.name === 'Oxide M3 official x86_64 AVD executes independent ARM64 JNI - one shot';
+            const isBridgeGame = run.name === 'Oxide M4 original game on proven x86_64 ARM64 translator - one trial';
             const isMatrix = run.name === 'Oxide virtual Android host candidates';
             const isRuntime = (run.path || '').endsWith('/oxide-115-arm64-runtime.yml') ||
               run.name === 'Oxide 1.15 ARM64 virtual runtime probe' ||
@@ -76,7 +80,24 @@ jobs:
             const isOfficialGame = run.name === 'Oxide M4 original APK on verified official ARM64 TCG (one attempt)' ||
               run.name === 'Oxide M4 original APK on macOS Apple Silicon Android ARM64 (one attempt)' ||
               run.name === 'Oxide M4 Mac ARM64 TCG original APK - verified one-shot handoff';
-            if (isOfficialBoot) {
+            if (isBridgeProbe) {
+              const proven = observations.some(x => x.includes('ARM64_JNI_EXECUTED_VIA_NATIVE_BRIDGE_ORIGINAL_GAME_UNTESTED'));
+              if (run.conclusion === 'success' && proven) {
+                action = 'An independent ARM64-only JNI test actually executed under official x86_64 Android native bridge. The separate M4 workflow verifies the run ID and nativebridge-jni-verdict.json before any original APK download. This is NOT game, menu, gameplay or ESP proof.';
+              } else {
+                action = 'Independent ARM64 JNI execution NOT verified. Original Oxide APK download is blocked; inspect JNI logcat and exit reason. ABI/libndk_translation advertising alone is not sufficient.';
+              }
+            } else if (isBridgeGame) {
+              const stable = observations.some(x => x.includes('PID_STABLE_35S_MENU_NOT_YET_REVIEWED'));
+              const failed = observations.some(x => x.includes('FAILED_PID_STABILITY_35S') ||
+                x.includes('PID_STABLE_WITHOUT_ORIGINAL_RESUMED_ACTIVITY') ||
+                x.includes('ORIGINAL_SELF_SIGKILL'));
+              action = stable ?
+                'Original Oxide Activity/PID passed sampled 35s on translated AVD. Menu/gameplay need visual and interaction validation; no ESP claim.' :
+                (failed ?
+                  'Original Oxide PID or Activity failed on translated AVD; inspect original application evidence, no automatic repeat or bypass.' :
+                  'No proof that the original game is stable on translated AVD. Inspect trial-stage.txt, runtime-verdict.json and logcat before further work.');
+            } else if (isOfficialBoot) {
               const bootProof = observations.some(x => x.includes('status.txt: OFFICIAL_TCG_ARM64_BOOT_VERIFIED_NO_APK'));
               const packageProof = observations.some(x => x.includes('ARM64_GOOGLE_PACKAGES_PRESENT_TRUST_UNVERIFIED'));
               if (run.conclusion === 'success' && bootProof && packageProof) {
