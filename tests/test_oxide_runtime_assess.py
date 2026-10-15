@@ -8,6 +8,13 @@ from tools.oxide_runtime_assess import evaluate
 from tools.oxide_goal_engine import ORIGINAL
 
 
+def activity_owned_by(pid, token="a1"):
+    return (f"  topResumedActivity=ActivityRecord{{{token} u0 {ORIGINAL} t8}}\n"
+            f"  * Hist  #0: ActivityRecord{{{token} u0 {ORIGINAL} t8}}\n"
+            f"    packageName=com.catsbit.oxidesurvivalisland processName=com.catsbit.oxidesurvivalisland\n"
+            f"    app=ProcessRecord{{b1 {pid}:com.catsbit.oxidesurvivalisland/u0a87}}\n")
+
+
 class TestRuntimeAssessment(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -23,7 +30,7 @@ class TestRuntimeAssessment(unittest.TestCase):
         self.put("launch.txt", f"Starting: Intent {{ cmp={ORIGINAL} }}\nStatus: ok\nActivity: {ORIGINAL}\n")
         for t in (0, 10, 35):
             self.put(f"pid-{t}.txt", "100")
-            self.put(f"activity-{t}.txt", f"  topResumedActivity=ActivityRecord{{value u0 {ORIGINAL} t8}}\n")
+            self.put(f"activity-{t}.txt", activity_owned_by(100))
         for t in (10, 35):
             (self.d / f"screen-{t}.png").write_bytes(b"\x89PNG\r\n\x1a\nabc")
         self.put("capture-timing.json", json.dumps({
@@ -130,7 +137,7 @@ class TestRuntimeAssessment(unittest.TestCase):
         self.put("pid-0.txt", "")
         self.put("activity-0.txt", "topResumedActivity=ActivityRecord{x u0 com.android.launcher/.Home t1}")
         self.put("pid-2.txt", "100")
-        self.put("activity-2.txt", f"topResumedActivity=ActivityRecord{{x u0 {ORIGINAL} t8}}")
+        self.put("activity-2.txt", activity_owned_by(100, token="ab"))
         timing = json.loads((self.d / "capture-timing.json").read_text())
         timing["reference"] = "adb_launch_dispatch"
         timing["checkpoints"][0]["pid"] = ""
@@ -148,13 +155,33 @@ class TestRuntimeAssessment(unittest.TestCase):
         self.put("pid-0.txt", "")
         self.put("pid-2.txt", "100")
         self.put("activity-0.txt", "topResumedActivity=ActivityRecord{x u0 com.android.launcher/.Home t1}")
-        self.put("activity-2.txt", f"topResumedActivity=ActivityRecord{{x u0 {ORIGINAL} t8}}")
+        self.put("activity-2.txt", activity_owned_by(100, token="ab"))
         self.put("pid-10.txt", "2296")
         self.put("pid-35.txt", "2296")
         result = evaluate(self.d)
         self.assertEqual(result["status"], "FAILED_PID_STABILITY_35S")
         self.assertEqual(result["first_original_resumed_checkpoint"], 2)
         self.assertFalse(result["gameplay_confirmed"])
+
+    def test_pidof_same_package_is_not_activity_process_at_t10(self):
+        self.valid_stable()
+        # pidof still returns 100, but dumpsys says the resumed Activity
+        # is now owned by PID 2296. This MUST NOT pass.
+        self.put("activity-10.txt", activity_owned_by(2296))
+        verdict = evaluate(self.d)
+        self.assertEqual(verdict["status"], "PID_STABLE_WITHOUT_ORIGINAL_RESUMED_ACTIVITY")
+        self.assertEqual(verdict["resumed_activity_owner_pids_at_10_35"], ["2296", "100"])
+        self.assertFalse(verdict["gameplay_confirmed"])
+
+    def test_activity_record_without_process_owner_is_not_proof(self):
+        self.valid_stable()
+        self.put("activity-35.txt",
+                 f"topResumedActivity=ActivityRecord{{a1 u0 {ORIGINAL} t8}}\n"
+                 f"* Hist  #0: ActivityRecord{{a1 u0 {ORIGINAL} t8}}\n"
+                 "  app=null\n")
+        verdict = evaluate(self.d)
+        self.assertEqual(verdict["status"], "PID_STABLE_WITHOUT_ORIGINAL_RESUMED_ACTIVITY")
+        self.assertIsNone(verdict["resumed_activity_owner_pids_at_10_35"][1])
 
     def test_background_task_history_is_not_resumed_activity(self):
         self.valid_stable()
