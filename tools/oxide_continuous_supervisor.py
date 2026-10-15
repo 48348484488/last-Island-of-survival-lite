@@ -29,6 +29,9 @@ SOURCES = {
     "oxide-m4-android16-binder-finish-origin.yml": 4,
     "oxide-m4-binder-finish-control-replay.yml": 4,
     "oxide-m4-task-removal-audit.yml": 4,
+    "oxide-m4-native-ustack-preflight.yml": 4,
+    "oxide-m4-original-userspace-callstacks.yml": 4,
+    "oxide-m4-original-userstack-archive-replay.yml": 4,
     "oxide-m4-binder-host-capabilities.yml": 4,
 
 }
