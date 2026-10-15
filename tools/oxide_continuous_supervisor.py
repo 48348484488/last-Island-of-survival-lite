@@ -28,6 +28,7 @@ SOURCES = {
     "oxide-original-exit-order-3-versions.yml": 1,
     "oxide-m4-android16-binder-finish-origin.yml": 4,
     "oxide-m4-binder-finish-control-replay.yml": 4,
+    "oxide-m4-task-removal-audit.yml": 4,
     "oxide-m4-binder-host-capabilities.yml": 4,
 
 }

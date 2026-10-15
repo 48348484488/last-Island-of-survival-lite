@@ -20,6 +20,7 @@ on:
       - "Oxide M1-M4 - Original Activity finish self-SIGKILL independent three-version proof"
       - "Oxide M4 - Observe original Android16 Activity finish Binder IPC without APK modifications"
       - "Oxide M4 - Independent replay of original finishActivity Binder endpoint versus stock Settings control"
+      - "Oxide M4 - Verify task-removal finish reason from archived original game and Settings control"
       - "Oxide M4 - Inventory stock Linux ARM64 Binder observability without launching game"
       - "Oxide original APK on native ARM64 Android container"
       - "Native Apple Silicon ARM64 Google Play Android emulator boot probe"
