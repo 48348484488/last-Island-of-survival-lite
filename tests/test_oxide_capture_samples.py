@@ -1,6 +1,9 @@
+import io
 import json
+import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 from types import SimpleNamespace
 from tools.oxide_capture_samples import capture, CHECKPOINTS, PNG_SIGNATURE
@@ -101,6 +104,55 @@ class TestCapture(unittest.TestCase):
         self.assertEqual(result[1]["pid"], "1234")
         self.assertEqual((self.reports / "pid-0.txt").read_text(), "\n")
         self.assertEqual((self.reports / "pid-35.txt").read_text(), "1234\n")
+
+    def test_cli_starts_nonblocking_original_activity_before_sampling(self):
+        from tools import oxide_capture_samples as mod
+        invocations = []
+
+        class FakeProcess:
+            returncode = 0
+            def wait(self, timeout):
+                invocations.append(("wait", timeout))
+                return 0
+            def kill(self):
+                raise AssertionError("Should not kill successful launch")
+
+        def popen(command, stdout, stderr):
+            invocations.append(("popen", command))
+            stdout.write(b"Status: ok\nActivity: com.example.game/.OxideActivity\n")
+            stdout.flush()
+            return FakeProcess()
+
+        def fake_capture(reports, package, serial, launcher):
+            self.assertEqual(package, "com.example.game")
+            self.assertEqual(serial, "emulator-5554")
+            self.assertTrue(callable(launcher))
+            launcher()
+            invocations.append(("capture", "started"))
+            return [{"valid_png": False, "elapsed_seconds": 35.0}]
+
+        output = io.StringIO()
+        argv = ["oxide_capture_samples.py", "--reports", str(self.reports),
+                "--package", "com.example.game", "--serial", "emulator-5554",
+                "--launch-activity", "com.example.game/.OxideActivity"]
+        with patch.object(sys, "argv", argv), patch.object(mod.subprocess, "Popen", popen), \
+             patch.object(mod, "capture", fake_capture), patch.object(sys, "stdout", output):
+            mod.main()
+        self.assertEqual([x[0] for x in invocations], ["popen", "capture", "wait"])
+        self.assertEqual(invocations[0][1][-2:],
+                         ["-n", "com.example.game/.OxideActivity"])
+        self.assertIn("Status: ok", (self.reports / "launch.txt").read_text())
+        self.assertTrue(json.loads(output.getvalue())["launch_dispatched"])
+
+    def test_cli_rejects_launch_for_unrelated_package(self):
+        from tools import oxide_capture_samples as mod
+        argv = ["oxide_capture_samples.py", "--reports", str(self.reports),
+                "--package", "com.example.game",
+                "--launch-activity", "com.example.other/.Activity"]
+        with patch.object(sys, "argv", argv), self.assertRaises(SystemExit) as exc:
+            mod.main()
+        self.assertEqual(exc.exception.code, 2)
+        self.assertFalse((self.reports / "launch.txt").exists())
 
     def test_timeout_does_not_abort_following_samples(self):
         def timeout_screenshot(command, timeout):
