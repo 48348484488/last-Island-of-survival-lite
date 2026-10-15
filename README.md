@@ -4,6 +4,14 @@ Arquivos completos da versão atualizada (**v1.15.11966**) do jogo **Oxide: Surv
 
 ---
 
+## 🔬 Estado verificado do Android virtual
+
+O **Redroid ARM64** conseguiu instalar os quatro APKs originais e iniciar Unity/IL2CPP, mas a Activity original do Oxide encerrou após aproximadamente **4,5 segundos**. Os runners Linux ARM64 sem KVM e macOS Apple Silicon sem `hv_vm_create` também não conseguiram iniciar o Android Emulator oficial; **não há prova de menu, gameplay ou ESP no jogo**. Nenhum APK foi alterado.
+
+O diagnóstico foi atualizado para capturar PID, Activity e imagens **desde o despacho do launch**, incluindo os primeiros 0–4 segundos, e exigir checkpoints monotônicos até 35 segundos. [Resultados e explicação da mudança](reports/1.15.11966-async-early-activity-capture.md) · [Matriz de ambientes virtuais testados](reports/1.15.11966-arm64-host-feasibility-matrix.md) · [Issue M4](https://github.com/48348484488/oxide/issues/4).
+
+---
+
 ## 📦 Arquivos no Repositório (Branch `main`)
 
 | Arquivo | Tamanho | Função |
