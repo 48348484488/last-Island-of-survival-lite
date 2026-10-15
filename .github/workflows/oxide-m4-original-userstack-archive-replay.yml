@@ -1,0 +1,102 @@
+name: "Oxide M4 - Replay real Android16 original Binder and SIGKILL userspace stack module offsets"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m4-original-userstack-archive-replay.yml"
+      - "tools/audit_original_kernel_userstacks.py"
+      - "tests/test_audit_original_kernel_userstacks.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  actual-original-kernel-ustack-module-attribution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - name: Checkout strict userstack audit and regression tests
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Test parser against mismatched kernel events and raw frame formats
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p test_audit_original_kernel_userstacks.py -v
+          python3 -m unittest discover -s tests -p test_audit_controlled_activity_finish_node.py -v
+          python3 -m py_compile tools/audit_original_kernel_userstacks.py
+      - name: Retrieve independent original game real ARM64 BPF and proc maps evidence
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38665464837
+          name: oxide-original-android16-arm64-userstack-binder-and-sigkill-proof
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: original-real-android16
+      - name: Link user PC addresses to exact process original host mappings
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir=original-real-android16/android_16
+          test -s "$dir/kernel_sigkill_trace.txt"
+          test -s "$dir/original_host_exec_maps.txt"
+          python3 tools/audit_original_kernel_userstacks.py "$dir" \
+            | tee original_userspace_modules_stdout.txt
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=Path("original-real-android16/android_16")
+          result=json.loads((d/"original_kernel_userstack_modules_verdict.json").read_text())
+          assert result["status"]=="ORIGINAL_BINDER_AND_SIGKILL_CALLSITE_MODULES_CORRELATED",result
+          assert result["real_original_pid_and_kernel_binder_control_verified"],result
+          assert result["original_host_pid"]==12475,result
+          assert result["original_guest_pid"]==2182,result
+          assert result["system_server_host_pid"]==10457,result
+          assert result["binder_endpoint_node"]==11854,result
+          assert result["binder_stack_events_attributed"]>=1,result
+          assert result["sigkill_stack_events_attributed"]>=1,result
+          assert result["both_stacks_contain_mapped_executable_pc"] is True,result
+          binder={Path(f["mapped_image"]).name for x in result["attributed_stacks"]
+                  if x["kind"]=="binder" for f in x["frames"] if f["mapped_image"]}
+          kernel_kill={Path(f["mapped_image"]).name for x in result["attributed_stacks"]
+                  if x["kind"]=="kill" for f in x["frames"] if f["mapped_image"]}
+          assert {"libc.so","libbinder.so","libandroid_runtime.so","boot-framework.oat"}<=binder,binder
+          assert "libc.so" in kernel_kill,kernel_kill
+          assert result["internal_game_function_identified"] is False,result
+          assert result["source_of_security_decision_identified"] is False,result
+          assert result["original_apks_modified"] is False,result
+          print("REAL_ORIGINAL_ARM64_BINDER_AND_KILL_RAW_USERSTACK_MAPPED_MODULES=VERIFIED")
+          print("BINDER_MODULES:",sorted(binder))
+          print("KILL_MODULES:",sorted(kernel_kill))
+          print("No specific game anti-cheat decision or native function is inferred.")
+          PY
+      - name: Declare exact positive and negative scope
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Original Oxide userspace PC module locations at Binder finish and SIGKILL"
+            if [ -f original-real-android16/android_16/original_kernel_userstack_modules_verdict.json ]; then
+              cat original-real-android16/android_16/original_kernel_userstack_modules_verdict.json
+            else
+              echo "No verified original-stack module attribution."
+            fi
+            echo "This reports module/file offsets only, not exact IL2CPP or Java caller identity."
+            echo "Original APKs remain unchanged. No integrity bypass or gameplay claim."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish only compact derived verdict
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-m4-original-binder-and-sigkill-userstack-module-offsets
+          path: |
+            original-real-android16/android_16/original_kernel_userstack_modules_verdict.json
+            original_userspace_modules_stdout.txt
+          if-no-files-found: warn
+          retention-days: 14
