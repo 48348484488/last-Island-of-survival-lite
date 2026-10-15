@@ -1,5 +1,5 @@
 name: Oxide goal forensic analysis
-run-name: Oxide goals for runtime #${{ inputs.runtime_run_id }}
+run-name: 'Oxide goals for runtime #${{ inputs.runtime_run_id }}'
 on:
   workflow_dispatch:
     inputs:
