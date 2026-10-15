@@ -1,0 +1,42 @@
+name: Oxide M3 - Genymotion SaaS CLI compatibility smoke
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-m3-genymotion-cli-smoke.yml'
+      - '.github/workflows/oxide-managed-cloud-arm64-trial.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  public-cli-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate hosted runner Android SDK and official gmsaas CLI arguments
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          test -n "$ANDROID_HOME"
+          test -d "$ANDROID_HOME/platform-tools"
+          command -v adb
+          python3 -m venv .gmsaas-venv
+          .gmsaas-venv/bin/python -m pip install --disable-pip-version-check 'gmsaas>=1.16,<2'
+          .gmsaas-venv/bin/python -m pip show gmsaas > reports/gmsaas-version.txt
+          .gmsaas-venv/bin/gmsaas config set android-sdk-path "$ANDROID_HOME" > reports/config-result.txt
+          .gmsaas-venv/bin/gmsaas instances adbconnect --help > reports/adbconnect-help.txt
+          grep -Fq -- '--adb-serial-port' reports/adbconnect-help.txt
+          printf 'PUBLIC_CLI_SYNTAX_OK_NO_CLOUD_ACCESS\n' > reports/verdict.txt
+          cat reports/gmsaas-version.txt reports/verdict.txt
+          echo 'No API token, trial instance, Android, game APK, Play Store, billing, or gameplay was used.'
+      - name: Save public tooling proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-m3-genymotion-gmsaas-cli-public-proof
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
