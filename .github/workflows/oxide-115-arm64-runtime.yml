@@ -68,20 +68,26 @@ jobs:
           aapt dump badging base.apk > reports/apk-badging.txt
           app_package=$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" reports/apk-badging.txt | head -n 1)
           test -n "$app_package"
+          app_activity=$(sed -n "s/^launchable-activity: name='\\([^']*\\)'.*/\\1/p" reports/apk-badging.txt | head -n 1)
+          test -n "$app_activity"
           echo "APP_PACKAGE=$app_package" >> "$GITHUB_ENV"
+          echo "APP_ACTIVITY=$app_activity" >> "$GITHUB_ENV"
       - name: Install, launch and sample original Oxide at 0, 10 and 35 seconds
         shell: bash
         run: |
           adb -s 127.0.0.1:5555 install-multiple -r base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk split_UnityDataAssetPack.apk > reports/install.txt 2>&1
           grep -q Success reports/install.txt
           adb -s 127.0.0.1:5555 shell pm list packages -3 > reports/packages.txt
-          adb -s 127.0.0.1:5555 shell monkey -p "$APP_PACKAGE" 1 > reports/launch.txt 2>&1 || true
+          adb -s 127.0.0.1:5555 shell am force-stop "$APP_PACKAGE" > reports/force-stop.txt 2>&1 || true
+          adb -s 127.0.0.1:5555 logcat -c > reports/logcat-clear.txt 2>&1 || true
+          # Launch the exact manifest Activity; Monkey exit -5 never started the game.
+          timeout 35 adb -s 127.0.0.1:5555 shell am start -W -n "$APP_PACKAGE/$APP_ACTIVITY" > reports/launch.txt 2>&1 || true
           for t in 0 10 35; do
             if [ "$t" -eq 10 ]; then sleep 10; fi
             if [ "$t" -eq 35 ]; then sleep 25; fi
             adb -s 127.0.0.1:5555 shell dumpsys activity activities > "reports/activity-${t}.txt" 2>&1 || true
             adb -s 127.0.0.1:5555 shell pidof "$APP_PACKAGE" > "reports/pid-${t}.txt" 2>&1 || true
-            adb -s 127.0.0.1:5555 shell screencap -p > "reports/screen-${t}.png" 2>/dev/null || true
+            adb -s 127.0.0.1:5555 exec-out screencap -p > "reports/screen-${t}.png" 2>/dev/null || true
           done
           adb -s 127.0.0.1:5555 logcat -d -v threadtime > reports/logcat.txt 2>&1 || true
           python3 tools/oxide_runtime_assess.py reports
