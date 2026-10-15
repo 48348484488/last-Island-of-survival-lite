@@ -3,6 +3,8 @@ on:
   workflow_run:
     workflows:
       - Oxide 1.15 ARM64 virtual runtime probe
+      - Oxide Android 15 run
+      - Oxide Android 16 run
       - Oxide virtual Android host candidates
     types: [completed]
 permissions:
