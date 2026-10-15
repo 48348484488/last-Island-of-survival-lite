@@ -125,6 +125,37 @@ class TestRuntimeAssessment(unittest.TestCase):
         self.assertEqual(json.loads(proc.stdout)["status"],
                          "PID_STABLE_UNVERIFIED_35S_TIMING")
 
+    def test_launch_and_capture_overlap_with_empty_pid_at_t0(self):
+        self.valid_stable()
+        self.put("pid-0.txt", "")
+        self.put("activity-0.txt", "topResumedActivity=ActivityRecord{x u0 com.android.launcher/.Home t1}")
+        self.put("pid-2.txt", "100")
+        self.put("activity-2.txt", f"topResumedActivity=ActivityRecord{{x u0 {ORIGINAL} t8}}")
+        timing = json.loads((self.d / "capture-timing.json").read_text())
+        timing["reference"] = "adb_launch_dispatch"
+        timing["checkpoints"][0]["pid"] = ""
+        self.put("capture-timing.json", json.dumps(timing))
+        result = evaluate(self.d)
+        self.assertEqual(result["status"], "PID_STABLE_35S_MENU_NOT_YET_REVIEWED")
+        self.assertEqual(result["first_original_resumed_checkpoint"], 2)
+        self.assertEqual(result["first_original_resumed_pid"], "100")
+        self.assertFalse(result["original_activity_resumed_at_0_10_35"])
+        self.assertTrue(result["original_activity_resumed_at_early_10_35"])
+        self.assertFalse(result["gameplay_confirmed"])
+
+    def test_later_analytics_pid_must_not_replace_early_original(self):
+        self.valid_stable()
+        self.put("pid-0.txt", "")
+        self.put("pid-2.txt", "100")
+        self.put("activity-0.txt", "topResumedActivity=ActivityRecord{x u0 com.android.launcher/.Home t1}")
+        self.put("activity-2.txt", f"topResumedActivity=ActivityRecord{{x u0 {ORIGINAL} t8}}")
+        self.put("pid-10.txt", "2296")
+        self.put("pid-35.txt", "2296")
+        result = evaluate(self.d)
+        self.assertEqual(result["status"], "FAILED_PID_STABILITY_35S")
+        self.assertEqual(result["first_original_resumed_checkpoint"], 2)
+        self.assertFalse(result["gameplay_confirmed"])
+
     def test_background_task_history_is_not_resumed_activity(self):
         self.valid_stable()
         self.put("activity-35.txt", f"Hist #0: ActivityRecord{{test u0 {ORIGINAL} t8}}\n")
