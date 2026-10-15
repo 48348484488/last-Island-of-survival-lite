@@ -44,12 +44,12 @@ jobs:
         run: |
           if ! grep -q 1 reports/boot.txt || ! grep -q arm64 reports/abi.txt; then
             echo "BLOCKED: ARM64 virtual Android did not boot" | tee reports/verdict.txt
-            exit 0
+            exit 1
           fi
           adb -s 127.0.0.1:5555 install-multiple -r base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk split_UnityDataAssetPack.apk > reports/install.txt 2>&1 || true
           if ! grep -q Success reports/install.txt; then
             echo "BLOCKED: original split install failed" | tee reports/verdict.txt
-            exit 0
+            exit 1
           fi
           adb -s 127.0.0.1:5555 shell pm list packages -3 > reports/packages.txt 2>&1 || true
           adb -s 127.0.0.1:5555 shell monkey -p com.catsbit.oxidesurvivalisland 1 > reports/launch.txt 2>&1 || true
