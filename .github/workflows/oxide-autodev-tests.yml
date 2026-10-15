@@ -40,6 +40,7 @@ on:
       - 'tests/test_oxide_managed_trial_workflow.py'
       - 'tests/test_oxide_exit_timeline.py'
       - 'tests/test_oxide_capture_samples.py'
+      - 'tests/test_oxide_async_launch_workflows.py'
       - 'tests/test_oxide_capture_timing_gate.py'
 permissions:
   contents: read
