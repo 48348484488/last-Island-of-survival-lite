@@ -1,0 +1,98 @@
+name: Oxide M4 real translated Android15 crash forensic replay - no APK
+on:
+  push:
+    paths:
+      - '.github/workflows/oxide-m4-translated-crash-forensic-replay.yml'
+      - 'tools/oxide_exit_timeline.py'
+      - 'tools/oxide_runtime_environment.py'
+      - 'tools/oxide_runtime_assess.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  offline-real-x86-original-sigill-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Recover only 4.4MB original x86 translated execution evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p historical reports
+          gh run download 38818956665 --repo 48348484488/oxide \
+            --name oxide-x86-nativebridge-original-kvm-recovery-once \
+            --dir historical
+          test -s historical/logcat.txt
+          test -s historical/nativebridge-prerequisite.json
+          test -s historical/capture-timing.json
+          test -s historical/original-sha256-verdict.json
+          test -s historical/install.txt
+
+      - name: Replay real original ARM64 libloader crash and architecture evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/oxide_exit_timeline.py historical/logcat.txt \
+            --output reports/native-bridge-exit-timeline.json > /dev/null
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from tools.oxide_runtime_assess import evaluate
+          from tools.oxide_goal_engine import evidence_summary
+          from tools.oxide_runtime_environment import evaluate_runtime_environment
+
+          directory=Path("historical")
+          forensic=json.loads(Path("reports/native-bridge-exit-timeline.json").read_text())
+          runtime=evaluate(directory)
+          goals=evidence_summary(directory)
+          env=evaluate_runtime_environment(directory)
+          assert env["status"] == "X86_64_ANDROID_ARM64_NATIVE_BRIDGE_JNI_PROVEN", env
+          assert env["android_arm64_native"] is False
+          assert env["arm64_jni_translation_proven_in_predecessor"] is True
+          assert directory.joinpath("install.txt").read_text().strip() == "Success"
+          hashes=json.loads(directory.joinpath("original-sha256-verdict.json").read_text())
+          assert hashes["all_hashes_match"] is True
+          assert forensic["status"] == "ORIGINAL_SIGILL_DURING_ARM64_LIBLOADER_CONSTRUCTORS", forensic
+          assert forensic["evidence"]["original_pid"] == 4426
+          assert forensic["evidence"]["original_fatal_sigill_origin"] == "SI_TKILL"
+          assert forensic["evidence"]["original_fatal_sigill_code"] == -6
+          assert forensic["evidence"]["start_to_sigill_ms"] == 3058
+          assert forensic["evidence"]["original_arm64_libloader_guest_frame"] is True
+          assert forensic["evidence"]["arm64_dynamic_linker_constructors_frame"] is True
+          assert forensic["evidence"]["original_zygote_signal4_exit_observed"] is True
+          assert runtime["status"] == "ORIGINAL_SIGILL_DURING_ARM64_LIBLOADER_CONSTRUCTORS", runtime
+          assert runtime["gameplay_confirmed"] is False
+          assert goals["checks"]["original_process_started_from_logcat"] is True
+          assert goals["checks"]["original_activity_resumed_at_10_and_35"] is False
+          assert goals["next_action"] == "FORENSIC_APP_EXIT"
+          assert forensic["security_trigger"] == "UNKNOWN"
+          assert forensic["play_integrity_verdict"] == "NOT_OBSERVED"
+
+          for name, data in (("translated-runtime-verdict.json",runtime),
+                             ("translated-goals-verdict.json",goals),
+                             ("translated-environment-verdict.json",env)):
+              Path("reports",name).write_text(json.dumps(data,indent=2,sort_keys=True)+"\n")
+          print(json.dumps({
+              "status":forensic["status"],"guest_pid":4426,
+              "abi":env["guest_abi"],"translated_jni_proven":True,
+              "time_to_sigill_ms":3058,"native_arm64_loader":"libloader.so",
+              "original_splits_hash_verified":True,"activity_35s":False,
+              "unity_started_verified":False,"gameplay_verified":False,
+              "security_trigger":"UNKNOWN",
+          },sort_keys=True))
+          PY
+      - name: Save small replay verdict without original APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-m4-real-x86-nativebridge-libloader-sigill-forensic
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
