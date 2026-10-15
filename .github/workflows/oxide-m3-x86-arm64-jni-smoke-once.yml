@@ -40,6 +40,34 @@ jobs:
           print("Pinned tiny ARM64-only diagnostic verified; no original game files.")
           PY
 
+      - name: Prove KVM API availability before Android SDK system-image download
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          if [ -c /dev/kvm ]; then
+            sudo chmod a+rw /dev/kvm
+          fi
+          python3 - <<'PY'
+          import fcntl, json, os
+          from pathlib import Path
+          result = {"kvm_usable": False, "kvm_api_version": None,
+                    "android_booted": False, "original_oxide_apk_downloaded": False,
+                    "arm64_jni_executed": False}
+          try:
+              fd = os.open("/dev/kvm", os.O_RDWR | os.O_CLOEXEC)
+              try:
+                  result["kvm_api_version"] = fcntl.ioctl(fd, 0xAE00, 0)
+              finally:
+                  os.close(fd)
+              result["kvm_usable"] = result["kvm_api_version"] == 12
+          except OSError as exc:
+              result["error"] = type(exc).__name__
+          Path("reports/kvm-gate.json").write_text(json.dumps(result, indent=2) + "\n")
+          print(json.dumps(result))
+          assert result["kvm_usable"], "BLOCKED_KVM_BEFORE_ANDROID_DOWNLOAD"
+          PY
+
       - name: Boot official x86_64 Play Android15 with KVM and test ARM64 JNI
         uses: reactivecircus/android-emulator-runner@v2
         with:
