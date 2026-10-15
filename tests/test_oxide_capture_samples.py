@@ -36,7 +36,7 @@ class TestCapture(unittest.TestCase):
         self.assertEqual([r['target_seconds'] for r in result], list(CHECKPOINTS))
         self.assertEqual([r['elapsed_seconds'] for r in result], list(CHECKPOINTS))
         self.assertTrue(all(r['valid_png'] for r in result))
-        self.assertEqual(sum('dumpsys' in x for x in self.calls), 3)
+        self.assertEqual(sum('dumpsys' in x for x in self.calls), len(CHECKPOINTS))
         self.assertEqual((self.reports / 'pid-35.txt').read_text(), '1234\n')
         self.assertEqual(len(json.loads((self.reports / 'capture-timing.json').read_text())['checkpoints']), 7)
 
@@ -48,6 +48,42 @@ class TestCapture(unittest.TestCase):
                          runner=slow_runner, clock=self.clock, sleeper=self.sleep)
         self.assertGreater(result[1]['elapsed_seconds'], 1)
         self.assertEqual(result[1]['target_seconds'], 1)
+
+    def test_async_launcher_runs_before_first_capture_without_waiting(self):
+        marks = []
+        def launcher():
+            marks.append(("launch", round(self.clock(), 3)))
+            # Simulate only the cost of dispatch; do not wait for the Activity.
+            self.elapsed += 0.05
+
+        result = capture(self.reports, "com.example.game",
+                         checkpoints=(0, 1, 2, 3, 4, 10, 35),
+                         runner=self.runner, clock=self.clock, sleeper=self.sleep,
+                         launcher=launcher)
+        self.assertEqual(marks, [("launch", 0.0)])
+        self.assertGreaterEqual(result[0]["elapsed_seconds"], 0.05)
+        self.assertLess(result[0]["elapsed_seconds"], 1.0)
+        meta = json.loads((self.reports / "capture-timing.json").read_text())
+        self.assertEqual(meta["reference"], "adb_launch_dispatch")
+        self.assertEqual(len([x for x in self.calls if "dumpsys" in x]), 7)
+
+    def test_capture_allows_initial_pid_missing_until_real_activity_starts(self):
+        calls = {"pid": 0}
+        def runner(command, timeout):
+            if "pidof" in command:
+                calls["pid"] += 1
+                self.elapsed += 0.08
+                if calls["pid"] == 1:
+                    return SimpleNamespace(stdout=b"", returncode=1)
+            return self.runner(command, timeout)
+
+        result = capture(self.reports, "com.example.game",
+                         checkpoints=(0, 1, 2, 3, 4, 10, 35), runner=runner,
+                         clock=self.clock, sleeper=self.sleep, launcher=lambda: None)
+        self.assertEqual(result[0]["pid"], "")
+        self.assertEqual(result[1]["pid"], "1234")
+        self.assertEqual((self.reports / "pid-0.txt").read_text(), "\n")
+        self.assertEqual((self.reports / "pid-35.txt").read_text(), "1234\n")
 
     def test_timeout_does_not_abort_following_samples(self):
         def timeout_screenshot(command, timeout):
