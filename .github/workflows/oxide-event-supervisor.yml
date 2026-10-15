@@ -61,7 +61,9 @@ jobs:
             });
             let action = 'No safe automatic remediation is known; inspect the evidence and do not repeat identical failed tests.';
             const isMatrix = run.name === 'Oxide virtual Android host candidates';
-            const isRuntime = run.name === 'Oxide 1.15 ARM64 virtual runtime probe';
+            const isRuntime = (run.path || '').endsWith('/oxide-115-arm64-runtime.yml') ||
+              run.name === 'Oxide 1.15 ARM64 virtual runtime probe' ||
+              run.name.startsWith('Oxide Android ');
             if (isMatrix) {
               const candidates = ['ubuntu-24.04-arm', 'ubuntu-22.04-arm'];
               const available = candidates.filter(runner =>
@@ -110,6 +112,33 @@ jobs:
               }
             } else if (isRuntime && run.conclusion === 'success') {
               action = 'Review screenshot/menu evidence; green CI or a stable PID alone is not proof of playable game or ESP.';
+            }
+            if (isRuntime) {
+              // An explicit workflow_dispatch starts a new event-driven goal analysis.
+              // Never pretend that a successful CI job proves gameplay.
+              const archive = await github.rest.actions.listWorkflowRunArtifacts({
+                owner, repo, run_id: run.id
+              });
+              const hasEvidence = archive.data.artifacts.some(a => a.name === 'oxide-115-arm64-runtime-evidence');
+              if (hasEvidence) {
+                const previousForensics = await github.rest.actions.listWorkflowRuns({
+                  owner, repo, workflow_id: 'oxide-goal-forensics.yml', per_page: 100
+                });
+                const markerForRun = 'Oxide goals for runtime #' + run.id;
+                if (!previousForensics.data.workflow_runs.some(x => x.display_title === markerForRun)) {
+                  await github.rest.actions.createWorkflowDispatch({
+                    owner, repo,
+                    workflow_id: 'oxide-goal-forensics.yml',
+                    ref: context.payload.repository.default_branch,
+                    inputs: {runtime_run_id: String(run.id)}
+                  });
+                  action += ' | Next goal evidence analysis automatically launched for #' + run.id + '.';
+                } else {
+                  action += ' | Forensics already launched; no duplicate run.';
+                }
+              } else {
+                action += ' | No original runtime archive: goals remain unverified.';
+              }
             }
             const report = [
               marker,
