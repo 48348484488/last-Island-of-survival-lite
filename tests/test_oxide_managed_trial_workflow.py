@@ -46,6 +46,12 @@ class CloudTrialWorkflowGuardTests(unittest.TestCase):
         self.assertIn("if: ${{ always() && inputs.stop_instance_after_test }}", self.yaml)
         self.assertIn('gmsaas instances stop "$INSTANCE_UUID"', self.yaml)
 
+    def test_uses_validated_ubuntu_sdk_and_pinned_gmsaas(self):
+        self.assertIn("gmsaas==1.16.0", self.yaml)
+        self.assertIn('sdk="$RUNNER_TEMP/oxide-android-sdk"', self.yaml)
+        self.assertIn("sudo apt-get install -y -qq --no-install-recommends adb", self.yaml)
+        self.assertNotIn('sdk="$ANDROID_HOME"', self.yaml)
+
     def test_no_gameplay_proof_assumed_on_passing_host(self):
         self.assertIn("tools/oxide_runtime_assess.py reports", self.yaml)
         self.assertIn("tools/oxide_exit_timeline.py", self.yaml)
