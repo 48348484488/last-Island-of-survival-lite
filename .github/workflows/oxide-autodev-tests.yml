@@ -6,6 +6,7 @@ on:
       - '.github/workflows/oxide-autodev-tests.yml'
       - 'tools/oxide_host_preflight.py'
       - 'tools/oxide_runtime_assess.py'
+      - 'tools/oxide_virtual_host_gate.py'
       - 'tools/oxide_exit_timeline.py'
       - 'tools/oxide_capture_samples.py'
       - 'tools/oxide_goal_engine.py'
@@ -13,6 +14,7 @@ on:
       - 'tests/test_oxide_goal_engine.py'
       - 'tests/test_oxide_host_preflight.py'
       - 'tests/test_oxide_runtime_assess.py'
+      - 'tests/test_oxide_virtual_host_gate.py'
       - 'tests/test_oxide_exit_timeline.py'
       - 'tests/test_oxide_capture_samples.py'
 permissions:
