@@ -16,11 +16,17 @@ def _run(command, timeout):
         return None
 
 def capture(reports, package, serial="127.0.0.1:5555", checkpoints=CHECKPOINTS,
-            runner=_run, clock=time.monotonic, sleeper=time.sleep):
-    """Sample relative to start; record actual elapsed time after ADB delays."""
+            runner=_run, clock=time.monotonic, sleeper=time.sleep, launcher=None):
+    """Measure checkpoints from the dispatch of an optional nonblocking launch.
+
+    A synchronous 'am start -W' before capture loses the crucial first seconds.
+    launcher() must return immediately after spawning the ADB process, not wait.
+    """
     reports = Path(reports)
     reports.mkdir(parents=True, exist_ok=True)
     start = clock()
+    if launcher is not None:
+        launcher()
     records = []
     adb = ["adb", "-s", serial]
     for target in checkpoints:
@@ -49,7 +55,9 @@ def capture(reports, package, serial="127.0.0.1:5555", checkpoints=CHECKPOINTS,
             (reports / f"screen-{target}.png").write_bytes(shot.stdout)
             record["png_bytes"] = len(shot.stdout)
             record["valid_png"] = True
-        if target in (0, 10, 35):
+        # Sample Activity at every early checkpoint, not only t=0: a launch
+        # can start with no PID yet and still die within the first 4.5 seconds.
+        if target in CHECKPOINTS:
             dump = runner(adb + ["shell", "dumpsys", "activity", "activities"], 6)
             if dump is None:
                 record["errors"].append("activity_timeout")
@@ -61,7 +69,9 @@ def capture(reports, package, serial="127.0.0.1:5555", checkpoints=CHECKPOINTS,
         record["finished_seconds"] = round(clock() - start, 3)
         records.append(record)
     (reports / "capture-timing.json").write_text(
-        json.dumps({"clock": "monotonic", "checkpoints": records}, indent=2) + "\n", encoding="utf8")
+        json.dumps({"clock": "monotonic",
+                    "reference": "adb_launch_dispatch" if launcher is not None else "capture_begin",
+                    "checkpoints": records}, indent=2) + "\n", encoding="utf8")
     return records
 
 def main():
@@ -69,10 +79,40 @@ def main():
     parser.add_argument("--reports", type=Path, default=Path("reports"))
     parser.add_argument("--package", required=True)
     parser.add_argument("--serial", default="127.0.0.1:5555")
+    parser.add_argument("--launch-activity",
+                        help="Original Android component; start asynchronously at t=0.")
     args = parser.parse_args()
-    samples = capture(args.reports, args.package, serial=args.serial)
+
+    launch = None
+    proc = None
+    output = None
+    try:
+        if args.launch_activity:
+            if not args.launch_activity.startswith(args.package + "/"):
+                parser.error("--launch-activity must belong to --package")
+            args.reports.mkdir(parents=True, exist_ok=True)
+            output = (args.reports / "launch.txt").open("wb")
+            def launch():
+                nonlocal proc
+                proc = subprocess.Popen(
+                    ["adb", "-s", args.serial, "shell", "am", "start", "-W",
+                     "-n", args.launch_activity],
+                    stdout=output, stderr=subprocess.STDOUT)
+
+        samples = capture(args.reports, args.package, serial=args.serial, launcher=launch)
+    finally:
+        if proc is not None:
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
+        if output is not None:
+            output.close()
     print(json.dumps({"samples": len(samples), "valid_png": sum(x["valid_png"] for x in samples),
-                      "last_elapsed": samples[-1]["elapsed_seconds"]}))
+                      "last_elapsed": samples[-1]["elapsed_seconds"],
+                      "launch_dispatched": args.launch_activity is not None,
+                      "launch_exit_code": proc.returncode if proc is not None else None}))
 
 if __name__ == "__main__":
     main()
