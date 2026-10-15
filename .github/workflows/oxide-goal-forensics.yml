@@ -39,12 +39,15 @@ jobs:
             --output goal-report
           cat goal-report/goals.md >> "$GITHUB_STEP_SUMMARY"
       - name: Update milestone and trigger next predefined safe stage
+        env:
+          RUNTIME_RUN_ID: ${{ inputs.runtime_run_id }}
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const {owner, repo} = context.repo;
-            const runtimeId = '${{ inputs.runtime_run_id }}';
+            const runtimeId = process.env.RUNTIME_RUN_ID;
+            if (!/^[0-9]{1,20}$/.test(runtimeId)) throw new Error('Invalid runtime run ID');
             const marker = '<!-- oxide-goals-runtime:' + runtimeId + ' -->';
             const comments = await github.paginate(github.rest.issues.listComments, {
               owner, repo, issue_number: 4, per_page: 100
