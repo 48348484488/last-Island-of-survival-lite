@@ -46,15 +46,6 @@ def capture(reports, package, serial="127.0.0.1:5555", checkpoints=CHECKPOINTS,
             record["pid"] = raw_pid
             if pid.returncode:
                 record["errors"].append("pid_unavailable")
-        shot = runner(adb + ["exec-out", "screencap", "-p"], 6)
-        if shot is None:
-            record["errors"].append("screencap_timeout")
-        elif shot.returncode or not shot.stdout.startswith(PNG_SIGNATURE):
-            record["errors"].append("invalid_screenshot")
-        else:
-            (reports / f"screen-{target}.png").write_bytes(shot.stdout)
-            record["png_bytes"] = len(shot.stdout)
-            record["valid_png"] = True
         # Sample Activity at every early checkpoint, not only t=0: a launch
         # can start with no PID yet and still die within the first 4.5 seconds.
         if target in CHECKPOINTS:
@@ -66,6 +57,20 @@ def capture(reports, package, serial="127.0.0.1:5555", checkpoints=CHECKPOINTS,
                 record["activity_dump_captured"] = dump.returncode == 0
                 if dump.returncode:
                     record["errors"].append("activity_dump_failed")
+        # Prioritize PID and Activity before any expensive screencap: the
+        # original has exited within ~4.5s in the observed Android runs.
+        # Skip screenshots at t=0/1 to protect the early lifecycle sampling.
+        if target in (2, 3, 4, 10, 35):
+            screenshot_timeout = 3 if target <= 4 else 6
+            shot = runner(adb + ["exec-out", "screencap", "-p"], screenshot_timeout)
+            if shot is None:
+                record["errors"].append("screencap_timeout")
+            elif shot.returncode or not shot.stdout.startswith(PNG_SIGNATURE):
+                record["errors"].append("invalid_screenshot")
+            else:
+                (reports / f"screen-{target}.png").write_bytes(shot.stdout)
+                record["png_bytes"] = len(shot.stdout)
+                record["valid_png"] = True
         record["finished_seconds"] = round(clock() - start, 3)
         records.append(record)
     (reports / "capture-timing.json").write_text(
