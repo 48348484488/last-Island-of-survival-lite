@@ -20,6 +20,20 @@ CLOSE_AT = re.compile(r"createdAt=(?P<md>\d\d-\d\d) (?P<hms>\d\d:\d\d:\d\d\.\d+)
 TASK_ID = re.compile(r"\btaskId=(\d+)")
 FINGERPRINT = re.compile(r'The property "ro\.build\.fingerprint" has a value with length (\d+) that is too large')
 
+FATAL_ORIGINAL_SIGILL = re.compile(
+    r"Fatal signal 4 \(SIGILL\), code (?P<code>-?\d+) "
+    r"\((?P<origin>SI_TKILL)\) in tid (?P<tid>\d+) "
+    r"\([^)]*\), pid (?P<pid>\d+) \([^)]*\)")
+DEBUG_ORIGINAL_PID = re.compile(
+    r"pid: (?P<pid>\d+), tid: \d+, name: .*>>> " + re.escape(PACKAGE) + r" <<<")
+GUEST_LOADER_FRAME = re.compile(
+    r"#00 pc [0-9a-fA-F]+\s+/.*/lib/arm64/libloader\.so(?:\s|$)")
+GUEST_LINKER_CONSTRUCTOR = re.compile(
+    r"/system/bin/arm64/linker64.*call_constructors")
+ZYGOTE_ORIGINAL_SIGILL = re.compile(
+    r"Process (?P<pid>\d+) exited due to signal 4 \(Illegal instruction\)")
+
+
 def _datetime(md, hms, year):
     return datetime.strptime(f"{year}-{md} {hms}", "%Y-%m-%d %H:%M:%S.%f")
 
@@ -37,6 +51,13 @@ def assess(logcat, year=2026):
     play_store_warning_before_exit = False
     install_permission_exception_before_exit = False
     fingerprint_length_before_exit = None
+    fatal_sigill_at = None
+    fatal_signal_code = None
+    fatal_signal_origin = None
+    native_debug_pid = None
+    guest_libloader_frame = False
+    guest_linker_constructors = False
+    zygote_signal4_exit = False
     for line in logcat.splitlines():
         match = STAMP.match(line)
         if not match:
@@ -50,6 +71,24 @@ def assess(logcat, year=2026):
             pid = int(proc["pid"])
         if pid is None:
             continue
+        sigill = FATAL_ORIGINAL_SIGILL.search(msg)
+        if (fatal_sigill_at is None and sigill
+                and int(sigill["pid"]) == pid and int(sigill["tid"]) == pid
+                and int(match["pid"]) == pid):
+            fatal_sigill_at = timestamp
+            fatal_signal_code = int(sigill["code"])
+            fatal_signal_origin = sigill["origin"]
+        debug_pid = DEBUG_ORIGINAL_PID.search(msg)
+        if debug_pid:
+            native_debug_pid = int(debug_pid["pid"])
+        if native_debug_pid == pid:
+            if GUEST_LOADER_FRAME.search(msg):
+                guest_libloader_frame = True
+            if GUEST_LINKER_CONSTRUCTOR.search(msg):
+                guest_linker_constructors = True
+        zygote_exit = ZYGOTE_ORIGINAL_SIGILL.search(msg)
+        if zygote_exit and int(zygote_exit["pid"]) == pid:
+            zygote_signal4_exit = True
         if fully_drawn is None and f"Fully drawn {ACTIVITY}" in msg:
             fully_drawn = timestamp
         signal = SELF_SIGNAL.search(msg)
@@ -84,11 +123,19 @@ def assess(logcat, year=2026):
         "play_store_missing_warning_observed": play_store_warning_before_exit,
         "undeclared_install_packages_permission_exception": install_permission_exception_before_exit,
         "oversized_fingerprint_read_observed_length": fingerprint_length_before_exit,
+        "original_fatal_sigill_observed": fatal_sigill_at is not None,
+        "original_fatal_sigill_code": fatal_signal_code,
+        "original_fatal_sigill_origin": fatal_signal_origin,
+        "original_arm64_libloader_guest_frame": guest_libloader_frame,
+        "arm64_dynamic_linker_constructors_frame": guest_linker_constructors,
+        "original_zygote_signal4_exit_observed": zygote_signal4_exit,
     }
     if started and fully_drawn:
         evidence["start_to_fully_drawn_ms"] = _diff_ms(started, fully_drawn)
     if started and signaled:
         evidence["start_to_self_sigkill_ms"] = _diff_ms(started, signaled)
+    if started and fatal_sigill_at:
+        evidence["start_to_sigill_ms"] = _diff_ms(started, fatal_sigill_at)
     if signaled and dead:
         evidence["self_sigkill_to_death_ms"] = _diff_ms(signaled, dead)
     valid_closes = []
@@ -101,7 +148,12 @@ def assess(logcat, year=2026):
         lag, task_id = sorted(valid_closes)[0]
         evidence["task_close_before_self_sigkill_ms"] = lag
         evidence["closing_task_id"] = task_id
-    if started and pid and signaled and dead and valid_closes:
+    if (started and fatal_sigill_at and zygote_signal4_exit
+            and guest_libloader_frame and guest_linker_constructors):
+        status = "ORIGINAL_SIGILL_DURING_ARM64_LIBLOADER_CONSTRUCTORS"
+    elif started and fatal_sigill_at and zygote_signal4_exit:
+        status = "ORIGINAL_SIGILL_NATIVE_BRIDGE_CAUSE_UNKNOWN"
+    elif started and pid and signaled and dead and valid_closes:
         status = "TASK_CLOSE_PRECEDES_ORIGINAL_SELF_SIGKILL"
     elif started and signaled and dead:
         status = "ORIGINAL_SELF_SIGKILL_NO_MATCHED_CLOSE"
@@ -120,7 +172,9 @@ def assess(logcat, year=2026):
             "Same-PID Android logcat is not a kernel stack trace.",
             "Missing Google Play Store is not proof of the security trigger.",
             "Permission exceptions and fingerprint warnings do not identify a security trigger.",
-            "A fully drawn Activity is not proof of a playable game."
+            "A fully drawn Activity is not proof of a playable game.",
+            "SIGILL with SI_TKILL can be explicitly signaled; it does not prove an unsupported CPU instruction.",
+            "A libloader.so constructor frame does not identify the triggering application logic or a security policy."
         ]
     }
 
