@@ -26,6 +26,15 @@ class TestRuntimeAssessment(unittest.TestCase):
             self.put(f"activity-{t}.txt", f"  topResumedActivity=ActivityRecord{{value u0 {ORIGINAL} t8}}\n")
         for t in (10, 35):
             (self.d / f"screen-{t}.png").write_bytes(b"\x89PNG\r\n\x1a\nabc")
+        self.put("capture-timing.json", json.dumps({
+            "clock": "monotonic",
+            "checkpoints": [
+                {"target_seconds": t, "elapsed_seconds": float(t),
+                 "finished_seconds": float(t) + 0.2,
+                 "pid": "100", "activity_dump_captured": True}
+                for t in (0, 1, 2, 3, 4, 10, 35)
+            ],
+        }))
 
     def run_cli(self):
         # Reproduce GitHub Actions invoking the script directly from another cwd.
@@ -90,6 +99,31 @@ class TestRuntimeAssessment(unittest.TestCase):
         self.assertEqual(result["status"], "PID_STABLE_35S_MENU_NOT_YET_REVIEWED")
         self.assertTrue(result["original_activity_resumed_at_0_10_35"])
         self.assertFalse(result["gameplay_confirmed"])
+
+    def test_stable_pid_without_elapsed_time_must_not_pass(self):
+        self.valid_stable()
+        (self.d / "capture-timing.json").unlink()
+        result = evaluate(self.d)
+        self.assertEqual(result["status"], "PID_STABLE_UNVERIFIED_35S_TIMING")
+        self.assertFalse(result["gameplay_confirmed"])
+
+    def test_fake_35_second_filename_cannot_approve_stability(self):
+        self.valid_stable()
+        captured = json.loads((self.d / "capture-timing.json").read_text())
+        captured["checkpoints"][-1]["elapsed_seconds"] = 5.0
+        captured["checkpoints"][-1]["finished_seconds"] = 5.2
+        self.put("capture-timing.json", json.dumps(captured))
+        result = evaluate(self.d)
+        self.assertEqual(result["status"], "PID_STABLE_UNVERIFIED_35S_TIMING")
+        self.assertFalse(result["timing"]["verified"])
+
+    def test_cli_rejects_missing_monotonic_capture(self):
+        self.valid_stable()
+        (self.d / "capture-timing.json").unlink()
+        proc = self.run_cli()
+        self.assertEqual(proc.returncode, 1, proc.stderr)
+        self.assertEqual(json.loads(proc.stdout)["status"],
+                         "PID_STABLE_UNVERIFIED_35S_TIMING")
 
     def test_background_task_history_is_not_resumed_activity(self):
         self.valid_stable()
