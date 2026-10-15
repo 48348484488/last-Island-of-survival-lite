@@ -24,6 +24,8 @@ on:
       - 'tests/test_oxide_goal_engine.py'
       - 'tests/test_oxide_activity_binding.py'
       - 'tests/test_oxide_activity_binding_audit.py'
+      - 'tests/test_oxide_x86_native_bridge_preflight.py'
+      - '.github/workflows/oxide-m3-x86-arm64-bridge-preflight.yml'
       - 'tests/test_oxide_host_preflight.py'
       - 'tests/test_oxide_runtime_assess.py'
       - 'tests/test_oxide_virtual_host_gate.py'
