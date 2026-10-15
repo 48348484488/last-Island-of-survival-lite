@@ -1,0 +1,88 @@
+name: "Oxide M4 - Verify task-removal finish reason from archived original game and Settings control"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m4-task-removal-audit.yml"
+      - "tools/audit_original_task_finish_branch.py"
+      - "tests/test_audit_original_task_finish_branch.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  replay-original-task-finish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - name: Checkout read-only framework and Binder task-finish auditors
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools
+            tests
+      - name: Run fail-closed exact-PID task ID token and finish-reason tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p test_audit_original_task_finish_branch.py -v
+          python3 -m unittest discover -s tests -p test_audit_controlled_activity_finish_node.py -v
+          python3 -m py_compile tools/audit_original_task_finish_branch.py
+      - name: Retrieve actual unmodified Android16 original game and stock Settings data
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38645776428
+          name: oxide-original-android16-arm64-binder-finish-ipc-window
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: actual-original
+      - name: Prove task removal versus ordinary Activity finish without reading APK source
+        shell: bash
+        run: |
+          set -euo pipefail
+          d=actual-original/android_16
+          python3 tools/audit_original_task_finish_branch.py "$d" \
+            | tee task_removal_verdict_stdout.txt
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path("actual-original/android_16/original_task_removal_branch_verdict.json").read_text())
+          assert x["status"]=="ORIGINAL_TASK_REMOVAL_FINISH_BRANCH_CORROBORATED",x
+          assert all(x["checks"].values()),x
+          assert x["original_activity_pid"]==2161,x
+          assert x["original_finish"]["reason"]=="finish-activity",x
+          assert x["original_finish"]["task"]==9,x
+          assert x["settings_control_finish"]["reason"]=="app-request",x
+          assert x["settings_control_finish"]["task"]==8,x
+          assert x["shared_binder_node"]==11600,x
+          assert x["finish_to_self_sigkill_ms"]==4,x
+          assert x["public_api_finish_and_remove_task_proven"] is False,x
+          assert x["app_internal_caller_or_security_reason_proven"] is False,x
+          print("ORIGINAL_ANDROID16_TASK_REMOVAL_FRAMEWORK_BRANCH_CORROBORATED")
+          PY
+      - name: Summarize precisely what is and is not proven
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Android16 original: finish-activity vs Settings app-request"
+            if [ -s actual-original/android_16/original_task_removal_branch_verdict.json ]; then
+              cat actual-original/android_16/original_task_removal_branch_verdict.json
+            else
+              echo "NOT_PROVEN"
+            fi
+            echo "No APK modified, no game security bypass or callstack inferred."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve only small validation outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-m4-task-removal-branch-original-vs-settings-verdict
+          path: |
+            actual-original/android_16/original_task_removal_branch_verdict.json
+            task_removal_verdict_stdout.txt
+          if-no-files-found: warn
+          retention-days: 14
