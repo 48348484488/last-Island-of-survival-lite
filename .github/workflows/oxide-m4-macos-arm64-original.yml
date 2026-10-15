@@ -1,0 +1,59 @@
+name: Oxide M4 original APK on macOS Apple Silicon Android ARM64 (one attempt)
+on:
+  push:
+    paths:
+      - '.github/workflows/oxide-m4-macos-arm64-original.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oxide-macos-arm64-original-one-attempt
+  cancel-in-progress: false
+
+jobs:
+  arm64-original-game:
+    runs-on: macos-15
+    timeout-minutes: 28
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify actual Apple Silicon and Hypervisor.Framework before downloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          uname -a > reports/host-uname.txt
+          [ "$(uname -m)" = "arm64" ]
+          [ -x "$ANDROID_HOME/emulator/emulator" ]
+          "$ANDROID_HOME/emulator/emulator" -accel-check > reports/emulator-accel-check.txt 2>&1
+          cat reports/emulator-accel-check.txt
+          grep -Fq 'Hypervisor.Framework' reports/emulator-accel-check.txt
+          grep -Eq '^0$' reports/emulator-accel-check.txt
+          echo 'MAC_ARM64_NATIVE_HVF_ACCEL_CHECK_PASSED_BOOT_UNTESTED' > reports/trial-stage.txt
+
+      - name: Boot official Android 15 ARM64 Google Play and run original Oxide once
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis_playstore
+          arch: arm64-v8a
+          profile: pixel_7
+          cores: 2
+          ram-size: 3072M
+          heap-size: 512M
+          emulator-boot-timeout: 500
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash tools/oxide_official_arm64_game_trial.sh emulator-5554 reports
+
+      - name: Retain all real Android and unchanged APK evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-macos-arm64-original-game-evidence
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
