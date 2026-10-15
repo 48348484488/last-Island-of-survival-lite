@@ -1,0 +1,141 @@
+name: Oxide M3 trial - existing Genymotion SaaS ARM64 (manual)
+run-name: Oxide managed Android ARM64 original APK trial
+on:
+  workflow_dispatch:
+    inputs:
+      instance_uuid:
+        description: "UUID of an already running Genymotion SaaS ARM64 virtual device; this workflow never starts one"
+        required: true
+        type: string
+      stop_instance_after_test:
+        description: "Stop the existing virtual instance on completion to conserve trial minutes; stopping destroys its state"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oxide-existing-cloud-${{ inputs.instance_uuid }}
+  cancel-in-progress: false
+
+jobs:
+  trial:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      INSTANCE_UUID: ${{ inputs.instance_uuid }}
+      GENYMOTION_API_TOKEN: ${{ secrets.GENYMOTION_API_TOKEN }}
+      CLOUD_ADB_SERIAL: localhost:46665
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate manual consent, UUID and existing Genymotion API token
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          if [[ ! "$INSTANCE_UUID" =~ ^[a-fA-F0-9]{8}-([a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}$ ]]; then
+            echo 'BLOCKED_INVALID_INSTANCE_UUID' | tee reports/cloud-status.txt
+            exit 1
+          fi
+          if [ -z "$GENYMOTION_API_TOKEN" ]; then
+            echo 'BLOCKED_GENYMOTION_API_TOKEN_NOT_CONNECTED' | tee reports/cloud-status.txt
+            echo 'Configure GENYMOTION_API_TOKEN as a repository Actions secret. Do not paste the token in logs or chat.'
+            exit 1
+          fi
+          echo 'READY_TO_CHECK_EXISTING_INSTANCE' > reports/cloud-status.txt
+
+      - name: Install public gmsaas ADB tunnel tooling, never create instances
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk="$ANDROID_HOME"
+          test -n "$sdk"
+          test -d "$sdk/platform-tools"
+          python3 -m venv .gmsaas-venv
+          .gmsaas-venv/bin/python -m pip install --disable-pip-version-check 'gmsaas>=1.16,<2'
+          .gmsaas-venv/bin/gmsaas config set android-sdk-path "$sdk" >/dev/null
+          timeout 40 .gmsaas-venv/bin/gmsaas doctor > reports/gmsaas-doctor.txt
+
+      - name: Connect only the already-running cloud Android through an authenticated tunnel
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120 .gmsaas-venv/bin/gmsaas instances adbconnect \
+            --adb-serial-port 46665 "$INSTANCE_UUID" > reports/adbconnect.txt 2>&1
+          test "$(adb -s "$CLOUD_ADB_SERIAL" get-state)" = device
+          echo 'CONNECTED_EXISTING_INSTANCE' > reports/cloud-status.txt
+          adb -s "$CLOUD_ADB_SERIAL" shell getprop sys.boot_completed > reports/boot.txt
+          adb -s "$CLOUD_ADB_SERIAL" shell getprop ro.product.cpu.abi > reports/abi.txt
+          adb -s "$CLOUD_ADB_SERIAL" shell getprop ro.build.version.release > reports/android-version.txt
+          # Package manager observations only. Never install/spoof Google packages.
+          adb -s "$CLOUD_ADB_SERIAL" shell pm path com.android.vending > reports/play-store-pm-path.txt 2>&1 || true
+          adb -s "$CLOUD_ADB_SERIAL" shell pm path com.google.android.gms > reports/play-services-pm-path.txt 2>&1 || true
+
+      - name: Stop before expensive download unless native ARM64 and Google packages are present
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/oxide_managed_arm64_gate.py --reports reports
+
+      - name: Download and byte-verify all four unchanged original APK splits
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends aapt
+          gh release download v1.15.11966 --repo 48348484488/oxide \
+            --pattern split_UnityDataAssetPack.apk --dir .
+          python3 tools/audit_original_split_hashes.py --output reports/original-apk-inventory.json
+          python3 tools/oxide_original_hash_gate.py \
+            --inventory reports/original-apk-inventory.json \
+            --output reports/original-sha256-verdict.json
+          aapt dump badging base.apk > reports/apk-badging.txt
+          app_package=$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" reports/apk-badging.txt | head -n 1)
+          app_activity=$(awk -F"'" '/^launchable-activity: name=/ {print $2; exit}' reports/apk-badging.txt)
+          test "$app_package" = 'com.catsbit.oxidesurvivalisland'
+          test "$app_activity" = 'com.catsbit.oxidesurvivalisland.OxideActivity'
+          echo "APP_PACKAGE=$app_package" >> "$GITHUB_ENV"
+          echo "APP_ACTIVITY=$app_activity" >> "$GITHUB_ENV"
+
+      - name: Install original split APKs together and record runtime evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 300 adb -s "$CLOUD_ADB_SERIAL" install-multiple -r \
+            base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk \
+            split_UnityDataAssetPack.apk > reports/install.txt 2>&1
+          grep -q '^Success' reports/install.txt
+          adb -s "$CLOUD_ADB_SERIAL" shell am force-stop "$APP_PACKAGE" > reports/force-stop.txt 2>&1 || true
+          adb -s "$CLOUD_ADB_SERIAL" logcat -c > reports/logcat-clear.txt 2>&1 || true
+          timeout 35 adb -s "$CLOUD_ADB_SERIAL" shell am start -W \
+            -n "$APP_PACKAGE/$APP_ACTIVITY" > reports/launch.txt 2>&1 || true
+          python3 tools/oxide_capture_samples.py --reports reports \
+            --package "$APP_PACKAGE" --serial "$CLOUD_ADB_SERIAL"
+          adb -s "$CLOUD_ADB_SERIAL" logcat -d -v threadtime > reports/logcat.txt 2>&1 || true
+          python3 tools/oxide_exit_timeline.py reports/logcat.txt \
+            --output reports/oxide-exit-timeline.json
+          # A green infrastructure step never means gameplay; auditor fails closed.
+          python3 tools/oxide_runtime_assess.py reports
+
+      - name: Save diagnostic outputs even if game exits or preflight fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-existing-cloud-arm64-original-evidence
+          path: reports/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Stop the existing instance when explicitly opted in
+        if: ${{ always() && inputs.stop_instance_after_test }}
+        shell: bash
+        run: |
+          if [ -n "$GENYMOTION_API_TOKEN" ] && \
+             [[ "$INSTANCE_UUID" =~ ^[a-fA-F0-9]{8}-([a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}$ ]] && \
+             [ -x .gmsaas-venv/bin/gmsaas ]; then
+            timeout 120 .gmsaas-venv/bin/gmsaas instances stop "$INSTANCE_UUID" || true
+          fi
