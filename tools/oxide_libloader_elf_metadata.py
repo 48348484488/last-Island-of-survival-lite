@@ -36,7 +36,7 @@ def inspect_elf(blob):
         fields = struct.unpack_from("<IIQQQQQQ", blob, phoff + i * phentsize)
         t, flags, offset, vaddr, _, filesz, memsz, align = fields
         if t == 1:  # PT_LOAD
-            if offset + filesz > len(blob):
+            if filesz > memsz or offset + filesz > len(blob):
                 raise ValueError("ELF_LOAD_FILE_RANGE_INVALID")
             segments.append({
                 "vaddr": vaddr, "memsz": memsz, "offset": offset,
