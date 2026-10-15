@@ -28,6 +28,8 @@ on:
       - 'tests/test_oxide_nativebridge_probe.py'
       - 'tests/test_oxide_nativebridge_probe_shell.py'
       - 'tests/test_oxide_nativebridge_handoff.py'
+      - 'tests/test_oxide_kvm_recovery_once.py'
+      - '.github/workflows/oxide-m4-x86-nativebridge-kvm-recovery-once.yml'
       - '.github/workflows/oxide-m3-x86-arm64-jni-smoke-once.yml'
       - '.github/workflows/oxide-m4-x86-arm64-nativebridge-original-on-success.yml'
       - 'tools/oxide_nativebridge_probe/**'
