@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -49,6 +50,17 @@ class TestGoals(unittest.TestCase):
             self.write(f'activity-{t}.txt',"Task{... "+PKG+" ...} OtherApp Resumed")
         self.assertFalse(evidence_summary(self.d)['checks']['original_activity_resumed_at_10_and_35'])
 
+    def test_name_35_without_clock_cannot_complete_goal(self):
+        self.boot_and_launch()
+        for t in (10, 35):
+            self.write(f'pid-{t}.txt', '2018')
+            self.write(f'activity-{t}.txt', 'topResumedActivity=ActivityRecord{a u0 '+PKG+' t8}')
+            (self.d/f'screen-{t}.png').write_bytes(b'\x89PNG\r\n\x1a\n'+b'a'*200)
+        report=evidence_summary(self.d)
+        self.assertEqual(report['goals'][2]['status'], 'blocked')
+        self.assertFalse(report['checks']['capture_timing']['verified'])
+        self.assertFalse(report['gameplay_confirmed'])
+
     def test_task_history_not_counted_as_resumed(self):
         self.assertFalse(resumed("* Hist #0: ActivityRecord{a u0 "+PKG+" t8}"))
 
@@ -58,6 +70,14 @@ class TestGoals(unittest.TestCase):
             self.write(f'pid-{t}.txt','2018')
             self.write(f'activity-{t}.txt','topResumedActivity=ActivityRecord{a u0 '+PKG+' t8}')
             (self.d/f'screen-{t}.png').write_bytes(b'\x89PNG\r\n\x1a\n'+b'a'*200)
+        self.write("capture-timing.json", json.dumps({
+            "clock": "monotonic",
+            "checkpoints": [
+                {"target_seconds": t, "elapsed_seconds": float(t), "finished_seconds": float(t)+0.2,
+                 "pid": "2018", "activity_dump_captured": True}
+                for t in (0, 1, 2, 3, 4, 10, 35)
+            ],
+        }))
         r=evidence_summary(self.d)
         self.assertEqual([g['status'] for g in r['goals']], ['complete','complete','complete','pending_visual_review','pending'])
         self.assertFalse(r['gameplay_confirmed'])
