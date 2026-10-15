@@ -52,6 +52,10 @@ def evidence_summary(root):
         else:
             screenshots[str(t)] = False
     logcat = read(root, "logcat.txt")
+    android_version = read(root, "android-version.txt")
+    if not android_version:
+        observed = re.search(r"Android OS (1[3-6])", logcat)
+        android_version = observed.group(1) if observed else "UNKNOWN"
     sigkill = False
     time_start = None
     time_kill = None
@@ -92,6 +96,7 @@ def evidence_summary(root):
         next_action = "REVIEW_REAL_MENU"
     return {
         "schema_version": 1,
+        "android_version": android_version,
         "goals": stages,
         "next_action": next_action,
         "checks": {
