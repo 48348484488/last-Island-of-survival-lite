@@ -17,6 +17,12 @@ class TestHostPreflight(unittest.TestCase):
         x = classify({}, binderfs_available=True)
         self.assertFalse(x["binder_ready"])
 
+    def test_mounted_binderfs_is_valid_native_host_path(self):
+        x = classify({}, binderfs_available=True, binderfs_binder_ready=True)
+        self.assertTrue(x['binder_ready'])
+        self.assertEqual(x['next_action'], 'BOOT_ANDROID')
+        self.assertFalse(x['game_tested'])
+
     def test_full_binder_allows_android_boot_attempt_not_gameplay_claim(self):
         x = classify({"binder": True, "hwbinder": True, "vndbinder": True})
         self.assertEqual(x["next_action"], "BOOT_ANDROID")
