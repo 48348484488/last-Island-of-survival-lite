@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "objective": "Start the unchanged Oxide 1.15.11966 in native virtual Android ARM64, prove 35 seconds of original Activity, review menu, then validate an independent synthetic overlay",
+  "goals": [
+    {"id":"android_arm64_boot","title":"Inicializar Android ARM64 virtual","criteria":"sys.boot_completed=1 and ABI arm64-v8a"},
+    {"id":"original_launch","title":"Instalar e abrir Oxide original","criteria":"all 4 original APKs installed and manifest Activity started with its own PID"},
+    {"id":"activity_35s","title":"Manter Activity original viva por 35 segundos","criteria":"same initial Activity PID and original resumed Activity at 10s and 35s"},
+    {"id":"menu_gameplay","title":"Confirmar menu e testar gameplay","criteria":"independent confirmation of real menu and responsive game on unchanged APK"},
+    {"id":"synthetic_overlay","title":"Validar overlay/ESP com dados sinteticos","criteria":"separate overlay receives authorized synthetic coordinates and is verified without manipulating game"}
+  ]
+}
