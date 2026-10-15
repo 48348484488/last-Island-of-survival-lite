@@ -111,8 +111,8 @@ class TestGoals(unittest.TestCase):
         self.write("pid-10.txt", "2296")
         self.write("pid-35.txt", "2296")
         self.write("logcat.txt",
-            "10-15 18:55:51.207  287 735 I ActivityTaskManager: START u0 { cmp="+PKG+" }\\n"
-            "10-15 18:55:55.687 2023 2023 I Process: Sending signal. PID: 2023 SIG: 9\\n")
+            "10-15 18:55:51.207  287 735 I ActivityTaskManager: START u0 { cmp="+PKG+" }\n"
+            "10-15 18:55:55.687 2023 2023 I Process: Sending signal. PID: 2023 SIG: 9\n")
         report = evidence_summary(self.d)
         self.assertEqual(report["checks"]["first_original_resumed_pid"], "2023")
         self.assertTrue(report["checks"]["initial_activity_self_sigkill_observed"])
