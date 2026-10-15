@@ -1,0 +1,94 @@
+name: Oxide goal forensic analysis
+run-name: Oxide goals for runtime #${{ inputs.runtime_run_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      runtime_run_id:
+        description: Completed original Oxide runtime GitHub Actions run ID
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: write
+  issues: write
+concurrency:
+  group: oxide-goals-${{ inputs.runtime_run_id }}
+  cancel-in-progress: false
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test deterministic goal criteria
+        run: python3 -m unittest discover -s tests -p 'test_oxide_goal_engine.py' -v
+      - name: Download original runtime evidence
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.runtime_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: oxide-115-arm64-runtime-evidence
+          path: evidence
+      - name: Classify all five goals against the original Activity and process
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d evidence/reports
+          python3 tools/oxide_goal_engine.py evidence/reports \
+            --catalog goals/oxide-goals.json \
+            --output goal-report
+          cat goal-report/goals.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Update milestone and trigger next predefined safe stage
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const {owner, repo} = context.repo;
+            const runtimeId = '${{ inputs.runtime_run_id }}';
+            const marker = '<!-- oxide-goals-runtime:' + runtimeId + ' -->';
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number: 4, per_page: 100
+            });
+            if (comments.some(c => c.body?.includes(marker))) {
+              core.notice('This evidence already has a goals report. No duplicate dispatch.');
+              return;
+            }
+            const goals = JSON.parse(fs.readFileSync('goal-report/goals.json', 'utf8'));
+            const markdown = fs.readFileSync('goal-report/goals.md', 'utf8');
+            let action = 'No safe automatic correction is known for this blockage. The original APK stays unchanged.';
+            if (goals.next_action === 'FORENSIC_APP_EXIT' &&
+                goals.android_version === '15' &&
+                goals.checks.initial_activity_self_sigkill_observed) {
+              const response = await github.rest.actions.listWorkflowRuns({
+                owner, repo, workflow_id: 'oxide-115-arm64-runtime.yml', per_page: 100
+              });
+              const alreadyAttempted = response.data.workflow_runs.some(r =>
+                (r.display_title || '').includes('Oxide Android 16 run'));
+              if (!alreadyAttempted) {
+                await github.rest.actions.createWorkflowDispatch({
+                  owner, repo, workflow_id: 'oxide-115-arm64-runtime.yml',
+                  ref: context.payload.repository.default_branch,
+                  inputs: {runner: 'ubuntu-24.04-arm', android_version: '16'}
+                });
+                action = 'ANDROID16 comparison automatically dispatched once. Same untouched APKs; no security bypass.';
+              } else {
+                action = 'Android16 experiment already exists. No retry loop; inspect the application-exit evidence.';
+              }
+            } else if (goals.next_action === 'REVIEW_REAL_MENU') {
+              action = '35-second original Activity check passed, but menu/gameplay still require independent visual verification.';
+            }
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: 4,
+              body: marker + '\n' + markdown +
+                '\n**Execucao original:** https://github.com/' + owner + '/' + repo + '/actions/runs/' + runtimeId +
+                '\n\n**Acao automatica:** ' + action
+            });
+            core.notice(action);
+      - name: Save machine-readable evidence and goal progress
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-goal-report-${{ inputs.runtime_run_id }}
+          path: goal-report/
+          if-no-files-found: warn
+          retention-days: 14
