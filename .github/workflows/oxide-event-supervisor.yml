@@ -10,6 +10,7 @@ on:
       - Oxide M3 macOS ARM64 official Android15 TCG boot only - one attempt
       - Oxide M4 original APK on verified official ARM64 TCG (one attempt)
       - Oxide M4 original APK on macOS Apple Silicon Android ARM64 (one attempt)
+      - Oxide M4 Mac ARM64 TCG original APK - verified one-shot handoff
     types: [completed]
 permissions:
   actions: write
@@ -73,7 +74,8 @@ jobs:
               run.name.startsWith('Oxide Android ');
             const isOfficialBoot = run.name === 'Oxide M3 official ARM64 Play Android software boot (no account)';
             const isOfficialGame = run.name === 'Oxide M4 original APK on verified official ARM64 TCG (one attempt)' ||
-              run.name === 'Oxide M4 original APK on macOS Apple Silicon Android ARM64 (one attempt)';
+              run.name === 'Oxide M4 original APK on macOS Apple Silicon Android ARM64 (one attempt)' ||
+              run.name === 'Oxide M4 Mac ARM64 TCG original APK - verified one-shot handoff';
             if (isOfficialBoot) {
               const bootProof = observations.some(x => x.includes('status.txt: OFFICIAL_TCG_ARM64_BOOT_VERIFIED_NO_APK'));
               const packageProof = observations.some(x => x.includes('ARM64_GOOGLE_PACKAGES_PRESENT_TRUST_UNVERIFIED'));
