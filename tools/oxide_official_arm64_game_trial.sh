@@ -50,10 +50,11 @@ grep -q '^Success' "$REPORTS/install.txt"
 echo "ORIGINAL_APK_INSTALLED" > "$REPORTS/trial-stage.txt"
 "${ADB[@]}" shell am force-stop "$APP_PACKAGE" || true
 "${ADB[@]}" logcat -c || true
-python3 tools/oxide_process_timeout.py --seconds 40 -- "${ADB[@]}" shell am start -W \
-  -n "$APP_PACKAGE/$APP_ACTIVITY" > "$REPORTS/launch.txt" 2>&1 || true
+# The capture clock starts at the same instant that am start -W is sent
+# asynchronously. Blocking on -W previously discarded the crucial first seconds.
 python3 tools/oxide_capture_samples.py --reports "$REPORTS" \
-  --package "$APP_PACKAGE" --serial "$SERIAL"
+  --package "$APP_PACKAGE" --serial "$SERIAL" \
+  --launch-activity "$APP_PACKAGE/$APP_ACTIVITY"
 collect_logcat
 python3 tools/oxide_exit_timeline.py "$REPORTS/logcat.txt" \
   --output "$REPORTS/oxide-exit-timeline.json"
