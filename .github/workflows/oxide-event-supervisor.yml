@@ -68,12 +68,22 @@ jobs:
                 jobs.some(j => j.name === 'Probe ' + runner && j.conclusion === 'success'));
               if (available.length) {
                 const runner = available[0];
-                await github.rest.actions.createWorkflowDispatch({
-                  owner, repo, workflow_id: 'oxide-115-arm64-runtime.yml',
-                  ref: context.payload.repository.default_branch,
-                  inputs: {runner}
+                const previous = await github.rest.actions.listWorkflowRuns({
+                  owner, repo, workflow_id: 'oxide-115-arm64-runtime.yml', per_page: 20
                 });
-                action = 'Dispatched real original-APK runtime probe on validated native host ' + runner + '.';
+                const newer = previous.data.workflow_runs.find(x =>
+                  Date.parse(x.created_at) >= Date.parse(run.created_at));
+                if (newer) {
+                  action = 'Native ' + runner + ' is viable; runtime already launched since matrix began: ' +
+                    newer.html_url + '. Do not download the 910 MB APK twice.';
+                } else {
+                  await github.rest.actions.createWorkflowDispatch({
+                    owner, repo, workflow_id: 'oxide-115-arm64-runtime.yml',
+                    ref: context.payload.repository.default_branch,
+                    inputs: {runner}
+                  });
+                  action = 'Dispatched real original-APK runtime probe on validated native host ' + runner + '.';
+                }
               } else {
                 action = 'No native ARM64 Redroid host was proven viable. Stopped automatically to avoid expensive endless retries. x86 results do not prove ARM64 game compatibility.';
               }
