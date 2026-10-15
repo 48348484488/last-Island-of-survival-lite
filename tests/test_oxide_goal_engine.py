@@ -70,7 +70,7 @@ class TestGoals(unittest.TestCase):
         for t in (10, 35):
             self.write(f"pid-{t}.txt", "2018")
             self.write(f"activity-{t}.txt", "topResumedActivity=ActivityRecord{x u0 "+PKG+" t8}")
-            (self.d / f"screen-{t}.png").write_bytes(b"\\x89PNG\\r\\n\\x1a\\n" + b"a"*200)
+            (self.d / f"screen-{t}.png").write_bytes(b"\x89PNG\r\n\x1a\n" + b"a"*200)
         self.write("capture-timing.json", json.dumps({
             "clock": "monotonic",
             "reference": "adb_launch_dispatch",
