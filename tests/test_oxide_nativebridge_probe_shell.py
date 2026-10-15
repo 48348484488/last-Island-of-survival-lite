@@ -31,8 +31,8 @@ class ProbeShellFailureEvidenceTests(unittest.TestCase):
         fake_adb = f"""#!/bin/sh
 case "$*" in
   *"getprop sys.boot_completed"*) echo 1; exit 0;;
-  *"getprop ro.product.cpu.abi"*) echo x86_64; exit 0;;
   *"getprop ro.product.cpu.abilist64"*) echo x86_64,arm64-v8a; exit 0;;
+  *"getprop ro.product.cpu.abi"*) echo x86_64; exit 0;;
   *"getprop ro.dalvik.vm.native.bridge"*) echo "{bridge}"; exit 0;;
   *"pm path com.android.vending"*) echo package:/system/priv-app/Vending/Vending.apk; exit 0;;
   *"pm path com.google.android.gms"*) echo package:/system/priv-app/Gms/Gms.apk; exit 0;;
