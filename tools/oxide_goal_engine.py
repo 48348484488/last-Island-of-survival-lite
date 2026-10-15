@@ -81,8 +81,12 @@ def evidence_summary(root):
     sigkill = False
     time_start = None
     time_kill = None
-    if pids["0"]:
-        signal_regex = re.compile(r"Sending signal\. PID:\s*" + re.escape(pids["0"]) + r"\s+SIG:\s*9")
+    # Async launches can legitimately have no PID at t=0. Correlate the
+    # self-signal to the first *resumed original Activity* PID, never to
+    # a later background analytics service PID.
+    original_pid = initial["pid"] if initial else pids["0"]
+    if original_pid:
+        signal_regex = re.compile(r"Sending signal\. PID:\s*" + re.escape(original_pid) + r"\s+SIG:\s*9")
         for line in logcat.splitlines():
             if time_start is None and "ActivityTaskManager: START u0" in line and ORIGINAL in line:
                 time_start = line.split(maxsplit=2)[1] if len(line.split()) > 1 else None
