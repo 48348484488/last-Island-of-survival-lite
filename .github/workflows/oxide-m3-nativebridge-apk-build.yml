@@ -15,6 +15,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - uses: android-actions/setup-android@v3
       - name: Prepare Android SDK build tools, no system image or original APK
         shell: bash
         run: |
