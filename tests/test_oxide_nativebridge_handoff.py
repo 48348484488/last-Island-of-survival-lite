@@ -18,10 +18,10 @@ class NativeBridgeOneShotHandoffTests(unittest.TestCase):
 
     def test_predecessor_is_pinned_and_trusted(self):
         self.assertIn("workflow_run:", self.second)
-        self.assertIn("github.event.workflow_run.id == 38815996467", self.second)
+        self.assertIn("github.event.workflow_run.id == 38817025884", self.second)
         self.assertIn("github.event.workflow_run.conclusion == 'success'", self.second)
         self.assertIn("github.event.workflow_run.head_repository.full_name == github.repository", self.second)
-        self.assertIn("gh run download 38815996467", self.second)
+        self.assertIn("gh run download 38817025884", self.second)
         self.assertIn("arm64_jni_executed", self.second)
 
     def test_proven_arm64_jni_precedes_expensive_oxide_download(self):
