@@ -1,0 +1,75 @@
+name: Oxide M4 original game on proven x86_64 ARM64 translator - one trial
+on:
+  workflow_run:
+    workflows:
+      - "Oxide M3 official x86_64 AVD executes independent ARM64 JNI - one shot"
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: oxide-m4-x86-proven-nativebridge-original-single-run
+  cancel-in-progress: false
+
+jobs:
+  unchanged-four-splits-only-after-native-jni:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.id == 38815996467 && github.event.workflow_run.head_repository.full_name == github.repository }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify exact previous JNI proof before Android image or 900MB game download
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p predecessor reports
+          gh run download 38815996467 --repo 48348484488/oxide \
+            --name oxide-x86-google-play-nativebridge-jni-real-verdict \
+            --dir predecessor
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          proof = json.loads(Path("predecessor/nativebridge-jni-verdict.json").read_text())
+          assert proof["status"] == "ARM64_JNI_EXECUTED_VIA_NATIVE_BRIDGE_ORIGINAL_GAME_UNTESTED", proof
+          assert proof["official_android_booted"] is True
+          assert proof["host_abi_x86_64"] is True
+          assert proof["arm64_abi_advertised"] is True
+          assert proof["native_bridge_configured"] is True
+          assert proof["arm64_jni_executed"] is True
+          assert proof["diagnostic_package_installed"] is True
+          assert proof["original_oxide_apk_installed"] is False
+          assert proof["original_oxide_gameplay_verified"] is False
+          assert proof["play_integrity_verdict"] == "NOT_OBSERVED"
+          Path("reports/nativebridge-prerequisite.json").write_text(
+              json.dumps(proof, indent=2) + "\n")
+          print("Independent JNI translation PROVEN on predecessor AVD; protected game still UNTESTED.")
+          PY
+          echo "JNI_PROOF_VERIFIED_ORIGINAL_APK_NOT_DOWNLOADED" > reports/trial-stage.txt
+
+      - name: One official x86_64 Google Play Android trial of all four unchanged Oxide APK splits
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          emulator-build: 16428233
+          arch: x86_64
+          target: google_apis_playstore
+          profile: pixel_7
+          cores: 2
+          ram-size: 2048M
+          emulator-boot-timeout: 380
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash tools/oxide_nativebridge_probe/original_on_verified_bridge.sh reports
+
+      - name: Preserve original game lifecycle and visual evidence even if game rejects emulator
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-x86-nativebridge-original-1-15-11966-one-shot
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
