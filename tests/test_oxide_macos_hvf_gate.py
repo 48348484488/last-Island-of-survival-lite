@@ -48,7 +48,7 @@ class ActualHypervisorGateTests(unittest.TestCase):
         self.assertIn("HOST_HVF_VM_CREATE_PASSED_ANDROID_UNTESTED", self.probe)
 
     def test_prober_source_exists_and_has_license_free_sdk_code(self):
-        self.assertIn("#include <Hypervisor/hv.h>", self.c_code)
+        self.assertIn("#include <Hypervisor/Hypervisor.h>", self.c_code)
         self.assertNotIn("pm grant", self.c_code)
         self.assertNotIn("Play Integrity", self.c_code)
 
