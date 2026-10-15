@@ -20,13 +20,18 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p reports
-          test -n "$ANDROID_HOME"
-          test -d "$ANDROID_HOME/platform-tools"
+          printf 'ANDROID_HOME=%s\n' "${ANDROID_HOME:-UNSET}" > reports/runner-android-env.txt
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends adb
           command -v adb
+          sdk="$RUNNER_TEMP/oxide-android-sdk"
+          mkdir -p "$sdk/platform-tools"
+          ln -s "$(command -v adb)" "$sdk/platform-tools/adb"
+          test -x "$sdk/platform-tools/adb"
           python3 -m venv .gmsaas-venv
           .gmsaas-venv/bin/python -m pip install --disable-pip-version-check 'gmsaas>=1.16,<2'
           .gmsaas-venv/bin/python -m pip show gmsaas > reports/gmsaas-version.txt
-          .gmsaas-venv/bin/gmsaas config set android-sdk-path "$ANDROID_HOME" > reports/config-result.txt
+          .gmsaas-venv/bin/gmsaas config set android-sdk-path "$sdk" > reports/config-result.txt
           .gmsaas-venv/bin/gmsaas instances adbconnect --help > reports/adbconnect-help.txt
           grep -Fq -- '--adb-serial-port' reports/adbconnect-help.txt
           printf 'PUBLIC_CLI_SYNTAX_OK_NO_CLOUD_ACCESS\n' > reports/verdict.txt
