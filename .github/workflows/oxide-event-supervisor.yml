@@ -102,9 +102,9 @@ jobs:
               'Execucao: ' + run.html_url,
               'Resultado CI: **' + run.conclusion + '**',
               'Jobs: ' + jobs.map(j => j.name + '=' + j.conclusion).join('; '),
-              'Diagnosticos: \\n' + (observations.length ? observations.map(x => '- ' + x).join('\\n') : '- Nenhum arquivo de verdict disponivel'),
+              'Diagnosticos: \n' + (observations.length ? observations.map(x => '- ' + x).join('\n') : '- Nenhum arquivo de verdict disponivel'),
               '**Proxima acao:** ' + action,
               'Jogo/ESP: nao considerar validados ate verificar execucao real e imagens.'
-            ].join('\\n\\n');
+            ].join('\n\n');
             await github.rest.issues.createComment({owner, repo, issue_number: 4, body: report});
             core.notice(action);
