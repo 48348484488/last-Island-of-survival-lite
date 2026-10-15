@@ -76,7 +76,7 @@ def inspect_elf(blob):
             "tombstone_pc": f"0x{pc:08x}",
             "mapped_load_segment": match is not None,
             "load_segment_executable": "X" in match["flags"] if match else False,
-            "elf_file_offset": (match["offset"] + pc - match["vaddr"]) if match else None,
+            "elf_file_offset": (match["offset"] + pc - match["vaddr"])\n            if match and pc - match["vaddr"] < match["filesz"] else None,\n            "file_backed_executable": bool(match and "X" in match["flags"]\n                and pc - match["vaddr"] < match["filesz"]\n                and section and section["executable"]),
             "section_name": section["name"] if section else None,
             "section_executable": section["executable"] if section else None,
         })
@@ -111,7 +111,7 @@ def inspect_original_archives(directory):
     if len(matches) != 1:
         raise ValueError(f"EXPECTED_ONE_UNCHANGED_LIBLOADER: {len(matches)}")
     result = matches[0]
-    executable = all(x["load_segment_executable"] for x in result["tombstone_pc_mappings"])
+    executable = all(x["file_backed_executable"] for x in result["tombstone_pc_mappings"])
     result.update({
         "status": ("NATIVE_ARM64_LIBLOADER_PCS_MAPPED_TO_EXECUTABLE_SEGMENTS"
                    if executable else "LIBLOADER_PC_MAPPING_INCOMPLETE"),
