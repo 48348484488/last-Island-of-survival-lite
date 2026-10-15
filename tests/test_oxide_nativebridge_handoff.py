@@ -70,6 +70,14 @@ class NativeBridgeOneShotHandoffTests(unittest.TestCase):
         self.assertIn("This is NOT game, menu, gameplay or ESP proof", supervisor)
         self.assertIn("no automatic repeat or bypass", supervisor)
 
+    def test_new_original_x86_host_proves_kvm_before_android_or_apk(self):
+        self.assertIn("KVM_GET_API_VERSION", self.second.replace("fcntl.ioctl(fd, 0xAE00, 0)", "KVM_GET_API_VERSION"))
+        self.assertIn('result["kvm_api_version"] == 12', self.second)
+        self.assertIn("sudo chmod a+rw /dev/kvm", self.second)
+        self.assertIn("BLOCKED_KVM_BEFORE_X86_AVD_OR_APK_DOWNLOAD", self.second)
+        self.assertLess(self.second.index("fcntl.ioctl(fd, 0xAE00, 0)"),
+                        self.second.index("reactivecircus/android-emulator-runner@v2"))
+
     def test_evidence_preserved_even_on_failure(self):
         self.assertIn("if: always()", self.second)
         self.assertIn("oxide-x86-nativebridge-original-1-15-11966-one-shot", self.second)
