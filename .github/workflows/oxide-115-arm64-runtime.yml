@@ -19,9 +19,6 @@ on:
         options:
           - '15'
           - '16'
-  push:
-    paths:
-      - '.github/workflows/oxide-115-arm64-runtime.yml'
 jobs:
   runtime:
     runs-on: ${{ inputs.runner || 'ubuntu-24.04-arm' }}
@@ -126,11 +123,11 @@ jobs:
           adb -s 127.0.0.1:5555 shell pm list packages -3 > reports/packages.txt
           adb -s 127.0.0.1:5555 shell am force-stop "$APP_PACKAGE" > reports/force-stop.txt 2>&1 || true
           adb -s 127.0.0.1:5555 logcat -c > reports/logcat-clear.txt 2>&1 || true
-          # Launch the exact manifest Activity; Monkey exit -5 never started the game.
-          timeout 35 adb -s 127.0.0.1:5555 shell am start -W -n "$APP_PACKAGE/$APP_ACTIVITY" > reports/launch.txt 2>&1 || true
-          # Capture the early exit window and retain 0/10/35 compatibility with the audit.
-          # Each sample records actual elapsed monotonic time, not assumed sleep timings.
-          python3 tools/oxide_capture_samples.py --reports reports --package "$APP_PACKAGE"
+          # Dispatch the original Activity and begin capture in the same clock window.
+          # A blocking am start -W here previously missed the 0-4 second exit window.
+          # Each sample records real monotonic time, not the name of its checkpoint.
+          python3 tools/oxide_capture_samples.py --reports reports --package "$APP_PACKAGE" \
+            --launch-activity "$APP_PACKAGE/$APP_ACTIVITY"
           adb -s 127.0.0.1:5555 logcat -d -v threadtime > reports/logcat.txt 2>&1 || true
           python3 tools/oxide_runtime_assess.py reports
       - name: Collect results even on failure
