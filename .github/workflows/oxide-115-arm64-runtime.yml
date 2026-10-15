@@ -1,82 +1,94 @@
 name: Oxide 1.15 ARM64 virtual runtime probe
 on:
   workflow_dispatch:
+    inputs:
+      runner:
+        description: Native ARM64 runner validated by the host matrix
+        required: true
+        type: choice
+        default: ubuntu-24.04-arm
+        options:
+          - ubuntu-24.04-arm
+          - ubuntu-22.04-arm
   push:
     paths:
       - '.github/workflows/oxide-115-arm64-runtime.yml'
 jobs:
   runtime:
-    runs-on: ubuntu-24.04-arm
-    timeout-minutes: 45
+    runs-on: ${{ inputs.runner || 'ubuntu-24.04-arm' }}
+    timeout-minutes: 35
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - name: Install virtual Android prerequisites
+      - name: Check Android Binder support before expensive APK download
+        shell: bash
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq adb curl jq
-          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder || true
-          sudo modprobe ashmem_linux || true
-          ls -l /dev/binder* /dev/ashmem /dev/kvm 2>&1 || true
           mkdir -p reports
           uname -a > reports/kernel.txt
-          lsmod > reports/kernel-modules.txt || true
-          cat /proc/filesystems > reports/filesystems.txt
-          ls -la /dev/binder* /dev/ashmem /dev/kvm > reports/android-devices.txt 2>&1 || true
-          mount | grep -E 'binder|ashmem' > reports/android-mounts.txt || true
-      - name: Download unmodified fourth APK
+          sudo modprobe binder_linux devices=binder,hwbinder,vndbinder > reports/modprobe-binder.txt 2>&1 || true
+          sudo modprobe ashmem_linux > reports/modprobe-ashmem.txt 2>&1 || true
+          if ! python3 tools/oxide_host_preflight.py --output reports/preflight.json; then
+            echo 'BLOCKED_HOST_BINDER: Redroid cannot boot on this hosted kernel' | tee reports/verdict.txt
+            exit 1
+          fi
+      - name: Boot Android 13 ARM64 without the original APK
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq adb aapt
+          docker pull redroid/redroid:13.0.0-latest > reports/pull.log 2>&1
+          docker run -d --name oxide-android --privileged -p 5555:5555 redroid/redroid:13.0.0-latest androidboot.redroid_width=720 androidboot.redroid_height=1280 androidboot.redroid_dpi=320 androidboot.redroid_gpu_mode=guest > reports/container-id.txt 2> reports/container-error.txt
+          for i in $(seq 1 36); do
+            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+            if adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' | grep -qx 1; then break; fi
+            sleep 5
+          done
+          adb -s 127.0.0.1:5555 shell getprop sys.boot_completed > reports/boot.txt 2>&1 || true
+          adb -s 127.0.0.1:5555 shell getprop ro.product.cpu.abi > reports/abi.txt 2>&1 || true
+          if ! tr -d '\r' < reports/boot.txt | grep -qx 1 || ! tr -d '\r' < reports/abi.txt | grep -qx arm64-v8a; then
+            echo 'BLOCKED_ANDROID_BOOT_OR_ABI' | tee reports/verdict.txt
+            exit 1
+          fi
+          echo 'BOOT_CONFIRMED_NO_GAME' > reports/verdict.txt
+      - name: Download and verify all four unmodified original APKs
         env:
           GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
           gh release download v1.15.11966 --repo 48348484488/oxide --pattern split_UnityDataAssetPack.apk --dir .
           python3 tools/audit_original_split_hashes.py --output original-apk-inventory.json
           python3 -c "import json; assert json.load(open('original-apk-inventory.json'))['complete']"
-      - name: Run Redroid Android ARM64 container
+          aapt dump badging base.apk > reports/apk-badging.txt
+          app_package=$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" reports/apk-badging.txt | head -n 1)
+          test -n "$app_package"
+          echo "APP_PACKAGE=$app_package" >> "$GITHUB_ENV"
+      - name: Install, launch and sample original Oxide at 0, 10 and 35 seconds
+        shell: bash
         run: |
-          mkdir -p reports
-          docker info > reports/docker-info.txt 2>&1 || true
-          docker pull redroid/redroid:13.0.0-latest > reports/pull.log 2>&1 || { cat reports/pull.log; exit 1; }
-          docker run -d --name oxide-android --privileged -p 5555:5555 redroid/redroid:13.0.0-latest androidboot.redroid_width=720 androidboot.redroid_height=1280 androidboot.redroid_dpi=320 > reports/container-id.txt 2> reports/container-error.txt || { cat reports/container-error.txt; exit 1; }
-          for i in $(seq 1 45); do
-            adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
-            if adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | grep -q 1; then break; fi
-            sleep 4
-          done
-          adb devices -l > reports/adb-devices.txt
-          adb -s 127.0.0.1:5555 shell getprop ro.product.cpu.abi > reports/abi.txt 2>&1 || true
-          adb -s 127.0.0.1:5555 shell getprop sys.boot_completed > reports/boot.txt 2>&1 || true
-      - name: Install and launch original game if virtual Android booted
-        run: |
-          if ! grep -q 1 reports/boot.txt || ! grep -q arm64 reports/abi.txt; then
-            echo "BLOCKED: ARM64 virtual Android did not boot" | tee reports/verdict.txt
-            exit 1
-          fi
-          adb -s 127.0.0.1:5555 install-multiple -r base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk split_UnityDataAssetPack.apk > reports/install.txt 2>&1 || true
-          if ! grep -q Success reports/install.txt; then
-            echo "BLOCKED: original split install failed" | tee reports/verdict.txt
-            exit 1
-          fi
-          adb -s 127.0.0.1:5555 shell pm list packages -3 > reports/packages.txt 2>&1 || true
-          adb -s 127.0.0.1:5555 shell monkey -p com.catsbit.oxidesurvivalisland 1 > reports/launch.txt 2>&1 || true
-          for i in 0 10 35; do
-            if [ "$i" -gt 0 ]; then sleep "$((i == 10 ? 10 : 25))"; fi
-            adb -s 127.0.0.1:5555 shell dumpsys activity activities > "reports/activity-${i}.txt" 2>&1 || true
-            adb -s 127.0.0.1:5555 shell pidof com.catsbit.oxidesurvivalisland > "reports/pid-${i}.txt" 2>&1 || true
-            adb -s 127.0.0.1:5555 shell screencap -p > "reports/screen-${i}.png" 2>/dev/null || true
+          adb -s 127.0.0.1:5555 install-multiple -r base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk split_UnityDataAssetPack.apk > reports/install.txt 2>&1
+          grep -q Success reports/install.txt
+          adb -s 127.0.0.1:5555 shell pm list packages -3 > reports/packages.txt
+          adb -s 127.0.0.1:5555 shell monkey -p "$APP_PACKAGE" 1 > reports/launch.txt 2>&1 || true
+          for t in 0 10 35; do
+            if [ "$t" -eq 10 ]; then sleep 10; fi
+            if [ "$t" -eq 35 ]; then sleep 25; fi
+            adb -s 127.0.0.1:5555 shell dumpsys activity activities > "reports/activity-${t}.txt" 2>&1 || true
+            adb -s 127.0.0.1:5555 shell pidof "$APP_PACKAGE" > "reports/pid-${t}.txt" 2>&1 || true
+            adb -s 127.0.0.1:5555 shell screencap -p > "reports/screen-${t}.png" 2>/dev/null || true
           done
           adb -s 127.0.0.1:5555 logcat -d -v threadtime > reports/logcat.txt 2>&1 || true
-          echo "UNVERIFIED: inspect PID, activity and screenshots; no gameplay claim" > reports/verdict.txt
-      - name: Collect evidence even on failure
+          python3 tools/oxide_runtime_assess.py reports
+      - name: Collect results even on failure
         if: always()
+        shell: bash
         run: |
           mkdir -p reports
           docker logs oxide-android > reports/container.log 2>&1 || true
           docker ps -a > reports/containers.txt 2>&1 || true
-          echo "::group::Android virtual host diagnosis"
-          cat reports/android-devices.txt reports/android-mounts.txt reports/container-error.txt reports/containers.txt reports/verdict.txt 2>/dev/null || true
-          tail -n 100 reports/container.log 2>/dev/null || true
-          echo "::endgroup::"
+          docker inspect oxide-android > reports/container-inspect.json 2>&1 || true
+          cat reports/verdict.txt reports/runtime-verdict.json reports/preflight.json reports/modprobe-binder.txt 2>/dev/null || true
+          tail -n 60 reports/container.log 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
