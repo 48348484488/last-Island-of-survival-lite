@@ -52,11 +52,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sdk="$ANDROID_HOME"
-          test -n "$sdk"
-          test -d "$sdk/platform-tools"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends adb
+          sdk="$RUNNER_TEMP/oxide-android-sdk"
+          mkdir -p "$sdk/platform-tools"
+          ln -s "$(command -v adb)" "$sdk/platform-tools/adb"
+          test -x "$sdk/platform-tools/adb"
           python3 -m venv .gmsaas-venv
-          .gmsaas-venv/bin/python -m pip install --disable-pip-version-check 'gmsaas>=1.16,<2'
+          .gmsaas-venv/bin/python -m pip install --disable-pip-version-check 'gmsaas==1.16.0'
           .gmsaas-venv/bin/gmsaas config set android-sdk-path "$sdk" >/dev/null
           timeout 40 .gmsaas-venv/bin/gmsaas doctor > reports/gmsaas-doctor.txt
 
