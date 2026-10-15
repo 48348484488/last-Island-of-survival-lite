@@ -10,10 +10,14 @@ if __package__:
     from .oxide_goal_engine import ORIGINAL, resumed, first_resumed_original
     from .oxide_capture_timing_gate import verify_capture_timing
     from .oxide_activity_binding import original_resumed_activity_pid
+    from .oxide_runtime_environment import evaluate_runtime_environment
+    from .oxide_exit_timeline import assess as assess_exit_timeline
 else:
     from oxide_goal_engine import ORIGINAL, resumed, first_resumed_original
     from oxide_capture_timing_gate import verify_capture_timing
     from oxide_activity_binding import original_resumed_activity_pid
+    from oxide_runtime_environment import evaluate_runtime_environment
+    from oxide_exit_timeline import assess as assess_exit_timeline
 
 
 def _value(directory, name):
@@ -41,8 +45,10 @@ def evaluate(directory):
         return {"status": "BLOCKED_HOST_BINDER", "gameplay_confirmed": False}
     if _value(d, "boot.txt") != "1":
         return {"status": "BLOCKED_ANDROID_BOOT", "gameplay_confirmed": False}
-    if _value(d, "abi.txt") != "arm64-v8a":
-        return {"status": "BLOCKED_WRONG_ABI", "gameplay_confirmed": False}
+    environment = evaluate_runtime_environment(d)
+    if not environment["original_arm64_runtime_eligible"]:
+        return {"status": "BLOCKED_WRONG_ABI", "runtime_environment": environment,
+                "gameplay_confirmed": False}
     if "Success" not in _value(d, "install.txt"):
         return {"status": "BLOCKED_ORIGINAL_APK_INSTALL", "gameplay_confirmed": False}
 
@@ -51,9 +57,20 @@ def evaluate(directory):
     baseline_pid = first["pid"] if first else pids[0]
     stable = _original_pid(baseline_pid) and pids[1] == pids[2] == baseline_pid
     if not stable:
-        return {"status": "FAILED_PID_STABILITY_35S", "pids": pids,
-                "first_original_resumed_checkpoint": first["checkpoint"] if first else None,
-                "gameplay_confirmed": False}
+        # Only logcat native tombstone evidence can attribute the exit signal;
+        # an x86_64 guest ABI is not itself a crash explanation.
+        forensic = assess_exit_timeline(_value(d, "logcat.txt"))
+        observed_status = forensic["status"]
+        return {
+            "status": observed_status if observed_status.startswith("ORIGINAL_SIGILL_")
+                      else "FAILED_PID_STABILITY_35S",
+            "pids": pids,
+            "first_original_resumed_checkpoint": first["checkpoint"] if first else None,
+            "original_pid_from_logcat": forensic["evidence"]["original_pid"],
+            "exit_diagnostic": forensic,
+            "runtime_environment": environment,
+            "gameplay_confirmed": False,
+        }
     launch = _value(d, "launch.txt")
     if "Status: ok" not in launch or ORIGINAL not in launch:
         return {"status": "PID_STABLE_MISSING_ORIGINAL_LAUNCH", "pids": pids, "gameplay_confirmed": False}
@@ -77,6 +94,7 @@ def evaluate(directory):
         "status": "PID_STABLE_35S_MENU_NOT_YET_REVIEWED",
         "timing": timing,
         "pids": pids,
+        "runtime_environment": environment,
         "screenshots_available": True,
         "original_activity_resumed_at_early_10_35": True,
         "first_original_resumed_checkpoint": first["checkpoint"],
