@@ -16,6 +16,7 @@ on:
       - 'tools/oxide_original_hash_gate.py'
       - 'tools/oxide_exit_timeline.py'
       - 'tools/oxide_capture_samples.py'
+      - 'tools/oxide_capture_timing_gate.py'
       - 'tools/oxide_goal_engine.py'
       - 'goals/oxide-goals.json'
       - 'tests/test_oxide_goal_engine.py'
@@ -39,6 +40,7 @@ on:
       - 'tests/test_oxide_managed_trial_workflow.py'
       - 'tests/test_oxide_exit_timeline.py'
       - 'tests/test_oxide_capture_samples.py'
+      - 'tests/test_oxide_capture_timing_gate.py'
 permissions:
   contents: read
 jobs:
