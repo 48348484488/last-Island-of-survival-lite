@@ -1,4 +1,6 @@
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -24,6 +26,35 @@ class TestRuntimeAssessment(unittest.TestCase):
             self.put(f"activity-{t}.txt", f"  topResumedActivity=ActivityRecord{{value u0 {ORIGINAL} t8}}\n")
         for t in (10, 35):
             (self.d / f"screen-{t}.png").write_bytes(b"\x89PNG\r\n\x1a\nabc")
+
+    def run_cli(self):
+        # Reproduce GitHub Actions invoking the script directly from another cwd.
+        script = Path(__file__).resolve().parents[1] / "tools" / "oxide_runtime_assess.py"
+        return subprocess.run([sys.executable, str(script), str(self.d)],
+                              cwd=self.d, capture_output=True, text=True, timeout=15)
+
+    def test_cli_direct_script_preserves_gameplay_gate(self):
+        self.valid_stable()
+        proc = self.run_cli()
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        result = json.loads(proc.stdout)
+        self.assertEqual(result["status"], "PID_STABLE_35S_MENU_NOT_YET_REVIEWED")
+        self.assertFalse(result["gameplay_confirmed"])
+        self.assertEqual(json.loads((self.d / "runtime-verdict.json").read_text()), result)
+
+    def test_cli_direct_script_fails_closed_on_realistic_pid_exit(self):
+        self.put("boot.txt", "1")
+        self.put("abi.txt", "arm64-v8a")
+        self.put("install.txt", "Success")
+        for name, pid in (("pid-0.txt", "2023"), ("pid-10.txt", "2296"),
+                          ("pid-35.txt", "2296")):
+            self.put(name, pid)
+        proc = self.run_cli()
+        self.assertEqual(proc.returncode, 1, proc.stderr)
+        result = json.loads(proc.stdout)
+        self.assertEqual(result["status"], "FAILED_PID_STABILITY_35S")
+        self.assertFalse(result["gameplay_confirmed"])
+        self.assertEqual(json.loads((self.d / "runtime-verdict.json").read_text()), result)
 
     def test_binder_blocker(self):
         self.put("preflight.json", json.dumps({"next_action": "HOST_NO_BINDER"}))
