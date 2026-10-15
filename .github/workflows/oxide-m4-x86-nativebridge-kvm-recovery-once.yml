@@ -1,0 +1,100 @@
+name: Oxide M4 x86 nativebridge KVM repair - one guarded recovery
+on:
+  workflow_run:
+    workflows:
+      - "Oxide M4 original game on proven x86_64 ARM64 translator - one trial"
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: oxide-m4-single-recovery-after-38817690114
+  cancel-in-progress: false
+
+jobs:
+  recover-only-if-prior-original-never-installed:
+    if: ${{ github.event.workflow_run.id == 38817690114 && (github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'cancelled') && github.event.workflow_run.head_repository.full_name == github.repository }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify predecessor NEVER reached Oxide download or installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports prior
+          gh run download 38817690114 --repo 48348484488/oxide \
+            --name oxide-x86-nativebridge-original-1-15-11966-one-shot \
+            --dir prior
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("prior")
+          stage = (p / "trial-stage.txt").read_text().strip()
+          assert stage == "JNI_PROOF_VERIFIED_ORIGINAL_APK_NOT_DOWNLOADED", stage
+          for missing in ("original-apk-inventory.json", "original-sha256-verdict.json",
+                          "apk-badging.txt", "install.txt", "capture-timing.json"):
+              assert not (p / missing).exists(), f"Cannot retry: {missing} already exists"
+          proof = json.loads((p / "nativebridge-prerequisite.json").read_text())
+          assert proof["status"] == "ARM64_JNI_EXECUTED_VIA_NATIVE_BRIDGE_ORIGINAL_GAME_UNTESTED"
+          assert proof["arm64_jni_executed"] is True
+          assert proof["original_oxide_gameplay_verified"] is False
+          (Path("reports") / "nativebridge-prerequisite.json").write_text(
+              json.dumps(proof, indent=2) + "\n")
+          (Path("reports") / "retry-provenance.json").write_text(
+              json.dumps({"original_run": 38817690114, "reason":
+                          "UNACCELERATED_AVD_PREVIOUS_RUN_NEVER_REACHED_ORIGINAL_APK",
+                          "previous_original_apk_downloaded": False,
+                          "retry_count": 1,
+                          "gameplay_verified": False}, indent=2) + "\n")
+          print("Safe KVM-aware single retry permitted: previous run never downloaded original APK.")
+          PY
+
+      - name: Verify real KVM on new runner before any Android image download
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -c /dev/kvm
+          sudo chmod a+rw /dev/kvm
+          python3 - <<'PY'
+          import fcntl, json, os
+          from pathlib import Path
+          fd=os.open("/dev/kvm",os.O_RDWR|os.O_CLOEXEC)
+          try:
+              api=fcntl.ioctl(fd,0xAE00,0)
+          finally:
+              os.close(fd)
+          data={"kvm_api_version":api,"kvm_usable":api==12,
+                "android_booted":False,"original_apk_downloaded":False}
+          Path("reports/kvm-gate.json").write_text(json.dumps(data,indent=2)+"\n")
+          print(data)
+          assert api==12, "BLOCKED_KVM_BEFORE_ANDROID_OR_ORIGINAL_APK_DOWNLOAD"
+          PY
+
+      - name: Run exactly one original Oxide APK attempt on KVM-accelerated official Android 15
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          emulator-build: 16428233
+          arch: x86_64
+          target: google_apis_playstore
+          profile: pixel_7
+          cores: 2
+          ram-size: 2048M
+          emulator-boot-timeout: 380
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash tools/oxide_nativebridge_probe/original_on_verified_bridge.sh reports
+
+      - name: Preserve real evidence even if Unity crashes or game refuses emulator
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-x86-nativebridge-original-kvm-recovery-once
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
