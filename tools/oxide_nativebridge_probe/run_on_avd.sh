@@ -5,6 +5,19 @@ set -euo pipefail
 APK="${1:-reports/diagnostic.apk}"
 REPORTS="${2:-reports}"
 mkdir -p "$REPORTS"
+
+# Preserve a machine-readable verdict and logcat even if 'adb install' or
+# 'am start' fails under the native bridge; never fake a positive result.
+finish_probe() {
+  exit_code="$?"
+  trap - EXIT
+  adb logcat -d -v threadtime > "$REPORTS/diagnostic-logcat.txt" 2>&1 || true
+  python3 tools/oxide_nativebridge_probe/assess_logcat.py "$REPORTS" \
+    --output "$REPORTS/nativebridge-jni-verdict.json" > "$REPORTS/assess-output.txt" 2>&1 || true
+  cat "$REPORTS/assess-output.txt" || true
+  exit "$exit_code"
+}
+trap finish_probe EXIT
 test -f "$APK"
 adb shell getprop sys.boot_completed > "$REPORTS/boot.txt"
 adb shell getprop ro.product.cpu.abi > "$REPORTS/abi.txt"
@@ -39,5 +52,7 @@ adb shell am start -W -n org.oxideprobe/.ProbeActivity \
   > "$REPORTS/diagnostic-launch.txt" 2>&1
 sleep 3
 adb shell pidof org.oxideprobe > "$REPORTS/diagnostic-pid.txt" 2>&1 || true
+# Final verifier's exit code is meaningful. The EXIT trap re-captures
+# logcat and preserves the verdict even on failure.
 adb logcat -d -v threadtime > "$REPORTS/diagnostic-logcat.txt" 2>&1 || true
 python3 tools/oxide_nativebridge_probe/assess_logcat.py "$REPORTS"
