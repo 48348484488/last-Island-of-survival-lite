@@ -1,0 +1,130 @@
+name: "Oxide M4 - Prove ARM64 host userspace call stacks before touching original APK"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oxide-m4-native-ustack-preflight.yml"
+      - "tools/oxide_host_ustack_calibration.c"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host-user-stack-only:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 12
+    steps:
+      - name: Checkout ONLY host-side synthetic calibration source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: tools/oxide_host_ustack_calibration.c
+          sparse-checkout-cone-mode: false
+      - name: Compile a tiny standalone native ARM64 process with frame pointers
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          mkdir -p host-callstack-evidence
+          uname -a > host-callstack-evidence/uname.txt
+          gcc -std=gnu11 -O0 -g -fno-omit-frame-pointer -fno-optimize-sibling-calls \
+            -o host-callstack-evidence/oxide-host-probe tools/oxide_host_ustack_calibration.c
+          file host-callstack-evidence/oxide-host-probe | tee host-callstack-evidence/binary_metadata.txt
+      - name: Install Linux syscall-tracing dependency only
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends bpftrace
+          bpftrace --version | tee host-callstack-evidence/bpftrace_version.txt
+      - name: Verify real ARM64 kernel can unwind a synthetic sender process
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > host-callstack-evidence/probe.bt <<'BT'
+          BEGIN { printf("OXIDE_HOST_STACK_TRACER_READY\n"); }
+          tracepoint:syscalls:sys_enter_kill
+          /args->sig == 9 && comm == "oxide-host-prob"/
+          {
+            printf("OXIDE_HOST_STACK_CONTROL sender=%d target=%d boot_ns=%llu\n",
+                   pid, args->pid, nsecs);
+            printf("OXIDE_HOST_STACK_FRAMES\n%s\nOXIDE_HOST_STACK_END\n", ustack(12));
+          }
+          BT
+          sudo -n stdbuf -oL -eL timeout --signal=INT 30s bpftrace \
+            host-callstack-evidence/probe.bt \
+            > host-callstack-evidence/kernel_stack_output.txt 2>&1 &
+          TRACE_PID=$!
+          ready=0
+          for attempt in $(seq 1 25); do
+            if grep -Fq OXIDE_HOST_STACK_TRACER_READY host-callstack-evidence/kernel_stack_output.txt; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$TRACE_PID" 2>/dev/null; then break; fi
+            sleep 0.5
+          done
+          if [[ "$ready" != 1 ]]; then
+            echo TRACEPOINT_ATTACH_NOT_CONFIRMED
+            cat host-callstack-evidence/kernel_stack_output.txt
+            exit 4
+          fi
+          host-callstack-evidence/oxide-host-probe \
+            > host-callstack-evidence/synthetic_process_stdout.txt \
+            2> host-callstack-evidence/synthetic_process_stderr.txt
+          captured=0
+          for attempt in $(seq 1 30); do
+            if grep -Fq OXIDE_HOST_STACK_END host-callstack-evidence/kernel_stack_output.txt; then
+              captured=1
+              break
+            fi
+            sleep 0.25
+          done
+          if [[ "$captured" != 1 ]]; then
+            echo SYNTHETIC_LINUX_HOST_STACK_NOT_CAPTURED
+            exit 5
+          fi
+          kill -INT "$TRACE_PID" 2>/dev/null || true
+          wait "$TRACE_PID" 2>/dev/null || true
+          python3 - <<'PY'
+          from pathlib import Path
+          log=Path("host-callstack-evidence/kernel_stack_output.txt").read_text(errors="replace")
+          assert "OXIDE_HOST_STACK_CONTROL sender=" in log
+          assert "OXIDE_HOST_STACK_FRAMES" in log
+          assert "OXIDE_HOST_STACK_END" in log
+          block=log.split("OXIDE_HOST_STACK_FRAMES",1)[1].split("OXIDE_HOST_STACK_END",1)[0]
+          lines=[x.strip() for x in block.splitlines() if x.strip()]
+          print("SYNTHETIC_HOST_STACK_CAPTURED")
+          print("FRAMES:",len(lines))
+          print("STACK:",repr(lines[:18]))
+          assert len(lines)>=2,("ARM64_USER_STACK_TOO_SHALLOW",lines)
+          print("HOST_BPFTRACE_USERSTACK_CALIBRATION_PASS")
+          PY
+      - name: Record limits and result
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Native ARM64 userspace stack preflight"
+            echo "Executed **only** a C binary compiled with frame pointers. No Android, proprietary APK, game process or anti-cheat involved."
+            echo "A host preflight pass does **not** prove Unity or IL2CPP stack unwinding; those binaries may omit frame pointers."
+            grep -E 'HOST_BPFTRACE_USERSTACK_CALIBRATION_PASS|OXIDE_HOST_STACK_CONTROL|error|ERROR|WARN' \
+              host-callstack-evidence/kernel_stack_output.txt 2>/dev/null | head -20 || true
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive stack capability evidence without proprietary binaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-m4-native-arm64-host-userspace-stack-capability
+          path: |
+            host-callstack-evidence/uname.txt
+            host-callstack-evidence/bpftrace_version.txt
+            host-callstack-evidence/binary_metadata.txt
+            host-callstack-evidence/kernel_stack_output.txt
+            host-callstack-evidence/synthetic_process_stdout.txt
+            host-callstack-evidence/synthetic_process_stderr.txt
+            host-callstack-evidence/probe.bt
+          if-no-files-found: warn
+          retention-days: 14
