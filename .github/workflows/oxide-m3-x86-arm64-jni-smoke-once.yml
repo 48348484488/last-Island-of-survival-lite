@@ -1,0 +1,77 @@
+name: Oxide M3 official x86_64 AVD executes independent ARM64 JNI - one shot
+on:
+  push:
+    paths:
+      - '.github/workflows/oxide-m3-x86-arm64-jni-smoke-once.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: oxide-x86-arm64-jni-isolated-one-test
+  cancel-in-progress: false
+
+jobs:
+  real-arm64-native-translation-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve and SHA-256-verify tiny diagnostic APK, NOT original game
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          gh run download 38815680677 --repo 48348484488/oxide \
+            --name oxide-m3-isolated-arm64-jni-apk-build --dir reports
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          apk=Path("reports/diagnostic.apk")
+          data=json.loads(Path("reports/diagnostic.json").read_text())
+          expected="b2193ecbb1777a471a8db8223d00da6ffb2383fd4ed9ff6ce359c17f9810e5f7"
+          assert hashlib.sha256(apk.read_bytes()).hexdigest()==expected
+          assert data["apk_sha256"]==expected
+          assert data["status"]=="INDEPENDENT_ARM64_DIAGNOSTIC_APK_BUILT_NOT_EXECUTED"
+          assert data["original_oxide_apk_modified"] is False
+          print("Pinned tiny ARM64-only diagnostic verified; no original game files.")
+          PY
+
+      - name: Boot official x86_64 Play Android15 with KVM and test ARM64 JNI
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          emulator-build: 16428233
+          arch: x86_64
+          target: google_apis_playstore
+          profile: pixel_7
+          cores: 2
+          ram-size: 2048M
+          emulator-boot-timeout: 380
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash tools/oxide_nativebridge_probe/run_on_avd.sh reports/diagnostic.apk reports
+
+      - name: Preserve real test evidence even if ARM64 translation fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-x86-google-play-nativebridge-jni-real-verdict
+          path: |
+            reports/diagnostic.json
+            reports/boot.txt
+            reports/abi.txt
+            reports/abilist64.txt
+            reports/native-bridge.txt
+            reports/play-store-pm-path.txt
+            reports/play-services-pm-path.txt
+            reports/pre-install-bridge-gate.txt
+            reports/diagnostic-install.txt
+            reports/diagnostic-launch.txt
+            reports/diagnostic-pid.txt
+            reports/diagnostic-logcat.txt
+            reports/nativebridge-jni-verdict.json
+          retention-days: 14
+          if-no-files-found: warn
