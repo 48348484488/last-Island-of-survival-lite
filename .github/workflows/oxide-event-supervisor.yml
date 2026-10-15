@@ -7,6 +7,7 @@ on:
       - Oxide Android 16 run
       - Oxide virtual Android host candidates
       - Oxide M3 official ARM64 Play Android software boot (no account)
+      - Oxide M3 macOS ARM64 official Android15 TCG boot only - one attempt
       - Oxide M4 original APK on verified official ARM64 TCG (one attempt)
       - Oxide M4 original APK on macOS Apple Silicon Android ARM64 (one attempt)
     types: [completed]
@@ -49,7 +50,7 @@ jobs:
               for (const child of fs.readdirSync(dir, {withFileTypes: true})) {
                 const p = path.join(dir, child.name);
                 if (child.isDirectory()) walk(p);
-                else if (['verdict.txt', 'preflight.json', 'runtime-verdict.json', 'abi.txt', 'status.txt', 'managed-arm64-gate.json', 'trial-stage.txt', 'oxide-exit-timeline.json'].includes(child.name)) files.push(p);
+                else if (['verdict.txt', 'preflight.json', 'runtime-verdict.json', 'abi.txt', 'status.txt', 'managed-arm64-gate.json', 'trial-stage.txt', 'oxide-exit-timeline.json', 'attempt-stage.txt', 'boot.txt'].includes(child.name)) files.push(p);
               }
             }
             walk('evidence');
@@ -81,6 +82,18 @@ jobs:
               } else {
                 action = 'Official ARM64 software boot NOT verified (runner ' + run.conclusion +
                   '). Do not download Oxide or schedule endless expensive retries. Inspect emulator startup logs before another hypothesis.';
+              }
+            } else if (run.name === 'Oxide M3 macOS ARM64 official Android15 TCG boot only - one attempt') {
+              const bootProof = observations.some(x =>
+                x.includes('attempt-stage.txt: OFFICIAL_MAC_ARM64_TCG_BOOT_SUCCEEDED_ORIGINAL_APK_NOT_INSTALLED'));
+              const packageProof = observations.some(x =>
+                x.includes('ARM64_GOOGLE_PACKAGES_PRESENT_TRUST_UNVERIFIED'));
+              const bootOne = observations.some(x => x.includes('boot.txt: 1'));
+              if (run.conclusion === 'success' && bootProof && packageProof && bootOne) {
+                action = 'Android ARM64 Google Play system booted using macOS software TCG, without HVF. This is Android-only evidence; original Oxide APK and gameplay remain UNTESTED. Prepare one controlled original APK trial, no loops or integrity bypass.';
+              } else {
+                action = 'Mac ARM64 software TCG official Android 15 boot was NOT fully verified (' +
+                  run.conclusion + '). No original APK downloaded. Inspect action logs and do not repeat the ~1.8GB image without a distinct hypothesis.';
               }
             } else if (isOfficialGame) {
               const hostBlocked = observations.some(x => x.includes('BLOCKED_HVF_VM_CREATE_NO_EMULATOR_OR_APK_DOWNLOAD'));
