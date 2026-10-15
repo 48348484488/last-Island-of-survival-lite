@@ -51,6 +51,8 @@ class VerifiedBootHandoffTests(unittest.TestCase):
         self.assertIn("no duplicate dispatch here", self.supervisor)
         self.assertIn("Do not download Oxide or schedule endless expensive retries", self.supervisor)
         self.assertIn("Do not count game or ESP as verified", self.supervisor)
+        self.assertIn("BLOCKED_HVF_VM_CREATE_NO_EMULATOR_OR_APK_DOWNLOAD", self.supervisor)
+        self.assertIn("BLOCKED_HVF_UNSUPPORTED:", self.supervisor)
         self.assertIn("do not rerun automatically", self.supervisor.lower())
 
     def test_only_original_hash_protected_game_trial(self):
