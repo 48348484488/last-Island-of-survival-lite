@@ -18,6 +18,7 @@ SELF_SIGNAL = re.compile(r"Sending signal\. PID: (?P<pid>\d+) SIG: 9(?:\D|$)")
 DEATH = re.compile(r"Process " + re.escape(PACKAGE) + r" \(pid (?P<pid>\d+)\) has died:")
 CLOSE_AT = re.compile(r"createdAt=(?P<md>\d\d-\d\d) (?P<hms>\d\d:\d\d:\d\d\.\d+)")
 TASK_ID = re.compile(r"\btaskId=(\d+)")
+FINGERPRINT = re.compile(r'The property "ro\.build\.fingerprint" has a value with length (\d+) that is too large')
 
 def _datetime(md, hms, year):
     return datetime.strptime(f"{year}-{md} {hms}", "%Y-%m-%d %H:%M:%S.%f")
@@ -34,6 +35,8 @@ def assess(logcat, year=2026):
     started = pid = fully_drawn = signaled = dead = None
     closes = []
     play_store_warning_before_exit = False
+    install_permission_exception_before_exit = False
+    fingerprint_length_before_exit = None
     for line in logcat.splitlines():
         match = STAMP.match(line)
         if not match:
@@ -58,6 +61,15 @@ def assess(logcat, year=2026):
         if ("requires the Google Play Store" in msg and PACKAGE in msg
                 and (signaled is None or timestamp <= signaled)):
             play_store_warning_before_exit = True
+        # Attribute SDK/API warnings only to the original Oxide PID.
+        # Observed warnings do not establish the reason for closing.
+        if int(match["pid"]) == pid and (signaled is None or timestamp <= signaled):
+            if ("java.lang.SecurityException: Need to declare "
+                    "android.permission.REQUEST_INSTALL_PACKAGES to call this api" in msg):
+                install_permission_exception_before_exit = True
+            fingerprint = FINGERPRINT.search(msg)
+            if fingerprint is not None:
+                fingerprint_length_before_exit = int(fingerprint.group(1))
         if "Sent Transition" in msg and "type = CLOSE" in msg and ACTIVITY in msg:
             close_at = CLOSE_AT.search(msg)
             task = TASK_ID.search(msg)
@@ -70,6 +82,8 @@ def assess(logcat, year=2026):
         "original_self_sigkill_logcat": signaled is not None,
         "original_pid_died": dead is not None,
         "play_store_missing_warning_observed": play_store_warning_before_exit,
+        "undeclared_install_packages_permission_exception": install_permission_exception_before_exit,
+        "oversized_fingerprint_read_observed_length": fingerprint_length_before_exit,
     }
     if started and fully_drawn:
         evidence["start_to_fully_drawn_ms"] = _diff_ms(started, fully_drawn)
@@ -105,6 +119,7 @@ def assess(logcat, year=2026):
             "Task CLOSE preceding SIGKILL does not identify the caller or reason.",
             "Same-PID Android logcat is not a kernel stack trace.",
             "Missing Google Play Store is not proof of the security trigger.",
+            "Permission exceptions and fingerprint warnings do not identify a security trigger.",
             "A fully drawn Activity is not proof of a playable game."
         ]
     }
