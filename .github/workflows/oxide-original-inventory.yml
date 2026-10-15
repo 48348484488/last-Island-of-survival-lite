@@ -15,9 +15,25 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test read-only inventory
         run: python3 -m unittest discover -s tests -p 'test_audit_original_split_hashes.py' -v
-      - name: Download original release asset pack\n        env:\n          GH_TOKEN: ${{ github.token }}\n        run: |\n          gh release download v1.15.11966 --repo 48348484488/oxide --pattern 'split_UnityDataAssetPack.apk' --dir .\n          test -s split_UnityDataAssetPack.apk\n      - name: Hash repository APKs
+      - name: Download original release asset pack
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v1.15.11966 --repo 48348484488/oxide --pattern 'split_UnityDataAssetPack.apk' --dir .
+          test -s split_UnityDataAssetPack.apk
+      - name: Hash repository APKs
         run: python3 tools/audit_original_split_hashes.py --output reports/oxide-1.15.11966-apk-inventory.json
-      - name: Require all four original APK splits\n        run: |\n          python3 - <<'PY'\n          import json\n          from pathlib import Path\n          result = json.loads(Path('reports/oxide-1.15.11966-apk-inventory.json').read_text())\n          assert result['complete'], 'Original APK inventory incomplete'\n          assert len(result['files']) == 4\n          print('Four original APK splits inventoried')\n          PY\n      - name: Upload evidence
+      - name: Require all four original APK splits
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('reports/oxide-1.15.11966-apk-inventory.json').read_text())
+          assert result['complete'], 'Original APK inventory incomplete'
+          assert len(result['files']) == 4
+          print('Four original APK splits inventoried')
+          PY
+      - name: Upload evidence
         uses: actions/upload-artifact@v4
         with:
           name: oxide-original-apk-inventory
