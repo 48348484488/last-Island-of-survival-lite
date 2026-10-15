@@ -1,0 +1,47 @@
+name: Oxide M3 official ARM64 Play catalog — no account or APK
+on:
+  push:
+    paths:
+      - '.github/workflows/oxide-m3-official-arm64-catalog.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  published-image-catalog:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Google's published Play ARM64 Android images (metadata only)
+        run: |
+          set -euo pipefail
+          python3 tools/oxide_official_arm64_play_catalog.py \
+            --output reports/official-arm64-play-catalog.json
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          report = json.loads(Path("reports/official-arm64-play-catalog.json").read_text())
+          lines = [
+            "## Oxide no-account official Android feasibility",
+            "",
+            f"**Published image gate:** {report['status']}",
+            f"**Recent ARM64 Play images:** {len(report['recent_api_35_or_newer'])}",
+            "",
+            "No emulator, cloud account, game APK, Google account or paid device was used.",
+            "An image catalog does not prove Android boot, certification, gameplay or Play Integrity."
+          ]
+          print("\n".join(lines))
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as stream:
+            stream.write("\n".join(lines) + "\n")
+          PY
+      - name: Preserve public image evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-official-arm64-play-catalog
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
