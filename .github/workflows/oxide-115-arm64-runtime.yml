@@ -26,19 +26,25 @@ jobs:
         run: |
           mkdir -p reports
           uname -a > reports/kernel.txt
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" kmod
           sudo modprobe binder_linux devices=binder,hwbinder,vndbinder > reports/modprobe-binder.txt 2>&1 || true
+          sudo mkdir -p /dev/binderfs
+          if ! mountpoint -q /dev/binderfs; then sudo mount -t binder binder /dev/binderfs > reports/mount-binderfs.txt 2>&1 || true; fi
+          sudo chmod a+rw /dev/binderfs/binder 2>/dev/null || true
+          ls -la /dev/binderfs > reports/binderfs-ls.txt 2>&1 || true
           sudo modprobe ashmem_linux > reports/modprobe-ashmem.txt 2>&1 || true
           if ! python3 tools/oxide_host_preflight.py --output reports/preflight.json; then
             echo 'BLOCKED_HOST_BINDER: Redroid cannot boot on this hosted kernel' | tee reports/verdict.txt
             exit 1
           fi
-      - name: Boot Android 13 ARM64 without the original APK
+      - name: Boot proven Android 15 ARM64 host baseline without the original APK
         shell: bash
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq adb aapt
-          docker pull redroid/redroid:13.0.0-latest > reports/pull.log 2>&1
-          docker run -d --name oxide-android --privileged -p 5555:5555 redroid/redroid:13.0.0-latest androidboot.redroid_width=720 androidboot.redroid_height=1280 androidboot.redroid_dpi=320 androidboot.redroid_gpu_mode=guest > reports/container-id.txt 2> reports/container-error.txt
+          docker pull redroid/redroid:15.0.0_64only-latest > reports/pull.log 2>&1
+          docker run -d --name oxide-android --privileged -p 127.0.0.1:5555:5555 -v /dev/binderfs:/dev/binderfs redroid/redroid:15.0.0_64only-latest androidboot.redroid_width=720 androidboot.redroid_height=1280 androidboot.redroid_dpi=320 androidboot.redroid_gpu_mode=guest > reports/container-id.txt 2> reports/container-error.txt
           for i in $(seq 1 36); do
             adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
             if adb -s 127.0.0.1:5555 shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' | grep -qx 1; then break; fi
@@ -87,7 +93,7 @@ jobs:
           docker logs oxide-android > reports/container.log 2>&1 || true
           docker ps -a > reports/containers.txt 2>&1 || true
           docker inspect oxide-android > reports/container-inspect.json 2>&1 || true
-          cat reports/verdict.txt reports/runtime-verdict.json reports/preflight.json reports/modprobe-binder.txt 2>/dev/null || true
+          cat reports/verdict.txt reports/runtime-verdict.json reports/preflight.json reports/modprobe-binder.txt reports/mount-binderfs.txt 2>/dev/null || true
           tail -n 60 reports/container.log 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         if: always()
