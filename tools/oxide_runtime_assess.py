@@ -5,7 +5,11 @@ import json
 import re
 from pathlib import Path
 
-from tools.oxide_goal_engine import ORIGINAL, resumed
+# Handle module imports and the direct script entry point used in Android CI.
+if __package__:
+    from .oxide_goal_engine import ORIGINAL, resumed
+else:
+    from oxide_goal_engine import ORIGINAL, resumed
 
 
 def _value(directory, name):
