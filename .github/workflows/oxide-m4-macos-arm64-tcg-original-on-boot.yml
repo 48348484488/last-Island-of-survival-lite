@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 30
     env:
       ANDROID_I_WANT_MY_TCG: "yes"
-      ${{ github.token }}: GH_TOKEN
+      GH_TOKEN: ${{ github.token }}
       PREDECESSOR: ${{ github.event.workflow_run.id }}
     steps:
       - uses: actions/checkout@v4
