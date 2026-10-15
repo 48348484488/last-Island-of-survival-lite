@@ -1,0 +1,24 @@
+name: Oxide 1.15 original APK inventory
+on:
+  push:
+    paths:
+      - 'tools/audit_original_split_hashes.py'
+      - 'tests/test_audit_original_split_hashes.py'
+      - '.github/workflows/oxide-original-inventory.yml'
+  workflow_dispatch:
+jobs:
+  inventory:
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test read-only inventory
+        run: python3 -m unittest discover -s tests -p 'test_audit_original_split_hashes.py' -v
+      - name: Hash repository APKs
+        run: python3 tools/audit_original_split_hashes.py --output reports/oxide-1.15.11966-apk-inventory.json
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-apk-inventory
+          path: reports/oxide-1.15.11966-apk-inventory.json
