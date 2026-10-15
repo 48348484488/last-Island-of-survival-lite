@@ -8,8 +8,10 @@ from pathlib import Path
 # Handle module imports and the direct script entry point used in Android CI.
 if __package__:
     from .oxide_goal_engine import ORIGINAL, resumed
+    from .oxide_capture_timing_gate import verify_capture_timing
 else:
     from oxide_goal_engine import ORIGINAL, resumed
+    from oxide_capture_timing_gate import verify_capture_timing
 
 
 def _value(directory, name):
@@ -56,8 +58,13 @@ def evaluate(directory):
         return {"status": "PID_STABLE_MISSING_VISUAL_EVIDENCE", "pids": pids, "gameplay_confirmed": False}
     if not all(resumed(activity) for activity in activities):
         return {"status": "PID_STABLE_WITHOUT_ORIGINAL_RESUMED_ACTIVITY", "pids": pids, "gameplay_confirmed": False}
+    timing = verify_capture_timing(d)
+    if not timing["verified"]:
+        return {"status": "PID_STABLE_UNVERIFIED_35S_TIMING", "pids": pids,
+                "timing": timing, "gameplay_confirmed": False}
     return {
         "status": "PID_STABLE_35S_MENU_NOT_YET_REVIEWED",
+        "timing": timing,
         "pids": pids,
         "screenshots_available": True,
         "original_activity_resumed_at_0_10_35": True,
