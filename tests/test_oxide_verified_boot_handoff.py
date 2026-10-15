@@ -42,6 +42,7 @@ class VerifiedBootHandoffTests(unittest.TestCase):
     def test_supervisor_tracks_official_boot_and_game_completion(self):
         self.assertIn("      - Oxide M3 official ARM64 Play Android software boot (no account)", self.supervisor)
         self.assertIn("      - Oxide M4 original APK on verified official ARM64 TCG (one attempt)", self.supervisor)
+        self.assertIn("      - Oxide M4 original APK on macOS Apple Silicon Android ARM64 (one attempt)", self.supervisor)
         self.assertIn("managed-arm64-gate.json", self.supervisor)
         self.assertIn("oxide-exit-timeline.json", self.supervisor)
         self.assertIn("status.txt", self.supervisor)
