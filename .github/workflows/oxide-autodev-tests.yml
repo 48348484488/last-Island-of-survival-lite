@@ -26,6 +26,7 @@ on:
       - 'tests/test_oxide_activity_binding_audit.py'
       - 'tests/test_oxide_x86_native_bridge_preflight.py'
       - 'tests/test_oxide_nativebridge_probe.py'
+      - 'tests/test_oxide_nativebridge_probe_shell.py'
       - 'tests/test_oxide_nativebridge_handoff.py'
       - '.github/workflows/oxide-m3-x86-arm64-jni-smoke-once.yml'
       - '.github/workflows/oxide-m4-x86-arm64-nativebridge-original-on-success.yml'
