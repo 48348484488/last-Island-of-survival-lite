@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   unchanged-four-splits-only-after-native-jni:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.id == 38815996467 && github.event.workflow_run.head_repository.full_name == github.repository }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.id == 38817025884 && github.event.workflow_run.head_repository.full_name == github.repository }}
     runs-on: ubuntu-24.04
     timeout-minutes: 18
     env:
@@ -28,7 +28,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p predecessor reports
-          gh run download 38815996467 --repo 48348484488/oxide \
+          gh run download 38817025884 --repo 48348484488/oxide \
             --name oxide-x86-google-play-nativebridge-jni-real-verdict \
             --dir predecessor
           python3 - <<'PY'
