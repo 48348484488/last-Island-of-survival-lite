@@ -50,7 +50,7 @@ class VerifiedBootHandoffTests(unittest.TestCase):
         self.assertIn("no duplicate dispatch here", self.supervisor)
         self.assertIn("Do not download Oxide or schedule endless expensive retries", self.supervisor)
         self.assertIn("Do not count game or ESP as verified", self.supervisor)
-        self.assertIn("Do not rerun automatically", self.supervisor)
+        self.assertIn("do not rerun automatically", self.supervisor.lower())
 
     def test_only_original_hash_protected_game_trial(self):
         self.assertIn("oxide_official_arm64_game_trial.sh", self.follow)
