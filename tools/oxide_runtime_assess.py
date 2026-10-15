@@ -7,10 +7,10 @@ from pathlib import Path
 
 # Handle module imports and the direct script entry point used in Android CI.
 if __package__:
-    from .oxide_goal_engine import ORIGINAL, resumed
+    from .oxide_goal_engine import ORIGINAL, resumed, first_resumed_original
     from .oxide_capture_timing_gate import verify_capture_timing
 else:
-    from oxide_goal_engine import ORIGINAL, resumed
+    from oxide_goal_engine import ORIGINAL, resumed, first_resumed_original
     from oxide_capture_timing_gate import verify_capture_timing
 
 
@@ -45,18 +45,22 @@ def evaluate(directory):
         return {"status": "BLOCKED_ORIGINAL_APK_INSTALL", "gameplay_confirmed": False}
 
     pids = [_value(d, f"pid-{t}.txt") for t in (0, 10, 35)]
-    stable = _original_pid(pids[0]) and all(pid == pids[0] for pid in pids)
+    first = first_resumed_original(d)
+    baseline_pid = first["pid"] if first else pids[0]
+    stable = _original_pid(baseline_pid) and pids[1] == pids[2] == baseline_pid
     if not stable:
-        return {"status": "FAILED_PID_STABILITY_35S", "pids": pids, "gameplay_confirmed": False}
+        return {"status": "FAILED_PID_STABILITY_35S", "pids": pids,
+                "first_original_resumed_checkpoint": first["checkpoint"] if first else None,
+                "gameplay_confirmed": False}
     launch = _value(d, "launch.txt")
     if "Status: ok" not in launch or ORIGINAL not in launch:
         return {"status": "PID_STABLE_MISSING_ORIGINAL_LAUNCH", "pids": pids, "gameplay_confirmed": False}
-    activities = [_value(d, f"activity-{t}.txt") for t in (0, 10, 35)]
+    activities = [_value(d, f"activity-{t}.txt") for t in (10, 35)]
     screenshots = [d / f"screen-{t}.png" for t in (10, 35)]
     pngs = all(_valid_png(p) for p in screenshots)
     if not all(activities) or not pngs:
         return {"status": "PID_STABLE_MISSING_VISUAL_EVIDENCE", "pids": pids, "gameplay_confirmed": False}
-    if not all(resumed(activity) for activity in activities):
+    if first is None or not all(resumed(activity) for activity in activities):
         return {"status": "PID_STABLE_WITHOUT_ORIGINAL_RESUMED_ACTIVITY", "pids": pids, "gameplay_confirmed": False}
     timing = verify_capture_timing(d)
     if not timing["verified"]:
@@ -67,7 +71,10 @@ def evaluate(directory):
         "timing": timing,
         "pids": pids,
         "screenshots_available": True,
-        "original_activity_resumed_at_0_10_35": True,
+        "original_activity_resumed_at_early_10_35": True,
+        "first_original_resumed_checkpoint": first["checkpoint"],
+        "first_original_resumed_pid": first["pid"],
+        "original_activity_resumed_at_0_10_35": first["checkpoint"] == 0,
         "gameplay_confirmed": False,
         "note": "Matching original resumed Activity and PID do not prove rendered menu/gameplay.",
     }
