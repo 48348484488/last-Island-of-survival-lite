@@ -61,6 +61,15 @@ class NativeBridgeOneShotHandoffTests(unittest.TestCase):
                            capture_output=True, text=True, timeout=6)
         self.assertEqual(p.returncode, 0, p.stderr)
 
+    def test_supervisor_classifies_toy_jni_without_claiming_gameplay(self):
+        supervisor = (ROOT / ".github/workflows/oxide-event-supervisor.yml").read_text()
+        self.assertIn("Oxide M3 official x86_64 AVD executes independent ARM64 JNI - one shot", supervisor)
+        self.assertIn("Oxide M4 original game on proven x86_64 ARM64 translator - one trial", supervisor)
+        self.assertIn("nativebridge-jni-verdict.json", supervisor)
+        self.assertIn("ABI/libndk_translation advertising alone is not sufficient", supervisor)
+        self.assertIn("This is NOT game, menu, gameplay or ESP proof", supervisor)
+        self.assertIn("no automatic repeat or bypass", supervisor)
+
     def test_evidence_preserved_even_on_failure(self):
         self.assertIn("if: always()", self.second)
         self.assertIn("oxide-x86-nativebridge-original-1-15-11966-one-shot", self.second)
