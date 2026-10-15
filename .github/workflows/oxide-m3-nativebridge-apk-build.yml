@@ -1,0 +1,53 @@
+name: Oxide M3 standalone ARM64 JNI APK compile proof - no emulator
+on:
+  push:
+    paths:
+      - '.github/workflows/oxide-m3-nativebridge-apk-build.yml'
+      - 'tools/oxide_nativebridge_probe/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile-independent-jni:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare Android SDK build tools, no system image or original APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          if ! command -v clang >/dev/null || ! command -v ld.lld >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends clang lld
+          fi
+          sdkmanager --install 'build-tools;35.0.0' 'platforms;android-35' > reports/sdk-build-tools-install.txt
+          clang --version | head -n 1 > reports/clang-version.txt
+          javac -version > reports/javac-version.txt 2>&1
+      - name: Build and sign only the new synthetic ARM64 JNI test app
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/oxide_nativebridge_probe/build_probe.sh \
+            "$RUNNER_TEMP/oxide-nativebridge-build" reports/diagnostic.apk \
+            > reports/probe-build.txt
+          cat reports/probe-build.txt
+          test -f reports/diagnostic.apk
+          test -f reports/diagnostic.json
+          cat reports/diagnostic.json
+      - name: Save reproducible independent diagnostic, never original Oxide
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-m3-isolated-arm64-jni-apk-build
+          path: |
+            reports/diagnostic.apk
+            reports/diagnostic.json
+            reports/probe-build.txt
+            reports/clang-version.txt
+            reports/javac-version.txt
+          retention-days: 7
+          if-no-files-found: warn
