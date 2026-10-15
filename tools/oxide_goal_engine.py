@@ -13,9 +13,13 @@ from pathlib import Path
 if __package__:
     from .oxide_capture_timing_gate import verify_capture_timing
     from .oxide_activity_binding import original_resumed_activity_pid
+    from .oxide_runtime_environment import evaluate_runtime_environment
+    from .oxide_exit_timeline import assess as assess_exit_timeline
 else:
     from oxide_capture_timing_gate import verify_capture_timing
     from oxide_activity_binding import original_resumed_activity_pid
+    from oxide_runtime_environment import evaluate_runtime_environment
+    from oxide_exit_timeline import assess as assess_exit_timeline
 
 GOAL_IDS = ("android_arm64_boot", "original_launch", "activity_35s", "menu_gameplay", "synthetic_overlay")
 ORIGINAL = "com.catsbit.oxidesurvivalisland/.OxideActivity"
@@ -56,7 +60,8 @@ def first_resumed_original(root):
 
 def evidence_summary(root):
     root = Path(root)
-    boot = read(root, "boot.txt") == "1" and read(root, "abi.txt") == "arm64-v8a"
+    runtime_environment = evaluate_runtime_environment(root)
+    boot = runtime_environment["original_arm64_runtime_eligible"]
     installed = boot and read(root, "install.txt").startswith("Success")
     launch_log = read(root, "launch.txt")
     pids = {str(t): pid_value(read(root, f"pid-{t}.txt")) for t in (0, 10, 35)}
@@ -79,6 +84,10 @@ def evidence_summary(root):
         else:
             screenshots[str(t)] = False
     logcat = read(root, "logcat.txt")
+    native_exit_diagnostic = assess_exit_timeline(logcat)
+    original_process_started = (installed and "Status: ok" in launch_log
+                                and ORIGINAL in launch_log
+                                and native_exit_diagnostic["evidence"]["original_pid"] is not None)
     android_version = read(root, "android-version.txt")
     if not android_version:
         observed = re.search(r"Android OS (1[3-6])", logcat)
@@ -119,6 +128,8 @@ def evidence_summary(root):
         next_action = "HOST_PREPARE"
     elif not installed:
         next_action = "CHECK_APK_INSTALL"
+    elif not launched and native_exit_diagnostic["evidence"]["original_pid_died"]:
+        next_action = "FORENSIC_APP_EXIT"
     elif not launched:
         next_action = "CHECK_ORIGINAL_ACTIVITY_LAUNCH"
     elif not resumed_35s:
@@ -132,6 +143,11 @@ def evidence_summary(root):
         "next_action": next_action,
         "checks": {
             "virtual_arm64_booted": boot,
+            "android_arm64_native": runtime_environment["android_arm64_native"],
+            "arm64_jni_translation_proven": runtime_environment["arm64_jni_translation_proven_in_predecessor"],
+            "runtime_environment": runtime_environment,
+            "original_process_started_from_logcat": bool(original_process_started),
+            "native_exit_diagnostic": native_exit_diagnostic,
             "original_split_install_confirmed": installed,
             "original_activity_started": launched,
             "first_original_resumed_checkpoint": initial["checkpoint"] if initial else None,
