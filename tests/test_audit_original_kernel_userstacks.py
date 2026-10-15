@@ -49,6 +49,33 @@ class RealOriginalUserspaceCallsiteTests(unittest.TestCase):
         self.assertFalse(result["source_of_security_decision_identified"])
         self.assertFalse(result["original_apks_modified"])
 
+    def test_bpftrace_raw_hex_pc_lines_without_0x(self):
+        x=self.fixture()
+        self.mutate(x,"0x400100\n0x5000a4","400100\n5000a4")
+        self.mutate(x,"0x500120\n0x400200","500120\n400200")
+        result=analyze(x)
+        self.assertEqual(result["status"],
+                         "ORIGINAL_BINDER_AND_SIGKILL_CALLSITE_MODULES_CORRELATED")
+        self.assertEqual(result["attributed_stacks"][0]["frames"][1]["file_offset_hex"],"0x80a4")
+
+    def test_nearby_independent_bpftrace_probe_timestamps_accepted(self):
+        x=self.fixture()
+        self.mutate(x,
+            "transaction=901 target_node=777 code=15 boot_ns=14997000000\n0x400100",
+            "transaction=901 target_node=777 code=15 boot_ns=14997014512\n0x400100")
+        self.mutate(x,
+            "target_pid=2120 signal=9 boot_ns=15000000000\n0x500120",
+            "target_pid=2120 signal=9 boot_ns=15000013096\n0x500120")
+        self.assertEqual(analyze(x)["status"],
+                         "ORIGINAL_BINDER_AND_SIGKILL_CALLSITE_MODULES_CORRELATED")
+
+    def test_unrelated_probe_more_than_200us_is_rejected(self):
+        x=self.fixture()
+        self.mutate(x,
+            "transaction=901 target_node=777 code=15 boot_ns=14997000000\n0x400100",
+            "transaction=901 target_node=777 code=15 boot_ns=14997500000\n0x400100")
+        self.assertFalse(analyze(x)["both_stacks_contain_mapped_executable_pc"])
+
     def test_wrong_binder_node_not_attributed(self):
         x=self.fixture()
         self.mutate(x,"transaction=901 target_node=777 code=15 boot_ns=14997000000",
