@@ -21,6 +21,28 @@ class BerberisLogcatAuditTests(unittest.TestCase):
         result = audit_logcat(SAMPLE.replace("in tid 4426", "in tid 5555").replace(" 4426  4426 F", " 5555  5555 F"))
         self.assertNotEqual(result["status"], "BERBERIS_UNDEFINED_INSTRUCTION_PRECEDES_SIGILL")
 
+    def test_midnight_rollover_preserves_six_ms_delta(self):
+        sample = SAMPLE.replace("22:46:43.180", "23:59:59.997").replace(
+            "22:46:43.186", "00:00:00.003")
+        result = audit_logcat(sample)
+        self.assertEqual(result["status"], "BERBERIS_UNDEFINED_INSTRUCTION_PRECEDES_SIGILL")
+        self.assertEqual(result["delta_ms"], 6)
+
+    def test_two_seconds_later_is_not_correlated(self):
+        sample = SAMPLE.replace("22:46:43.186", "22:46:45.186")
+        result = audit_logcat(sample)
+        self.assertEqual(result["status"], "NO_MATCHING_BERBERIS_SIGILL_SEQUENCE")
+
+    def test_signal_occurring_before_instruction_is_rejected(self):
+        sample = SAMPLE.replace("22:46:43.186", "22:46:43.174")
+        result = audit_logcat(sample)
+        self.assertEqual(result["status"], "NO_MATCHING_BERBERIS_SIGILL_SEQUENCE")
+
+    def test_other_signal_code_is_not_accepted(self):
+        sample = SAMPLE.replace("SI_TKILL", "SI_USER")
+        result = audit_logcat(sample)
+        self.assertEqual(result["status"], "NO_MATCHING_BERBERIS_SIGILL_SEQUENCE")
+
     def test_missing_signal_is_not_success(self):
         result = audit_logcat(SAMPLE.splitlines()[0])
         self.assertNotEqual(result["status"], "BERBERIS_UNDEFINED_INSTRUCTION_PRECEDES_SIGILL")
