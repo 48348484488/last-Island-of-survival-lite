@@ -9,7 +9,7 @@ on:
         type: string
 permissions:
   contents: read
-  actions: write
+  actions: read
   issues: write
 concurrency:
   group: oxide-goals-${{ inputs.runtime_run_id }}
@@ -59,24 +59,11 @@ jobs:
             const goals = JSON.parse(fs.readFileSync('goal-report/goals.json', 'utf8'));
             const markdown = fs.readFileSync('goal-report/goals.md', 'utf8');
             let action = 'No safe automatic correction is known for this blockage. The original APK stays unchanged.';
-            if (goals.next_action === 'FORENSIC_APP_EXIT' &&
-                goals.android_version === '15' &&
-                goals.checks.initial_activity_self_sigkill_observed) {
-              const response = await github.rest.actions.listWorkflowRuns({
-                owner, repo, workflow_id: 'oxide-115-arm64-runtime.yml', per_page: 100
-              });
-              const alreadyAttempted = response.data.workflow_runs.some(r =>
-                (r.display_title || '').includes('Oxide Android 16 run'));
-              if (!alreadyAttempted) {
-                await github.rest.actions.createWorkflowDispatch({
-                  owner, repo, workflow_id: 'oxide-115-arm64-runtime.yml',
-                  ref: context.payload.repository.default_branch,
-                  inputs: {runner: 'ubuntu-24.04-arm', android_version: '16'}
-                });
-                action = 'ANDROID16 comparison automatically dispatched once. Same untouched APKs; no security bypass.';
-              } else {
-                action = 'Android16 experiment already exists. No retry loop; inspect the application-exit evidence.';
-              }
+            // Both original Redroid ARM64 Android 15 and 16 already terminated
+            // their own Activity after ~4.5 seconds. An old workflow listing
+            // can never authorize a repeated ~900MB game download.
+            if (goals.next_action === 'FORENSIC_APP_EXIT') {
+              action = 'Android15/16 original exit already reproduced (#38789434979 and #38787025289). No automatic Android/APK rerun. Reuse logs; require a distinct reviewed preflight before any new expensive experiment.';
             } else if (goals.next_action === 'REVIEW_REAL_MENU') {
               action = '35-second original Activity check passed, but menu/gameplay still require independent visual verification.';
             }
