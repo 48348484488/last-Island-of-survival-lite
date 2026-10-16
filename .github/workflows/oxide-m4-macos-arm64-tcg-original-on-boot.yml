@@ -1,9 +1,8 @@
 name: Oxide M4 Mac ARM64 TCG original APK - verified one-shot handoff
+# ARCHIVED after original-game failures; no automatic replay of costly APK/AVD trials.
+# A future distinct hypothesis requires a NEW preflight and review.
 on:
-  workflow_run:
-    workflows:
-      - "Oxide M3 macOS ARM64 official Android15 TCG boot only - one attempt"
-    types: [completed]
+  workflow_dispatch:
 
 permissions:
   actions: read
@@ -15,7 +14,8 @@ concurrency:
 
 jobs:
   unchanged-original-one-attempt:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.id == 38813694423 && github.event.workflow_run.head_repository.full_name == github.repository }}
+    # Permanently skip this historical automatic single-use trial.
+    if: ${{ false }}
     runs-on: macos-15
     timeout-minutes: 30
     env:
