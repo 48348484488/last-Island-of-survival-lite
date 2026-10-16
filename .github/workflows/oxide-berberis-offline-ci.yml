@@ -1,0 +1,28 @@
+name: Oxide Berberis offline regression
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/oxide-berberis-offline-ci.yml'
+      - 'tools/oxide_berberis_logcat_audit.py'
+      - 'tools/oxide_exit_timeline.py'
+      - 'tests/test_oxide_berberis_logcat_audit.py'
+      - 'tests/test_oxide_exit_timeline.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: oxide-berberis-offline-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  offline-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile offline auditors
+        run: python3 -m compileall -q tools/oxide_berberis_logcat_audit.py tools/oxide_exit_timeline.py tests/test_oxide_berberis_logcat_audit.py tests/test_oxide_exit_timeline.py
+      - name: Test Berberis opcode chronology
+        run: python3 -m unittest discover -s tests -p 'test_oxide_berberis_logcat_audit.py' -v
+      - name: Test original Android exit timelines
+        run: python3 -m unittest discover -s tests -p 'test_oxide_exit_timeline.py' -v
