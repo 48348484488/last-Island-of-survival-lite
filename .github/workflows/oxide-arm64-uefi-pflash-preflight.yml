@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - '.github/workflows/oxide-arm64-uefi-pflash-preflight.yml'
+      - 'tools/oxide_arm64_uefi_pflash_probe.sh'
 
 permissions:
   contents: read
