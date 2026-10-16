@@ -15,6 +15,7 @@ ORIGINAL_LIKE = "\n".join((
     "10-15 22:46:43.186  4426  4426 F libc    : Fatal signal 4 (SIGILL), code -6 (SI_TKILL) in tid 4426 (esurvivalisland), pid 4426 (esurvivalisland)",
     "10-15 22:46:44.166  4495  4495 F DEBUG   : pid: 4426, tid: 4426, name: esurvivalisland  >>> com.catsbit.oxidesurvivalisland <<<",
     "10-15 22:46:44.186  4495  4495 F DEBUG   :       #00 pc 0000000000700a3c  /data/app/synthetic/lib/arm64/libloader.so",
+    "10-15 22:46:44.186  4495  4495 F DEBUG   :       #01 pc 0000000000700be8  /data/app/synthetic/lib/arm64/libloader.so",
     "10-15 22:46:44.186  4495  4495 F DEBUG   :       #02 pc 000000000008b144  /system/bin/arm64/linker64 (__dl__ZN6soinfo17call_constructorsEv+604)",
     "10-15 22:46:44.327   350   350 I Zygote  : Process 4426 exited due to signal 4 (Illegal instruction)",
 ))
@@ -31,6 +32,9 @@ class OriginalBerberisArtifactReplayTests(unittest.TestCase):
         self.assertEqual(result["observed_signal_delta_ms"], 6)
         self.assertEqual(result["original_pid"], 4426)
         self.assertEqual(result["reported_opcode"], "0xd5380429")
+        self.assertTrue(result["checks"]["tombstone_frame_00_exact_pc"])
+        self.assertTrue(result["checks"]["tombstone_frame_01_exact_pc"])
+        self.assertEqual(result["tombstone_secondary_pc"], "0x700be8")
         self.assertFalse(result["original_gameplay_verified"])
         self.assertEqual(result["security_trigger"], "UNKNOWN")
         self.assertEqual(result["native_arm64_compatibility"], "NOT_ESTABLISHED")
@@ -58,6 +62,18 @@ class OriginalBerberisArtifactReplayTests(unittest.TestCase):
         result = self.read(ORIGINAL_LIKE.replace("22:46:40.128", "22:46:39.128"))
         self.assertFalse(result["checks"]["launch_to_signal"])
         self.assertFalse(result["all_checks_passed"])
+
+    def test_tampered_first_tombstone_pc_fails_closed(self):
+        result = self.read(ORIGINAL_LIKE.replace("0000000000700a3c", "0000000000700a40"))
+        self.assertFalse(result["checks"]["tombstone_frame_00_exact_pc"])
+        self.assertFalse(result["all_checks_passed"])
+        self.assertIsNone(result["tombstone_guest_pc"])
+
+    def test_tampered_second_tombstone_pc_fails_closed(self):
+        result = self.read(ORIGINAL_LIKE.replace("0000000000700be8", "0000000000700bec"))
+        self.assertFalse(result["checks"]["tombstone_frame_01_exact_pc"])
+        self.assertFalse(result["all_checks_passed"])
+        self.assertIsNone(result["tombstone_secondary_pc"])
 
     def test_missing_signal_fails_closed(self):
         result = self.read("\n".join(line for line in ORIGINAL_LIKE.splitlines()
