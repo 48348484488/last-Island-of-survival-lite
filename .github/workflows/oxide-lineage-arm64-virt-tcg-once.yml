@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - '.github/workflows/oxide-lineage-arm64-virt-tcg-once.yml'
+      - 'tools/oxide_lineage_arm64_virt_tcg_once.sh'
 
 permissions:
   contents: read
