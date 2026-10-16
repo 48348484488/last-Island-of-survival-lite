@@ -70,6 +70,35 @@ class OriginalLibloaderMetadataTests(unittest.TestCase):
         self.assertEqual(data["status"], "LIBLOADER_PC_MAPPING_INCOMPLETE")
         self.assertFalse(data["tombstone_pc_mappings"][0]["load_segment_executable"])
 
+    def test_executable_memory_without_file_bytes_is_not_file_backed(self):
+        # Both tombstone PCs lie beyond p_filesz but inside p_memsz.
+        blob = bytearray(elf_fixture())
+        struct.pack_into("<Q", blob, 0x40 + 32, 0xA00)  # p_filesz
+        self.archives(bytes(blob))
+        result = inspect_original_archives(self.folder)
+        self.assertEqual(result["status"], "LIBLOADER_PC_MAPPING_INCOMPLETE")
+        for pc in result["tombstone_pc_mappings"]:
+            self.assertTrue(pc["mapped_load_segment"])
+            self.assertTrue(pc["load_segment_executable"])
+            self.assertTrue(pc["section_executable"])
+            self.assertIsNone(pc["elf_file_offset"])
+            self.assertFalse(pc["file_backed_executable"])
+
+    def test_load_filesz_exceeding_memsz_is_rejected(self):
+        blob = bytearray(elf_fixture())
+        struct.pack_into("<Q", blob, 0x40 + 40, 0x1000)  # p_memsz < p_filesz
+        with self.assertRaisesRegex(ValueError, "ELF_LOAD_FILE_RANGE_INVALID"):
+            inspect_elf(bytes(blob))
+
+    def test_executable_segment_without_executable_section_is_incomplete(self):
+        blob = bytearray(elf_fixture())
+        struct.pack_into("<Q", blob, 0x200 + 64 + 8, 2)  # .text sh_flags: ALLOC only
+        self.archives(bytes(blob))
+        result = inspect_original_archives(self.folder)
+        self.assertEqual(result["status"], "LIBLOADER_PC_MAPPING_INCOMPLETE")
+        self.assertTrue(result["tombstone_pc_mappings"][0]["load_segment_executable"])
+        self.assertFalse(result["tombstone_pc_mappings"][0]["file_backed_executable"])
+
     def test_missing_split_is_blocked(self):
         with ZipFile(self.folder / "base.apk", "w") as z:
             z.writestr("lib/arm64-v8a/libloader.so", elf_fixture())
