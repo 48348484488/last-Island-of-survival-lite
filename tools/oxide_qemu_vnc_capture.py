@@ -9,6 +9,8 @@ import json
 import socket
 import struct
 import zlib
+import time
+import hashlib
 from pathlib import Path
 
 MAX_PIXELS = 4096 * 4096
@@ -62,7 +64,7 @@ def save_bgra_as_png(path, width, height, pixels):
     return {"sampled_unique_rgb": len(colors), "png_bytes": len(png)}
 
 
-def capture(host, port, outfile):
+def capture(host, port, outfile, keysym=None):
     if host not in ("127.0.0.1", "::1", "localhost"):
         raise ValueError("Only localhost QEMU VNC is allowed")
     with socket.create_connection((host, port), timeout=8) as sock:
@@ -98,6 +100,15 @@ def capture(host, port, outfile):
         sock.sendall(bytes([0, 0, 0, 0]) + fmt)
         # SetEncodings (type 2) RAW only (encoding 0).
         sock.sendall(struct.pack(">BBHi", 2, 0, 1, 0))
+        # Optional ordinary keyboard event on the user's test VM only.
+        # QEMU must explicitly have a keyboard device; this is not ADB or APK patching.
+        if keysym is not None:
+            if not 0 <= keysym <= 0xffffffff:
+                raise ValueError("Invalid X11 key symbol")
+            sock.sendall(struct.pack(">BBHI", 4, 1, 0, keysym))
+            time.sleep(0.20)
+            sock.sendall(struct.pack(">BBHI", 4, 0, 0, keysym))
+            time.sleep(1.0)
         # Request full framebuffer.
         sock.sendall(struct.pack(">BBHHHH", 3, 0, 0, 0, width, height))
 
@@ -138,6 +149,13 @@ def capture(host, port, outfile):
                     "pixel_format_requested": "BGRA little-endian 32bpp",
                     "original_pixfmt_hex": original_pixel_format.hex(),
                     "framebuffer_captured": True,
+                    "injected_keysym": keysym,
+                    "framebuffer_sha256": hashlib.sha256(framebuffer).hexdigest(),
+                    "recovery_menu_rgb_samples": {
+                        str(y): list(reversed(framebuffer[((y * width) + width // 2) * 4:
+                                                      ((y * width) + width // 2) * 4 + 3]))
+                        for y in (240, 290, 340, 390) if y < height
+                    },
                     **stats,
                     "is_android_home_or_gameplay": "UNVERIFIED",
                 }
@@ -148,11 +166,12 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--port", type=int, default=5909)
+    p.add_argument("--keysym", type=lambda x: int(x, 0), default=None)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--report", type=Path, required=True)
     args = p.parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    result = capture(args.host, args.port, args.output)
+    result = capture(args.host, args.port, args.output, args.keysym)
     args.report.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(json.dumps(result, sort_keys=True))
 
