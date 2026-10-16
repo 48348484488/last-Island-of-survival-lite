@@ -1,0 +1,116 @@
+name: Oxide original ARM64 ELF DT_NEEDED audit - no Android
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/oxide_elf_dependency_audit.py'
+      - 'tests/test_oxide_elf_dependency_audit.py'
+      - '.github/workflows/oxide-arm64-elf-dt-needed.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: oxide-arm64-elf-dependency-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  read-native-elf-dynamic-metadata-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            tools
+            tests
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+
+      - name: First run the synthetic AArch64 ELF metadata regressions
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q tools/oxide_elf_dependency_audit.py tests/test_oxide_elf_dependency_audit.py
+          python3 -m unittest discover -s tests -p 'test_oxide_elf_dependency_audit.py' -v
+
+      - name: Cheap strict preflight before reading any ELF bytes
+        run: |
+          set -euo pipefail
+          for file in base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk; do
+            test -f "$file"
+            test "$(stat -c %s "$file")" -lt 120000000
+          done
+          test ! -f split_UnityDataAssetPack.apk
+          echo "Only three pre-existing small APK splits will be SHA-verified; no Android or asset pack."
+
+      - name: Read only ELF PT_DYNAMIC dependency names from verified original ZIP entries
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          python3 tools/oxide_elf_dependency_audit.py \
+            --directory . --output reports/original-arm64-elf-dt-needed.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          report=json.loads(Path("reports/original-arm64-elf-dt-needed.json").read_text())
+          assert report["status"]=="ORIGINAL_ARM64_DYNAMIC_DEPENDENCIES_READ_ONLY_VERIFIED"
+          assert report["arm64_libraries_inspected"] >= 1
+          assert len(report["original_apk_sha256_verified"]) == 3
+          assert report["all_four_splits_inspected"] is False
+          assert report["large_asset_pack_inspected"] is False
+          assert report["security_trigger"] == "UNKNOWN"
+          assert report["failed_dlopen_causation"] == "NOT_ESTABLISHED"
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as f:
+              f.write("### Oxide original ARM64 DT_NEEDED (read-only ELF metadata)\n")
+              f.write(f"- AArch64 ELF libraries: {report['arm64_libraries_inspected']}\n")
+              for name,info in report["lookup_names"].items():
+                  f.write(f"- {name}: {len(info['packaged_paths'])} packaged filenames, ")
+                  f.write(f"{len(info['libraries_declaring_dt_needed'])} DT_NEEDED users\n")
+              f.write("- All original hashes verified; asset pack excluded\n")
+              f.write("- No game, APK, emulator or protection logic executed\n")
+              f.write("- dlopen cause: NOT ESTABLISHED\n")
+          PY
+
+      - name: Publish ONLY derived names and hash metadata as JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-arm64-elf-dynamic-dependencies-readonly
+          path: reports/original-arm64-elf-dt-needed.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Record actual audit result in M4 once
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          RESULT: ${{ job.status }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const marker='<!-- oxide-original-elf-dt-needed:'+context.runId+' -->';
+            const comments=await github.paginate(github.rest.issues.listComments,{
+              owner,repo,issue_number:4,per_page:100
+            });
+            if (comments.some(c=>c.body?.includes(marker))) return;
+            let summary='no report: preflight or tests failed';
+            const fs=require('fs');
+            if (fs.existsSync('reports/original-arm64-elf-dt-needed.json')) {
+              const r=JSON.parse(fs.readFileSync('reports/original-arm64-elf-dt-needed.json','utf8'));
+              summary='status='+r.status+', ARM64 libraries='+String(r.arm64_libraries_inspected ?? 'unknown');
+              if (r.lookup_names) {
+                for (const [name,info] of Object.entries(r.lookup_names)) {
+                  summary+='\n'+name+': DT_NEEDED users='+info.libraries_declaring_dt_needed.length;
+                }
+              }
+            }
+            const body=marker+'\n**ELF DT_NEEDED original, sem executar Oxide:** '+process.env.RESULT+
+              '\nRun: https://github.com/'+owner+'/'+repo+'/actions/runs/'+context.runId+
+              '\n'+summary+
+              '\nSomente metadados ELF de 3 APKs menores hash-pinned. Asset pack grande excluído. '+
+              'Nenhuma inferência de anti-cheat, integridade, causa de SIGKILL ou gameplay.';
+            await github.rest.issues.createComment({owner,repo,issue_number:4,body});
