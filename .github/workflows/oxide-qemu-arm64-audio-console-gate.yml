@@ -1,0 +1,61 @@
+name: Oxide QEMU ARM64 audio and dual console host preflight - no Android
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-qemu-arm64-audio-console-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  virtual-hardware:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Check QEMU ARM64 virtual AC97 sound and dual VirtIO consoles without any guest or APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/oxide-qemu-audio-console
+          evidence="$PWD/evidence/oxide-qemu-audio-console"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends qemu-system-arm >/dev/null
+          qemu-system-aarch64 --version | head -n1 | tee "$evidence/qemu-version.txt"
+          qemu-system-aarch64 -device help > "$evidence/qemu-devices.txt"
+          grep -Fi 'AC97' "$evidence/qemu-devices.txt" | head -n1
+          grep -Fi 'virtconsole' "$evidence/qemu-devices.txt" | head -n1
+          set +e
+          timeout --signal=TERM --kill-after=3s 5s qemu-system-aarch64 \
+            -machine virt,accel=tcg -cpu cortex-a57 -smp 2 -m 512 \
+            -S -nographic -serial none -monitor none \
+            -audiodev none,id=audio0 \
+            -device AC97,audiodev=audio0 \
+            -device virtio-serial-pci,id=vs0 \
+            -chardev file,id=c0,path="$evidence/hvc0.txt" \
+            -device virtconsole,chardev=c0,bus=vs0.0 \
+            -chardev file,id=c1,path="$evidence/hvc1.txt" \
+            -device virtconsole,chardev=c1,bus=vs0.0 \
+            > "$evidence/host.log" 2>&1
+          qemu_rc=$?
+          set -e
+          echo "QEMU_EXIT_CODE=$qemu_rc" | tee "$evidence/result.txt"
+          if test "$qemu_rc" -eq 124 && test -f "$evidence/hvc0.txt" && test -f "$evidence/hvc1.txt"; then
+            echo "RESULT=PASS_AUDIO_AND_TWO_VIRTCONSOLE_DEVICES_ATTACHED_PAUSED_GUEST" | tee -a "$evidence/result.txt"
+            echo "GUEST_BOOT=NOT_TESTED" >> "$evidence/result.txt"
+            echo "ANDROID_FULL_BOOT=NOT_TESTED" >> "$evidence/result.txt"
+            echo "OXIDE_ORIGINAL_APK=NOT_TESTED" >> "$evidence/result.txt"
+          else
+            echo "RESULT=FAIL_VIRTUAL_HARDWARE_CONFIG" | tee -a "$evidence/result.txt"
+            cat "$evidence/host.log"
+            exit 1
+          fi
+      - name: Retain exact QEMU virtual-device proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-audio-virtconsole-host-proof
+          path: evidence/oxide-qemu-audio-console/
+          retention-days: 7
+          if-no-files-found: warn
