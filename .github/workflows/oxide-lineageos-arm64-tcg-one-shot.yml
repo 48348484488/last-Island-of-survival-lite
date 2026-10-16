@@ -1,0 +1,34 @@
+name: Oxide one-shot full ARM64 LineageOS QEMU TCG boot - no APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-lineageos-arm64-tcg-one-shot.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oxide-lineageos-arm64-tcg-one-shot
+  cancel-in-progress: true
+
+jobs:
+  full-android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate full Android trial script
+        run: bash -n tools/oxide_lineageos_arm64_full_tcg_trial.sh
+      - name: Boot community LineageOS ARM64 UTM QEMU virt under software TCG (no APK, bounded)
+        shell: bash
+        run: bash tools/oxide_lineageos_arm64_full_tcg_trial.sh
+      - name: Archive bounded boot logs and screen without including large downloaded images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-lineageos-arm64-tcg-one-shot-evidence
+          path: evidence/oxide-lineageos-arm64-full-tcg/
+          if-no-files-found: warn
+          retention-days: 7
