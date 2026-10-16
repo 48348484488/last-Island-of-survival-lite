@@ -37,3 +37,13 @@
 - [Matriz de hardware sem Android](https://github.com/48348484488/oxide/actions/runs/38938257237): **sucesso** na configuração de áudio, consoles VirtIO e GPU.
 
 **Não concluído:** boot Android completo confirmado, serviços Play/integração de conta, APK original Oxide, estabilidade de PID e gameplay.
+
+## Descoberta posterior: por que o logcat foi tão curto
+
+O arquivo [init.logcat-to-serial.rc do LineageOS](https://github.com/LineageOS/android_device_mainline_common/blob/main/optional/logcat-to-serial/init.logcat-to-serial.rc) usa o buffer `crash` por padrão. Isso explica por que o canal VirtIO `hvc1` produziu apenas 138 bytes no teste; não indica que todos os logs Android foram coletados.
+
+Os parâmetros documentados no [LineageOS](https://github.com/LineageOS/android_device_mainline_generic/blob/main/docs/boot-parameters.md) aceitam `androidboot.seriallogging.logcat_buffer=all`. O GRUB do target VirtIO passa parâmetros adicionais para a inicialização com `boot_android`. A próxima instrumentação deve coletar o buffer `all` usando uma cópia descartável do ambiente virtual, sem modificar os APKs originais ou alegar compatibilidade com o jogo.
+
+## Teste de otimização QEMU TCG
+
+O [teste #38940720328](https://github.com/48348484488/oxide/actions/runs/38940720328) executou carga Linux ARM64 com duas threads dentro de um QEMU *full-system*: 0,227643 s em TCG padrão e 0,233826 s em `tcg,tb-size=1024,thread=multi` (checksum idêntico, fator de velocidade 0,974). É uma medição curta sujeita a ruído; **não há ganho demonstrado que justifique novo boot pesado** só para esse ajuste. Não é benchmark de FPS ou Android.
