@@ -10,6 +10,12 @@ import json
 import re
 from pathlib import Path
 
+# Support package imports and direct script execution from tools/.
+if __package__:
+    from .oxide_berberis_logcat_audit import audit_logcat
+else:
+    from oxide_berberis_logcat_audit import audit_logcat
+
 PACKAGE = "com.catsbit.oxidesurvivalisland"
 ACTIVITY = PACKAGE + "/.OxideActivity"
 STAMP = re.compile(r"^(?P<md>\d\d-\d\d) (?P<hms>\d\d:\d\d:\d\d\.\d+)\s+(?P<pid>\d+)\s+(?P<tid>\d+)\s+\w\s+[^:]+: (?P<msg>.*)$")
@@ -114,6 +120,12 @@ def assess(logcat, year=2026):
             task = TASK_ID.search(msg)
             if close_at and task:
                 closes.append((_datetime(close_at["md"], close_at["hms"], year), int(task[1])))
+    berberis = audit_logcat(logcat)
+    original_berberis = bool(
+        fatal_sigill_at is not None and pid is not None
+        and berberis["status"] == "BERBERIS_UNDEFINED_INSTRUCTION_PRECEDES_SIGILL"
+        and berberis["pid"] == pid
+    )
     evidence = {
         "original_activity_started": started is not None,
         "original_pid": pid,
@@ -129,6 +141,9 @@ def assess(logcat, year=2026):
         "original_arm64_libloader_guest_frame": guest_libloader_frame,
         "arm64_dynamic_linker_constructors_frame": guest_linker_constructors,
         "original_zygote_signal4_exit_observed": zygote_signal4_exit,
+        "original_berberis_undefined_instruction_precedes_sigill": original_berberis,
+        "original_berberis_reported_opcode": berberis["opcode"] if original_berberis else None,
+        "original_berberis_to_sigill_ms": berberis["delta_ms"] if original_berberis else None,
     }
     if started and fully_drawn:
         evidence["start_to_fully_drawn_ms"] = _diff_ms(started, fully_drawn)
@@ -174,7 +189,8 @@ def assess(logcat, year=2026):
             "Permission exceptions and fingerprint warnings do not identify a security trigger.",
             "A fully drawn Activity is not proof of a playable game.",
             "SIGILL with SI_TKILL can be explicitly signaled; it does not prove an unsupported CPU instruction.",
-            "A libloader.so constructor frame does not identify the triggering application logic or a security policy."
+            "A libloader.so constructor frame does not identify the triggering application logic or a security policy.",
+            "Berberis reporting an undefined instruction identifies translator behavior, not native ARM64 legality or a security trigger."
         ]
     }
 
