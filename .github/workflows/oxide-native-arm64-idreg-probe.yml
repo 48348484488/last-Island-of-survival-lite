@@ -1,0 +1,93 @@
+name: Oxide native Linux ARM64 independent ID register probe
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/oxide_arm64_linux_idreg_probe.c'
+      - '.github/workflows/oxide-native-arm64-idreg-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: oxide-independent-native-arm64-idreg-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  read-id-register-only-in-independent-program:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify native ARM64 Linux environment without KVM or Android
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          command -v gcc
+          mkdir -p reports
+          echo "Native Linux AArch64 identified; no emulator or Oxide APK used."
+
+      - name: Build standalone opcode probe and report observed SIGILL or EL0 read
+        run: |
+          set -euo pipefail
+          gcc -std=c11 -O0 -Wall -Wextra -Werror \
+            tools/oxide_arm64_linux_idreg_probe.c \
+            -o "$RUNNER_TEMP/oxide-independent-idreg-probe"
+          "$RUNNER_TEMP/oxide-independent-idreg-probe" \
+            | tee reports/native-linux-arm64-idreg-observation.json
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          data=json.loads(Path("reports/native-linux-arm64-idreg-observation.json").read_text())
+          assert data["status"] in ("EL0_MRS_READ_SUCCEEDED","EL0_MRS_TRAPPED_SIGILL")
+          assert data["opcode"] == "0xd5380429"
+          assert data["register"] == "ID_AA64PFR1_EL1"
+          assert data["os"] == "linux" and data["architecture"] == "aarch64"
+          assert data["android_runtime_tested"] is False
+          assert data["original_game_tested"] is False
+          if data["status"] == "EL0_MRS_TRAPPED_SIGILL":
+              assert isinstance(data.get("sigill_si_code"), int)
+          else:
+              assert data.get("value_hex", "").startswith("0x")
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as report:
+              report.write("### Independent native Linux ARM64 feature-ID instruction\n")
+              report.write("- Opcode: `0xd5380429` (`MRS X9, ID_AA64PFR1_EL1`)\n")
+              report.write("- Observed result: " + data["status"] + "\n")
+              report.write("- Linux AArch64 EL0 only; Android and Oxide NOT executed.\n")
+              report.write("- Does not identify Play Integrity or anti-cheat policy.\n")
+          PY
+
+      - name: Preserve only observation JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-independent-native-linux-arm64-idreg
+          path: reports/native-linux-arm64-idreg-observation.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Report noninvasive test outcome to M3
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          PROBE_RESULT: ${{ job.status }}
+        with:
+          script: |
+            const {owner, repo}=context.repo;
+            const marker='<!-- oxide-idreg-linux-arm64:' + context.runId + ' -->';
+            const comments=await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number:3, per_page:100
+            });
+            if (comments.some(c=>c.body?.includes(marker))) return;
+            await github.rest.issues.createComment({
+              owner,repo,issue_number:3,
+              body: marker + '\n' +
+                '**Probe isolado Linux AArch64 (MRS ID_AA64PFR1_EL1):** ' +
+                process.env.PROBE_RESULT + '\n' +
+                'Run: https://github.com/' + owner + '/' + repo + '/actions/runs/' + context.runId + '\n' +
+                'Executa a instrução exata em programa separado nativo Linux. Não executa ' +
+                'Android, Oxide, APK, libloader.so, verificações de integridade ou antifraude. ' +
+                'O resultado não comprova permissões de EL0 em Android nem gameplay.'
+            });
