@@ -53,16 +53,8 @@ def inspect(artifact: Path):
     )
     # The default guest may not expose ADB. Separate Android boot-stage evidence,
     # ADB transport availability, framebuffer status, and original gameplay.
-    service_started = lambda name: bool(re.search(
-        r"init: (?:\\.\\.\\. )?started service '" + re.escape(name) + r"' has pid",
-        serial,
-    ))
     adb_stopped = "init.svc.adbd=stopped" in serial
     adb_requested = bool(re.search(r"init: .*started service 'adbd' has pid", serial))
-    shell_bytes = (artifact / "hvc0-shell.log").stat().st_size \\
-        if (artifact / "hvc0-shell.log").is_file() else 0
-    logcat_bytes = (artifact / "hvc1-logcat.log").stat().st_size \\
-        if (artifact / "hvc1-logcat.log").is_file() else 0
     images_captured = [k for k, v in screenshots.items()
                        if v.get("png_valid_signature") and v.get("framebuffer_captured")]
     observations = {
