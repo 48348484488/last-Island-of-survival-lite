@@ -1,0 +1,34 @@
+name: Oxide QEMU ARM64 full-system Linux kernel boot (TCG)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-qemu-tcg-kernel-boot.yml'
+      - 'tools/oxide_qemu_tcg_kernel_boot.sh'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oxide-tcg-kernel-boot
+  cancel-in-progress: true
+
+jobs:
+  arm64-kernel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shell syntax (no Android or APK artifacts)
+        run: bash -n tools/oxide_qemu_tcg_kernel_boot.sh
+      - name: Boot Alpine ARM64 Linux kernel and verified guest PID 1 using QEMU TCG
+        run: bash tools/oxide_qemu_tcg_kernel_boot.sh
+      - name: Preserve bounded console logs and result even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-tcg-arm64-kernel-boot
+          path: evidence/oxide-tcg-kernel/
+          if-no-files-found: warn
+          retention-days: 7
