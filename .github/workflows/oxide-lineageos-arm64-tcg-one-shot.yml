@@ -19,8 +19,11 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
-      - name: Validate full Android trial script
-        run: bash -n tools/oxide_lineageos_arm64_full_tcg_trial.sh
+      - name: Validate full Android trial script and verified UEFI pflash fix
+        run: |
+          bash -n tools/oxide_lineageos_arm64_full_tcg_trial.sh
+          grep -Fq 'efi_vars_pflash64.fd' tools/oxide_lineageos_arm64_full_tcg_trial.sh
+          grep -Fq 'bytes([0xff])' tools/oxide_lineageos_arm64_full_tcg_trial.sh
       - name: Boot community LineageOS ARM64 UTM QEMU virt under software TCG (no APK, bounded)
         shell: bash
         run: bash tools/oxide_lineageos_arm64_full_tcg_trial.sh
