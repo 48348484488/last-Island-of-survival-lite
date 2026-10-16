@@ -133,12 +133,15 @@ PY
 qemu-img info --output=json "$tmp/vda.qcow2" > "$evidence/vda-qemu-info.json"
 qemu-img info --output=json "$tmp/vdb.qcow2" > "$evidence/vdb-qemu-info.json"
 echo 'BOOT_STRATEGY=real LineageOS QEMU-virt qcow2 disks + guest EFI variables; software ARM64 TCG only' | tee -a "$evidence/result.txt"
+echo 'DIAGNOSTIC_HYPOTHESIS=seriallogging failed with missing VirtIO console and setup_sound_card SIGABRT without sound device' >> "$evidence/result.txt"
+echo 'DIAGNOSTIC_HARDWARE=AC97_audio_none_backend;2_virtconsole_ports;virtio_gpu;explicit_no_defaults' >> "$evidence/result.txt"
+echo 'PREDECESSOR_HARDWARE_GATE=38938257237' >> "$evidence/result.txt"
 
 # Boot complete Android (not recovery) with the matching UTM VM disks.
 # Restrict guest network to outbound NAT and localhost ADB forwarding.
 timeout --signal=TERM --kill-after=5s 530s \
   qemu-system-aarch64 \
-    -machine virt,accel=tcg -cpu max -smp 2 -m 3072 \
+    -machine virt,accel=tcg -cpu max -smp 2 -m 3072 -nodefaults \
     -drive if=pflash,unit=0,file="$firmware",format=raw,readonly=on \
     -drive if=pflash,unit=1,file="$tmp/efi_vars_pflash64.fd",format=raw \
     -drive if=none,id=vda,file="$tmp/vda.qcow2",format=qcow2 \
@@ -149,7 +152,13 @@ timeout --signal=TERM --kill-after=5s 530s \
     -device virtio-net-pci,netdev=n0,romfile= \
     -device virtio-gpu-pci \
     -device virtio-rng-pci \
-    -device virtio-serial \
+    -audiodev none,id=audio0 \
+    -device AC97,audiodev=audio0 \
+    -device virtio-serial-pci,id=vs0,romfile= \
+    -chardev file,id=guest_shell,path="$tmp/hvc0-shell.log" \
+    -device virtconsole,chardev=guest_shell,bus=vs0.0 \
+    -chardev file,id=guest_logcat,path="$tmp/hvc1-logcat.log" \
+    -device virtconsole,chardev=guest_logcat,bus=vs0.0 \
     -device qemu-xhci,id=usb-bus \
     -device usb-tablet,bus=usb-bus.0 \
     -device usb-kbd,bus=usb-bus.0 \
@@ -248,6 +257,27 @@ PY
 sleep 2
 if test -f "$tmp/serial.log"; then
   tail -c 1500000 "$tmp/serial.log" > "$evidence/serial-console.log"
+fi
+# Neither a shell channel nor a logcat channel counts as operational without
+# actual guest bytes. Preserve no more than 2MB per channel in CI artifacts.
+for name in hvc0-shell hvc1-logcat; do
+  if test -f "$tmp/$name.log"; then
+    bytes="$(stat -c %s "$tmp/$name.log")"
+    echo "VIRTIO_CHANNEL_$name-BYTES=$bytes" >> "$evidence/result.txt"
+    tail -c 2000000 "$tmp/$name.log" > "$evidence/$name.log"
+  else
+    echo "VIRTIO_CHANNEL_$name-BYTES=0" >> "$evidence/result.txt"
+    : > "$evidence/$name.log"
+  fi
+done
+if test -f "$evidence/serial-console.log"; then
+  for service in seriallogging vendor.setup_sound_card; do
+    if grep -aE "Service '$service'.*(received SIGABRT|exited with status [1-9])" "$evidence/serial-console.log" >/dev/null; then
+      echo "ANDROID_SERVICE_$service=FAILURE_OBSERVED" >> "$evidence/result.txt"
+    else
+      echo "ANDROID_SERVICE_$service=NO_FAILURE_OBSERVED_IN_SERIAL" >> "$evidence/result.txt"
+    fi
+  done
 fi
 if test -f "$evidence/serial-console.log"; then
   for service in zygote surfaceflinger bootanim; do
