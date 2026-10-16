@@ -1,4 +1,4 @@
-name: Oxide QEMU ARM64 audio and dual console host preflight - no Android
+name: Oxide QEMU ARM64 option ROM isolated hardware matrix - no Android
 
 on:
   workflow_dispatch:
@@ -14,48 +14,73 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 4
     steps:
-      - name: Check QEMU ARM64 virtual AC97 sound and dual VirtIO consoles without any guest or APK
+      - name: Test audio, VirtIO serial and VirtIO GPU independently without guest images
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p evidence/oxide-qemu-audio-console
           evidence="$PWD/evidence/oxide-qemu-audio-console"
+          mkdir -p "$evidence"
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends qemu-system-arm >/dev/null
           qemu-system-aarch64 --version | head -n1 | tee "$evidence/qemu-version.txt"
           qemu-system-aarch64 -device help > "$evidence/qemu-devices.txt"
-          grep -Fi 'AC97' "$evidence/qemu-devices.txt" | head -n1
-          grep -Fi 'virtconsole' "$evidence/qemu-devices.txt" | head -n1
-          set +e
-          timeout --signal=TERM --kill-after=3s 5s qemu-system-aarch64 \
-            -machine virt,accel=tcg -cpu cortex-a57 -smp 2 -m 512 \
-            -S -nographic -serial none -monitor none \
-            -audiodev none,id=audio0 \
-            -device AC97,audiodev=audio0 \
+          : > "$evidence/results.txt"
+          run_variant() {
+            variant="$1"
+            shift
+            echo "=== $variant ==="
+            set +e
+            timeout --signal=TERM --kill-after=2s 3s \
+              qemu-system-aarch64 \
+                -machine virt,accel=tcg -cpu cortex-a57 -smp 1 -m 512 \
+                -S -display none -serial none -monitor none -no-reboot \
+                "$@" > "$evidence/$variant.log" 2>&1
+            rc=$?
+            set -e
+            if test "$rc" -eq 124; then
+              echo "$variant=PASS_PAUSED_QEMU" | tee -a "$evidence/results.txt"
+            else
+              echo "$variant=FAIL_EXIT_$rc" | tee -a "$evidence/results.txt"
+              tail -n 4 "$evidence/$variant.log"
+            fi
+          }
+          run_variant bare
+          run_variant audio -audiodev none,id=audio0 -device AC97,audiodev=audio0
+          run_variant serial \
+            -device virtio-serial-pci,id=vs0,romfile= \
+            -chardev file,id=c0,path="$evidence/hvc0.txt" \
+            -device virtconsole,chardev=c0,bus=vs0.0 \
+            -chardev file,id=c1,path="$evidence/hvc1.txt" \
+            -device virtconsole,chardev=c1,bus=vs0.0
+          run_variant gpu -device virtio-gpu-pci,romfile=
+          run_variant audio_serial \
+            -audiodev none,id=audio0 -device AC97,audiodev=audio0 \
+            -device virtio-serial-pci,id=vs0,romfile= \
+            -chardev file,id=c0,path="$evidence/hvc0.txt" \
+            -device virtconsole,chardev=c0,bus=vs0.0 \
+            -chardev file,id=c1,path="$evidence/hvc1.txt" \
+            -device virtconsole,chardev=c1,bus=vs0.0
+          run_variant audio_serial_gpu \
+            -audiodev none,id=audio0 -device AC97,audiodev=audio0 \
             -device virtio-serial-pci,id=vs0,romfile= \
             -chardev file,id=c0,path="$evidence/hvc0.txt" \
             -device virtconsole,chardev=c0,bus=vs0.0 \
             -chardev file,id=c1,path="$evidence/hvc1.txt" \
             -device virtconsole,chardev=c1,bus=vs0.0 \
-            > "$evidence/host.log" 2>&1
-          qemu_rc=$?
-          set -e
-          echo "QEMU_EXIT_CODE=$qemu_rc" | tee "$evidence/result.txt"
-          if test "$qemu_rc" -eq 124 && test -f "$evidence/hvc0.txt" && test -f "$evidence/hvc1.txt"; then
-            echo "RESULT=PASS_AUDIO_AND_TWO_VIRTCONSOLE_DEVICES_ATTACHED_PAUSED_GUEST" | tee -a "$evidence/result.txt"
-            echo "GUEST_BOOT=NOT_TESTED" >> "$evidence/result.txt"
-            echo "ANDROID_FULL_BOOT=NOT_TESTED" >> "$evidence/result.txt"
-            echo "OXIDE_ORIGINAL_APK=NOT_TESTED" >> "$evidence/result.txt"
+            -device virtio-gpu-pci,romfile=
+          echo "NO_ANDROID_ORIGINAL_GAME_APK_DOWNLOADED=yes" >> "$evidence/results.txt"
+          echo "HOST_ONLY_STATIC_HARDWARE_PROBE_NOT_GUEST_BOOT" >> "$evidence/results.txt"
+          if grep -Fxq 'audio_serial_gpu=PASS_PAUSED_QEMU' "$evidence/results.txt"; then
+            echo "RESULT=PASS_ALL_REQUIRED_DEVICES" | tee -a "$evidence/results.txt"
           else
-            echo "RESULT=FAIL_VIRTUAL_HARDWARE_CONFIG" | tee -a "$evidence/result.txt"
-            cat "$evidence/host.log"
+            echo "RESULT=FAIL_AUDIO_SERIAL_GPU_COMBINATION" | tee -a "$evidence/results.txt"
             exit 1
           fi
-      - name: Retain exact QEMU virtual-device proof
+      - name: Retain exact device-by-device QEMU failures and passes
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: oxide-arm64-audio-virtconsole-host-proof
+          name: oxide-arm64-hardware-option-rom-matrix
           path: evidence/oxide-qemu-audio-console/
           retention-days: 7
           if-no-files-found: warn
