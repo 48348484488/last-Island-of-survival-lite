@@ -58,7 +58,7 @@ timeout --signal=TERM --kill-after=5s 75s \
     -drive if=none,id=drv_b,file="$tmp/vdb.raw",format=raw \
     -device virtio-blk-pci,drive=drv_b \
     -netdev user,id=n0,restrict=on \
-    -device virtio-net-pci,netdev=n0 \
+    -device virtio-net-pci,netdev=n0,romfile= \
     -device virtio-gpu-pci \
     -device virtio-rng-pci \
     -display none -monitor none -serial file:"$tmp/serial.log" \
