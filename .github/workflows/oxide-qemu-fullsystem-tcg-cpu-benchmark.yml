@@ -1,0 +1,29 @@
+name: Oxide QEMU full-system ARM64 TCG default vs tuned CPU benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-qemu-fullsystem-tcg-cpu-benchmark.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  full-system-benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate guest benchmark launcher
+        run: bash -n tools/oxide_tcg_fullsystem_cpu_compare.sh
+      - name: Run real ARM64 Linux 2-thread workload with default and tuned TCG
+        run: bash tools/oxide_tcg_fullsystem_cpu_compare.sh
+      - name: Save reproducible microbenchmark results (no Android or APK)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-qemu-arm64-tcg-fullsystem-performance
+          path: evidence/oxide-tcg-performance/
+          retention-days: 7
+          if-no-files-found: warn
