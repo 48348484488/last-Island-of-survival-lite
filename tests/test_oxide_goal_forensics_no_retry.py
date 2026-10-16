@@ -41,6 +41,25 @@ class NoExpensiveOriginalRetryTests(unittest.TestCase):
         self.assertIn("comments.some(", self.script)
         self.assertIn("github.rest.issues.createComment(", self.script)
 
+    def test_completed_original_one_shots_cannot_retrigger_apk_download(self):
+        root = Path(__file__).resolve().parents[1] / ".github/workflows"
+        historical = (
+            "oxide-m4-x86-arm64-nativebridge-original-on-success.yml",
+            "oxide-m4-x86-nativebridge-kvm-recovery-once.yml",
+            "oxide-m4-macos-arm64-tcg-original-on-boot.yml",
+            "oxide-m4-official-arm64-original-on-boot.yml",
+        )
+        for filename in historical:
+            with self.subTest(workflow=filename):
+                text = (root / filename).read_text(encoding="utf8")
+                self.assertIn("  workflow_dispatch:", text)
+                self.assertNotIn("  workflow_run:", text)
+                self.assertNotIn("  schedule:", text)
+                self.assertIn("    if: ${{ false }}", text)
+                self.assertNotIn("actions: write", text)
+                self.assertIn("ARCHIVED", text)
+
+
 
 if __name__ == "__main__":
     unittest.main()
