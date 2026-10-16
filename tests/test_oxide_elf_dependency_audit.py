@@ -1,5 +1,6 @@
 """Synthetic ELF fixtures: native DT_NEEDED metadata and SHA-gated APK ZIPs."""
 import hashlib
+from io import BytesIO
 import struct
 import tempfile
 import unittest
@@ -12,6 +13,7 @@ from zipfile import ZipFile
 
 from tools.oxide_elf_dependency_audit import (
     ELFMetadataError, audit_dependency_metadata, parse_aarch64_dynamic,
+    parse_aarch64_dynamic_streaming,
 )
 
 
@@ -44,6 +46,17 @@ class ElfMetadataTests(unittest.TestCase):
         result = parse_aarch64_dynamic(fixture_elf())
         self.assertEqual(result["dt_needed"], ["libc.so", "lib_burst_0_0.so"])
         self.assertEqual(result["dt_soname"], "libfoo.so")
+
+    def test_bounded_stream_returns_the_same_dynamic_dependencies(self):
+        elf = fixture_elf()
+        result = parse_aarch64_dynamic_streaming(BytesIO(elf), len(elf))
+        self.assertEqual(result, parse_aarch64_dynamic(elf))
+
+    def test_stream_rejects_file_unbacked_dynamic_strings(self):
+        elf = bytearray(fixture_elf())
+        struct.pack_into("<Q", elf, 0x100 + 8, 0x1410)
+        with self.assertRaisesRegex(ELFMetadataError, "AMBIGUOUS_OR_UNBACKED_STRING_TABLE"):
+            parse_aarch64_dynamic_streaming(BytesIO(elf), len(elf))
 
     def test_empty_needed(self):
         self.assertEqual(parse_aarch64_dynamic(fixture_elf(needed=()))["dt_needed"], [])
@@ -112,7 +125,8 @@ class PinnedZipDependencyTests(unittest.TestCase):
             ("lib/arm64-v8a/libnormal.so", fixture_elf(("libc.so",))),
             ("lib/arm64-v8a/liboversized.so", fixture_elf(("libc.so",)) + b"\x00" * 256),
         ])
-        with patch.object(audit_module, "MAX_ELF_BYTES", 1100):
+        with patch.object(audit_module, "MAX_ELF_BYTES", 1100), \
+             patch.object(audit_module, "MAX_STREAMABLE_ELF_BYTES", 1200):
             result = audit_dependency_metadata(self.root, hashes)
         self.assertEqual(result["status"],
                          "PARTIAL_ORIGINAL_ARM64_DYNAMIC_DEPENDENCIES_VERIFIED")
@@ -122,6 +136,24 @@ class PinnedZipDependencyTests(unittest.TestCase):
         self.assertEqual(result["large_libraries_not_examined"][0]["path"],
                          "lib/arm64-v8a/liboversized.so")
         self.assertEqual(result["failed_dlopen_causation"], "NOT_ESTABLISHED")
+
+    def test_over_memory_cap_library_is_streamed_with_complete_coverage(self):
+        hashes = self._write_zip([
+            ("lib/arm64-v8a/libnormal.so", fixture_elf(("libc.so",))),
+            ("lib/arm64-v8a/liblarge.so", fixture_elf(("lib_burst_0_0.so",)) + b"\x00" * 256),
+        ])
+        with patch.object(audit_module, "MAX_ELF_BYTES", 1100), \
+             patch.object(audit_module, "MAX_STREAMABLE_ELF_BYTES", 2048):
+            result = audit_dependency_metadata(self.root, hashes)
+        self.assertEqual(result["status"],
+                         "ORIGINAL_ARM64_DYNAMIC_DEPENDENCIES_READ_ONLY_VERIFIED")
+        self.assertEqual(result["arm64_libraries_inspected"], 2)
+        self.assertTrue(result["all_packaged_arm64_libraries_examined"])
+        self.assertEqual(len(result["large_libraries_examined_by_bounded_stream"]), 1)
+        self.assertEqual(result["lookup_names"]["lib_burst_0_0.so"]["libraries_declaring_dt_needed"],
+                         ["lib/arm64-v8a/liblarge.so"])
+        self.assertIsNone(next(lib["elf_sha256"] for lib in result["libraries"]
+                               if lib["path"].endswith("liblarge.so")))
 
     def test_pinned_sha_mismatch_blocks_before_archive_read(self):
         hashes = self._write_zip([("lib/arm64-v8a/libfoo.so", fixture_elf())])
