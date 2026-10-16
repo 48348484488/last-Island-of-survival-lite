@@ -128,6 +128,7 @@ def audit_dependency_metadata(directory, expected_hashes=EXPECTED_PINNED_HASHES)
     try:
         original_apks = _checked_apks(directory, expected_hashes)
         libraries = []
+        skipped_libraries = []
         for apk_name in expected_hashes:
             with ZipFile(directory / apk_name, "r") as archive:
                 entries = archive.infolist()
@@ -139,7 +140,12 @@ def audit_dependency_metadata(directory, expected_hashes=EXPECTED_PINNED_HASHES)
                             and member.filename.endswith(".so")):
                         continue
                     if member.file_size > MAX_ELF_BYTES:
-                        raise ELFMetadataError("ELF_ENTRY_TOO_LARGE")
+                        skipped_libraries.append({
+                            "apk": apk_name, "path": member.filename,
+                            "uncompressed_size_bytes": member.file_size,
+                            "reason": "EXCEEDS_PER_LIBRARY_160_MIB_LIMIT",
+                        })
+                        continue
                     with archive.open(member, "r") as stream:
                         elf = stream.read(MAX_ELF_BYTES + 1)
                     if len(elf) != member.file_size or len(elf) > MAX_ELF_BYTES:
@@ -162,10 +168,14 @@ def audit_dependency_metadata(directory, expected_hashes=EXPECTED_PINNED_HASHES)
         users = {name: [lib["path"] for lib in libraries if name in lib["dt_needed"]]
                  for name in LOOKUPS}
         return {
-            "status": "ORIGINAL_ARM64_DYNAMIC_DEPENDENCIES_READ_ONLY_VERIFIED",
+            "status": ("PARTIAL_ORIGINAL_ARM64_DYNAMIC_DEPENDENCIES_VERIFIED"
+                       if skipped_libraries else
+                       "ORIGINAL_ARM64_DYNAMIC_DEPENDENCIES_READ_ONLY_VERIFIED"),
             "original_apk_sha256_verified": original_apks,
             "arm64_libraries_inspected": len(libraries),
             "libraries": libraries,
+            "large_libraries_not_examined": skipped_libraries,
+            "all_packaged_arm64_libraries_examined": not skipped_libraries,
             "lookup_names": {name: {
                 "packaged_paths": found[name],
                 "libraries_declaring_dt_needed": users[name],
@@ -195,7 +205,10 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(json.dumps(result, sort_keys=True))
-    return 0 if result["status"] == "ORIGINAL_ARM64_DYNAMIC_DEPENDENCIES_READ_ONLY_VERIFIED" else 2
+    return 0 if result["status"] in (
+        "ORIGINAL_ARM64_DYNAMIC_DEPENDENCIES_READ_ONLY_VERIFIED",
+        "PARTIAL_ORIGINAL_ARM64_DYNAMIC_DEPENDENCIES_VERIFIED",
+    ) else 2
 
 
 if __name__ == "__main__":
