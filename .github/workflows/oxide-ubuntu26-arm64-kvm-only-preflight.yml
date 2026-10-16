@@ -1,0 +1,111 @@
+name: Oxide Ubuntu 26.04 ARM64 KVM host preflight - NO APK or Android
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/oxide_arm64_kvm_host_preflight.py'
+      - 'tests/test_oxide_arm64_kvm_host_preflight.py'
+      - '.github/workflows/oxide-ubuntu26-arm64-kvm-only-preflight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: oxide-ubuntu26-host-kvm-only-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  inspect-arm64-kvm-only:
+    runs-on: ubuntu-26.04-arm
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            tools
+            tests
+
+      - name: Prove host architecture before inspecting KVM
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+          test "$(uname -s)" = "Linux"
+          echo "Running on native Linux ARM64, without downloading any Android image or APK."
+
+      - name: Run 11 hardware-independent KVM gate regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q tools/oxide_arm64_kvm_host_preflight.py tests/test_oxide_arm64_kvm_host_preflight.py
+          python3 -m unittest discover -s tests -p 'test_oxide_arm64_kvm_host_preflight.py' -v
+
+      - name: Query kernel KVM API only - never create guest or download Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          python3 tools/oxide_arm64_kvm_host_preflight.py \
+            --output reports/oxide-ubuntu26-arm64-kvm-host-preflight.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads(Path("reports/oxide-ubuntu26-arm64-kvm-host-preflight.json").read_text())
+          assert r["host_os"]=="Linux"
+          assert r["host_machine"] in ("aarch64","arm64")
+          assert r["status"] in (
+              "ARM64_HOST_KVM_PREREQUISITE_MET",
+              "ARM64_HOST_KVM_NOT_AVAILABLE_FOR_ACCELERATED_AVD")
+          assert r["native_arm64_kvm_prerequisite_verified"] is (
+              r["status"]=="ARM64_HOST_KVM_PREREQUISITE_MET")
+          assert r["android_or_oxide_executed"] is False
+          assert r["heavy_android_retry_authorized"] is False
+          assert r["original_apk_modified"] is False
+          assert r["gameplay_verified"] is False
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as f:
+              f.write("### Ubuntu 26.04 native ARM64 KVM prerequisite, NO game/emulator\n")
+              f.write(f"- Host: {r['host_machine']}; {r['runner_image']}\n")
+              f.write(f"- KVM API: {r['kvm']['status']} (version: {r['kvm']['api_version']})\n")
+              f.write(f"- Verdict: {r['status']}\n")
+              f.write(f"- Allowed next action: {r['next_action']}\n")
+              f.write("- Official ARM64 Android system image/GMS NOT checked or downloaded\n")
+              f.write("- The original APK and Android were NOT downloaded or executed\n")
+          PY
+
+      - name: Upload only tiny JSON host evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-ubuntu26-arm64-kvm-only-preflight
+          path: reports/oxide-ubuntu26-arm64-kvm-host-preflight.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Record KVM result, not misleading workflow success, in M3
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          JOB_RESULT: ${{ job.status }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const marker='<!-- oxide-ubuntu26-arm64-kvm-only:'+context.runId+' -->';
+            const existing=await github.paginate(github.rest.issues.listComments,{
+              owner,repo,issue_number:3,per_page:100
+            });
+            if(existing.some(c=>c.body?.includes(marker))) return;
+            const fs=require('fs'),p='reports/oxide-ubuntu26-arm64-kvm-host-preflight.json';
+            const result=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')):null;
+            const status=result?.status || 'NO_ACTUAL_HOST_VERDICT';
+            const body=marker+'\n**Novo preflight host Ubuntu 26.04 ARM64:** '+process.env.JOB_RESULT+
+              '\nRun: https://github.com/'+owner+'/'+repo+'/actions/runs/'+context.runId+
+              '\n**Veredicto do hardware: '+status+'**'+
+              '\nKVM device/API: '+(result?.kvm?.status ?? 'unknown')+
+              '; API version: '+String(result?.kvm?.api_version ?? 'not available')+
+              '\nNenhuma imagem Android ou APK original baixado, nenhum Android/Unity iniciado. '+
+              'Mesmo com KVM, faltariam verificar imagem Android ARM64 oficial, GMS e aceitação do aplicativo '+
+              'sem alterar mecanismos de integridade. A CI verde não prova gameplay.';
+            await github.rest.issues.createComment({owner,repo,issue_number:3,body});
