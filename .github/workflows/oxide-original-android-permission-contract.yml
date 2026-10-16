@@ -1,0 +1,148 @@
+name: Oxide original Android permission API contract - read-only logcat
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/oxide_android_permission_api_audit.py'
+      - 'tests/test_oxide_android_permission_api_audit.py'
+      - '.github/workflows/oxide-original-android-permission-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: oxide-original-package-permission-api-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify-original-android-public-api-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            tools
+            tests
+
+      - name: Compile and run synthetic fail-closed API chronology regressions
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q tools/oxide_android_permission_api_audit.py tests/test_oxide_android_permission_api_audit.py
+          python3 -m unittest discover -s tests -p 'test_oxide_android_permission_api_audit.py' -v
+
+      - name: Preflight only two existing small immutable original evidence archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/15 evidence/16 reports
+          gh api repos/48348484488/oxide/actions/artifacts/11999246750 > "$RUNNER_TEMP/original15.json"
+          gh api repos/48348484488/oxide/actions/artifacts/11997973952 > "$RUNNER_TEMP/original16.json"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          for tag,artifact_id,run_id in (
+              ("original15",11999246750,38789434979),
+              ("original16",11997973952,38787025289),
+          ):
+              a=json.loads((Path(os.environ["RUNNER_TEMP"])/(tag+".json")).read_text())
+              assert a["id"]==artifact_id
+              assert a["workflow_run"]["id"]==run_id
+              assert a["name"]=="oxide-115-arm64-runtime-evidence"
+              assert a["expired"] is False
+              assert 0<a["size_in_bytes"]<10_000_000
+              print(tag,"original small logcat artifact only:",a["size_in_bytes"],"bytes")
+          PY
+
+      - name: Download and analyze original logcat plus original aapt manifest badging
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download 38789434979 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir evidence/15
+          gh run download 38787025289 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir evidence/16
+          test -s evidence/15/reports/logcat.txt
+          test -s evidence/16/reports/logcat.txt
+          test -s evidence/15/reports/apk-badging.txt
+          test -s evidence/16/reports/apk-badging.txt
+          python3 tools/oxide_android_permission_api_audit.py \
+            --a15-log evidence/15/reports/logcat.txt \
+            --a15-badging evidence/15/reports/apk-badging.txt \
+            --a16-log evidence/16/reports/logcat.txt \
+            --a16-badging evidence/16/reports/apk-badging.txt \
+            --output reports/original-android-install-api-permission-mismatch.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads(Path("reports/original-android-install-api-permission-mismatch.json").read_text())
+          assert r["status"]=="SHARED_ORIGINAL_PERMISSION_API_MISMATCH_OBSERVED"
+          assert r["verified"] is True
+          expected={
+              "android15":(2023,225,4156,2296),
+              "android16":(2108,135,4252,2356),
+          }
+          for label,(pid,delta_unity,delta_kill,job_pid) in expected.items():
+              a=r["runs"][label]
+              assert a["verified"] is True
+              assert a["original_pid"]==pid
+              assert a["target_sdk"]==36
+              assert a["request_install_packages_declared"] is False
+              assert a["exception_to_unity_il2cpp_ms"]==delta_unity
+              assert a["exception_to_original_sigkill_ms"]==delta_kill
+              assert a["secondary_process_ids"]==[job_pid]
+              assert a["java_uncaught_exception_proven"] is False
+              assert a["exception_caused_original_sigkill"]=="NOT_ESTABLISHED"
+              assert a["security_threat_alert_caused_by_exception"]=="NOT_ESTABLISHED"
+              assert a["original_gameplay_verified"] is False
+          assert r["permission_grant_or_apk_edit_proposed"] is False
+          assert r["gameplay_verified"] is False
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as f:
+              f.write("### Original Oxide public Android API permission mismatch\n")
+              f.write("- Target SDK 36; no REQUEST_INSTALL_PACKAGES declaration in original aapt badging\n")
+              f.write("- PackageManager.canRequestPackageInstalls() SecurityException in both original PIDs\n")
+              for label,pid in expected.items():
+                  a=r["runs"][label]
+                  f.write(f"- {label} PID {a['original_pid']}: exception {a['exception_to_unity_il2cpp_ms']}ms before Unity and {a['exception_to_original_sigkill_ms']}ms before SIGKILL\n")
+              f.write("- Exception reappears in separate service processes; no causal link established\n")
+              f.write("- No original APK, Android, permissions, certification or game runtime modified\n")
+          PY
+
+      - name: Upload only derived JSON, not original logcat or APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-android-permission-api-contract
+          path: reports/original-android-install-api-permission-mismatch.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Record observed CI result on M4 once
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          OUTCOME: ${{ job.status }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const marker='<!-- oxide-public-android-package-permission:'+context.runId+' -->';
+            const comments=await github.paginate(github.rest.issues.listComments,{
+              owner,repo,issue_number:4,per_page:100
+            });
+            if(comments.some(c=>c.body?.includes(marker))) return;
+            const fs=require('fs'), p='reports/original-android-install-api-permission-mismatch.json';
+            const report=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')):{};
+            const body=marker+'\n**Original Android public API permission audit:** '+
+              process.env.OUTCOME+'\nRun: https://github.com/'+owner+'/'+repo+'/actions/runs/'+context.runId+
+              '\nVerdict: '+String(report.status||'NO_VERIFIED_RESULT')+
+              '\nOriginal targetSdk=36, no REQUEST_INSTALL_PACKAGES in original aapt. '+
+              'PackageManager.canRequestPackageInstalls() throws SecurityException in the original PID '+
+              'but Unity continues afterwards. The reason for the later SIGKILL/anticheat warning '+
+              'remains UNKNOWN. No permission grant, APK changes, Android boot, or download.';
+            await github.rest.issues.createComment({owner,repo,issue_number:4,body});
