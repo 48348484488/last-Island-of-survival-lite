@@ -16,8 +16,8 @@ if [ -z "$fw_code" ] || [ -z "$fw_vars" ]; then
   echo 'RESULT=BLOCKED_MISSING_AAVMF_CODE_OR_VARS' | tee -a "$evidence/result.txt"
   exit 1
 fi
-code_bytes="$(stat -c '%s' "$fw_code")"
-vars_bytes="$(stat -c '%s' "$fw_vars")"
+code_bytes="$(stat -Lc '%s' "$fw_code")"
+vars_bytes="$(stat -Lc '%s' "$fw_vars")"
 echo "UEFI_CODE_BYTES=$code_bytes" | tee -a "$evidence/result.txt"
 echo "UEFI_VARS_BYTES=$vars_bytes" | tee -a "$evidence/result.txt"
 if [ "$code_bytes" -ne 67108864 ] || [ "$vars_bytes" -ne 67108864 ]; then
