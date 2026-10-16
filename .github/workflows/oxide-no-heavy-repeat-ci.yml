@@ -5,6 +5,10 @@ on:
     paths:
       - '.github/workflows/oxide-no-heavy-repeat-ci.yml'
       - '.github/workflows/oxide-goal-forensics.yml'
+      - '.github/workflows/oxide-m4-x86-arm64-nativebridge-original-on-success.yml'
+      - '.github/workflows/oxide-m4-x86-nativebridge-kvm-recovery-once.yml'
+      - '.github/workflows/oxide-m4-macos-arm64-tcg-original-on-boot.yml'
+      - '.github/workflows/oxide-m4-official-arm64-original-on-boot.yml'
       - 'tests/test_oxide_goal_forensics_no_retry.py'
   workflow_dispatch:
 
