@@ -113,7 +113,7 @@ if not 0 < len(original) <= required:
     raise ValueError("EFI variable store incompatible with host QEMU pflash")
 with out.open("wb") as f:
     f.write(original)
-    chunk = b"\\xff" * (1024 * 1024)
+    chunk = bytes([0xff]) * (1024 * 1024)
     remaining = required - len(original)
     while remaining:
         n = min(len(chunk), remaining)
@@ -126,7 +126,7 @@ assert out.stat().st_size == required
     "construction": "original variable store prefix + erased flash suffix",
     "verification": "SIZE_ONLY_QEMU_BOOT_UNVERIFIED",
     "game_apk_modified": False
-}, indent=2, sort_keys=True)+"\\n")
+}, indent=2, sort_keys=True)+chr(10))
 print(f"EFI_VARS_ORIGINAL_BYTES={len(original)} EFI_VARS_PADDED_BYTES={required}")
 PY
 
