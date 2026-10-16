@@ -1,0 +1,54 @@
+name: Oxide ARM64 TCG execution throughput preflight
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-qemu-tcg-throughput.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - name: Build and run bounded ARM64 guest CPU workload
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends qemu-user gcc-aarch64-linux-gnu libc6-dev-arm64-cross >/dev/null
+          mkdir -p evidence
+          cat > /tmp/oxide_tcg_bench.c <<'EOF'
+          #include <stdint.h>
+          #include <stdio.h>
+          #include <time.h>
+          int main(void) {
+              struct timespec a,b;
+              volatile uint64_t x=0x123456789abcdef0ULL;
+              const uint64_t n=12000000ULL;
+              clock_gettime(CLOCK_MONOTONIC,&a);
+              for(uint64_t i=0;i<n;i++) {
+                  x ^= x << 13; x ^= x >> 7; x ^= x << 17;
+              }
+              clock_gettime(CLOCK_MONOTONIC,&b);
+              double s=(b.tv_sec-a.tv_sec)+(b.tv_nsec-a.tv_nsec)/1e9;
+              printf("ARCH=aarch64 ITERATIONS=%llu SECONDS=%.6f ITERATIONS_PER_SECOND=%.0f CHECKSUM=%llu\n",
+                  (unsigned long long)n,s,n/s,(unsigned long long)x);
+              return 0;
+          }
+          EOF
+          aarch64-linux-gnu-gcc -O2 -static -o /tmp/oxide_tcg_bench_arm64 /tmp/oxide_tcg_bench.c
+          file /tmp/oxide_tcg_bench_arm64 | tee evidence/oxide-tcg-throughput.txt
+          echo "QEMU_VERSION=$(qemu-aarch64 --version | head -n1)" | tee -a evidence/oxide-tcg-throughput.txt
+          echo "HOST=$(uname -m) CPUS=$(nproc)" | tee -a evidence/oxide-tcg-throughput.txt
+          timeout 20s qemu-aarch64 -cpu max /tmp/oxide_tcg_bench_arm64 | tee -a evidence/oxide-tcg-throughput.txt
+          echo "BOUNDARY: user-mode ARM64 CPU microbenchmark only; not full-system Android, graphics, Google Play, or Oxide gameplay." | tee -a evidence/oxide-tcg-throughput.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: oxide-tcg-throughput
+          path: evidence/
+          retention-days: 7
