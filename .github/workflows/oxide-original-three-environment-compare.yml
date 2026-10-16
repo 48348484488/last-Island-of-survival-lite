@@ -1,0 +1,136 @@
+name: Oxide native ARM64 vs translated x86 original logcat comparison
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/oxide-original-three-environment-compare.yml'
+      - 'tools/oxide_original_environment_compare.py'
+      - 'tests/test_oxide_original_environment_compare.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: oxide-original-three-environment-compare-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compare-only-preexisting-small-logs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run comparison unit tests without an emulator or APK
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q tools/oxide_original_environment_compare.py tests/test_oxide_original_environment_compare.py
+          python3 -m unittest discover -s tests -p 'test_oxide_original_environment_compare.py' -v
+
+      - name: Verify all three artifacts are small pre-existing diagnostic logs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/oxide-meta"
+          gh api repos/48348484488/oxide/actions/artifacts/11999246750 > "$RUNNER_TEMP/oxide-meta/15.json"
+          gh api repos/48348484488/oxide/actions/artifacts/11997973952 > "$RUNNER_TEMP/oxide-meta/16.json"
+          gh api repos/48348484488/oxide/actions/artifacts/12011154062 > "$RUNNER_TEMP/oxide-meta/x86.json"
+          python3 - "$RUNNER_TEMP/oxide-meta" <<'PY'
+          import json, sys
+          from pathlib import Path
+          root=Path(sys.argv[1])
+          expected={
+              "15": (11999246750,38789434979,"oxide-115-arm64-runtime-evidence"),
+              "16": (11997973952,38787025289,"oxide-115-arm64-runtime-evidence"),
+              "x86": (12011154062,38818956665,"oxide-x86-nativebridge-original-kvm-recovery-once"),
+          }
+          for name,(id_,run,artifact) in expected.items():
+              doc=json.loads((root/(name+".json")).read_text())
+              assert doc["id"] == id_, (name,"artifact-id")
+              assert doc["workflow_run"]["id"] == run, (name,"wrong-original-run")
+              assert doc["name"] == artifact, (name,"artifact-name")
+              assert doc["expired"] is False, (name,"artifact-expired")
+              assert 0 < doc["size_in_bytes"] < 10_000_000, (name,"artifact-too-large")
+              print(name,"existing diagnostic artifact bytes:",doc["size_in_bytes"])
+          PY
+
+      - name: Download small existing logs only and prove native ABI of both Redroid runs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/android15 evidence/android16 evidence/x86 reports
+          gh run download 38789434979 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir evidence/android15
+          gh run download 38787025289 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir evidence/android16
+          gh run download 38818956665 --repo 48348484488/oxide \
+            --name oxide-x86-nativebridge-original-kvm-recovery-once --dir evidence/x86
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in ("android15","android16","x86"):
+              files=list((Path("evidence")/name).rglob("logcat.txt"))
+              assert len(files)==1, (name,"expected-one-existing-logcat",files)
+              Path("reports/"+name+"-logcat-path.txt").write_text(str(files[0])+"\n")
+          for name in ("android15","android16"):
+              abi=list((Path("evidence")/name).rglob("abi.txt"))
+              assert len(abi)==1, (name,"expected-one-abi-record")
+              assert abi[0].read_text().strip()=="arm64-v8a", (name,"not-native-arm64")
+          PY
+          python3 tools/oxide_original_environment_compare.py \
+            --android15-logcat "$(cat reports/android15-logcat-path.txt)" \
+            --android16-logcat "$(cat reports/android16-logcat-path.txt)" \
+            --x86-logcat "$(cat reports/x86-logcat-path.txt)" \
+            --output reports/original-three-environment-comparison.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads(Path("reports/original-three-environment-comparison.json").read_text())
+          assert r["all_checks_passed"] is True
+          assert r["shared_causality"] == "NOT_ESTABLISHED"
+          assert r["original_gameplay_verified"] is False
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as f:
+              f.write("### Distinct original-game exit paths (offline)\n")
+              for name,entry in r["executions"].items():
+                  f.write(f"- {name}: PID={entry['original_pid']} "                          f"status={entry['exit_status']} "                          f"signal_elapsed={entry['start_to_signal_ms']}ms\n")
+              f.write("- Native ARM64 security cause: UNKNOWN\n")
+              f.write("- Joint causality: NOT ESTABLISHED\n")
+              f.write("- 35s/gameplay: NOT VERIFIED; no emulator/APK downloads\n")
+          PY
+
+      - name: Publish ONLY compact comparison JSON, never underlying proprietary logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-native-vs-translated-three-logcat-comparison
+          path: reports/original-three-environment-comparison.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Note real replay outcome in M4 issue
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          DIFF_RESULT: ${{ job.status }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const marker='<!-- oxide-original-native-x86-compare:' + context.runId + ' -->';
+            const comments=await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number:4, per_page:100
+            });
+            if (comments.some(c=>c.body?.includes(marker))) return;
+            await github.rest.issues.createComment({
+              owner,repo,issue_number:4,
+              body: marker + '\n' +
+                '**Comparação offline entre três logs originais:** ' + process.env.DIFF_RESULT + '\n' +
+                'Run: https://github.com/' + owner + '/' + repo + '/actions/runs/' + context.runId + '\n' +
+                'Fontes: Android15 #38789434979, Android16 #38787025289, x86 Berberis #38818956665. ' +
+                'Somente artefatos antigos e pequenos; nenhuma inicialização de Android ou instalação de APK. ' +
+                'Encerramento no ARM64 nativo e erro de tradução no x86_64 não demonstram causa compartilhada. ' +
+                'Menu, gameplay e PID por 35 segundos permanecem sem prova.'
+            });
