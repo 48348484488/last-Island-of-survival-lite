@@ -1,0 +1,48 @@
+name: Oxide ARM64 QEMU TCG lightweight preflight
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-qemu-tcg-preflight.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Host resources and emulator availability (no Android or APK downloads)
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "HOST_ARCH=$(uname -m)"
+          echo "HOST_CPUS=$(nproc)"
+          free -h
+          if test -e /dev/kvm; then ls -l /dev/kvm; else echo 'KVM=absent'; fi
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends qemu-system-arm qemu-efi-aarch64 >/dev/null
+          qemu-system-aarch64 --version
+          qemu-system-aarch64 -accel help
+          qemu-system-aarch64 -machine virt,accel=tcg -cpu max -smp 2 -m 512M -nographic -nodefaults -S -monitor none -serial none -display none -daemonize -pidfile /tmp/oxide-qemu-tcg.pid
+          pid="$(cat /tmp/oxide-qemu-tcg.pid)"
+          kill -0 "$pid"
+          echo "TCG_MACHINE_START=PASS (paused VM; no guest instructions executed)"
+          kill "$pid"
+      - name: Record evidence and limits
+        if: always()
+        run: |
+          mkdir -p evidence
+          {
+            echo "Preflight only: QEMU TCG binary and paused aarch64 machine startup."
+            echo "No Android image, no APK, no guest CPU benchmark, no boot, no gameplay."
+            echo "A pass DOES NOT authorize a large Android download or prove Oxide compatibility."
+          } > evidence/oxide-qemu-tcg-preflight.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: oxide-qemu-tcg-preflight
+          path: evidence/oxide-qemu-tcg-preflight.txt
+          retention-days: 7
