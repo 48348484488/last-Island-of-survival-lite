@@ -1,0 +1,98 @@
+name: Oxide ARM64 QEMU-virt Android recovery kernel probe (no APK)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-arm64-qemu-android-recovery-preflight.yml'
+      - 'tools/oxide_android_bootimg_extract.py'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oxide-qemu-arm64-android-recovery
+  cancel-in-progress: true
+
+jobs:
+  android-recovery-preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify extractor compiles (no downloads)
+        run: python3 -m py_compile tools/oxide_android_bootimg_extract.py
+      - name: Download SHA-256-pinned small recovery image; execute ARM64 kernel with full-system TCG
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/oxide-android-recovery-tcg
+          evidence="$PWD/evidence/oxide-android-recovery-tcg"
+          echo "RESULT=PRECHECK_STARTED_NO_ANDROID_OR_OXIDE_PROOF" > "$evidence/result.txt"
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          echo "HOST_ARCH=$(uname -m)" | tee -a "$evidence/result.txt"
+          echo "VM=QEMU_ARM64_VIRT_TCG_NOT_KVM" | tee -a "$evidence/result.txt"
+          echo "SOURCE=Community-built LineageOS virtio QEMU recovery v2026.09.17; not certified Play Store Android" | tee -a "$evidence/result.txt"
+          echo "APK_DOWNLOADED=no" | tee -a "$evidence/result.txt"
+          echo "GOOGLE_SERVICES_VERIFIED=no" | tee -a "$evidence/result.txt"
+          echo "GAMEPLAY_VERIFIED=no" | tee -a "$evidence/result.txt"
+
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+            qemu-system-arm lz4 >/dev/null
+          qemu-system-aarch64 --version | head -n 1 | tee -a "$evidence/result.txt"
+
+          recovery_url="https://github.com/jqssun/android-lineage-qemu/releases/download/v2026.09.17/recovery_arm64only.img"
+          echo "RECOVERY_SOURCE=$recovery_url" | tee -a "$evidence/result.txt"
+          curl --fail --location --show-error --silent --retry 1 \
+            --connect-timeout 10 --max-time 75 --max-filesize 65000000 \
+            "$recovery_url" --output "$tmp/recovery.img"
+          echo "RECOVERY_BYTES=$(stat -c '%s' "$tmp/recovery.img")" | tee -a "$evidence/result.txt"
+          test "$(stat -c '%s' "$tmp/recovery.img")" -eq 60821504
+          echo '08389076ebd424f9626dde48529e1e81a676b864b413d5fd37629a7826ff0158  '"$tmp/recovery.img" | sha256sum --check
+          echo "RECOVERY_SHA256_VERIFIED=yes" | tee -a "$evidence/result.txt"
+          python3 tools/oxide_android_bootimg_extract.py "$tmp/recovery.img" "$tmp/extracted"
+          cp "$tmp/extracted/image-metadata.json" "$evidence/"
+
+          echo 'Starting full-system QEMU ARM64 Android recovery kernel for <=90s' | tee -a "$evidence/result.txt"
+          started="$(date +%s)"
+          set +e
+          timeout --signal=TERM --kill-after=5s 90s qemu-system-aarch64 \
+            -machine virt,accel=tcg -cpu max -smp 2 -m 2048 \
+            -kernel "$tmp/extracted/Image" \
+            -initrd "$tmp/extracted/ramdisk.img" \
+            -append 'console=ttyAMA0 earlycon=pl011,0x09000000 androidboot.hardware=virtio loglevel=6' \
+            -display none -monitor none -serial file:"$tmp/console.log" -no-reboot -net none
+          rc=$?
+          set -e
+          echo "QEMU_EXIT_CODE=$rc" | tee -a "$evidence/result.txt"
+          echo "QEMU_WALL_SECONDS=$(( $(date +%s) - started ))" | tee -a "$evidence/result.txt"
+          if test -f "$tmp/console.log"; then
+            tail -c 4000000 "$tmp/console.log" > "$evidence/console.log"
+          else
+            : > "$evidence/console.log"
+          fi
+          echo '--- diagnostic console tail ---'
+          tail -n 35 "$evidence/console.log"
+
+          if grep -aFq 'Linux version' "$evidence/console.log" \
+            && grep -aEi 'init: init (first|second) stage started' "$evidence/console.log"; then
+            echo 'RESULT=PASS_ANDROID_RECOVERY_INIT_STAGE_REACHED' | tee -a "$evidence/result.txt"
+            echo 'CAUTION: Android recovery init only; NO full Android boot, Google Play, original Oxide activity or gameplay.' | tee -a "$evidence/result.txt"
+          elif grep -aFq 'Linux version' "$evidence/console.log"; then
+            echo 'RESULT=PARTIAL_ARM64_KERNEL_BOOTED_BUT_NO_ANDROID_RECOVERY_INIT' | tee -a "$evidence/result.txt"
+            exit 1
+          else
+            echo 'RESULT=FAIL_NO_ANDROID_KERNEL_BOOT_OBSERVED' | tee -a "$evidence/result.txt"
+            exit 1
+          fi
+
+      - name: Retain verified metadata, status and bounded serial console even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-android-arm64-virt-recovery-tcg-probe
+          path: evidence/oxide-android-recovery-tcg/
+          if-no-files-found: warn
+          retention-days: 7
