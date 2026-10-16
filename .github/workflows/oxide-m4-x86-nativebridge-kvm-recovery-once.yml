@@ -1,9 +1,8 @@
 name: Oxide M4 x86 nativebridge KVM repair - one guarded recovery
+# ARCHIVED after original-game failures; no automatic replay of costly APK/AVD trials.
+# A future distinct hypothesis requires a NEW preflight and review.
 on:
-  workflow_run:
-    workflows:
-      - "Oxide M4 original game on proven x86_64 ARM64 translator - one trial"
-    types: [completed]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,7 +14,8 @@ concurrency:
 
 jobs:
   recover-only-if-prior-original-never-installed:
-    if: ${{ github.event.workflow_run.id == 38817690114 && (github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'cancelled') && github.event.workflow_run.head_repository.full_name == github.repository }}
+    # Permanently skip this historical automatic single-use trial.
+    if: ${{ false }}
     runs-on: ubuntu-24.04
     timeout-minutes: 18
     env:
