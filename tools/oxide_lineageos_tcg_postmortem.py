@@ -76,6 +76,15 @@ def inspect(artifact: Path):
             bool(re.search(r"init: Service 'seriallogging'.*exited with status [1-9]", serial)),
         "sound_card_setup_sigabrt_in_serial":
             bool(re.search(r"init: Service 'vendor.setup_sound_card'.*received SIGABRT", serial)),
+        "sound_card_setup_exited_nonzero_in_serial":
+            bool(re.search(r"init: Service 'vendor.setup_sound_card'.*exited with status [1-9]", serial)),
+        "seriallogging_still_running_at_last_observed_event":
+            ("service 'seriallogging' requested start, but it is already running" in serial),
+        "hvc_channels_contain_bytes_but_shell_prompt_not_verified":
+            (artifact / "hvc0-shell.log").is_file()
+            and (artifact / "hvc0-shell.log").stat().st_size > 0,
+        "adb_service_may_be_disabled":
+            ("init.svc.adbd=stopped" in serial),
         "hvc0_shell_bytes": (artifact / "hvc0-shell.log").stat().st_size
             if (artifact / "hvc0-shell.log").is_file() else 0,
         "hvc1_logcat_bytes": (artifact / "hvc1-logcat.log").stat().st_size
