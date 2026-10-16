@@ -41,10 +41,10 @@ jobs:
             });
             if (comments.some(c => c.body?.includes(marker))) return;
             const status = process.env.TEST_JOB_STATUS;
-            const body = marker + '\\n' +
-              '**CI offline Berberis / timeline:** ' + status + '\\n' +
-              'Run: https://github.com/' + owner + '/' + repo + '/actions/runs/' + context.runId + '\\n' +
-              'Commit: ' + context.sha + '\\n' +
+            const body = marker + '\n' +
+              '**CI offline Berberis / timeline:** ' + status + '\n' +
+              'Run: https://github.com/' + owner + '/' + repo + '/actions/runs/' + context.runId + '\n' +
+              'Commit: ' + context.sha + '\n' +
               'Somente testes Python e logcat sintético. Nenhum APK/Android baixado ou executado; ' +
               'o jogo original permanece sem prova de 35 s, menu ou gameplay.';
             await github.rest.issues.createComment({owner, repo, issue_number: 4, body});
