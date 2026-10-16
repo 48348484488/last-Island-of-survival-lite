@@ -1,0 +1,134 @@
+name: Oxide original Redroid native dlopen fallback - read-only logs
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/oxide_native_loader_fallback_audit.py'
+      - 'tests/test_oxide_native_loader_fallback_audit.py'
+      - '.github/workflows/oxide-native-loader-fallback.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: oxide-native-dlopen-logs-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compare-existing-native-loader-logs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            tools
+            tests
+
+      - name: Synthetic same-PID fallback regression suite
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q tools/oxide_native_loader_fallback_audit.py tests/test_oxide_native_loader_fallback_audit.py
+          python3 -m unittest discover -s tests -p 'test_oxide_native_loader_fallback_audit.py' -v
+
+      - name: Gate only two tiny existing original ARM64 logcat artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/15 evidence/16 reports
+          gh api repos/48348484488/oxide/actions/artifacts/11999246750 > "$RUNNER_TEMP/15.json"
+          gh api repos/48348484488/oxide/actions/artifacts/11997973952 > "$RUNNER_TEMP/16.json"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          for key,aid,rid in [("15",11999246750,38789434979),
+                              ("16",11997973952,38787025289)]:
+              data=json.loads((Path(os.environ["RUNNER_TEMP"])/(key+".json")).read_text())
+              assert data["id"]==aid
+              assert data["workflow_run"]["id"]==rid
+              assert data["name"]=="oxide-115-arm64-runtime-evidence"
+              assert data["expired"] is False
+              assert 0<data["size_in_bytes"]<10_000_000
+          PY
+
+      - name: Replay original Android15 and 16 loader events only
+        run: |
+          set -euo pipefail
+          gh run download 38789434979 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir evidence/15
+          gh run download 38787025289 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir evidence/16
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            "15":"bcc57f460584553fe860fab3995f4d930b88ce9e8e6eb370ff116a9932d70c4c",
+            "16":"776a2394656e5cc802c1f267aae7b36fd4c90b295f7b9a0527ef86ec96b8f120",
+          }
+          for key, digest in expected.items():
+              root=Path("evidence")/key
+              logs=list(root.rglob("logcat.txt"))
+              abi=list(root.rglob("abi.txt"))
+              assert len(logs)==len(abi)==1
+              assert abi[0].read_text().strip()=="arm64-v8a"
+              assert hashlib.sha256(logs[0].read_bytes()).hexdigest()==digest
+              (Path("reports")/(key+"-logcat-path.txt")).write_text(str(logs[0]))
+          PY
+          python3 tools/oxide_native_loader_fallback_audit.py \
+            --android15 "$(cat reports/15-logcat-path.txt)" \
+            --android16 "$(cat reports/16-logcat-path.txt)" \
+            --output reports/original-native-loader-alternate-name-evidence.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads(Path("reports/original-native-loader-alternate-name-evidence.json").read_text())
+          assert r["evidence_validated"] is True
+          assert r["status"]=="TWO_REAL_NATIVE_AUDIO_FALLBACKS_VERSUS_BURST_FAILED_LOOKUPS"
+          assert r["original_runs"]["android15"]["alternate_audio_name_gap_ms"]==1
+          assert r["original_runs"]["android16"]["alternate_audio_name_gap_ms"]==1
+          assert r["original_runs"]["android15"]["last_burst_failed_load_to_self_sigkill_ms"]==388
+          assert r["original_runs"]["android16"]["last_burst_failed_load_to_self_sigkill_ms"]==113
+          assert r["original_gameplay_verified"] is False
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as f:
+              f.write("### Original Redroid ARM64 native loader alternate-name evidence\n")
+              for key,run in r["original_runs"].items():
+                  f.write(f"- {key}: PID {run['original_pid']}, audio fallback success after 1ms; ")
+                  f.write(f"Burst names unresolved, self SIGKILL after {run['last_burst_failed_load_to_self_sigkill_ms']}ms\n")
+              f.write("- Failed dlopen was recoverable for the audio plugin; Burst cause UNKNOWN\n")
+              f.write("- No APK/Android execution or modification; no gameplay proof\n")
+          PY
+
+      - name: Preserve only derived JSON (no raw logs, no APK)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-native-dlopen-fallback-evidence
+          path: reports/original-native-loader-alternate-name-evidence.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Record actual offline result in issue M4 once
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          RESULT: ${{ job.status }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const marker='<!-- oxide-original-native-audio-fallback:'+context.runId+' -->';
+            const comments=await github.paginate(github.rest.issues.listComments,{
+              owner,repo,issue_number:4,per_page:100
+            });
+            if (comments.some(c=>c.body?.includes(marker))) return;
+            const body=marker+'\n**Replay original Redroid de nomes alternativos dlopen:** '+
+              process.env.RESULT+'\nRun: https://github.com/'+owner+'/'+repo+'/actions/runs/'+context.runId+
+              '\nLê somente os 2 logcats originais ARM64 pré-verificados, sem Android/APK novo. '+
+              'Um erro de busca da biblioteca de áudio foi seguido de sucesso com outro nome; '+
+              'as buscas Burst não tiveram sucesso observável. Causa do SIGKILL, integridade '+
+              'e gameplay ainda DESCONHECIDOS.';
+            await github.rest.issues.createComment({owner,repo,issue_number:4,body});
