@@ -80,7 +80,8 @@ def inspect_elf(blob):
             if match and pc - match["vaddr"] < match["filesz"] else None, 
             "file_backed_executable": bool(match and "X" in match["flags"] 
                 and pc - match["vaddr"] < match["filesz"] 
-                and section and section["executable"]),
+                and section and section["executable"]
+                and section["type"] != 8),
             "section_name": section["name"] if section else None,
             "section_executable": section["executable"] if section else None,
         })
