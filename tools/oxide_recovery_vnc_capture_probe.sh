@@ -49,6 +49,7 @@ python3 - "$tmp/monitor.sock" "$evidence/recovery-vnc.ppm" "$evidence" <<'PY'
 import json
 import socket
 import sys
+import time
 from pathlib import Path
 
 monitor, output, root = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
@@ -64,9 +65,25 @@ try:
         s.connect(str(monitor))
         banner = s.recv(8192).decode("utf8", "replace")
         s.sendall(("screendump " + str(output) + "\n").encode())
-        reply = s.recv(8192).decode("utf8", "replace")
+        # HMP is a line-edited asynchronous terminal: the first recv can contain
+        # just an echoed "s", before screendump actually executes.
+        chunks = []
+        deadline = time.monotonic() + 8
+        s.settimeout(0.5)
+        while time.monotonic() < deadline:
+            try:
+                chunk = s.recv(8192)
+                if not chunk:
+                    break
+                chunks.append(chunk)
+            except socket.timeout:
+                pass
+            if output.is_file() and output.stat().st_size > 64:
+                break
+            time.sleep(0.1)
+        reply = b"".join(chunks).decode("utf8", "replace")
         record["hmp_banner"] = banner[:500]
-        record["hmp_response"] = reply[:1200]
+        record["hmp_response"] = reply[-2200:]
 except OSError as exc:
     record["hmp_error"] = type(exc).__name__ + ": " + str(exc)
 record["screenshot_created"] = output.is_file() and output.stat().st_size > 64
