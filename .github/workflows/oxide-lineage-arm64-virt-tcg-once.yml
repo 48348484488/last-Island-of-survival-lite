@@ -1,0 +1,46 @@
+name: Oxide ARM64 full LineageOS QEMU-virt Android boot once (no APK)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-lineage-arm64-virt-tcg-once.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oxide-lineage-arm64-virt-tcg-single-bounded-attempt
+  cancel-in-progress: true
+
+jobs:
+  android-arm64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate script without booting anything
+        run: bash -n tools/oxide_lineage_arm64_virt_tcg_once.sh
+      - name: Preflight, verified single full Android ARM64 VM boot, ADB and screen proof (never Oxide APK)
+        run: bash tools/oxide_lineage_arm64_virt_tcg_once.sh
+      - name: Present evidence and actual limits
+        if: always()
+        shell: bash
+        run: |
+          echo '## Oxide QEMU ARM64 full Android boot proof' >> "$GITHUB_STEP_SUMMARY"
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          if [ -f evidence/oxide-lineage-virt-arm64-tcg/result.txt ]; then
+            cat evidence/oxide-lineage-virt-arm64-tcg/result.txt >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'No execution evidence generated; not boot-verified.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No original game APKs installed. Full Android ADB boot is distinct from game compatibility or certification.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve logs, no VM image or original game files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-lineage-arm64-virt-tcg-fullboot-one-shot
+          path: evidence/oxide-lineage-virt-arm64-tcg/
+          if-no-files-found: warn
+          retention-days: 7
