@@ -1,0 +1,30 @@
+name: Oxide ARM64 QEMU virt device CLI preflight - no Android download
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-arm64-virt-devices-preflight.yml'
+      - 'tools/oxide_arm64_virt_devices_probe.sh'
+
+permissions:
+  contents: read
+
+jobs:
+  dry-qemu-virt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate QEMU preflight shell
+        run: bash -n tools/oxide_arm64_virt_devices_probe.sh
+      - name: Prove UEFI 64MiB plus VirtIO networking, block disks and GPU CLI
+        run: bash tools/oxide_arm64_virt_devices_probe.sh
+      - name: Store verified QEMU host/device diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-virt-devices-preflight
+          path: evidence/oxide-arm64-virt-devices/
+          retention-days: 7
+          if-no-files-found: warn
