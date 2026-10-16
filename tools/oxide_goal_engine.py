@@ -71,10 +71,34 @@ def evidence_summary(root):
                 and initial is not None)
     stable_pid = launched and initial["pid"] == pids["10"] == pids["35"]
     timing = verify_capture_timing(root)
+    logcat = read(root, "logcat.txt")
+    native_exit_diagnostic = assess_exit_timeline(logcat)
+    native_evidence = native_exit_diagnostic["evidence"]
+    # Cross-check the original Activity PID against independent logcat evidence.
+    # An explicit fatal signal before 35 seconds overrides contradictory PID
+    # snapshots, even when those snapshots and their timestamps appear valid.
+    exit_at_ms = [
+        native_evidence[key] for key in ("start_to_self_sigkill_ms", "start_to_sigill_ms")
+        if isinstance(native_evidence.get(key), (int, float))
+    ]
+    original_pid_in_logcat = (
+        initial is not None
+        and native_evidence["original_pid"] is not None
+        and str(native_evidence["original_pid"]) == initial["pid"]
+    )
+    observed_fatal = any(native_evidence.get(key) is True for key in (
+        "original_self_sigkill_logcat", "original_fatal_sigill_observed",
+        "original_pid_died", "original_zygote_signal4_exit_observed"
+    ))
+    fatal_original_exit_conflicts_with_35s = bool(
+        original_pid_in_logcat and observed_fatal
+        and (not exit_at_ms or min(exit_at_ms) <= 35_000)
+    )
     resumed_35s = (stable_pid and initial is not None
                    and original_resumed_activity_pid(activity["10"]) == initial["pid"]
                    and original_resumed_activity_pid(activity["35"]) == initial["pid"]
-                   and timing["verified"])
+                   and timing["verified"]
+                   and not fatal_original_exit_conflicts_with_35s)
     screenshots = {}
     for t in (0, 10, 35):
         path = root / f"screen-{t}.png"
@@ -83,8 +107,6 @@ def evidence_summary(root):
                 screenshots[str(t)] = image.read(8) == b"\x89PNG\r\n\x1a\n"
         else:
             screenshots[str(t)] = False
-    logcat = read(root, "logcat.txt")
-    native_exit_diagnostic = assess_exit_timeline(logcat)
     original_process_started = (installed and "Status: ok" in launch_log
                                 and ORIGINAL in launch_log
                                 and native_exit_diagnostic["evidence"]["original_pid"] is not None)
@@ -153,6 +175,9 @@ def evidence_summary(root):
             "first_original_resumed_checkpoint": initial["checkpoint"] if initial else None,
             "first_original_resumed_pid": initial["pid"] if initial else None,
             "original_activity_resumed_at_10_and_35": bool(resumed_35s),
+            "fatal_original_exit_conflicts_with_35s": fatal_original_exit_conflicts_with_35s,
+            "fully_drawn_is_not_gameplay_evidence": native_evidence[
+                "original_activity_fully_drawn"],
             "activity_owners": {
                 str(t): original_resumed_activity_pid(read(root, f"activity-{t}.txt"))
                 for t in (0, 1, 2, 3, 4, 10, 35)
@@ -166,7 +191,7 @@ def evidence_summary(root):
         "gameplay_confirmed": False,
         "synthetic_overlay_confirmed": False,
         "security_cause": "UNKNOWN",
-        "explanation": "A later same-package PID may be an analytics service; original resumed Activity is also required. Screenshots alone do not prove gameplay.",
+        "explanation": "Independent fatal logcat evidence overrides contradictory 10s/35s PID snapshots. A later same-package PID may be an analytics service. Fully-drawn Activity and screenshots alone do not prove gameplay.",
     }
 
 
