@@ -55,8 +55,23 @@ qemu-system-aarch64 --version | head -n 1 | tee -a "$EVIDENCE/result.txt"
 qemu-system-aarch64 -machine help | grep -Eq '^virt ' || { echo 'NO_VIRT_BOARD'; exit 1; }
 qemu-system-aarch64 -device help | grep -q 'virtio-gpu-pci' || { echo 'NO_VIRTIO_GPU_DEVICE'; exit 1; }
 fw_code="$(find /usr/share -name AAVMF_CODE.fd -print -quit 2>/dev/null)"
-if [ -z "$fw_code" ]; then echo 'NO_AARCH64_UEFI_FIRMWARE' | tee -a "$EVIDENCE/result.txt"; exit 1; fi
-printf 'UEFI_CODE=%s\n' "$fw_code" | tee -a "$EVIDENCE/result.txt"
+fw_vars="$(find /usr/share -name AAVMF_VARS.fd -print -quit 2>/dev/null)"
+if [ -z "$fw_code" ] || [ -z "$fw_vars" ]; then
+  echo 'RESULT=BLOCKED_MISSING_MATCHED_AAVMF_FIRMWARE' | tee -a "$EVIDENCE/result.txt"
+  exit 1
+fi
+# Verified independently in the successful firmware-only preflight #38932199116.
+code_bytes="$(stat -Lc '%s' "$fw_code")"
+vars_bytes="$(stat -Lc '%s' "$fw_vars")"
+echo "AAVMF_CODE_REAL_BYTES=$code_bytes" | tee -a "$EVIDENCE/result.txt"
+echo "AAVMF_VARS_REAL_BYTES=$vars_bytes" | tee -a "$EVIDENCE/result.txt"
+if [ "$code_bytes" -ne 67108864 ] || [ "$vars_bytes" -ne 67108864 ]; then
+  echo 'RESULT=BLOCKED_AAVMF_FIRMWARE_NOT_MATCHING_64M' | tee -a "$EVIDENCE/result.txt"
+  exit 1
+fi
+cp "$fw_vars" "$tmp/aavmf-vars-64m.fd"
+echo "UEFI_CODE=$fw_code" | tee -a "$EVIDENCE/result.txt"
+echo 'UEFI_VARIABLE_STORE=Ubuntu_AAVMF_VARS_64M; upstream UTM 334848B store incompatible with this QEMU firmware' | tee -a "$EVIDENCE/result.txt"
 
 VM_URL="https://github.com/jqssun/android-lineage-qemu/releases/download/v2026.09.17/UTM-VM-lineage-23.2-20260917-jqssun-virtio_arm64only.zip"
 echo 'HOST_PREFLIGHT=PASS_VM_DOWNLOAD_AUTHORIZED_ONCE' | tee -a "$EVIDENCE/result.txt"
@@ -90,7 +105,7 @@ if [ -z "$adb_bin" ]; then echo 'MISSING_ADB_CLIENT' | tee -a "$EVIDENCE/result.
 qemu-system-aarch64 \
   -machine virt,accel=tcg -cpu max -smp 2 -m 3072 \
   -drive "if=pflash,unit=0,format=raw,readonly=on,file=$fw_code" \
-  -drive "if=pflash,unit=1,format=raw,snapshot=on,file=$efi_vars" \
+  -drive "if=pflash,unit=1,format=raw,file=$tmp/aavmf-vars-64m.fd" \
   -device virtio-blk-pci,drive=vda,bootindex=0 \
   -device virtio-blk-pci,drive=vdb,bootindex=1 \
   -drive "file=$vda,if=none,id=vda,format=qcow2,snapshot=on" \
