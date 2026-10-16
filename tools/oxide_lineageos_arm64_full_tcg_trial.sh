@@ -40,6 +40,12 @@ if test -z "$firmware"; then
   exit 1
 fi
 echo "FIRMWARE=$firmware" | tee -a "$evidence/result.txt"
+fw_bytes="$(stat -Lc '%s' "$firmware")"
+echo "FIRMWARE_BYTES=$fw_bytes" | tee -a "$evidence/result.txt"
+if test "$fw_bytes" -ne 67108864; then
+  echo "RESULT=DENIED_UNSUPPORTED_AARCH64_FIRMWARE_SIZE" | tee -a "$evidence/result.txt"
+  exit 1
+fi
 
 release_url="https://github.com/jqssun/android-lineage-qemu/releases/download/v2026.09.17/UTM-VM-lineage-23.2-20260917-jqssun-virtio_arm64only.zip"
 echo "RELEASE=$release_url" | tee -a "$evidence/result.txt"
@@ -91,6 +97,39 @@ report = {name: {"zip_member": m.filename, "uncompressed_bytes": m.file_size}
 print(json.dumps(report, sort_keys=True))
 PY
 
+# GitHub-hosted QEMU virt exposes 64MiB pflash. The upstream UTM guest
+# ships only 334848 bytes of EFI variables; using it directly fails before boot:
+# "device requires 67108864 bytes, block backend provides 334848 bytes".
+# Keep the original variable store as a prefix and extend only this disposable
+# VM copy with erased flash bytes (0xff), never alter the upstream download.
+python3 - "$tmp/efi_vars.fd" "$tmp/efi_vars_pflash64.fd" "$evidence" <<'PY'
+from pathlib import Path
+import json
+import sys
+src, out, ev = map(Path, sys.argv[1:])
+original = src.read_bytes()
+required = 64 * 1024 * 1024
+if not 0 < len(original) <= required:
+    raise ValueError("EFI variable store incompatible with host QEMU pflash")
+with out.open("wb") as f:
+    f.write(original)
+    chunk = b"\\xff" * (1024 * 1024)
+    remaining = required - len(original)
+    while remaining:
+        n = min(len(chunk), remaining)
+        f.write(chunk[:n])
+        remaining -= n
+assert out.stat().st_size == required
+(ev / "efi-pflash-compat.json").write_text(json.dumps({
+    "original_efi_variables_bytes": len(original),
+    "guest_efi_pflash_bytes": required,
+    "construction": "original variable store prefix + erased flash suffix",
+    "verification": "SIZE_ONLY_QEMU_BOOT_UNVERIFIED",
+    "game_apk_modified": False
+}, indent=2, sort_keys=True)+"\\n")
+print(f"EFI_VARS_ORIGINAL_BYTES={len(original)} EFI_VARS_PADDED_BYTES={required}")
+PY
+
 qemu-img info --output=json "$tmp/vda.qcow2" > "$evidence/vda-qemu-info.json"
 qemu-img info --output=json "$tmp/vdb.qcow2" > "$evidence/vdb-qemu-info.json"
 echo 'BOOT_STRATEGY=real LineageOS QEMU-virt qcow2 disks + guest EFI variables; software ARM64 TCG only' | tee -a "$evidence/result.txt"
@@ -101,7 +140,7 @@ timeout --signal=TERM --kill-after=5s 315s \
   qemu-system-aarch64 \
     -machine virt,accel=tcg -cpu max -smp 2 -m 3072 \
     -drive if=pflash,unit=0,file="$firmware",format=raw,readonly=on \
-    -drive if=pflash,unit=1,file="$tmp/efi_vars.fd",format=raw \
+    -drive if=pflash,unit=1,file="$tmp/efi_vars_pflash64.fd",format=raw \
     -drive if=none,id=vda,file="$tmp/vda.qcow2",format=qcow2 \
     -device virtio-blk-pci,drive=vda,bootindex=0 \
     -drive if=none,id=vdb,file="$tmp/vdb.qcow2",format=qcow2 \
