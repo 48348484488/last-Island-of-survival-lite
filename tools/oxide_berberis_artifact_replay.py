@@ -8,6 +8,7 @@ integrity attestation, stability for 35 seconds, or gameplay.
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 
 if __package__:
@@ -25,6 +26,24 @@ EXPECTED_GUEST_PC = "0x700a3c"
 EXPECTED_DELTA_MS = 6
 EXPECTED_START_TO_SIGNAL_MS = 3058
 
+DEBUG_ORIGINAL_HEADER = re.compile(
+    r"pid: 4426, tid: \\d+, name: .*>>> com\\.catsbit\\.oxidesurvivalisland <<<")
+FRAME_00 = re.compile(
+    r"#00\\s+pc\\s+0*700a3c\\s+/.*/lib/arm64/libloader\\.so(?:\\s|$)", re.I)
+FRAME_01 = re.compile(
+    r"#01\\s+pc\\s+0*700be8\\s+/.*/lib/arm64/libloader\\.so(?:\\s|$)", re.I)
+
+
+def original_guest_frames(logcat):
+    """Read only the frame lines near the exact original PID's tombstone header."""
+    lines = logcat.splitlines()
+    for index, line in enumerate(lines):
+        if DEBUG_ORIGINAL_HEADER.search(line):
+            window = lines[index + 1:index + 120]
+            return (any(FRAME_00.search(x) for x in window),
+                    any(FRAME_01.search(x) for x in window))
+    return False, False
+
 
 def verify_existing_logcat(blob):
     """Return a fail-closed, byte-provenanced conclusion from logcat bytes."""
@@ -32,6 +51,7 @@ def verify_existing_logcat(blob):
     bridge = audit_logcat(text)
     timeline = assess_exit(text)
     observed = timeline["evidence"]
+    frame_00, frame_01 = original_guest_frames(text)
     checks = {
         "original_pid": observed["original_pid"] == EXPECTED_PID,
         "berberis_same_pid": bridge.get("pid") == EXPECTED_PID,
@@ -47,6 +67,8 @@ def verify_existing_logcat(blob):
             and observed["original_fatal_sigill_origin"] == "SI_TKILL",
         "constructor_stack": timeline["status"] ==
             "ORIGINAL_SIGILL_DURING_ARM64_LIBLOADER_CONSTRUCTORS",
+        "tombstone_frame_00_exact_pc": frame_00,
+        "tombstone_frame_01_exact_pc": frame_01,
         "launch_to_signal": observed.get("start_to_sigill_ms") ==
             EXPECTED_START_TO_SIGNAL_MS,
         "no_gameplay_claim": timeline["gameplay_verified"] is False,
@@ -62,7 +84,8 @@ def verify_existing_logcat(blob):
         "reported_opcode": bridge.get("opcode"),
         "reported_instruction_address": bridge.get("address"),
         "observed_signal_delta_ms": bridge.get("delta_ms"),
-        "tombstone_guest_pc": EXPECTED_GUEST_PC if checks["constructor_stack"] else None,
+        "tombstone_guest_pc": EXPECTED_GUEST_PC if frame_00 else None,
+        "tombstone_secondary_pc": "0x700be8" if frame_01 else None,
         "translated_environment": "OFFICIAL_X86_64_AVD_BERBERIS_AARCH64",
         "original_apks_modified": False,
         "original_gameplay_verified": False,
