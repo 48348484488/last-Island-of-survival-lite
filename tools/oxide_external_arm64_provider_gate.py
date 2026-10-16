@@ -9,6 +9,11 @@ import json
 from pathlib import Path
 from urllib.parse import urlparse
 
+KNOWN_PROVIDER_CONSTRAINTS = {
+    "firebase_test_lab_arm": ("firebase.google.com", "/docs/test-lab/android/avds"),
+    "sauce_labs_arm": ("docs.saucelabs.com", "/mobile-apps/android-emulators/"),
+}
+
 REQUIRED = ("native_arm64_virtual", "play_store_app_supported",
             "no_new_payment_required", "authorized_access_verified",
             "host_acceleration_verified", "legitimate_services_verified")
@@ -38,8 +43,13 @@ def assess(data):
         source = item.get("official_source_url")
         if not isinstance(source, str) or urlparse(source).scheme != "https":
             return invalid("MISSING_OFFICIAL_HTTPS_SOURCE")
-        if urlparse(source).hostname not in {"firebase.google.com", "docs.saucelabs.com"}:
-            return invalid("UNKNOWN_OFFICIAL_SOURCE")
+        expected = KNOWN_PROVIDER_CONSTRAINTS.get(item["name"])
+        if expected is None or (urlparse(source).hostname, urlparse(source).path) != expected:
+            return invalid("PROVIDER_SOURCE_MISMATCH")
+        if item.get("play_store_app_supported") is not False:
+            return invalid("CONTRADICTS_DOCUMENTED_PLAY_STORE_LIMITATION")
+        if item.get("no_new_payment_required") is not False:
+            return invalid("CONTRADICTS_DOCUMENTED_ACCESS_LIMITATION")
         if any(item.get(field) is not None and type(item[field]) is not bool for field in REQUIRED):
             return invalid("NON_BOOLEAN_CAPABILITY")
         if any(field not in item for field in REQUIRED):
