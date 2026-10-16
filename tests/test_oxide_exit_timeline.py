@@ -83,6 +83,7 @@ class ExitTimelineTests(unittest.TestCase):
             f"10-15 22:46:40.128   541  1109 I ActivityTaskManager: START u0 {{cmp={ACTIVITY}}} from uid 2000",
             "10-15 22:46:40.465   541   575 I ActivityManager: Start proc 4426:com.catsbit.oxidesurvivalisland/u0a209 for next-top-activity",
             "10-15 22:46:40.992  4426  4426 I berberis: Initialized Berberis (aarch64), version 0.2.3",
+            "10-15 22:46:43.180  4426  4426 E berberis: Undefined instruction 0xd5380429 at 0x0000737d96904a3c",
             "10-15 22:46:43.186  4426  4426 F libc    : Fatal signal 4 (SIGILL), code -6 (SI_TKILL) in tid 4426 (esurvivalisland), pid 4426 (esurvivalisland)",
             "10-15 22:46:44.166  4495  4495 F DEBUG   : pid: 4426, tid: 4426, name: esurvivalisland  >>> com.catsbit.oxidesurvivalisland <<<",
             "10-15 22:46:44.166  4495  4495 F DEBUG   : signal 4 (SIGILL), code -6 (SI_TKILL), fault addr --------",
@@ -102,6 +103,9 @@ class ExitTimelineTests(unittest.TestCase):
         self.assertTrue(e["original_arm64_libloader_guest_frame"])
         self.assertTrue(e["arm64_dynamic_linker_constructors_frame"])
         self.assertTrue(e["original_zygote_signal4_exit_observed"])
+        self.assertTrue(e["original_berberis_undefined_instruction_precedes_sigill"])
+        self.assertEqual(e["original_berberis_reported_opcode"], "0xd5380429")
+        self.assertEqual(e["original_berberis_to_sigill_ms"], 6)
         self.assertFalse(result["gameplay_verified"])
         self.assertEqual(result["security_trigger"], "UNKNOWN")
 
@@ -127,6 +131,7 @@ class ExitTimelineTests(unittest.TestCase):
         result = assess(log)
         self.assertEqual(result["status"], "ORIGINAL_SIGILL_NATIVE_BRIDGE_CAUSE_UNKNOWN")
         self.assertFalse(result["evidence"]["original_arm64_libloader_guest_frame"])
+        self.assertFalse(result["evidence"]["original_berberis_undefined_instruction_precedes_sigill"])
 
     def test_invalid_year(self):
         with self.assertRaises(ValueError):
