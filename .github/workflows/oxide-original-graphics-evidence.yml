@@ -1,0 +1,145 @@
+name: Oxide original ARM64 graphics and immersive-dialog evidence - offline
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/oxide_original_graphics_evidence.py'
+      - 'tests/test_oxide_original_graphics_evidence.py'
+      - '.github/workflows/oxide-original-graphics-evidence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: oxide-original-graphics-evidence-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  original-graphics-offline-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            tools
+            tests
+
+      - name: Syntax and ten synthetic fail-closed regressions
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q tools/oxide_original_graphics_evidence.py tests/test_oxide_original_graphics_evidence.py
+          python3 -m unittest discover -s tests -p 'test_oxide_original_graphics_evidence.py' -v
+
+      - name: Preflight exact existing small original artifacts, no game or Android images
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/15 evidence/16 reports
+          gh api repos/48348484488/oxide/actions/artifacts/11999246750 > "$RUNNER_TEMP/original15.json"
+          gh api repos/48348484488/oxide/actions/artifacts/11997973952 > "$RUNNER_TEMP/original16.json"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          for name,aid,rid in [
+              ("original15",11999246750,38789434979),
+              ("original16",11997973952,38787025289),
+          ]:
+              a=json.loads((Path(os.environ["RUNNER_TEMP"])/(name+".json")).read_text())
+              assert a["id"]==aid, name
+              assert a["workflow_run"]["id"]==rid, name
+              assert a["name"]=="oxide-115-arm64-runtime-evidence", name
+              assert a["expired"] is False, name
+              assert 0<a["size_in_bytes"]<10_000_000, name
+              print(name,"only existing logcat/screenshots ZIP bytes:",a["size_in_bytes"])
+          PY
+
+      - name: Verify exact logcat and original screens while classifying graphics sequence
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download 38789434979 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir evidence/15
+          gh run download 38787025289 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir evidence/16
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            "15":"bcc57f460584553fe860fab3995f4d930b88ce9e8e6eb370ff116a9932d70c4c",
+            "16":"776a2394656e5cc802c1f267aae7b36fd4c90b295f7b9a0527ef86ec96b8f120",
+          }
+          for name,checksum in expected.items():
+              folder=Path("evidence")/name
+              log=folder/"reports/logcat.txt"
+              abi=folder/"reports/abi.txt"
+              assert log.is_file() and abi.read_text().strip()=="arm64-v8a"
+              assert hashlib.sha256(log.read_bytes()).hexdigest()==checksum, name
+          PY
+          python3 tools/oxide_original_graphics_evidence.py \
+            --android15-reports evidence/15/reports \
+            --android16-reports evidence/16/reports \
+            --output reports/oxide-original-arm64-graphics-visual-limit.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads(Path("reports/oxide-original-arm64-graphics-visual-limit.json").read_text())
+          assert r["validated"] is True
+          assert r["status"]=="GRAPHICS_WARNINGS_NONBLOCKING_TO_UNITY_SCREENSHOTS_OCCLUDED"
+          assert r["original_gameplay_verified"] is False
+          for key, run in r["runs"].items():
+              assert run["angle_swiftshader_software_renderer_reported"] is True, key
+              assert run["unity_il2cpp_reported_after_graphics_warnings"] is True, key
+              assert run["graphics_buffer_probe_formats_failed"]==[43,56,59], key
+              assert run["original_manifest_vulkan_feature"]=="NOT_REQUIRED", key
+          assert len(r["runs"]["android15"]["original_screenshots"])==3
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as out:
+              out.write("### Original ARM64 graphics milestones (read-only existing artifacts)\n")
+              for key,run in r["runs"].items():
+                  ev=run["events_ms_since_activity_start"]
+                  out.write(f"- {key}: AHB format 43/56/59 failed at +{ev['hardware_buffer_format_probe_failed']}ms; ")
+                  out.write(f"ANGLE renderer at +{ev['angle_swiftshader_renderer_reported']}ms; ")
+                  out.write(f"Unity at +{ev['unity_il2cpp_identified']}ms\n")
+              out.write("- Android15 screenshots 2/3/4 manually recognized ONLY by exact SHA-256; Android immersive prompt obscures view\n")
+              out.write("- Renderer compatibility with gameplay: NOT ESTABLISHED\n")
+              out.write("- SIGKILL source: UNKNOWN; no Android boot, APK or protection change\n")
+          PY
+
+      - name: Preserve only provenance and derived JSON, not screenshots or APKs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-redroid-graphics-and-visual-occlusion
+          path: reports/oxide-original-arm64-graphics-visual-limit.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Record exact offline evidence result in M4 once
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          RESULT: ${{ job.status }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const marker='<!-- oxide-redroid-graphics-and-visual:'+context.runId+' -->';
+            const comments=await github.paginate(github.rest.issues.listComments,{
+              owner,repo,issue_number:4,per_page:100
+            });
+            if (comments.some(c=>c.body?.includes(marker))) return;
+            const fs=require('fs'),p='reports/oxide-original-arm64-graphics-visual-limit.json';
+            const report=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')):{};
+            const body=marker+'\n**Gráficos originais e visibilidade (somente replay):** '+process.env.RESULT+
+              '\nRun: https://github.com/'+owner+'/'+repo+'/actions/runs/'+context.runId+
+              '\nResultado: '+String(report.status||'NO VERIFIED REPORT')+
+              '\nOs erros de formatos AHardwareBuffer antecedem ANGLE/SwiftShader e Unity no PID original. '+
+              'Capturas Android15 2/3/4, identificadas por SHA fixado e revisão humana, estão '+
+              'parcialmente cobertas pelo aviso Android de tela cheia. Não comprova gameplay, '+
+              'nem indica causa da saída ou do aviso de segurança. Não houve APK/Android novo.';
+            await github.rest.issues.createComment({owner,repo,issue_number:4,body});
