@@ -1,9 +1,8 @@
 name: Oxide M4 original game on proven x86_64 ARM64 translator - one trial
+# ARCHIVED after original-game failures; no automatic replay of costly APK/AVD trials.
+# A future distinct hypothesis requires a NEW preflight and review.
 on:
-  workflow_run:
-    workflows:
-      - "Oxide M3 official x86_64 AVD executes independent ARM64 JNI - one shot"
-    types: [completed]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,7 +14,8 @@ concurrency:
 
 jobs:
   unchanged-four-splits-only-after-native-jni:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.id == 38817025884 && github.event.workflow_run.head_repository.full_name == github.repository }}
+    # Permanently skip this historical automatic single-use trial.
+    if: ${{ false }}
     runs-on: ubuntu-24.04
     timeout-minutes: 18
     env:
