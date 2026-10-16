@@ -33,7 +33,7 @@ jobs:
             timeout --signal=TERM --kill-after=2s 3s \
               qemu-system-aarch64 \
                 -machine virt,accel=tcg -cpu cortex-a57 -smp 1 -m 512 \
-                -S -display none -serial none -monitor none -no-reboot \
+                -S -nodefaults -net none -display none -serial none -monitor none -no-reboot \
                 "$@" > "$evidence/$variant.log" 2>&1
             rc=$?
             set -e
