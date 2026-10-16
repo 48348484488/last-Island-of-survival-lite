@@ -152,6 +152,7 @@ timeout --signal=TERM --kill-after=5s 530s \
     -device virtio-serial \
     -device qemu-xhci,id=usb-bus \
     -device usb-tablet,bus=usb-bus.0 \
+    -device usb-kbd,bus=usb-bus.0 \
     -vnc 127.0.0.1:9 \
     -monitor unix:"$tmp/monitor.sock",server=on,wait=off \
     -serial file:"$tmp/serial.log" \
@@ -163,6 +164,24 @@ echo "QEMU_STARTED_PID=$qpid" | tee -a "$evidence/result.txt"
 booted=0
 last_abi=""
 started="$(date +%s)"
+captures=0
+echo "VNC_SNAPSHOT_CHECKPOINTS=270,360,450_SECONDS" >> "$evidence/result.txt"
+capture_frame() {
+  label="$1"
+  set +e
+  timeout --signal=TERM --kill-after=3s 18s \
+    python3 tools/oxide_qemu_vnc_capture.py \
+      --output "$evidence/full-android-$label.png" \
+      --report "$evidence/full-android-$label.json" \
+      > "$evidence/full-android-$label-capture.log" 2>&1
+  snap_rc=$?
+  set -e
+  if test "$snap_rc" -eq 0 && test -s "$evidence/full-android-$label.png"; then
+    echo "VISUAL_SNAPSHOT_$label=CAPTURED" | tee -a "$evidence/result.txt"
+  else
+    echo "VISUAL_SNAPSHOT_$label=FAILED_EXIT_$snap_rc" | tee -a "$evidence/result.txt"
+  fi
+}
 # Verified prior run #38932798336 reached Android bootanim only at ~251 seconds.
 # Extend a single diagnostic window, never assume that late init is a game proof.
 while (( $(date +%s) - started < 470 )); do
@@ -179,7 +198,20 @@ while (( $(date +%s) - started < 470 )); do
     booted=1
     break
   fi
-  echo "PROBE_SECONDS=$(( $(date +%s) - started )) BOOT_COMPLETED=$boot ABI=$abi" >> "$evidence/poll.log"
+  elapsed="$(( $(date +%s) - started ))"
+  if (( elapsed >= 270 && captures == 0 )); then
+    capture_frame 0270
+    captures=1
+  fi
+  if (( elapsed >= 360 && captures == 1 )); then
+    capture_frame 0360
+    captures=2
+  fi
+  if (( elapsed >= 450 && captures == 2 )); then
+    capture_frame 0450
+    captures=3
+  fi
+  echo "PROBE_SECONDS=$elapsed BOOT_COMPLETED=$boot ABI=$abi" >> "$evidence/poll.log"
   sleep 8
 done
 echo "WALL_BOOT_PROBE_SECONDS=$(( $(date +%s) - started ))" | tee -a "$evidence/result.txt"
