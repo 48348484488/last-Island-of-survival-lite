@@ -1,0 +1,43 @@
+name: Oxide ARM64 QEMU TCG CPU configuration check
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-tcg-configuration-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  cpu-config:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check QEMU TCG configuration, without Android or APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/qemu-tcg-configuration
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends qemu-system-arm >/dev/null
+          qemu-system-aarch64 --version | tee evidence/qemu-tcg-configuration/version.txt
+          for opts in default tuned; do
+            echo "MODE=$opts"
+            if [ "$opts" = tuned ]; then flags=("tcg,tb-size=1024,thread=multi"); else flags=("tcg"); fi
+            set +e
+            timeout 4s qemu-system-aarch64 -machine virt -accel "$flags" -cpu max -smp 2 -m 512 \
+              -S -nodefaults -net none -display none -serial none -monitor none \
+              > "evidence/qemu-tcg-configuration/$opts.log" 2>&1
+            rc=$?
+            set -e
+            echo "$opts=$rc" | tee -a evidence/qemu-tcg-configuration/result.txt
+            test "$rc" -eq 124
+          done
+          echo "RESULT=PASS_BOTH_TCG_CONFIGS_NO_GUEST_EXECUTION" >> evidence/qemu-tcg-configuration/result.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: oxide-tcg-configuration
+          path: evidence/qemu-tcg-configuration/
+          retention-days: 7
