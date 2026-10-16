@@ -1,0 +1,97 @@
+name: Oxide three original split ZIP library inventory - offline
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/oxide_native_library_inventory.py'
+      - 'tests/test_oxide_native_library_inventory.py'
+      - '.github/workflows/oxide-native-library-index-offline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: oxide-native-library-index-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pinned-small-original-apk-index-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            tools
+            tests
+            base.apk
+            split_config.arm64_v8a.apk
+            split_config.xxhdpi.apk
+      - name: Run synthetic ZIP index regressions first
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q tools/oxide_native_library_inventory.py tests/test_oxide_native_library_inventory.py
+          python3 -m unittest discover -s tests -p 'test_oxide_native_library_inventory.py' -v
+      - name: Hard gate only three small pinned original APK splits
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk; do
+            test -f "$f"
+            test "$(stat -c %s "$f")" -lt 120000000
+          done
+          test ! -f split_UnityDataAssetPack.apk
+          echo "Only the 3 already-versioned splits will be read; asset pack excluded."
+      - name: Inspect central directory names, not content or executable code
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          python3 tools/oxide_native_library_inventory.py \
+            --directory . --output reports/original-small-apk-native-library-index.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          doc=json.loads(Path("reports/original-small-apk-native-library-index.json").read_text())
+          assert doc["pinned_hashes_match"] is True
+          assert doc["all_four_splits_inspected"] is False
+          assert doc["status"] == "THREE_PINNED_ORIGINAL_APK_ZIP_INDEXES_VERIFIED"
+          assert doc["original_gameplay_verified"] is False
+          assert doc["causal_link_to_original_exit"] == "NOT_ESTABLISHED"
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as handle:
+              handle.write("### Original Oxide ZIP filename inventory (read-only)\n")
+              for name, matches in doc["exact_library_matches"].items():
+                  handle.write(f"- {name}: {len(matches)} exact ZIP entries in inspected APKs\n")
+              handle.write("- Large fourth asset pack: NOT inspected\n")
+              handle.write("- No causal attribution to original SIGKILL or protection policy\n")
+              handle.write("- No Android/game run or APK modification\n")
+          PY
+      - name: Preserve only derived ZIP inventory metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-three-pinned-original-apk-native-library-index
+          path: reports/original-small-apk-native-library-index.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Record real CI result in M4 (no duplicate report)
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          RESULT: ${{ job.status }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const marker='<!-- oxide-small-original-apk-zip-index:'+context.runId+' -->';
+            const comments=await github.paginate(github.rest.issues.listComments,{
+              owner,repo,issue_number:4,per_page:100
+            });
+            if (comments.some(c=>c.body?.includes(marker))) return;
+            const body=marker+'\n**Inspeção somente dos 3 APKs originais menores:** '+process.env.RESULT+
+              '\nExecução: https://github.com/'+owner+'/'+repo+'/actions/runs/'+context.runId+
+              '\nHash SHA-256 original obrigatório; leitura exclusiva do índice ZIP, sem descompactar bibliotecas, '+
+              'sem baixar pacote de assets (~900MB), sem Android ou execução do jogo. '+
+              'Nomes ausentes não provam dependência obrigatória nem causa de SIGKILL; gameplay ainda não comprovado.';
+            await github.rest.issues.createComment({owner,repo,issue_number:4,body});
