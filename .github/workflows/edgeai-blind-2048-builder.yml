@@ -1,0 +1,102 @@
+name: EdgeAI isolated external 2048 binary build
+
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths: [".github/workflows/edgeai-blind-2048-builder.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout pinned unknown third-party game (MIT)
+        uses: actions/checkout@v4
+        with:
+          repository: Frost-Phoenix/2048-cli
+          ref: 53f4da8249cbe9bce17e0daefbd7903f4a4684be
+          path: input-source
+          persist-credentials: false
+      - name: Install AArch64 compiler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+      - name: Build actual game as ARM64 and record hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C input-source rev-parse HEAD)" = "53f4da8249cbe9bce17e0daefbd7903f4a4684be"
+          grep -qi "MIT License" input-source/LICENSE
+          mkdir -p output
+          aarch64-linux-gnu-gcc -std=c11 -D_DEFAULT_SOURCE -O1 -g0 -fno-inline -fno-omit-frame-pointer -no-pie \
+            -Iinput-source/include input-source/src/*.c -o output/2048-arm64-symbols.elf -lm
+          aarch64-linux-gnu-strip --strip-all --output-file=output/2048-arm64-stripped.elf output/2048-arm64-symbols.elf
+          file output/*.elf
+          sha256sum output/*.elf | tee output/SHA256SUMS
+          python3 - <<'PY'
+          import json,subprocess,hashlib
+          from pathlib import Path
+          game=Path("output/2048-arm64-symbols.elf")
+          symbols=subprocess.check_output(["aarch64-linux-gnu-nm","--defined-only","--format=posix",str(game)],text=True)
+          funs=[line.split()[0] for line in symbols.splitlines() if len(line.split())>=3 and line.split()[1] in ("T","t")]
+          json.dump({"source_repository":"Frost-Phoenix/2048-cli",
+            "commit":"53f4da8249cbe9bce17e0daefbd7903f4a4684be",
+            "architecture":"aarch64","license":"MIT",
+            "source_included_in_artifacts":False,
+            "game_elf_hash":hashlib.sha256(game.read_bytes()).hexdigest(),
+            "stripped_elf_hash":hashlib.sha256(Path("output/2048-arm64-stripped.elf").read_bytes()).hexdigest(),
+            "elf_named_text_symbols":len(funs)},open("output/metadata.json","w"),indent=2)
+          print("NAMED_TEXT_SYMBOLS="+str(len(funs)))
+          PY
+      - name: Transfer only compiled ELF + metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: output/
+          retention-days: 14
+          if-no-files-found: error
+
+  binary-only-inventory:
+    needs: compile-only
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Download binary-only artifact (no source)
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: input
+      - name: Static disassembly and symbol inventory (not C++ decompilation)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e input-source
+          test -s input/2048-arm64-symbols.elf
+          test -s input/2048-arm64-stripped.elf
+          cd input
+          sha256sum --check SHA256SUMS
+          readelf -h 2048-arm64-symbols.elf > elf-header.txt
+          readelf -Ws 2048-arm64-symbols.elf > named-symbols.txt
+          readelf -Ws 2048-arm64-stripped.elf > stripped-symbols.txt
+          objdump -d 2048-arm64-symbols.elf > object-disassembly.txt || true
+          grep -q 'AArch64' elf-header.txt
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          info=json.loads(Path('metadata.json').read_text())
+          assert info['source_included_in_artifacts'] is False
+          assert info['game_elf_hash']==hashlib.sha256(Path('2048-arm64-symbols.elf').read_bytes()).hexdigest()
+          assert info['stripped_elf_hash']==hashlib.sha256(Path('2048-arm64-stripped.elf').read_bytes()).hexdigest()
+          print("BINARY_ONLY_INVENTORY_SUCCESS")
+          PY
+      - name: Save binary-only inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-static-inventory
+          path: input/
+          retention-days: 14
+          if-no-files-found: error
