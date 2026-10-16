@@ -32,7 +32,7 @@ jobs:
             -S -nographic -serial none -monitor none \
             -audiodev none,id=audio0 \
             -device AC97,audiodev=audio0 \
-            -device virtio-serial-pci,id=vs0 \
+            -device virtio-serial-pci,id=vs0,romfile= \
             -chardev file,id=c0,path="$evidence/hvc0.txt" \
             -device virtconsole,chardev=c0,bus=vs0.0 \
             -chardev file,id=c1,path="$evidence/hvc1.txt" \
