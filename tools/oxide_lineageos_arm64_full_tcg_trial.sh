@@ -136,7 +136,7 @@ echo 'BOOT_STRATEGY=real LineageOS QEMU-virt qcow2 disks + guest EFI variables; 
 
 # Boot complete Android (not recovery) with the matching UTM VM disks.
 # Restrict guest network to outbound NAT and localhost ADB forwarding.
-timeout --signal=TERM --kill-after=5s 315s \
+timeout --signal=TERM --kill-after=5s 530s \
   qemu-system-aarch64 \
     -machine virt,accel=tcg -cpu max -smp 2 -m 3072 \
     -drive if=pflash,unit=0,file="$firmware",format=raw,readonly=on \
@@ -163,7 +163,9 @@ echo "QEMU_STARTED_PID=$qpid" | tee -a "$evidence/result.txt"
 booted=0
 last_abi=""
 started="$(date +%s)"
-while (( $(date +%s) - started < 285 )); do
+# Verified prior run #38932798336 reached Android bootanim only at ~251 seconds.
+# Extend a single diagnostic window, never assume that late init is a game proof.
+while (( $(date +%s) - started < 470 )); do
   if ! kill -0 "$qpid" 2>/dev/null; then
     echo "QEMU_EXITED_BEFORE_VERIFIED_BOOT=yes" | tee -a "$evidence/result.txt"
     break
@@ -203,15 +205,31 @@ if sockpath.is_socket():
         s.connect(str(sockpath))
         s.recv(8192)
         s.sendall(f"screendump {sys.argv[2]}\n".encode())
-        s.recv(8192)
+        reply=s.recv(8192).decode(errors="replace")
         s.close()
-        print("HMP_SCREENSHOT_REQUESTED")
+        response_file=Path(sys.argv[2]).with_suffix(".hmp.txt")
+        response_file.write_text(reply[:8192])
+        print("HMP_SCREENSHOT_RESPONSE_SAVED",response_file)
     except (OSError, TimeoutError) as exc:
         print("HMP_SCREENSHOT_UNAVAILABLE", type(exc).__name__)
 PY
 sleep 2
 if test -f "$tmp/serial.log"; then
   tail -c 1500000 "$tmp/serial.log" > "$evidence/serial-console.log"
+fi
+if test -f "$evidence/serial-console.log"; then
+  for service in zygote surfaceflinger bootanim; do
+    if grep -aEq "started service '$service' has pid" "$evidence/serial-console.log"; then
+      echo "ANDROID_SERVICE_${service}=started" >> "$evidence/result.txt"
+    else
+      echo "ANDROID_SERVICE_${service}=not_observed" >> "$evidence/result.txt"
+    fi
+  done
+fi
+if test -s "$evidence/last-frame.ppm"; then
+  echo "QEMU_FRAME_CAPTURED=yes" >> "$evidence/result.txt"
+else
+  echo "QEMU_FRAME_CAPTURED=no" >> "$evidence/result.txt"
 fi
 echo '--- serial excerpts ---'
 grep -aE 'Linux version|init:|Fatal|ERROR|mount|error|boot|Starting' "$evidence/serial-console.log" 2>/dev/null | tail -n 30 || true
