@@ -1,0 +1,109 @@
+name: Oxide Windows 11 ARM64 WHPX host preflight - NO APK or Android
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/oxide_windows_arm64_whpx_preflight.ps1'
+      - '.github/workflows/oxide-windows-arm64-whpx-only-preflight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: oxide-windows-arm64-whpx-only-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  inspect-windows-arm64-hypervisor-api-only:
+    runs-on: windows-11-vs2026-arm
+    timeout-minutes: 6
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            tools
+
+      - name: Verify native Windows Arm64 architecture only
+        run: |
+          $ErrorActionPreference="Stop"
+          $arch=[System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
+          if($arch -ne "Arm64") { throw "Expected native Windows ARM64, observed $arch" }
+          Write-Output "Native Windows ARM64 host observed; no VM/API changes."
+
+      - name: Run eight synthetic WHPX fail-closed classification tests
+        run: |
+          $ErrorActionPreference="Stop"
+          & pwsh -NoProfile -File tools/oxide_windows_arm64_whpx_preflight.ps1 -SelfTest
+          if($LASTEXITCODE -ne 0) { throw "WHPX classifier regression failed" }
+
+      - name: Query only Windows WHvGetCapability HypervisorPresent and Arm64Support
+        run: |
+          $ErrorActionPreference="Stop"
+          & pwsh -NoProfile -File tools/oxide_windows_arm64_whpx_preflight.ps1 -Output reports/windows-arm64-whpx-preflight.json
+          if($LASTEXITCODE -ne 0) { throw "Read-only WHPX probe failed" }
+          $report=Get-Content reports/windows-arm64-whpx-preflight.json -Raw | ConvertFrom-Json
+          $statuses=@(
+            "WHPX_ARM64_PLATFORM_PREREQUISITE_MET",
+            "WHPX_HYPERVISOR_NOT_PRESENT",
+            "WHPX_HYPERVISOR_QUERY_FAILED",
+            "WHPX_FEATURES_QUERY_FAILED",
+            "WHPX_ARM64_FEATURE_NOT_EXPOSED",
+            "WINDOWS_ARM64_BUILD_TOO_OLD"
+          )
+          if($statuses -notcontains $report.status) { throw "Unexpected WHPX verdict: $($report.status)" }
+          if($report.host_architecture -ne "Arm64") { throw "Wrong CPU architecture" }
+          if($report.original_android_vm_started -or $report.original_oxide_apks_downloaded -or
+             $report.original_oxide_apks_modified -or $report.heavy_android_retry_authorized -or
+             $report.original_gameplay_verified) {
+            throw "Preflight must not claim Android/game execution or allow a heavy trial"
+          }
+          @(
+            "### Windows 11 ARM64 hypervisor API: tiny host-only preflight",
+            "- Native CPU: $($report.host_architecture), Windows build: $($report.windows_build)",
+            "- Hypervisor present: $($report.windows_hypervisor_present)",
+            "- WHPX Arm64Support: $($report.whpx_arm64_support_bit)",
+            "- Host prerequisite verdict: $($report.status)",
+            "- No Android emulator, images, GMS, original APK, Play Integrity or gameplay tested",
+            "- No VM partition was created; no permission/configuration changes"
+          ) | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+      - name: Upload ONLY small host-capability JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-windows-arm64-whpx-only-preflight
+          path: reports/windows-arm64-whpx-preflight.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Record observed Windows hypervisor capability once in M3
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          JOB_RESULT: ${{ job.status }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const marker='<!-- oxide-windows-arm64-whpx-only:'+context.runId+' -->';
+            const comments=await github.paginate(github.rest.issues.listComments,{
+              owner,repo,issue_number:3,per_page:100
+            });
+            if (comments.some(c=>c.body?.includes(marker))) return;
+            const fs=require('fs'),path='reports/windows-arm64-whpx-preflight.json';
+            const report=fs.existsSync(path)?JSON.parse(fs.readFileSync(path,'utf8')):null;
+            const body=marker+
+              '\n**WHPX Arm64 host-only preflight:** '+process.env.JOB_RESULT+
+              '\nRun: https://github.com/'+owner+'/'+repo+'/actions/runs/'+context.runId+
+              '\nHost verdict: **'+String(report?.status??'NO_VERIFIED_HOST_RESULT')+'**'+
+              '\nWindows HypervisorPresent: '+String(report?.windows_hypervisor_present??'UNKNOWN')+
+              '\nArm64Support: '+String(report?.whpx_arm64_support_bit??'UNKNOWN')+
+              '\nSem imagem Android, APK, VM, permissões alteradas ou uso de Play Integrity. '+
+              'WHPX não equivale a emulador oficial ARM64 nem certificação de dispositivo; '+
+              'nenhum novo teste pesado está autorizado por esse gate.';
+            await github.rest.issues.createComment({owner,repo,issue_number:3,body});
