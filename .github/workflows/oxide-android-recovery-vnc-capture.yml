@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/oxide-android-recovery-vnc-capture.yml'
+      - 'tools/oxide_recovery_vnc_capture_probe.sh'
 permissions:
   contents: read
 concurrency:
