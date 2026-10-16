@@ -46,14 +46,14 @@ def assess(data):
         expected = KNOWN_PROVIDER_CONSTRAINTS.get(item["name"])
         if expected is None or (urlparse(source).hostname, urlparse(source).path) != expected:
             return invalid("PROVIDER_SOURCE_MISMATCH")
-        if item.get("play_store_app_supported") is not False:
-            return invalid("CONTRADICTS_DOCUMENTED_PLAY_STORE_LIMITATION")
-        if item.get("no_new_payment_required") is not False:
-            return invalid("CONTRADICTS_DOCUMENTED_ACCESS_LIMITATION")
         if any(item.get(field) is not None and type(item[field]) is not bool for field in REQUIRED):
             return invalid("NON_BOOLEAN_CAPABILITY")
         if any(field not in item for field in REQUIRED):
             return invalid("MISSING_CAPABILITY")
+        if item.get("play_store_app_supported") is not False:
+            return invalid("CONTRADICTS_DOCUMENTED_PLAY_STORE_LIMITATION")
+        if item.get("no_new_payment_required") is not False:
+            return invalid("CONTRADICTS_DOCUMENTED_ACCESS_LIMITATION")
         if item.get("original_gameplay_verified") is not False:
             return invalid("UNSUPPORTED_GAMEPLAY_CLAIM")
         blockers = [key for key in REQUIRED if item[key] is not True]
