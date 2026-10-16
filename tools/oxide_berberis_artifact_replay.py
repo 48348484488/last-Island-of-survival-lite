@@ -27,11 +27,11 @@ EXPECTED_DELTA_MS = 6
 EXPECTED_START_TO_SIGNAL_MS = 3058
 
 DEBUG_ORIGINAL_HEADER = re.compile(
-    r"pid: 4426, tid: \\d+, name: .*>>> com\\.catsbit\\.oxidesurvivalisland <<<")
+    r"pid: 4426, tid: \d+, name: .*>>> com\.catsbit\.oxidesurvivalisland <<<")
 FRAME_00 = re.compile(
-    r"#00\\s+pc\\s+0*700a3c\\s+/.*/lib/arm64/libloader\\.so(?:\\s|$)", re.I)
+    r"#00\s+pc\s+0*700a3c\s+/.*/lib/arm64/libloader\.so(?:\s|$)", re.I)
 FRAME_01 = re.compile(
-    r"#01\\s+pc\\s+0*700be8\\s+/.*/lib/arm64/libloader\\.so(?:\\s|$)", re.I)
+    r"#01\s+pc\s+0*700be8\s+/.*/lib/arm64/libloader\.so(?:\s|$)", re.I)
 
 
 def original_guest_frames(logcat):
