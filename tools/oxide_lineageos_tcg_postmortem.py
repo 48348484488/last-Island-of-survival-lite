@@ -51,7 +51,27 @@ def inspect(artifact: Path):
         and screenshots["0360"].get("framebuffer_sha256") ==
         screenshots["0450"].get("framebuffer_sha256")
     )
+    # The default guest may not expose ADB. Separate Android boot-stage evidence,
+    # ADB transport availability, framebuffer status, and original gameplay.
+    service_started = lambda name: bool(re.search(
+        r"init: (?:\\.\\.\\. )?started service '" + re.escape(name) + r"' has pid",
+        serial,
+    ))
+    adb_stopped = "init.svc.adbd=stopped" in serial
+    adb_requested = bool(re.search(r"init: .*started service 'adbd' has pid", serial))
+    shell_bytes = (artifact / "hvc0-shell.log").stat().st_size \\
+        if (artifact / "hvc0-shell.log").is_file() else 0
+    logcat_bytes = (artifact / "hvc1-logcat.log").stat().st_size \\
+        if (artifact / "hvc1-logcat.log").is_file() else 0
+    images_captured = [k for k, v in screenshots.items()
+                       if v.get("png_valid_signature") and v.get("framebuffer_captured")]
     observations = {
+        "adb_service_reported_stopped_in_serial": adb_stopped,
+        "adb_service_reported_started_in_serial": adb_requested,
+        "system_server_process_seen": "system_server" in serial,
+        "android_init_observed": "init: " in serial,
+        "actual_framebuffer_snapshots": images_captured,
+        "graphics_framebuffer_captured": bool(images_captured),
         "boot_completed_via_adb": boot,
         "same_framebuffer_at_360_and_450_seconds": same_late_screen,
         "initialization_animation_service_started":
@@ -68,6 +88,8 @@ def inspect(artifact: Path):
             if (artifact / "hvc0-shell.log").is_file() else 0,
         "hvc1_logcat_bytes": (artifact / "hvc1-logcat.log").stat().st_size
             if (artifact / "hvc1-logcat.log").is_file() else 0,
+        "adb_available": bool(fields.get("LAST_REPORTED_ABI", "")),
+        "android_ui_home_screen_confirmed": False,
         "latest_qemu_wall_seconds": fields.get("WALL_BOOT_PROBE_SECONDS"),
         "runtime_exit_classification": fields.get("RESULT", "UNKNOWN"),
         "screenshots": screenshots,
@@ -77,6 +99,8 @@ def inspect(artifact: Path):
         "status": "ANDROID_ARM64_BOOT_CONFIRMED_NO_GAME" if boot
                   else "ANDROID_ARM64_BOOT_NOT_CONFIRMED",
         "original_oxide_apk_executed": False,
+        "intermediate_android_boot_stage_observed": observations["android_init_observed"]
+            and observations["initialization_animation_service_started"],
         "original_oxide_gameplay_confirmed": False,
         "google_play_certification_verified": False,
         "observations": observations,
