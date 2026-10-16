@@ -1,9 +1,8 @@
 name: Oxide M4 original APK on verified official ARM64 TCG (one attempt)
+# ARCHIVED after original-game failures; no automatic replay of costly APK/AVD trials.
+# A future distinct hypothesis requires a NEW preflight and review.
 on:
-  workflow_run:
-    workflows:
-      - "Oxide M3 official ARM64 Play Android software boot (no account)"
-    types: [completed]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,7 +14,8 @@ concurrency:
 
 jobs:
   unchanged-original-after-real-boot:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository }}
+    # Permanently skip this historical automatic single-use trial.
+    if: ${{ false }}
     runs-on: ubuntu-24.04
     timeout-minutes: 26
     env:
