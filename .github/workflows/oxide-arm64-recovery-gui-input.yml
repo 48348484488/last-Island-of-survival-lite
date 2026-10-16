@@ -1,0 +1,36 @@
+name: Oxide QEMU ARM64 recovery GUI input visual proof - no APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-arm64-recovery-gui-input.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oxide-recovery-gui-input
+  cancel-in-progress: true
+
+jobs:
+  gui-input:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate source without downloading Android
+        run: |
+          bash -n tools/oxide_android_recovery_vnc_input_probe.sh
+          python3 -m py_compile tools/oxide_qemu_vnc_capture.py
+          python3 -m py_compile tools/oxide_android_bootimg_extract.py
+      - name: Boot minimal Android ARM64 recovery and exercise GUI via keyboard over VNC
+        run: bash tools/oxide_android_recovery_vnc_input_probe.sh
+      - name: Save independently captured before and after screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-recovery-vnc-input-evidence
+          path: evidence/oxide-android-recovery-input/
+          retention-days: 7
+          if-no-files-found: warn
