@@ -1,0 +1,48 @@
+name: Oxide external ARM64 provider docs gate - offline only
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/oxide_external_arm64_provider_gate.py'
+      - 'tests/test_oxide_external_arm64_provider_gate.py'
+      - 'evidence/oxide_external_arm64_providers_2026-10-16.json'
+      - '.github/workflows/oxide-external-arm64-provider-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docs-only-no-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools/oxide_external_arm64_provider_gate.py
+            tests/test_oxide_external_arm64_provider_gate.py
+            evidence/oxide_external_arm64_providers_2026-10-16.json
+          sparse-checkout-cone-mode: false
+      - name: Run fail-closed regression tests
+        run: |
+          python3 -m unittest discover -s tests -p 'test_oxide_external_arm64_provider_gate.py' -v
+      - name: Emit only offline host decision
+        run: |
+          python3 tools/oxide_external_arm64_provider_gate.py \
+            --evidence evidence/oxide_external_arm64_providers_2026-10-16.json \
+            --output provider-host-gate-decision.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          verdict=json.loads(Path('provider-host-gate-decision.json').read_text())
+          assert verdict['status']=='NO_VERIFIED_ELIGIBLE_EXTERNAL_ARM64_VIRTUAL_HOST'
+          assert verdict['heavy_android_or_apk_trial_authorized'] is False
+          assert verdict['gameplay_verified'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oxide-external-provider-docs-only-gate
+          path: provider-host-gate-decision.json
+          retention-days: 14

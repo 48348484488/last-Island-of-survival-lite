@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-10-16",
+  "providers": [
+    {
+      "name": "firebase_test_lab_arm",
+      "evidence_level": "official_documentation_only",
+      "official_source_url": "https://firebase.google.com/docs/test-lab/android/avds",
+      "native_arm64_virtual": true,
+      "play_store_app_supported": false,
+      "no_new_payment_required": false,
+      "authorized_access_verified": false,
+      "host_acceleration_verified": null,
+      "legitimate_services_verified": null,
+      "original_gameplay_verified": false,
+      "notes": "ARM virtual devices and GPU acceleration documented; Play Store app unsupported; listed price $1 per virtual-device hour."
+    },
+    {
+      "name": "sauce_labs_arm",
+      "evidence_level": "official_documentation_only",
+      "official_source_url": "https://docs.saucelabs.com/mobile-apps/android-emulators/",
+      "native_arm64_virtual": true,
+      "play_store_app_supported": false,
+      "no_new_payment_required": false,
+      "authorized_access_verified": false,
+      "host_acceleration_verified": null,
+      "legitimate_services_verified": null,
+      "original_gameplay_verified": false,
+      "notes": "Native ARM Android 14-17 restricted to Enterprise; separate official Appium emulator docs say Play Store integration unsupported."
+    }
+  ]
+}
