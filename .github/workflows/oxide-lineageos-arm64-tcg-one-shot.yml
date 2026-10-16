@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - '.github/workflows/oxide-lineageos-arm64-tcg-one-shot.yml'
+      - 'tools/oxide_lineageos_arm64_full_tcg_trial.sh'
 
 permissions:
   contents: read
@@ -16,7 +17,7 @@ concurrency:
 jobs:
   full-android:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 14
     steps:
       - uses: actions/checkout@v4
       - name: Validate full Android trial script and verified UEFI pflash fix
