@@ -1,0 +1,43 @@
+name: Oxide no-repeat heavy APK safety gate
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/oxide-no-heavy-repeat-ci.yml'
+      - '.github/workflows/oxide-goal-forensics.yml'
+      - 'tests/test_oxide_goal_forensics_no_retry.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  verify-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure goal supervisor cannot relaunch previously failed original APK
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_oxide_goal_forensics_no_retry.py' -v
+          python3 -m unittest discover -s tests -p 'test_oxide_goal_engine.py' -v
+      - name: Record guard CI outcome without starting a game
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          RESULT: ${{ job.status }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const marker='<!-- oxide-no-heavy-retry:'+context.runId+' -->';
+            const comments=await github.paginate(github.rest.issues.listComments,{
+              owner,repo,issue_number:4,per_page:100
+            });
+            if (comments.some(c=>c.body?.includes(marker))) return;
+            const body=marker+'\n**Trava contra repetição pesada:** '+process.env.RESULT+
+              '\nRun: https://github.com/'+owner+'/'+repo+'/actions/runs/'+context.runId+
+              '\nEste workflow só executa testes Python. Não instala nem executa Android/APKs. '+
+              'O supervisor de metas não tem permissão de disparo de outro workflow.';
+            await github.rest.issues.createComment({owner,repo,issue_number:4,body});
