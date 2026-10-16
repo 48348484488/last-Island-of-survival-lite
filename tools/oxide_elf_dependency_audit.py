@@ -17,7 +17,9 @@ if __package__:
 else:
     from oxide_native_library_inventory import EXPECTED_PINNED_HASHES, sha256_file
 
-MAX_ELF_BYTES = 160 * 1024 * 1024
+MAX_ELF_BYTES = 160 * 1024 * 1024  # in-memory cap
+MAX_STREAMABLE_ELF_BYTES = 512 * 1024 * 1024  # bounded streaming cap
+MAX_DYNAMIC_STRING_BYTES = 32 * 1024 * 1024  # only metadata strings in memory
 MAX_DYNAMIC_ENTRIES = 32768
 LOOKUPS = ("lib_burst_generated.so", "liblib_burst_0_0.so", "lib_burst_0_0.so")
 
@@ -109,6 +111,94 @@ def parse_aarch64_dynamic(blob):
     return {"dt_needed": needed, "dt_soname": sonames[0] if sonames else None}
 
 
+
+def parse_aarch64_dynamic_streaming(source, file_size):
+    """Read headers, dynamic tags and needed names with bounded seek/read.
+
+    ZipExtFile may decompress skipped regions internally. It does NOT load the
+    entire .so in memory or execute any native code.
+    """
+    if not (64 <= file_size <= MAX_STREAMABLE_ELF_BYTES):
+        raise ELFMetadataError("STREAM_ELF_SIZE_OUT_OF_RANGE")
+
+    def read_at(offset, length):
+        if offset < 0 or length < 0 or offset > file_size or length > file_size - offset:
+            raise ELFMetadataError("STREAM_ELF_READ_OUT_OF_RANGE")
+        if length > MAX_DYNAMIC_STRING_BYTES:
+            raise ELFMetadataError("STREAM_ELF_READ_OVER_MEMORY_LIMIT")
+        source.seek(offset)
+        result = source.read(length)
+        if len(result) != length:
+            raise ELFMetadataError("STREAM_ELF_SHORT_READ")
+        return result
+
+    header = read_at(0, 64)
+    if header[:6] != b"\x7fELF\x02\x01" or header[6] != 1:
+        raise ELFMetadataError("EXPECTED_ELF64_LE")
+    if struct.unpack_from("<H", header, 18)[0] != 183:
+        raise ELFMetadataError("EXPECTED_AARCH64")
+    if struct.unpack_from("<H", header, 16)[0] != 3:
+        raise ELFMetadataError("EXPECTED_SHARED_OBJECT")
+    phoff = struct.unpack_from("<Q", header, 32)[0]
+    phentsize, phnum = struct.unpack_from("<HH", header, 54)
+    if phentsize < 56 or not (1 <= phnum <= 4096):
+        raise ELFMetadataError("BAD_PROGRAM_HEADERS")
+    phdata = read_at(phoff, phnum * phentsize)
+    loads, dynamics = [], []
+    for i in range(phnum):
+        t, flags, off, va, _, file_sz, mem_sz, align = struct.unpack_from(
+            "<IIQQQQQQ", phdata, i * phentsize)
+        if file_sz > mem_sz or off + file_sz > file_size:
+            raise ELFMetadataError("SEGMENT_OUTSIDE_FILE")
+        if t == 1:
+            loads.append((va, off, file_sz))
+        elif t == 2:
+            dynamics.append((off, file_sz))
+    if len(dynamics) != 1 or not loads:
+        raise ELFMetadataError("EXPECTED_SINGLE_DYNAMIC_AND_LOAD_SEGMENTS")
+    dynamic_offset, dynamic_size = dynamics[0]
+    if not dynamic_size or dynamic_size % 16 or dynamic_size // 16 > MAX_DYNAMIC_ENTRIES:
+        raise ELFMetadataError("BAD_DYNAMIC_SEGMENT_SIZE")
+    dyn = read_at(dynamic_offset, dynamic_size)
+    tags, terminator = {}, False
+    for offset in range(0, len(dyn), 16):
+        tag, value = struct.unpack_from("<qQ", dyn, offset)
+        if tag == 0:
+            terminator = True
+            break
+        if tag in (1, 5, 10, 14):
+            tags.setdefault(tag, []).append(value)
+    if not terminator:
+        raise ELFMetadataError("DYNAMIC_TERMINATOR_MISSING")
+    if len(tags.get(5, [])) != 1 or len(tags.get(10, [])) != 1:
+        raise ELFMetadataError("DYNAMIC_STRING_TABLE_METADATA_MISSING")
+    string_va, string_size = tags[5][0], tags[10][0]
+    if not (0 < string_size <= MAX_DYNAMIC_STRING_BYTES):
+        raise ELFMetadataError("BAD_DYNAMIC_STRING_TABLE_SIZE")
+    mapped = [off + string_va - va for va, off, count in loads
+              if va <= string_va < va + count and string_size <= va + count - string_va]
+    if len(mapped) != 1:
+        raise ELFMetadataError("AMBIGUOUS_OR_UNBACKED_STRING_TABLE")
+    strings = read_at(mapped[0], string_size)
+
+    def string_at(index):
+        if index >= len(strings):
+            raise ELFMetadataError("DYNAMIC_STRING_OFFSET_OUT_OF_RANGE")
+        end = strings.find(b"\x00", index)
+        if end < 0:
+            raise ELFMetadataError("DYNAMIC_STRING_NOT_TERMINATED")
+        try:
+            return strings[index:end].decode("utf-8", "strict")
+        except UnicodeDecodeError as exc:
+            raise ELFMetadataError("DYNAMIC_STRING_NOT_UTF8") from exc
+
+    names = [string_at(index) for index in tags.get(1, [])]
+    sonames = [string_at(index) for index in tags.get(14, [])]
+    if len(sonames) > 1:
+        raise ELFMetadataError("MULTIPLE_SONAME_ENTRIES")
+    return {"dt_needed": names, "dt_soname": sonames[0] if sonames else None}
+
+
 def _checked_apks(directory, expected):
     result = {}
     for apk_name, digest in expected.items():
@@ -129,6 +219,7 @@ def audit_dependency_metadata(directory, expected_hashes=EXPECTED_PINNED_HASHES)
         original_apks = _checked_apks(directory, expected_hashes)
         libraries = []
         skipped_libraries = []
+        streamed_libraries = []
         for apk_name in expected_hashes:
             with ZipFile(directory / apk_name, "r") as archive:
                 entries = archive.infolist()
@@ -139,21 +230,31 @@ def audit_dependency_metadata(directory, expected_hashes=EXPECTED_PINNED_HASHES)
                     if not (member.filename.startswith("lib/arm64-v8a/")
                             and member.filename.endswith(".so")):
                         continue
-                    if member.file_size > MAX_ELF_BYTES:
+                    if member.file_size > MAX_STREAMABLE_ELF_BYTES:
                         skipped_libraries.append({
                             "apk": apk_name, "path": member.filename,
                             "uncompressed_size_bytes": member.file_size,
-                            "reason": "EXCEEDS_PER_LIBRARY_160_MIB_LIMIT",
+                            "reason": "EXCEEDS_PER_LIBRARY_STREAMING_CAP",
                         })
                         continue
-                    with archive.open(member, "r") as stream:
-                        elf = stream.read(MAX_ELF_BYTES + 1)
-                    if len(elf) != member.file_size or len(elf) > MAX_ELF_BYTES:
-                        raise ELFMetadataError("ELF_MEMBER_SIZE_INCORRECT")
-                    meta = parse_aarch64_dynamic(elf)
+                    if member.file_size > MAX_ELF_BYTES:
+                        with archive.open(member, "r") as stream:
+                            meta = parse_aarch64_dynamic_streaming(stream, member.file_size)
+                        streamed_libraries.append({
+                            "apk": apk_name, "path": member.filename,
+                            "uncompressed_size_bytes": member.file_size,
+                        })
+                        digest = None  # No complete binary loaded or hashed.
+                    else:
+                        with archive.open(member, "r") as stream:
+                            elf = stream.read(MAX_ELF_BYTES + 1)
+                        if len(elf) != member.file_size or len(elf) > MAX_ELF_BYTES:
+                            raise ELFMetadataError("ELF_MEMBER_SIZE_INCORRECT")
+                        meta = parse_aarch64_dynamic(elf)
+                        digest = hashlib.sha256(elf).hexdigest()
                     libraries.append({
                         "apk": apk_name, "path": member.filename,
-                        "elf_sha256": hashlib.sha256(elf).hexdigest(),
+                        "elf_sha256": digest,
                         "dt_soname": meta["dt_soname"],
                         "dt_needed": meta["dt_needed"],
                     })
@@ -175,6 +276,8 @@ def audit_dependency_metadata(directory, expected_hashes=EXPECTED_PINNED_HASHES)
             "arm64_libraries_inspected": len(libraries),
             "libraries": libraries,
             "large_libraries_not_examined": skipped_libraries,
+            "large_libraries_examined_by_bounded_stream": streamed_libraries,
+            "individual_elf_hash_complete": len(streamed_libraries) == 0,
             "all_packaged_arm64_libraries_examined": not skipped_libraries,
             "lookup_names": {name: {
                 "packaged_paths": found[name],
