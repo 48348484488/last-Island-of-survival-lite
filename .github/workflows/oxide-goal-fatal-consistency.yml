@@ -1,0 +1,164 @@
+name: Oxide 35s goal fatal-exit consistency - existing logs only
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/oxide-goal-fatal-consistency.yml'
+      - 'tools/oxide_goal_engine.py'
+      - 'tests/test_oxide_goal_engine.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: oxide-goal-fatal-consistency-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fail-closed-original-35s-goal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            tools
+            tests
+            goals
+
+      - name: Compile and execute goal criteria regressions
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q tools/oxide_goal_engine.py tests/test_oxide_goal_engine.py
+          python3 -m unittest discover -s tests -p 'test_oxide_goal_engine.py' -v
+          python3 -m unittest discover -s tests -p 'test_oxide_exit_timeline.py' -v
+
+      - name: Confirm both original diagnostic artifacts are preexisting and small
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/android15 evidence/android16 reports
+          gh api repos/48348484488/oxide/actions/artifacts/11999246750 > "$RUNNER_TEMP/redroid15.json"
+          gh api repos/48348484488/oxide/actions/artifacts/11997973952 > "$RUNNER_TEMP/redroid16.json"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          for label,aid,rid in [
+              ("redroid15",11999246750,38789434979),
+              ("redroid16",11997973952,38787025289),
+          ]:
+              doc=json.loads((root/(label+".json")).read_text())
+              assert doc["id"]==aid
+              assert doc["workflow_run"]["id"]==rid
+              assert doc["name"]=="oxide-115-arm64-runtime-evidence"
+              assert doc["expired"] is False
+              assert 0 < doc["size_in_bytes"] < 10_000_000
+          PY
+
+      - name: Reprocess unchanged original Activity checkpoints and logcat
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download 38789434979 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir evidence/android15
+          gh run download 38787025289 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir evidence/android16
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          from tools.oxide_goal_engine import evidence_summary
+          expected={
+              "android15": {
+                  "logcat_sha256":"bcc57f460584553fe860fab3995f4d930b88ce9e8e6eb370ff116a9932d70c4c",
+                  "pid":"2023", "service_pid":"2296", "start_to_exit_ms":4480
+              },
+              "android16": {
+                  "logcat_sha256":"776a2394656e5cc802c1f267aae7b36fd4c90b295f7b9a0527ef86ec96b8f120",
+                  "pid":"2108", "service_pid":"2356", "start_to_exit_ms":4670
+              }
+          }
+          output={}
+          for name, exp in expected.items():
+              root=Path("evidence")/name/"reports"
+              source=root/"logcat.txt"
+              assert hashlib.sha256(source.read_bytes()).hexdigest()==exp["logcat_sha256"]
+              assert (root/"abi.txt").read_text().strip()=="arm64-v8a"
+              r=evidence_summary(root)
+              checks=r["checks"]
+              assert checks["first_original_resumed_pid"]==exp["pid"]
+              assert checks["pids"]["10"]==checks["pids"]["35"]==exp["service_pid"]
+              assert checks["native_exit_diagnostic"]["evidence"]["original_activity_fully_drawn"] is True
+              assert checks["native_exit_diagnostic"]["evidence"]["start_to_self_sigkill_ms"]==exp["start_to_exit_ms"]
+              assert checks["fatal_original_exit_conflicts_with_35s"] is True
+              assert checks["original_activity_resumed_at_10_and_35"] is False
+              assert r["goals"][2]["status"]=="blocked"
+              assert r["goals"][3]["status"]=="pending"
+              assert r["gameplay_confirmed"] is False
+              output[name]={
+                  "original_pid": exp["pid"],
+                  "later_service_pid": exp["service_pid"],
+                  "original_activity_fully_drawn": True,
+                  "original_died_within_35s": True,
+                  "start_to_self_sigkill_ms": exp["start_to_exit_ms"],
+                  "35s_goal_status": r["goals"][2]["status"],
+                  "menu_gameplay_verified": False,
+                  "logcat_sha256": exp["logcat_sha256"]
+              }
+          report={
+              "status":"ORIGINAL_FULLY_DRAWN_BUT_FATAL_EXIT_BEFORE_35S_VERIFIED",
+              "both_original_runs_checked": True,
+              "runs": output,
+              "original_apks_modified": False,
+              "gameplay_verified": False,
+          }
+          Path("reports/goal-fatal-consistency.json").write_text(
+              json.dumps(report,indent=2,sort_keys=True)+"\n")
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as f:
+              f.write("### Original 35-second goal, fail-closed on logcat fatal exit\n")
+              for name,x in output.items():
+                  f.write(f"- {name}: Fully drawn Activity, PID {x['original_pid']} ")
+                  f.write(f"died after {x['start_to_self_sigkill_ms']}ms; later service ")
+                  f.write(f"PID {x['later_service_pid']} is NOT original Activity\n")
+              f.write("- Activity 35s: BLOCKED, menu/gameplay: NOT VERIFIED\n")
+              f.write("- Only existing small Android artifacts; no APK/AVD boot\n")
+          print(json.dumps(report,sort_keys=True))
+          PY
+
+      - name: Preserve only derived check results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-35s-goal-fatal-crosscheck
+          path: reports/goal-fatal-consistency.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Record actual validation result in M4 once
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          RUN_RESULT: ${{ job.status }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const marker='<!-- oxide-35s-fatal-consistency:'+context.runId+' -->';
+            const comments=await github.paginate(github.rest.issues.listComments,{
+              owner,repo,issue_number:4,per_page:100
+            });
+            if (comments.some(c=>c.body?.includes(marker))) return;
+            const fs=require('fs'),p='reports/goal-fatal-consistency.json';
+            const result=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')):{};
+            const body=marker+'\n**Original 35s goal fatal consistency:** '+
+              process.env.RUN_RESULT+'\nRun: https://github.com/'+owner+'/'+repo+'/actions/runs/'+context.runId+
+              '\nStatus: '+String(result.status||'NO_VERIFIED_RESULT')+
+              '\nFully drawn Activity is not menu/gameplay. Independent original same-PID '+
+              'fatal logcat signal before 35s prevents a positive milestone even when '+
+              'other checkpoint inputs are contradictory. No original APK or Android restarted.';
+            await github.rest.issues.createComment({owner,repo,issue_number:4,body});
