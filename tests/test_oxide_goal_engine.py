@@ -146,7 +146,7 @@ class TestGoals(unittest.TestCase):
             self.write(f"pid-{t}.txt", "2018")
             self.write(f"activity-{t}.txt", original_activity("2018"))
             (self.d / f"screen-{t}.png").write_bytes(
-                b"\\x89PNG\\r\\n\\x1a\\n" + b"a" * 200)
+                b"\x89PNG\r\n\x1a\n" + b"a" * 200)
         self.write("capture-timing.json", json.dumps({
             "clock": "monotonic",
             "checkpoints": [
@@ -160,9 +160,9 @@ class TestGoals(unittest.TestCase):
     def test_35s_goal_rejects_same_pid_self_sigkill_at_four_seconds(self):
         self._contradictory_35s_checkpoints()
         self.write("logcat.txt",
-            "10-15 18:23:42.179 287 735 I ActivityTaskManager: START u0 { cmp=" + PKG + " }\\n"
-            "10-15 18:23:42.200 287 735 I ActivityManager: Start proc 2018:com.catsbit.oxidesurvivalisland/u0a87 for next-top-activity\\n"
-            "10-15 18:23:46.763 2018 2018 I Process: Sending signal. PID: 2018 SIG: 9\\n")
+            "10-15 18:23:42.179 287 735 I ActivityTaskManager: START u0 { cmp=" + PKG + " }\n"
+            "10-15 18:23:42.200 287 735 I ActivityManager: Start proc 2018:com.catsbit.oxidesurvivalisland/u0a87 for next-top-activity\n"
+            "10-15 18:23:46.763 2018 2018 I Process: Sending signal. PID: 2018 SIG: 9\n")
         r = evidence_summary(self.d)
         self.assertTrue(r["checks"]["capture_timing"]["verified"])
         self.assertTrue(r["checks"]["fatal_original_exit_conflicts_with_35s"])
@@ -173,9 +173,9 @@ class TestGoals(unittest.TestCase):
     def test_35s_goal_rejects_same_pid_sigill_before_thirty_five_seconds(self):
         self._contradictory_35s_checkpoints()
         self.write("logcat.txt",
-            "10-15 18:23:42.179 287 735 I ActivityTaskManager: START u0 { cmp=" + PKG + " }\\n"
-            "10-15 18:23:42.200 287 735 I ActivityManager: Start proc 2018:com.catsbit.oxidesurvivalisland/u0a87 for next-top-activity\\n"
-            "10-15 18:23:46.763 2018 2018 F libc: Fatal signal 4 (SIGILL), code -6 (SI_TKILL) in tid 2018 (esurvivalisland), pid 2018 (esurvivalisland)\\n")
+            "10-15 18:23:42.179 287 735 I ActivityTaskManager: START u0 { cmp=" + PKG + " }\n"
+            "10-15 18:23:42.200 287 735 I ActivityManager: Start proc 2018:com.catsbit.oxidesurvivalisland/u0a87 for next-top-activity\n"
+            "10-15 18:23:46.763 2018 2018 F libc: Fatal signal 4 (SIGILL), code -6 (SI_TKILL) in tid 2018 (esurvivalisland), pid 2018 (esurvivalisland)\n")
         r = evidence_summary(self.d)
         self.assertTrue(r["checks"]["fatal_original_exit_conflicts_with_35s"])
         self.assertEqual(r["goals"][2]["status"], "blocked")
@@ -183,9 +183,9 @@ class TestGoals(unittest.TestCase):
     def test_fatal_after_thirty_five_seconds_does_not_retroactively_erase_survival(self):
         self._contradictory_35s_checkpoints()
         self.write("logcat.txt",
-            "10-15 18:23:42.179 287 735 I ActivityTaskManager: START u0 { cmp=" + PKG + " }\\n"
-            "10-15 18:23:42.200 287 735 I ActivityManager: Start proc 2018:com.catsbit.oxidesurvivalisland/u0a87 for next-top-activity\\n"
-            "10-15 18:24:22.179 2018 2018 I Process: Sending signal. PID: 2018 SIG: 9\\n")
+            "10-15 18:23:42.179 287 735 I ActivityTaskManager: START u0 { cmp=" + PKG + " }\n"
+            "10-15 18:23:42.200 287 735 I ActivityManager: Start proc 2018:com.catsbit.oxidesurvivalisland/u0a87 for next-top-activity\n"
+            "10-15 18:24:22.179 2018 2018 I Process: Sending signal. PID: 2018 SIG: 9\n")
         r = evidence_summary(self.d)
         self.assertFalse(r["checks"]["fatal_original_exit_conflicts_with_35s"])
         self.assertEqual(r["goals"][2]["status"], "complete")
@@ -195,9 +195,9 @@ class TestGoals(unittest.TestCase):
     def test_unrelated_process_fatal_does_not_invalidate_original_activity(self):
         self._contradictory_35s_checkpoints()
         self.write("logcat.txt",
-            "10-15 18:23:42.179 287 735 I ActivityTaskManager: START u0 { cmp=" + PKG + " }\\n"
-            "10-15 18:23:42.200 287 735 I ActivityManager: Start proc 9999:com.catsbit.oxidesurvivalisland/u0a87 for next-top-activity\\n"
-            "10-15 18:23:46.763 9999 9999 I Process: Sending signal. PID: 9999 SIG: 9\\n")
+            "10-15 18:23:42.179 287 735 I ActivityTaskManager: START u0 { cmp=" + PKG + " }\n"
+            "10-15 18:23:42.200 287 735 I ActivityManager: Start proc 9999:com.catsbit.oxidesurvivalisland/u0a87 for next-top-activity\n"
+            "10-15 18:23:46.763 9999 9999 I Process: Sending signal. PID: 9999 SIG: 9\n")
         r = evidence_summary(self.d)
         self.assertFalse(r["checks"]["fatal_original_exit_conflicts_with_35s"])
         self.assertEqual(r["goals"][2]["status"], "complete")
