@@ -19,7 +19,7 @@ def audit_logcat(text):
     signals = [m for line in text.splitlines() if (m := SIGILL.search(line))]
     for instruction in candidates:
         for signal in signals:
-            delta = _milliseconds(signal["time"]) - _milliseconds(instruction["time"])
+            delta = (_milliseconds(signal["time"]) - _milliseconds(instruction["time"])) % 86400000
             if signal["pid"] == instruction["pid"] and 0 <= delta <= 1000:
                 return {
                     "status": "BERBERIS_UNDEFINED_INSTRUCTION_PRECEDES_SIGILL",
