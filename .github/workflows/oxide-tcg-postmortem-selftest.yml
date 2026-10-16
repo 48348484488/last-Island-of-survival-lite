@@ -1,0 +1,61 @@
+name: Oxide ARM64 Android boot postmortem self-test (offline)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/oxide_lineageos_tcg_postmortem.py'
+      - '.github/workflows/oxide-tcg-postmortem-selftest.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  selftest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile classifier and verify fail-closed decisions using synthetic fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/oxide_lineageos_tcg_postmortem.py
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          mkdir -p "$tmp/partial" "$tmp/verified"
+          cat > "$tmp/partial/result.txt" <<'EOF'
+          RESULT=FAIL_ANDROID_ARM64_FULL_BOOT_NOT_CONFIRMED
+          LAST_REPORTED_ABI=
+          WALL_BOOT_PROBE_SECONDS=477
+          EOF
+          cat > "$tmp/partial/serial-console.log" <<'EOF'
+          [  1.000][    T1] init: ... started service 'bootanim' has pid 52
+          [  2.000][    T1] init: processing action (init.svc.adbd=stopped)
+          EOF
+          cp "$tmp/partial/serial-console.log" "$tmp/verified/serial-console.log"
+          cat > "$tmp/verified/result.txt" <<'EOF'
+          RESULT=PASS_ANDROID_ARM64_FULL_BOOT_NO_GAME
+          BOOT_COMPLETED=1
+          LAST_REPORTED_ABI=arm64-v8a
+          EOF
+          python3 tools/oxide_lineageos_tcg_postmortem.py \
+            --artifact "$tmp/partial" --output "$tmp/partial/report.json"
+          python3 tools/oxide_lineageos_tcg_postmortem.py \
+            --artifact "$tmp/verified" --output "$tmp/verified/report.json"
+          python3 - "$tmp" <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+          root=Path(sys.argv[1])
+          partial=json.loads((root/"partial/report.json").read_text())
+          verified=json.loads((root/"verified/report.json").read_text())
+          assert partial["status"] == "ANDROID_ARM64_BOOT_NOT_CONFIRMED", partial
+          assert partial["observations"]["adb_service_reported_stopped_in_serial"], partial
+          assert partial["intermediate_android_boot_stage_observed"], partial
+          assert not partial["original_oxide_gameplay_confirmed"]
+          assert verified["status"] == "ANDROID_ARM64_BOOT_CONFIRMED_NO_GAME", verified
+          assert not verified["original_oxide_apk_executed"]
+          assert not verified["original_oxide_gameplay_confirmed"]
+          print("OFFLINE_POSTMORTEM_PASS: guest boot, ADB, graphics and gameplay claims remain distinct.")
+          PY
