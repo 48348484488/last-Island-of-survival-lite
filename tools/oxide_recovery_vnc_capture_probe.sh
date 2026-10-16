@@ -94,10 +94,35 @@ if record["screenshot_created"]:
 print(json.dumps(record, sort_keys=True))
 PY
 
-if test -s "$evidence/recovery-vnc.ppm" && head -c2 "$evidence/recovery-vnc.ppm" | grep -Fq 'P6'; then
-  echo 'RESULT=PASS_GRAPHICS_FRAMEBUFFER_CAPTURED_RECOVERY_ONLY' | tee -a "$evidence/result.txt"
+# HMP screendump is asynchronous; fall back to direct RFB framebuffer.
+# This independently checks actual pixels instead of the VNC server banner.
+set +e
+timeout --signal=TERM --kill-after=3s 18s \
+  python3 tools/oxide_qemu_vnc_capture.py \
+    --host 127.0.0.1 --port 5909 \
+    --output "$evidence/recovery-frame.png" \
+    --report "$evidence/rfb-frame.json" \
+    > "$evidence/rfb-capture-stdout.log" 2>&1
+capture_rc=$?
+set -e
+echo "VNC_FRAME_CAPTURE_EXIT=$capture_rc" | tee -a "$evidence/result.txt"
+cat "$evidence/rfb-capture-stdout.log"
+
+if test "$capture_rc" -eq 0 \
+  && test -s "$evidence/recovery-frame.png" \
+  && python3 - "$evidence/recovery-frame.png" <<'PY'
+from pathlib import Path
+import sys
+p=Path(sys.argv[1])
+assert p.read_bytes()[:8]==bytes.fromhex("89504e470d0a1a0a")
+PY
+then
+  echo 'RESULT=PASS_REAL_VNC_GPU_FRAMEBUFFER_PNG_CAPTURED_RECOVERY_ONLY' | tee -a "$evidence/result.txt"
+elif test -s "$evidence/recovery-vnc.ppm" && head -c2 "$evidence/recovery-vnc.ppm" | grep -Fq 'P6'; then
+  echo 'RESULT=PASS_QEMU_HMP_SCREENSHOT_RECOVERY_ONLY' | tee -a "$evidence/result.txt"
 elif grep -Fq 'RFB ' "$evidence/vnc-capture.json"; then
   echo 'RESULT=PARTIAL_VNC_AVAILABLE_NO_IMAGE' | tee -a "$evidence/result.txt"
+  exit 1
 else
   echo 'RESULT=FAIL_NO_GRAPHICS_CAPTURE_OR_VNC' | tee -a "$evidence/result.txt"
   exit 1
