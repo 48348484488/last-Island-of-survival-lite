@@ -1,0 +1,124 @@
+name: Oxide original ELF dependency graph reconciliation (JSON only)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/oxide_elf_dependency_resolution.py'
+      - 'tests/test_oxide_elf_dependency_resolution.py'
+      - '.github/workflows/oxide-arm64-elf-resolution.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: oxide-elf-dependency-json-only-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  reconcile-original-derived-elf-json:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            tools
+            tests
+
+      - name: Verify metadata graph logic against synthetic fixtures
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q tools/oxide_elf_dependency_resolution.py tests/test_oxide_elf_dependency_resolution.py
+          python3 -m unittest discover -s tests -p 'test_oxide_elf_dependency_resolution.py' -v
+
+      - name: Preflight exact existing tiny JSON artifact before download
+        run: |
+          set -euo pipefail
+          mkdir -p evidence reports
+          gh api repos/48348484488/oxide/actions/artifacts/12042309125 > "$RUNNER_TEMP/original-elf-artifact.json"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          a=json.loads((Path(os.environ["RUNNER_TEMP"])/"original-elf-artifact.json").read_text())
+          assert a["id"]==12042309125
+          assert a["workflow_run"]["id"]==38893088328
+          assert a["name"]=="oxide-original-arm64-elf-dynamic-dependencies-readonly"
+          assert a["expired"] is False
+          assert 0<a["size_in_bytes"]<100000
+          print("Read-only derived JSON source verified:",a["size_in_bytes"],"bytes")
+          PY
+
+      - name: Reconcile only prior SHA-verified DT_NEEDED JSON, no original APK
+        run: |
+          set -euo pipefail
+          gh run download 38893088328 --repo 48348484488/oxide \
+            --name oxide-original-arm64-elf-dynamic-dependencies-readonly \
+            --dir evidence
+          python3 tools/oxide_elf_dependency_resolution.py \
+            --input evidence/original-arm64-elf-dt-needed.json \
+            --output reports/oxide-original-arm64-elf-dependency-graph.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads(Path("reports/oxide-original-arm64-elf-dependency-graph.json").read_text())
+          assert r["status"]=="ELF_DECLARED_DEPENDENCY_NAMES_ACCOUNTED_FOR"
+          assert r["original_arm64_libraries"]==28
+          assert r["distinct_declared_names"]==11
+          assert r["total_declared_dependency_edges"]==126
+          assert r["packaged_dependency_edges"]==5
+          assert r["expected_ndk_system_dependency_edges"]==121
+          assert r["unaccounted_for_dependency_edges"]==0
+          assert all(v==0 for v in r["burst_lookup_names_declared_as_dt_needed"].values())
+          assert r["actual_android_linker_success"]=="NOT_ESTABLISHED"
+          assert r["security_trigger"]=="UNKNOWN"
+          assert r["original_gameplay_verified"] is False
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as out:
+              out.write("### Original ELF dependency graph from existing tiny metadata JSON\n")
+              out.write("- 28 ARM64 libraries; 126 declared DT_NEEDED edges\n")
+              out.write("- 5 packaged-library edges, 121 expected NDK system-library edges\n")
+              out.write("- 0 unaccounted-for library names in this naming classification\n")
+              out.write("- 0 ELF DT_NEEDED edges to both absent Burst lookup names\n")
+              out.write("- Actual Android linker availability NOT ESTABLISHED\n")
+              out.write("- No APK, Android, anti-cheat, or game execution\n")
+          PY
+
+      - name: Publish only compact derived metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-original-arm64-elf-dependency-graph-summary
+          path: reports/oxide-original-arm64-elf-dependency-graph.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Record actual result in M4 issue
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          RESULT: ${{ job.status }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            const marker='<!-- oxide-elf-dependency-resolution:'+context.runId+' -->';
+            const comments=await github.paginate(github.rest.issues.listComments,{
+              owner,repo,issue_number:4,per_page:100
+            });
+            if (comments.some(c=>c.body?.includes(marker))) return;
+            const fs=require('fs'), path='reports/oxide-original-arm64-elf-dependency-graph.json';
+            const report=fs.existsSync(path)?JSON.parse(fs.readFileSync(path,'utf8')):{};
+            const body=marker+'\n**Grafo ELF DT_NEEDED original (somente JSON):** '+process.env.RESULT+
+              '\nRun: https://github.com/'+owner+'/'+repo+'/actions/runs/'+context.runId+
+              '\nStatus: '+String(report.status||'No verified report')+
+              '\nBibliotecas: '+String(report.original_arm64_libraries??'?')+
+              ', arestas declaradas: '+String(report.total_declared_dependency_edges??'?')+
+              ', nomes ainda não contabilizados: '+String(report.unaccounted_for_dependency_edges??'?')+
+              '\nNomes NDK conhecidos NÃO demonstram bibliotecas disponíveis no Android virtual; '+
+              'ausência de DT_NEEDED NÃO demonstra motivo do SIGKILL. '+
+              'Nenhum APK/Android executado. Gameplay/35s ainda não comprovados.';
+            await github.rest.issues.createComment({owner,repo,issue_number:4,body});
