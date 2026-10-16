@@ -4,6 +4,9 @@ import struct
 import tempfile
 import unittest
 import warnings
+from unittest.mock import patch
+
+from tools import oxide_elf_dependency_audit as audit_module
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -103,6 +106,22 @@ class PinnedZipDependencyTests(unittest.TestCase):
         self.assertEqual(result["lookup_names"]["liblib_burst_0_0.so"]["libraries_declaring_dt_needed"], [])
         self.assertEqual(result["failed_dlopen_causation"], "NOT_ESTABLISHED")
         self.assertFalse(result["original_gameplay_verified"])
+
+    def test_oversized_library_is_explicitly_uninspected(self):
+        hashes = self._write_zip([
+            ("lib/arm64-v8a/libnormal.so", fixture_elf(("libc.so",))),
+            ("lib/arm64-v8a/liboversized.so", fixture_elf(("libc.so",)) + b"\x00" * 256),
+        ])
+        with patch.object(audit_module, "MAX_ELF_BYTES", 1100):
+            result = audit_dependency_metadata(self.root, hashes)
+        self.assertEqual(result["status"],
+                         "PARTIAL_ORIGINAL_ARM64_DYNAMIC_DEPENDENCIES_VERIFIED")
+        self.assertEqual(result["arm64_libraries_inspected"], 1)
+        self.assertFalse(result["all_packaged_arm64_libraries_examined"])
+        self.assertEqual(len(result["large_libraries_not_examined"]), 1)
+        self.assertEqual(result["large_libraries_not_examined"][0]["path"],
+                         "lib/arm64-v8a/liboversized.so")
+        self.assertEqual(result["failed_dlopen_causation"], "NOT_ESTABLISHED")
 
     def test_pinned_sha_mismatch_blocks_before_archive_read(self):
         hashes = self._write_zip([("lib/arm64-v8a/libfoo.so", fixture_elf())])
