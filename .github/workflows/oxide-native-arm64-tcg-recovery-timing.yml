@@ -1,0 +1,44 @@
+name: Oxide native GitHub ARM64 host QEMU TCG recovery timing - no APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-native-arm64-tcg-recovery-timing.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oxide-native-arm64-tcg-recovery-timing
+  cancel-in-progress: true
+
+jobs:
+  native-arm64-no-kvm:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify actual ARM64 runner and no KVM dependency
+        run: |
+          set -euo pipefail
+          echo "HOST_ARCH=$(uname -m)"
+          test "$(uname -m)" = aarch64
+          if test -e /dev/kvm; then ls -l /dev/kvm; else echo "KVM=absent"; fi
+          bash -n tools/oxide_recovery_vnc_capture_probe.sh
+          python3 -m py_compile tools/oxide_qemu_vnc_capture.py
+      - name: Boot 61MB checksum-pinned ARM64 recovery with TCG and capture framebuffer
+        run: |
+          set -euo pipefail
+          started=$(date +%s)
+          bash tools/oxide_recovery_vnc_capture_probe.sh
+          echo "WALL_SECONDS_TO_VERIFIED_VNC_FRAME=$(( $(date +%s) - started ))" \
+            | tee -a evidence/oxide-android-recovery-vnc/result.txt
+      - name: Keep native host frame, logs and benchmark
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-native-arm64-host-tcg-recovery-evidence
+          path: evidence/oxide-android-recovery-vnc/
+          if-no-files-found: warn
+          retention-days: 7
