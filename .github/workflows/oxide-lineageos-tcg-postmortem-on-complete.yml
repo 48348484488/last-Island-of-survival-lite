@@ -1,0 +1,73 @@
+name: Oxide ARM64 Android boot artifact postmortem - auto on completion
+
+on:
+  workflow_run:
+    workflows:
+      - 'Oxide one-shot full ARM64 LineageOS QEMU TCG boot - no APK'
+    types:
+      - completed
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  inspect-prior-result:
+    if: github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PREDECESSOR_RUN_ID: ${{ github.event.workflow_run.id }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download ONLY the completed run's lightweight evidence, never Android/APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p predecessor evidence/oxide-lineageos-postmortem
+          gh run download "$PREDECESSOR_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name oxide-lineageos-arm64-tcg-one-shot-evidence \
+            --dir predecessor
+      - name: Classify QEMU framebuffer timestamps and shell/logcat service evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/oxide_lineageos_tcg_postmortem.py \
+            --artifact predecessor \
+            --output evidence/oxide-lineageos-postmortem/classification.json
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          p=Path("evidence/oxide-lineageos-postmortem/classification.json")
+          report=json.loads(p.read_text())
+          o=report["observations"]
+          lines=[
+              "## ARM64 Android QEMU completed-run diagnostic",
+              "",
+              f"Predecessor run: {os.environ['PREDECESSOR_RUN_ID']}",
+              f"Status: {report['status']}",
+              f"Original Oxide gameplay: not tested",
+              f"Android boot animation started: {o['initialization_animation_service_started']}",
+              f"Unchanged frame at 360/450s: {o['same_framebuffer_at_360_and_450_seconds']}",
+              f"Seriallogging failed: {o['seriallogging_service_failure_in_serial']}",
+              f"Sound card SIGABRT: {o['sound_card_setup_sigabrt_in_serial']}",
+              f"VirtIO shell bytes: {o['hvc0_shell_bytes']}",
+              f"VirtIO logcat bytes: {o['hvc1_logcat_bytes']}",
+              "",
+              "Visual progress, boot completion and gameplay are separate claims.",
+          ]
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("\n".join(lines)+"\n")
+          print("\n".join(lines))
+          PY
+      - name: Save automatic verdict
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-completed-boot-automated-diagnostic
+          path: evidence/oxide-lineageos-postmortem/
+          if-no-files-found: warn
+          retention-days: 7
