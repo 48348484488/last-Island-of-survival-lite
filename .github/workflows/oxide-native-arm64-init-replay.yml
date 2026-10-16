@@ -1,0 +1,98 @@
+name: Oxide original Redroid ARM64 init replay (small logs only)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/oxide_arm64_init_trace.py'
+      - 'tests/test_oxide_arm64_init_trace.py'
+      - '.github/workflows/oxide-native-arm64-init-replay.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  original-init-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run relevant regression tests
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q tools/oxide_arm64_init_trace.py tests/test_oxide_arm64_init_trace.py
+          python3 -m unittest discover -s tests -p 'test_oxide_arm64_init_trace.py' -v
+          python3 -m unittest discover -s tests -p 'test_oxide_exit_timeline.py' -v
+
+      - name: Preflight two existing small diagnostic artifacts (no image or APK)
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/15 evidence/16 reports
+          gh api repos/48348484488/oxide/actions/artifacts/11999246750 > "$RUNNER_TEMP/redroid15.json"
+          gh api repos/48348484488/oxide/actions/artifacts/11997973952 > "$RUNNER_TEMP/redroid16.json"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          for key,aid,rid in (("redroid15",11999246750,38789434979),
+                              ("redroid16",11997973952,38787025289)):
+              obj=json.loads((root/(key+".json")).read_text())
+              assert obj["id"]==aid and obj["workflow_run"]["id"]==rid
+              assert obj["name"]=="oxide-115-arm64-runtime-evidence"
+              assert obj["expired"] is False
+              assert 0 < obj["size_in_bytes"] < 10_000_000
+              print(key,"approved log artifact",obj["size_in_bytes"],"bytes")
+          PY
+
+      - name: Reprocess original two Redroid logcats and fixed SHA-256
+        run: |
+          set -euo pipefail
+          gh run download 38789434979 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir evidence/15
+          gh run download 38787025289 --repo 48348484488/oxide \
+            --name oxide-115-arm64-runtime-evidence --dir evidence/16
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            "15":"bcc57f460584553fe860fab3995f4d930b88ce9e8e6eb370ff116a9932d70c4c",
+            "16":"776a2394656e5cc802c1f267aae7b36fd4c90b295f7b9a0527ef86ec96b8f120",
+          }
+          for name,sha in expected.items():
+              root=Path("evidence")/name
+              logs=list(root.rglob("logcat.txt"))
+              abi=list(root.rglob("abi.txt"))
+              assert len(logs)==len(abi)==1, name
+              assert abi[0].read_text().strip()=="arm64-v8a", name
+              assert hashlib.sha256(logs[0].read_bytes()).hexdigest()==sha, name
+              (Path("reports")/(name+"-logcat-path.txt")).write_text(str(logs[0]))
+          PY
+          python3 tools/oxide_arm64_init_trace.py \
+            --android15-logcat "$(cat reports/15-logcat-path.txt)" \
+            --android16-logcat "$(cat reports/16-logcat-path.txt)" \
+            --output reports/native-arm64-init-milestones.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          result=json.loads(Path("reports/native-arm64-init-milestones.json").read_text())
+          assert result["replay_verified"] is True
+          assert result["causal_link_from_burst_lookup_to_exit"]=="NOT_ESTABLISHED"
+          assert result["gameplay_verified"] is False
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as out:
+              out.write("Original Redroid native logcat milestones, read-only:\n")
+              for key,run in result["executions"].items():
+                  out.write(f"{key}: PID {run['original_pid']}, last optional Burst lookup -> SIGKILL {run['burst_last_lookup_to_self_sigkill_ms']} ms\n")
+              out.write("No causal attribution, no gameplay; no APK or Android downloaded.\n")
+          PY
+
+      - name: Publish derived JSON only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-redroid-arm64-native-init-milestones
+          path: reports/native-arm64-init-milestones.json
+          if-no-files-found: warn
+          retention-days: 14
