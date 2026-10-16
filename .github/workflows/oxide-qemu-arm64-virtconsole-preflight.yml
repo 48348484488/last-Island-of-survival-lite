@@ -1,0 +1,35 @@
+name: Oxide ARM64 LineageOS VirtIO shell and logcat preflight (no APK)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-qemu-arm64-virtconsole-preflight.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oxide-arm64-virtconsole-preflight
+  cancel-in-progress: true
+
+jobs:
+  console-preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate source and explicitly bounded guest setup
+        run: |
+          bash -n tools/oxide_qemu_virtconsole_preflight.sh
+          python3 -m py_compile tools/oxide_android_bootimg_extract.py
+      - name: Boot real Android ARM64 recovery with 2 VirtIO observation consoles
+        run: bash tools/oxide_qemu_virtconsole_preflight.sh
+      - name: Retain serial and VirtIO console observations even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-virtconsole-recovery-preflight
+          path: evidence/oxide-arm64-virtconsole/
+          if-no-files-found: warn
+          retention-days: 7
