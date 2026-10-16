@@ -1,0 +1,29 @@
+name: Oxide ARM64 UEFI pflash 64MiB host preflight (no Android)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-arm64-uefi-pflash-preflight.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  firmware-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check syntax
+        run: bash -n tools/oxide_arm64_uefi_pflash_probe.sh
+      - name: Prove compatible 64MiB ARM64 UEFI pflash without downloading Android
+        run: bash tools/oxide_arm64_uefi_pflash_probe.sh
+      - name: Preserve firmware-only proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-uefi-pflash-preflight
+          path: evidence/oxide-arm64-uefi/
+          retention-days: 7
+          if-no-files-found: warn
