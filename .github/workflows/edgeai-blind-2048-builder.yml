@@ -78,7 +78,7 @@ jobs:
           test -s input/2048-arm64-symbols.elf
           test -s input/2048-arm64-stripped.elf
           cd input
-          sha256sum --check SHA256SUMS
+          sed -E 's#  output/#  #' SHA256SUMS | sha256sum --check -
           readelf -h 2048-arm64-symbols.elf > elf-header.txt
           readelf -Ws 2048-arm64-symbols.elf > named-symbols.txt
           readelf -Ws 2048-arm64-stripped.elf > stripped-symbols.txt
