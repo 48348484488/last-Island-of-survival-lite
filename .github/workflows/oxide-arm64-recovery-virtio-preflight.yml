@@ -1,0 +1,35 @@
+name: Oxide ARM64 Android recovery VirtIO devices preflight - no APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-arm64-recovery-virtio-preflight.yml'
+      - 'tools/oxide_android_recovery_virtio_probe.sh'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oxide-arm64-recovery-virtio
+  cancel-in-progress: true
+
+jobs:
+  recovery-virtio:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate probe script syntax
+        run: bash -n tools/oxide_android_recovery_virtio_probe.sh
+      - name: Execute pinned ARM64 Android recovery with synthetic VirtIO devices (75-second stop)
+        shell: bash
+        run: bash tools/oxide_android_recovery_virtio_probe.sh
+      - name: Archive serial, device comparison, and status
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-recovery-virtio-evidence
+          path: evidence/oxide-android-recovery-virtio/
+          if-no-files-found: warn
+          retention-days: 7
