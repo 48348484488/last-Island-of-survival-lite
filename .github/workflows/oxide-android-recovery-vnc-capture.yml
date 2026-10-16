@@ -1,0 +1,29 @@
+name: Oxide ARM64 recovery QEMU VirtIO GPU VNC capture - no APK
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/oxide-android-recovery-vnc-capture.yml'
+permissions:
+  contents: read
+concurrency:
+  group: oxide-android-recovery-vnc
+  cancel-in-progress: true
+jobs:
+  vnc-visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate VNC capture script
+        run: bash -n tools/oxide_recovery_vnc_capture_probe.sh
+      - name: Boot checksum-pinned Android ARM64 recovery and capture QEMU framebuffer
+        run: bash tools/oxide_recovery_vnc_capture_probe.sh
+      - name: Archive serial, HMP response and framebuffer proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-arm64-qemu-recovery-vnc-capture-evidence
+          path: evidence/oxide-android-recovery-vnc/
+          if-no-files-found: warn
+          retention-days: 7
