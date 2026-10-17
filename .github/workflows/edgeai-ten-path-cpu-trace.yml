@@ -1,0 +1,114 @@
+name: EdgeAI ARM64 ten-path CPU-state verification
+
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths: ['edgeai_probe/**', '.github/workflows/edgeai-ten-path-cpu-trace.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  ten-real-machine-paths:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download SHA-pinned original stripped ELF
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: original
+          run-id: 38969071956
+          github-token: ${{ github.token }}
+      - name: Install QEMU, LLVM decoder and cross compiler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends qemu-user gcc-aarch64-linux-gnu libc6-dev-arm64-cross llvm
+      - name: Build and verify original executable plus runtime
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          echo 'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b  original/2048-arm64-stripped.elf' | sha256sum -c -
+          chmod +x original/2048-arm64-stripped.elf
+          aarch64-linux-gnu-gcc -shared -fPIC -O2 -Wall -Wextra -Werror -fno-stack-protector \
+            -o output/targeted_v2.so edgeai_probe/arm64_targeted_cpu_trace_v2.c
+          file original/2048-arm64-stripped.elf output/targeted_v2.so
+      - name: Run actual ARM64 original machine instructions on ten distinct board paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          for case in $(seq 0 9); do
+            qemu-aarch64 -L /usr/aarch64-linux-gnu \
+              -singlestep -d cpu,in_asm -dfilter 0x400dc4+0x48 \
+              -D "$PWD/output/qemu_cpu_case_$case.txt" \
+              -E LD_PRELOAD="$PWD/output/targeted_v2.so" \
+              -E EDGEAI_DEBUG_ENTRY=0x400dc4 \
+              -E EDGEAI_DEBUG_CASE="$case" \
+              "$PWD/original/2048-arm64-stripped.elf" \
+              > "output/original_stdout_case_$case.txt"
+            python3 edgeai_probe/parse_arm64_targeted_trace.py \
+              --trace "output/qemu_cpu_case_$case.txt" \
+              --stdout "output/original_stdout_case_$case.txt" \
+              --entry 0x400dc4 --stop 0x400e0c --case "$case" \
+              --output "output/original_cpu_case_$case.json"
+            python3 edgeai_probe/edgeai_qemu_cpu_state_differential.py \
+              --elf original/2048-arm64-stripped.elf \
+              --cpu "output/original_cpu_case_$case.json" \
+              --raw "output/qemu_cpu_case_$case.txt" \
+              --entry 0x400dc4 --stop 0x400e0c --case "$case" \
+              --output "output/differential_case_$case.json"
+          done
+          python3 edgeai_probe/edgeai_qemu_cpu_state_differential.py \
+            --elf original/2048-arm64-stripped.elf \
+            --cpu output/original_cpu_case_2.json \
+            --raw output/qemu_cpu_case_2.txt \
+            --entry 0x400dc4 --stop 0x400e0c --case 2 --invert-equal \
+            --output output/negative_control_inverted_branch.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          expect=[0,0,1,0,0,1,1,1,1,0]
+          runs=[]
+          for i in range(10):
+            doc=json.loads(Path(f'output/differential_case_{i}.json').read_text())
+            machine=json.loads(Path(f'output/original_cpu_case_{i}.json').read_text())
+            assert doc['passed'] and doc['first_mismatch'] is None
+            assert doc['case']==i and doc['real_cpu_steps']==machine['cpu_snapshot_count']
+            assert machine['original_machine_io']['actual_original_return']==expect[i]
+            assert all(v in machine['original_machine_io'] for v in ('input_board','board_after_fnv64'))
+            runs.append(doc)
+          neg=json.loads(Path('output/negative_control_inverted_branch.json').read_text())
+          assert not neg['passed'] and neg['first_mismatch']['kind']=='PC'
+          assert neg['first_mismatch']['step']==7
+          cpu={k:sum(r['checks'][k] for r in runs) for k in ('pc','registers','nzcv')}
+          traces=[json.loads(Path(f'output/original_cpu_case_{i}.json').read_text()) for i in range(10)]
+          unique_pc=sorted(set(frame['pc'] for t in traces for frame in t['snapshot_sequence']))
+          unique_edges=sorted({f"{u['at']}->{u['next']}" for t in traces for u in t['branches']})
+          assert len(unique_pc)>8 and len(unique_edges)>=2
+          report={'status':'ORIGINAL_ELF_ARM64_VS_BOUNDED_INTERPRETER_CPU_PARITY',
+            'original_sha256':'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b',
+            'original_executed_under_qemu':True,'function_entry':'0x400dc4',
+            'board_cases':list(range(10)),'expected_returns':expect,
+            'machine_instruction_steps':sum(x['real_cpu_steps'] for x in runs),
+            'register_flag_pc_checks':cpu,'total_checks':sum(cpu.values()),
+            'mismatches':0,'unique_real_machine_PCs':len(unique_pc),
+            'unique_real_machine_branch_edges':len(unique_edges),
+            'case_instruction_counts':[x['real_cpu_steps'] for x in runs],
+            'injected_bad_branch_first_mismatch':neg['first_mismatch'],
+            'input_generation':'ten fixed bounded board shapes, independent of source',
+            'limitations':['One real game function is covered, not full game',
+             'PC/register/NZCV sample parity is not full memory or API equivalence',
+             'Negative mutation tested only a single controlled branch mistake']}
+          Path('output/ten_path_cpu_report.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Upload original QEMU evidence and stepwise comparisons
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-2048-ten-path-original-cpu-traces
+          path: output/
+          if-no-files-found: error
+          retention-days: 14
