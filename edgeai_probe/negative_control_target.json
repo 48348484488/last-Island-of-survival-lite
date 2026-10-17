@@ -1,0 +1,12 @@
+{
+  "explanation": "Reproduce first mismatch of deliberately incorrect reconstructed C++ at precise ARM64 original ELF function. Explicit debug location taken from post-analysis negative control, not used by generator.",
+  "elf_sha256": "a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b",
+  "entry": "0x400dc4",
+  "stop": "0x400e0c",
+  "cases": [
+    0,
+    2
+  ],
+  "expected_machine_result_difference": true,
+  "original_source_read": false
+}
