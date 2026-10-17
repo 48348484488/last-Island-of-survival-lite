@@ -1,0 +1,86 @@
+name: EdgeAI validate original ARM64 QEMU CPU states against interpreter
+
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths: ['edgeai_probe/**', '.github/workflows/edgeai-cpu-state-differential.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  cpu-stepwise-comparison:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - name: Checkout ARM64 machine-state comparator
+        uses: actions/checkout@v4
+      - name: Fetch original stripped ELF
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: original
+          run-id: 38969071956
+          github-token: ${{ github.token }}
+      - name: Fetch verified original QEMU per-instruction CPU register logs
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-2048-original-arm64-first-divergence-cpu-state
+          path: real_cpu
+          run-id: 39043771538
+          github-token: ${{ github.token }}
+      - name: Ensure LLVM instruction decoder is available
+        run: |
+          if ! command -v llvm-objdump >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends llvm
+          fi
+          llvm-objdump --version | head -n 1
+      - name: Compare PC, registers, and condition flags at original ELF instruction granularity
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p results
+          echo 'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b  original/2048-arm64-stripped.elf' | sha256sum --check -
+          for i in 0 2; do
+            python3 edgeai_probe/edgeai_qemu_cpu_state_differential.py \
+              --elf original/2048-arm64-stripped.elf \
+              --cpu "real_cpu/original_cpu_summary_case_$i.json" \
+              --raw "real_cpu/original_cpu_case_$i.txt" \
+              --entry 0x400dc4 --stop 0x400e0c --case "$i" \
+              --output "results/arm64_cpu_state_case_$i.json"
+          done
+          python3 edgeai_probe/edgeai_qemu_cpu_state_differential.py \
+            --elf original/2048-arm64-stripped.elf \
+            --cpu real_cpu/original_cpu_summary_case_2.json \
+            --raw real_cpu/original_cpu_case_2.txt \
+            --entry 0x400dc4 --stop 0x400e0c --case 2 --invert-equal \
+            --output results/arm64_cpu_state_bad_branch.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          docs=[json.loads(Path(f'results/arm64_cpu_state_case_{i}.json').read_text()) for i in (0,2)]
+          wrong=json.loads(Path('results/arm64_cpu_state_bad_branch.json').read_text())
+          assert all(x['passed'] for x in docs)
+          assert [x['real_cpu_steps'] for x in docs]==[125,9]
+          assert not wrong['passed'] and wrong['first_mismatch']['kind']=='PC'
+          assert wrong['first_mismatch']['step']==7
+          counts={k:sum(x['checks'][k] for x in docs) for k in ('pc','registers','nzcv')}
+          report={'check':'QEMU original ARM64 CPU state vs bounded ELF-only interpreter',
+            'real_original_CPU':True,'source_read':False,
+            'cases':[0,2],'machine_steps':sum(x['real_cpu_steps'] for x in docs),
+            'compared_intermediate_values':counts,'total_compared':sum(counts.values()),
+            'mismatches':0,'negative_control_first_bad_pc_index':wrong['first_mismatch']['step'],
+            'negative_control_detail':wrong['first_mismatch']}
+          Path('results/summary.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Upload CPU-state parity and negative-control first divergence
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-qemu-vs-interpreter-real-register-parity
+          path: results/
+          if-no-files-found: error
+          retention-days: 14
