@@ -1,0 +1,58 @@
+{
+  "description": "Only known ELF-derived entry addresses and lifter ABI contracts; source-independent actual instruction replay, 2000 deterministic cases each",
+  "elf_sha256": "a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b",
+  "roles": {
+    "read_only_leaf": 0,
+    "mutating_leaf": 1,
+    "scalar_leaf": 2,
+    "board_score_caller": 3,
+    "board_column_score_leaf": 4
+  },
+  "entries": [
+    {
+      "address": "0x4009e8",
+      "role": "board_column_score_leaf"
+    },
+    {
+      "address": "0x400abc",
+      "role": "mutating_leaf"
+    },
+    {
+      "address": "0x400b5c",
+      "role": "read_only_leaf"
+    },
+    {
+      "address": "0x400ba0",
+      "role": "read_only_leaf"
+    },
+    {
+      "address": "0x400d58",
+      "role": "read_only_leaf"
+    },
+    {
+      "address": "0x400dc4",
+      "role": "read_only_leaf"
+    },
+    {
+      "address": "0x400e0c",
+      "role": "board_score_caller"
+    },
+    {
+      "address": "0x400e68",
+      "role": "board_score_caller"
+    },
+    {
+      "address": "0x400eb8",
+      "role": "board_score_caller"
+    },
+    {
+      "address": "0x400f08",
+      "role": "board_score_caller"
+    },
+    {
+      "address": "0x400f58",
+      "role": "scalar_leaf"
+    }
+  ],
+  "version": "2.0"
+}
