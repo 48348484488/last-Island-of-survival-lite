@@ -45,6 +45,7 @@ jobs:
           assert {i['role'] for i in m['entries']}==set(m['roles'])
           print('VERIFIED_STRIPPED_ELF_SHA256='+m['elf_sha256'])
           PY
+          chmod +x target/2048-arm64-stripped.elf
           file target/2048-arm64-stripped.elf
           aarch64-linux-gnu-gcc -shared -fPIC -O2 -Wall -Wextra -Werror -fno-stack-protector \
             -o output/real_aarch64_probe.so edgeai_probe/real_elf_aarch64_probe.c
@@ -61,7 +62,7 @@ jobs:
               print(f'export EDGEAI_ROLE_{i}={m["roles"][item["role"]]}')
           PY
           )"
-          qemu-aarch64 -L /usr/aarch64-linux-gnu \
+          qemu-aarch64 -strace -L /usr/aarch64-linux-gnu \
             -E LD_PRELOAD="$PWD/output/real_aarch64_probe.so" \
             -d in_asm -D "$PWD/output/qemu_arm64_instruction_blocks.log" \
             "$PWD/target/2048-arm64-stripped.elf" \
