@@ -1,0 +1,79 @@
+name: EdgeAI original compiled ARM64 game QEMU check
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths: [".github/workflows/edgeai-qemu-original-game.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  execute-original-binary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Download precompiled ARM64 ELF only (no source)
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: binary
+          repository: 48348484488/oxide
+          run-id: 38969071956
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install QEMU ARM64 Linux userspace emulator
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qemu-user libc6-arm64-cross
+      - name: Execute original ELF in a pseudo-terminal and inspect output
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b  binary/2048-arm64-stripped.elf' | sha256sum -c -
+          python3 - <<'PY'
+          import hashlib,json,os,pty,select,subprocess,time
+          from pathlib import Path
+          exe=Path('binary/2048-arm64-stripped.elf')
+          master,slave=pty.openpty()
+          p=subprocess.Popen(['qemu-aarch64','-L','/usr/aarch64-linux-gnu',str(exe)],
+              stdin=slave,stdout=slave,stderr=slave,start_new_session=True)
+          os.close(slave)
+          output=bytearray();sent=False
+          deadline=time.monotonic()+18
+          while time.monotonic()<deadline:
+              if p.poll() is not None: break
+              ready,_,_=select.select([master],[],[],0.15)
+              if ready:
+                  try: data=os.read(master,65536)
+                  except OSError: break
+                  if not data: break
+                  output.extend(data)
+              if not sent and (b'estart' in output or b'uit' in output or len(output)>512):
+                  os.write(master,b'q');sent=True
+          if p.poll() is None:
+              p.terminate()
+              try: p.wait(timeout=2)
+              except subprocess.TimeoutExpired:
+                  p.kill();p.wait(timeout=2)
+          os.close(master)
+          Path('result').mkdir(exist_ok=True)
+          Path('result/terminal.bin').write_bytes(output)
+          decoded=output.decode('utf-8','replace')
+          report={'elf_sha256':hashlib.sha256(exe.read_bytes()).hexdigest(),
+            'source_code_used':False,'execution_method':'QEMU ARM64 Linux userspace emulator on x86_64',
+            'exit_code':p.returncode,'quit_sent':sent,'captured_bytes':len(output),
+            'output_sha256':hashlib.sha256(output).hexdigest(),
+            'rendered_board':('╭' in decoded and '╯' in decoded),
+            'rendered_controls':('estart' in decoded and 'uit' in decoded),
+            'recompiled_C++_whole_game_ran':False}
+          Path('result/real_qemu_game.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          assert p.returncode==0 and sent and report['rendered_board'] and report['rendered_controls']
+          PY
+      - name: Upload binary-only QEMU behavior evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-original-arm64-2048-qemu-process
+          path: result/
+          retention-days: 14
+          if-no-files-found: warn
