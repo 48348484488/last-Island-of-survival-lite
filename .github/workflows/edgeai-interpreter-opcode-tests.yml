@@ -1,0 +1,21 @@
+name: EdgeAI ARM64 interpreter strict opcode tests
+
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths: ['edgeai_probe/**', '.github/workflows/edgeai-interpreter-opcode-tests.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cpu-subset-unit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Python syntax and execute fail-closed ARM64 regression tests
+        run: |
+          python3 -m py_compile edgeai_probe/edgeai_qemu_cpu_state_differential.py edgeai_probe/test_cpu_subset_extended.py
+          python3 -m unittest discover -s edgeai_probe -p 'test_cpu_subset_extended.py' -v
