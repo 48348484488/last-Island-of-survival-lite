@@ -1,0 +1,107 @@
+name: EdgeAI run original stripped 2048 ARM64 machine code
+
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths: ['edgeai_probe/**', '.github/workflows/edgeai-real-machine-probe.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  actual-elf-aarch64-qemu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - name: Checkout isolated public runtime probe (not game source)
+        uses: actions/checkout@v4
+      - name: Retrieve exact previously built original stripped ELF
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: target
+          run-id: 38969071956
+          github-token: ${{ github.token }}
+      - name: Install actual ARM64 userspace execution runtime and cross compiler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends qemu-user gcc-aarch64-linux-gnu libc6-dev-arm64-cross
+      - name: Verify manifest, stripped ELF and build probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          m=json.loads(Path('edgeai_probe/abi_manifest.json').read_text())
+          p=Path('target/2048-arm64-stripped.elf')
+          assert p.is_file()
+          assert m['elf_sha256']==hashlib.sha256(p.read_bytes()).hexdigest()
+          assert len(m['entries'])==5
+          assert len(set(x['address'] for x in m['entries']))==5
+          assert {i['role'] for i in m['entries']}==set(m['roles'])
+          print('VERIFIED_STRIPPED_ELF_SHA256='+m['elf_sha256'])
+          PY
+          file target/2048-arm64-stripped.elf
+          aarch64-linux-gnu-gcc -shared -fPIC -O2 -Wall -Wextra -Werror -fno-stack-protector \
+            -o output/real_aarch64_probe.so edgeai_probe/real_elf_aarch64_probe.c
+          file output/real_aarch64_probe.so
+      - name: Run original machine instructions in QEMU linux-user, output result digests
+        shell: bash
+        run: |
+          set -euo pipefail
+          eval "$(python3 - <<'PY'
+          import json
+          m=json.load(open('edgeai_probe/abi_manifest.json'))
+          for i,item in enumerate(m['entries']):
+              print(f'export EDGEAI_ENTRY_{i}={item["address"]}')
+              print(f'export EDGEAI_ROLE_{i}={m["roles"][item["role"]]}')
+          PY
+          )"
+          qemu-aarch64 -L /usr/aarch64-linux-gnu \
+            -E LD_PRELOAD="$PWD/output/real_aarch64_probe.so" \
+            -d in_asm -D "$PWD/output/qemu_arm64_instruction_blocks.log" \
+            "$PWD/target/2048-arm64-stripped.elf" \
+            | tee output/real_arm64_function_digests.txt
+          test "$(grep -c '^ARM64_REAL_ELF ' output/real_arm64_function_digests.txt)" = 5
+          grep -q '400b5c' output/qemu_arm64_instruction_blocks.log
+          grep -q '400dc4' output/qemu_arm64_instruction_blocks.log
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re
+          m=json.loads(Path('edgeai_probe/abi_manifest.json').read_text())
+          lines=Path('output/real_arm64_function_digests.txt').read_text().splitlines()
+          entries=[]
+          for index,line in enumerate(lines):
+              match=re.fullmatch(r'ARM64_REAL_ELF slot=(\d+) addr=0x([0-9a-f]{16}) role=(\d+) calls=(\d+) fnv64=([0-9a-f]{16})',line)
+              assert match,line
+              slot,addr,role,calls,digest=match.groups()
+              assert int(slot)==index and int(addr,16)==int(m['entries'][index]['address'],16)
+              assert int(role)==m['roles'][m['entries'][index]['role']]
+              assert int(calls)==2000
+              entries.append({'address':hex(int(addr,16)), 'role':m['entries'][index]['role'],
+                              'cases':int(calls),'fnv64':digest})
+          assert len(entries)==5
+          report={'test':'Real unmodified AArch64 .text instructions executed under QEMU Linux user mode',
+            'source_code_used':False,'symtab_used':False,'emulated_processor':'QEMU AArch64',
+            'original_elf_sha256':m['elf_sha256'],'interpreter_only':False,
+            'real_original_ELF_executed':True,'cases':sum(x['cases'] for x in entries),
+            'entry_sha_bound_to_manifest':True,'roles_assumed_from_blind_lifter':True,
+            'reference_digests':entries,
+            'verification':'Independent host C++ reconstructed binary comparison still required'}
+          Path('output/qemu_real_arm64_reference.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Upload machine reference and actual AArch64 decode trace
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-real-arm64-2048-machine-oracle
+          path: |
+            output/qemu_real_arm64_reference.json
+            output/real_arm64_function_digests.txt
+            output/qemu_arm64_instruction_blocks.log
+          if-no-files-found: error
+          retention-days: 14
