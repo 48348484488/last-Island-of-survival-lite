@@ -35,9 +35,11 @@ jobs:
           import hashlib,json,os,pty,select,subprocess,time
           from pathlib import Path
           exe=Path('binary/2048-arm64-stripped.elf')
+          Path('result').mkdir(exist_ok=True)
           master,slave=pty.openpty()
-          p=subprocess.Popen(['qemu-aarch64','-L','/usr/aarch64-linux-gnu',str(exe)],
-              stdin=slave,stdout=slave,stderr=slave,start_new_session=True)
+          stderr_log=open('result/qemu_arm64_syscalls.log','wb')
+          p=subprocess.Popen(['qemu-aarch64','-strace','-d','in_asm','-D','result/qemu_arm64_asm_blocks.log','-L','/usr/aarch64-linux-gnu',str(exe)],
+              stdin=slave,stdout=slave,stderr=stderr_log,start_new_session=True)
           os.close(slave)
           output=bytearray();sent=False
           deadline=time.monotonic()+18
@@ -57,6 +59,7 @@ jobs:
               except subprocess.TimeoutExpired:
                   p.kill();p.wait(timeout=2)
           os.close(master)
+          stderr_log.close()
           Path('result').mkdir(exist_ok=True)
           Path('result/terminal.bin').write_bytes(output)
           decoded=output.decode('utf-8','replace')
@@ -66,7 +69,9 @@ jobs:
             'output_sha256':hashlib.sha256(output).hexdigest(),
             'rendered_board':('╭' in decoded and '╯' in decoded),
             'rendered_controls':('estart' in decoded and 'uit' in decoded),
-            'recompiled_C++_whole_game_ran':False}
+            'recompiled_C++_whole_game_ran':False,
+            'syscalls_log_bytes':Path('result/qemu_arm64_syscalls.log').stat().st_size,
+            'translated_block_log_bytes':Path('result/qemu_arm64_asm_blocks.log').stat().st_size}
           Path('result/real_qemu_game.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report,indent=2))
           assert p.returncode==0 and sent and report['rendered_board'] and report['rendered_controls']
