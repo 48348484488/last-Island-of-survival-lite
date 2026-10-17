@@ -1,0 +1,92 @@
+name: EdgeAI targeted original ARM64 instruction trace
+
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths: ['edgeai_probe/**', '.github/workflows/edgeai-targeted-arm64-trace.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  machine-registers-first-divergence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - name: Checkout targeted tracing code (no game source)
+        uses: actions/checkout@v4
+      - name: Obtain exact original stripped ARM64 executable
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: target
+          run-id: 38969071956
+          github-token: ${{ github.token }}
+      - name: Install real ARM64 CPU emulator and cross compiler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends qemu-user gcc-aarch64-linux-gnu libc6-dev-arm64-cross
+      - name: Verify provenance and build minimal original-ELF probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          cfg=json.loads(Path('edgeai_probe/negative_control_target.json').read_text())
+          assert hashlib.sha256(Path('target/2048-arm64-stripped.elf').read_bytes()).hexdigest()==cfg['elf_sha256']
+          assert 0x400dc4==int(cfg['entry'],16)
+          assert int(cfg['stop'],16)>int(cfg['entry'],16)
+          print('TARGET_ELF_SHA256_CONFIRMED',cfg['elf_sha256'])
+          PY
+          chmod +x target/2048-arm64-stripped.elf
+          aarch64-linux-gnu-gcc -shared -fPIC -O2 -Wall -Wextra -Werror -fno-stack-protector \
+            -o output/arm64_targeted_cpu_probe.so edgeai_probe/arm64_targeted_cpu_trace.c
+      - name: Execute precise failing and passing inputs and record real PC-X-SP-PSTATE
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in 0 2; do
+            echo "ARM64_REAL_DEBUG_CASE=$i"
+            qemu-aarch64 -L /usr/aarch64-linux-gnu \
+              -singlestep -d cpu,in_asm \
+              -dfilter 0x400dc4+0x48 \
+              -D "$PWD/output/original_cpu_case_$i.txt" \
+              -E LD_PRELOAD="$PWD/output/arm64_targeted_cpu_probe.so" \
+              -E EDGEAI_DEBUG_ENTRY=0x400dc4 \
+              -E EDGEAI_DEBUG_CASE="$i" \
+              "$PWD/target/2048-arm64-stripped.elf" \
+              > "output/original_stdout_case_$i.txt"
+            cat "output/original_stdout_case_$i.txt"
+            python3 edgeai_probe/parse_arm64_targeted_trace.py \
+              --trace "output/original_cpu_case_$i.txt" \
+              --stdout "output/original_stdout_case_$i.txt" \
+              --entry 0x400dc4 --stop 0x400e0c --case "$i" \
+              --output "output/original_cpu_summary_case_$i.json"
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('output/original_cpu_summary_case_0.json').read_text())
+          b=json.loads(Path('output/original_cpu_summary_case_2.json').read_text())
+          assert a['cpu_snapshot_count']>5 and b['cpu_snapshot_count']>5
+          assert a['original_machine_io']['actual_original_return']==0
+          assert b['original_machine_io']['actual_original_return']==1
+          assert a['cpu_snapshot_count']>b['cpu_snapshot_count']
+          assert a['original_machine_io']['input_board']==[0]*16
+          assert b['original_machine_io']['input_board']==[2048]*16
+          print('MACHINE_TRACE_NEGATIVE_CONTROL_CONFIRMED:',
+                {'zero_board_instructions':a['cpu_snapshot_count'],
+                 '2048_board_instructions':b['cpu_snapshot_count'],
+                 'returns':[0,1]})
+          PY
+      - name: Upload original ARM64 register evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-2048-original-arm64-first-divergence-cpu-state
+          path: output/
+          retention-days: 14
+          if-no-files-found: error
