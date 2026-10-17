@@ -12,6 +12,7 @@ from pathlib import Path
 INS=re.compile(r'^\s*([0-9a-fA-F]+):\s+([a-z][a-z0-9.]*)\s*(.*?)\s*$')
 REG=re.compile(r'^[wx](\d{1,2})$')
 MEM=re.compile(r'^(w\d+), \[(x\d+), (x\d+), lsl #(\d+)\]$')
+MEM_IMMEDIATE=re.compile(r'^(w\d+), \[(x\d+)(?:, #(0x[0-9a-fA-F]+|\d+))?\]$')
 MASK32=(1<<32)-1
 MASK64=(1<<64)-1
 VBASE=0x10000000
@@ -62,13 +63,28 @@ def run_interpreter(code,start,board,*,invert_equal=False,budget=4096):
         elif op=='mov' and len(pieces)==2:
             put(pieces[0],get(pieces[1]))
         elif op=='ldr':
-            m=MEM.fullmatch(args)
-            if not m or int(m[4]) not in (0,2):
+            indexed=MEM.fullmatch(args)
+            immediate=MEM_IMMEDIATE.fullmatch(args)
+            if indexed:
+                shift=int(indexed[4])
+                if shift not in (0,2):
+                    raise ValueError('unsupported register index shift')
+                dest=indexed[1]
+                addr=get(indexed[2])+(get(indexed[3])<<shift)
+            elif immediate:
+                dest=immediate[1]
+                addr=get(immediate[2])+(int(immediate[3],0) if immediate[3] else 0)
+            else:
                 raise ValueError('unmodeled ARM64 memory load: '+args)
-            addr=get(m[2])+(get(m[3])<<int(m[4]))
             if addr<VBASE or addr>VBASE+60 or (addr-VBASE)%4:
                 raise ValueError('memory outside input board')
-            put(m[1],board[(addr-VBASE)//4])
+            put(dest,board[(addr-VBASE)//4])
+        elif op in ('cbz','cbnz') and len(pieces)==2:
+            target=TARGET.fullmatch(pieces[1])
+            if not target:raise ValueError('unknown compare-and-branch target')
+            zero=(get(pieces[0])==0)
+            if zero == (op=='cbz'):
+                nxt=int(target[1],16)
         elif op=='cmp' and len(pieces)==2:
             width=32 if pieces[0].startswith('w') else 64
             mask=(1<<width)-1
