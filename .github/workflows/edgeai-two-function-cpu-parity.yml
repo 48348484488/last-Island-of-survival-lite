@@ -1,0 +1,119 @@
+name: EdgeAI QEMU validate two additional 2048 ARM64 game functions
+
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths: ['edgeai_probe/**', '.github/workflows/edgeai-two-function-cpu-parity.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  independent-machine-functions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download original stripped ELF, hash fixed
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: original
+          run-id: 38969071956
+          github-token: ${{ github.token }}
+      - name: Install original machine emulator and C/LLVM tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends qemu-user gcc-aarch64-linux-gnu libc6-dev-arm64-cross llvm
+      - name: Build source-blind QEMU invocation shim
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          echo 'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b  original/2048-arm64-stripped.elf' | sha256sum -c -
+          chmod +x original/2048-arm64-stripped.elf
+          aarch64-linux-gnu-gcc -shared -fPIC -O2 -Wall -Wextra -Werror -fno-stack-protector \
+            -o output/targeted_v2.so edgeai_probe/arm64_targeted_cpu_trace_v2.c
+      - name: Single-step real original ELF and verify independent instruction semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          for range in 0x400b5c:0x400ba0 0x400ba0:0x400bfc; do
+            IFS=: read -r entry stop <<< "$range"
+            tag=$(printf '%x' "$((entry))")
+            length=$((stop-entry))
+            for case in $(seq 0 9); do
+              suffix="$tag-$case"
+              qemu-aarch64 -L /usr/aarch64-linux-gnu \
+                -singlestep -d cpu,in_asm -dfilter "$entry+$length" \
+                -D "$PWD/output/qemu_cpu_$suffix.txt" \
+                -E LD_PRELOAD="$PWD/output/targeted_v2.so" \
+                -E EDGEAI_DEBUG_ENTRY="$entry" \
+                -E EDGEAI_DEBUG_CASE="$case" \
+                "$PWD/original/2048-arm64-stripped.elf" \
+                > "output/original_stdout_$suffix.txt"
+              python3 edgeai_probe/parse_arm64_targeted_trace.py \
+                --trace "output/qemu_cpu_$suffix.txt" \
+                --stdout "output/original_stdout_$suffix.txt" \
+                --entry "$entry" --stop "$stop" --case "$case" \
+                --output "output/original_cpu_$suffix.json"
+              python3 edgeai_probe/edgeai_qemu_cpu_state_differential.py \
+                --elf original/2048-arm64-stripped.elf \
+                --cpu "output/original_cpu_$suffix.json" \
+                --raw "output/qemu_cpu_$suffix.txt" \
+                --entry "$entry" --stop "$stop" --case "$case" \
+                --output "output/differential_$suffix.json"
+            done
+          done
+          python3 edgeai_probe/edgeai_qemu_cpu_state_differential.py \
+            --elf original/2048-arm64-stripped.elf \
+            --cpu output/original_cpu_400b5c-0.json \
+            --raw output/qemu_cpu_400b5c-0.txt \
+            --entry 0x400b5c --stop 0x400ba0 --case 0 --invert-equal \
+            --output output/negative_control_bad_cbz.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          funcs=[0x400b5c,0x400ba0]
+          reads=[]
+          steps=0
+          cases=[]
+          for address in funcs:
+              results=[]
+              for case in range(10):
+                  f=Path(f'output/differential_{address:x}-{case}.json')
+                  obj=json.loads(f.read_text())
+                  original=json.loads(Path(f'output/original_cpu_{address:x}-{case}.json').read_text())
+                  assert obj['passed'] and not obj['first_mismatch']
+                  assert original['original_machine_io']['case']==case
+                  assert obj['real_cpu_steps']==original['cpu_snapshot_count']
+                  results.append(obj)
+                  cases.append((address,case,original['original_machine_io']['actual_original_return']))
+              assert len(set(case[2] for case in cases if case[0]==address))>=2
+              steps+=sum(item['real_cpu_steps'] for item in results)
+              reads.extend(results)
+          wrong=json.loads(Path('output/negative_control_bad_cbz.json').read_text())
+          assert not wrong['passed'] and wrong['first_mismatch']['kind']=='PC'
+          checks={k:sum(r['checks'][k] for r in reads) for k in ('pc','registers','nzcv')}
+          report={'status':'TWO_ADDITIONAL_GAME_FUNCTIONS_REAL_QEMU_CPU_STEP_PARITY',
+                  'original_elf_sha256':'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b',
+                  'original_arm64_machine_executed':True,
+                  'function_addresses':[hex(x) for x in funcs],
+                  'case_count':len(reads),'cpu_instruction_steps':steps,
+                  'comparison_totals':checks,'total_checks':sum(checks.values()),
+                  'mismatches':0,'cbz_negative_control':wrong['first_mismatch'],
+                  'source_used':False,'symbols_used':False,
+                  'limitations':['Only two more functions in this run; not whole-game decompilation.',
+                    'Only decoded supported integer/word load subset is verified.',
+                    'QEMU traces compared to interpreter do not prove C++ model equivalence.']}
+          Path('output/two_function_cpu_report.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Upload two-function QEMU per-instruction artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-2048-two-more-original-arm64-cpu-parity
+          path: output/
+          retention-days: 14
+          if-no-files-found: error
