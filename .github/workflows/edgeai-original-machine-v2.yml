@@ -1,0 +1,85 @@
+name: EdgeAI ARM64 original 2048 per-call differential oracle V2
+
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths: ['edgeai_probe/**', '.github/workflows/edgeai-original-machine-v2.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  original-machine-reference-v2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout runtime-probe only
+        uses: actions/checkout@v4
+      - name: Download original pinned stripped game ELF
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: target
+          run-id: 38969071956
+          github-token: ${{ github.token }}
+      - name: Install AArch64 emulator and C compiler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends qemu-user gcc-aarch64-linux-gnu libc6-dev-arm64-cross
+      - name: Assert ELF hash and compile source-independent runtime probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          chmod +x target/2048-arm64-stripped.elf
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          cfg=json.loads(Path('edgeai_probe/abi_manifest_v2.json').read_text())
+          path=Path('target/2048-arm64-stripped.elf')
+          assert path.stat().st_size>10000
+          assert hashlib.sha256(path.read_bytes()).hexdigest()==cfg['elf_sha256']
+          assert len(cfg['entries'])==11
+          assert len(set(x['address'] for x in cfg['entries']))==11
+          print("REAL_ELF_SHA256_VERIFIED",cfg['elf_sha256'])
+          PY
+          aarch64-linux-gnu-gcc -shared -fPIC -O2 -Wall -Wextra -Werror -fno-stack-protector \
+            -o output/runtime_probe_v2.so edgeai_probe/real_elf_aarch64_probe_v2.c
+          file target/2048-arm64-stripped.elf output/runtime_probe_v2.so
+      - name: Execute original game functions on emulated ARM64 CPU
+        shell: bash
+        run: |
+          set -euo pipefail
+          eval "$(python3 - <<'PY'
+          import json
+          cfg=json.load(open('edgeai_probe/abi_manifest_v2.json'))
+          for slot,e in enumerate(cfg['entries']):
+              print(f'export EDGEAI_ENTRY_{slot}={e["address"]}')
+              print(f'export EDGEAI_ROLE_{slot}={cfg["roles"][e["role"]]}')
+          PY
+          )"
+          qemu-aarch64 -L /usr/aarch64-linux-gnu \
+            -E LD_PRELOAD="$PWD/output/runtime_probe_v2.so" \
+            -d in_asm -D "$PWD/output/original_arm64_basic_blocks.txt" \
+            "$PWD/target/2048-arm64-stripped.elf" \
+            > output/original_arm64_cases.txt
+          echo "ORIGINAL_ARM64_CASE_RECORDS=$(grep -c '^ARM64_CASE ' output/original_arm64_cases.txt)"
+          echo "ORIGINAL_ARM64_FUNCTION_SUMMARIES=$(grep -c '^ARM64_REAL_ELF ' output/original_arm64_cases.txt)"
+          python3 edgeai_probe/validate_machine_probe_v2.py \
+            --elf target/2048-arm64-stripped.elf \
+            --manifest edgeai_probe/abi_manifest_v2.json \
+            --records output/original_arm64_cases.txt \
+            --output output/original_machine_reference_v2.json
+          tail -n 1 output/original_arm64_cases.txt
+      - name: Upload per-call machine results and instruction decoding proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-2048-v2-original-arm64-per-case-oracle
+          path: |
+            output/original_arm64_cases.txt
+            output/original_machine_reference_v2.json
+            output/original_arm64_basic_blocks.txt
+          if-no-files-found: error
+          retention-days: 14
