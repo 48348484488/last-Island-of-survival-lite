@@ -29,6 +29,8 @@ jobs:
         run: |
           set -euo pipefail
           echo 'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b  binary/2048-arm64-stripped.elf' | sha256sum -c -
+          chmod +x binary/2048-arm64-stripped.elf
+          ls -l binary/2048-arm64-stripped.elf
           python3 - <<'PY'
           import hashlib,json,os,pty,select,subprocess,time
           from pathlib import Path
