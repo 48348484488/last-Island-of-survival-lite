@@ -1,0 +1,103 @@
+name: EdgeAI 2048 ARM64 original slide-column CPU tracing
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths:
+      - edgeai_probe/arm64_targeted_slide_column_trace.c
+      - .github/workflows/edgeai-slide-column-cpu-trace.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  original-column-slide:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download pinned original stripped AArch64 executable
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: original
+          run-id: 38969071956
+          github-token: ${{ github.token }}
+      - name: Install original AArch64 CPU emulator and cross compiler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends qemu-user gcc-aarch64-linux-gnu libc6-dev-arm64-cross llvm
+      - name: Verify unmodified ELF and build bounded probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          echo 'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b  original/2048-arm64-stripped.elf' | sha256sum -c -
+          chmod +x original/2048-arm64-stripped.elf
+          aarch64-linux-gnu-gcc -shared -fPIC -O2 -Wall -Wextra -Werror -fno-stack-protector \
+            -o output/slide_probe.so edgeai_probe/arm64_targeted_slide_column_trace.c
+          file original/2048-arm64-stripped.elf output/slide_probe.so
+      - name: Execute original compiled slide-column under single-step ARM64 QEMU
+        shell: bash
+        run: |
+          set -euo pipefail
+          for case in $(seq 0 9); do
+            qemu-aarch64 -L /usr/aarch64-linux-gnu \
+              -singlestep -d cpu,in_asm -dfilter 0x4009e8+0xd4 \
+              -D "$PWD/output/slide_qemu_case_$case.txt" \
+              -E LD_PRELOAD="$PWD/output/slide_probe.so" \
+              -E EDGEAI_DEBUG_ENTRY=0x4009e8 \
+              -E EDGEAI_DEBUG_CASE="$case" \
+              "$PWD/original/2048-arm64-stripped.elf" \
+              > "output/slide_io_case_$case.txt"
+          done
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          inp=re.compile(r'^EDGEAI_COLUMN_DEBUG case=(\d+) entry=0x([0-9a-f]{16}) col=(\d+) score=(\d+) board=\[([\d,]+)\]$')
+          res=re.compile(r'^EDGEAI_COLUMN_RESULT case=(\d+) return=(\d+) score=(\d+) board_sha_fnv64=([0-9a-f]{16})$')
+          board=re.compile(r'^EDGEAI_COLUMN_BOARD case=(\d+) values=\[([\d,]+)\]$')
+          runs=[]
+          for n in range(10):
+              lines=Path(f'output/slide_io_case_{n}.txt').read_text().splitlines()
+              if len(lines)!=3:raise ValueError('unexpected IO lines case '+str(n)+repr(lines))
+              a,b,c=inp.fullmatch(lines[0]),res.fullmatch(lines[1]),board.fullmatch(lines[2])
+              assert a and b and c,(n,lines)
+              assert int(a[1])==int(b[1])==int(c[1])==n
+              assert int(a[2],16)==0x4009e8
+              assert int(a[3])==n%4
+              orig=list(map(int,a[5].split(',')))
+              final=list(map(int,c[2].split(',')))
+              assert len(orig)==len(final)==16
+              assert all(0<=x<2**32 for x in orig+final)
+              assert int(b[2]) in (0,1)
+              assert 0<=int(b[3])<2**32
+              assert all(orig[k]==final[k] for k in range(16) if k%4!=n%4),n
+              d=14695981039346656037
+              for val in final:
+                  for shift in (0,8,16,24):
+                      d=((d^((val>>shift)&255))*1099511628211)&((1<<64)-1)
+              assert f'{d:016x}'==b[4]
+              raw=Path(f'output/slide_qemu_case_{n}.txt')
+              PCs=re.findall(r'\bPC\s*=\s*([0-9a-fA-F]{8,16})',raw.read_text(errors='replace'))
+              inside=[int(x,16) for x in PCs if 0x4009e8<=int(x,16)<0x400abc]
+              assert inside and inside[0]==0x4009e8,(n,inside[:5])
+              runs.append({'case':n,'column':int(a[3]),'score_before':int(a[4]),
+                  'score_after':int(b[3]),'return':int(b[2]),'qemu_cpu_steps':len(inside),
+                  'original_trace_sha256':hashlib.sha256(raw.read_bytes()).hexdigest()})
+          report={'status':'REAL_STRIPPED_ELF_ARM64_SLIDE_COLUMN_CPU_LOGS_CAPTURED',
+             'original_elf_sha256':'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b',
+             'original_arm64_elf_executed_under_qemu':True,
+             'source_used':False,'function_start':'0x4009e8',
+             'cpu_state_parity_already_checked':False,
+             'cases':runs,'total_original_cpu_steps':sum(x['qemu_cpu_steps'] for x in runs),
+             'limited_to_10_sampled_input_cases':True}
+          Path('output/slide_cpu_machine_reference.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Upload real original ARM64 CPU snapshots and board-plus-score outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-original-slide-column-arm64-cpu-states-10cases
+          path: output/
+          if-no-files-found: error
+          retention-days: 14
