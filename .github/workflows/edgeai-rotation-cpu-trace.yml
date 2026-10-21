@@ -1,0 +1,107 @@
+name: EdgeAI real ARM64 rotating-board QEMU CPU single-step oracle
+
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths:
+      - edgeai_probe/arm64_targeted_rotation_trace.c
+      - .github/workflows/edgeai-rotation-cpu-trace.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  original-board-rotation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download pinned real ARM64 original game ELF
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: original
+          run-id: 38969071956
+          github-token: ${{ github.token }}
+      - name: Install ARM64 CPU emulator and compilation tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends qemu-user gcc-aarch64-linux-gnu libc6-dev-arm64-cross llvm
+      - name: Verify exact unmodified ELF and build source-blind shim
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          echo 'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b  original/2048-arm64-stripped.elf' | sha256sum -c -
+          chmod +x original/2048-arm64-stripped.elf
+          aarch64-linux-gnu-gcc -shared -fPIC -O2 -Wall -Wextra -Werror -fno-stack-protector \
+            -o output/rotation_probe.so edgeai_probe/arm64_targeted_rotation_trace.c
+          file original/2048-arm64-stripped.elf output/rotation_probe.so
+      - name: Run 10 real ARM64 rotation calls with each CPU instruction traced
+        shell: bash
+        run: |
+          set -euo pipefail
+          for case in $(seq 0 9); do
+            qemu-aarch64 -L /usr/aarch64-linux-gnu \
+              -singlestep -d cpu,in_asm -dfilter 0x400abc+0xa0 \
+              -D "$PWD/output/rotation_qemu_case_$case.txt" \
+              -E LD_PRELOAD="$PWD/output/rotation_probe.so" \
+              -E EDGEAI_DEBUG_ENTRY=0x400abc \
+              -E EDGEAI_DEBUG_CASE="$case" \
+              "$PWD/original/2048-arm64-stripped.elf" \
+              > "output/rotation_io_case_$case.txt"
+          done
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,hashlib,json
+          inp=re.compile(r'^EDGEAI_MACHINE_DEBUG case=(\d+) entry=0x([0-9a-f]{16}) board=\[([\d,]+)\]$')
+          result=re.compile(r'^EDGEAI_MACHINE_RESULT case=(\d+) return=(\d+) board_sha_fnv64=([0-9a-f]{16})$')
+          board=re.compile(r'^EDGEAI_MACHINE_BOARD case=(\d+) values=\[([\d,]+)\]$')
+          reports=[]
+          for case in range(10):
+              path=Path(f'output/rotation_io_case_{case}.txt')
+              lines=path.read_text().splitlines()
+              assert len(lines)==3,(case,lines)
+              a,b,c=inp.fullmatch(lines[0]),result.fullmatch(lines[1]),board.fullmatch(lines[2])
+              assert a and b and c,(case,lines)
+              assert int(a[1])==case and int(b[1])==case and int(c[1])==case
+              assert int(a[2],16)==0x400abc
+              before=list(map(int,a[3].split(',')))
+              after=list(map(int,c[2].split(',')))
+              assert len(before)==16 and len(after)==16
+              expected=[before[(3-col)*4+row] for row in range(4) for col in range(4)]
+              assert after==expected,(case,after,expected)
+              digest=14695981039346656037
+              for v in after:
+                  for shift in (0,8,16,24):
+                      digest=((digest^((v>>shift)&255))*1099511628211)&((1<<64)-1)
+              assert f'{digest:016x}'==b[3]
+              raw=Path(f'output/rotation_qemu_case_{case}.txt')
+              trace=raw.read_text(errors='replace')
+              snapshots=re.findall(r'(?m)^\s*PC\s*=\s*([0-9a-fA-F]{8,16})',trace)
+              if not snapshots:
+                  snapshots=re.findall(r'\bPC\s*=\s*([0-9a-fA-F]{8,16})',trace)
+              inside=[int(p,16) for p in snapshots if 0x400abc<=int(p,16)<0x400b5c]
+              assert inside and inside[0]==0x400abc,(case,inside[:5])
+              reports.append({'case':case,'original_cpu_steps':len(inside),
+                'machine_board_16_words_match_clockwise_rotation':True,
+                'raw_qemu_trace_sha256':hashlib.sha256(raw.read_bytes()).hexdigest()})
+          report={'status':'ORIGINAL_ARM64_MACHINE_ROTATION_TRACES_VERIFIED',
+            'stripped_elf_sha256':'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b',
+            'original_aarch64_elf_executed_under_qemu':True,
+            'source_used':False,'function_entry':'0x400abc',
+            'cases':reports,'total_cpu_steps':sum(x['original_cpu_steps'] for x in reports),
+            'board_16_word_differential_passed':True,
+            'interpreter_internal_cpu_parity_checked':False}
+          Path('output/rotation_qemu_manifest.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Preserve all CPU states, original machine IO, metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-real-arm64-rotate-cpu-10-inputs
+          path: output/
+          retention-days: 14
+          if-no-files-found: error
