@@ -50,7 +50,7 @@ int __libc_start_main(int(*real_main)(int,char**,char**),int argc,char**argv,
       unsigned long long num=strtoull(next,&tail,10);
       if(errno||!tail||tail==next||num>9999)done(77);
       board[i]=(uint32_t)num;
-      if(i<15){if(*tail!=',')done(78);next=tail+1;}
+      if(i<15){if(*tail!=':')done(78);next=tail+1;}
       else if(*tail)done(79);
     }
     void(*fn)(uint32_t*)=(void*)(uintptr_t)entry;
