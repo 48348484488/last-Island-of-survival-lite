@@ -65,7 +65,7 @@ jobs:
                               f'EDGEAI_ROW={c["row"]}',f'EDGEAI_COL={c["col"]}'])
               else:
                   assert c['entry']=='0x401404' and len(c['board'])==16
-                  env.append('EDGEAI_BOARD='+','.join(map(str,c['board'])))
+                  env.append('EDGEAI_BOARD='+':'.join(map(str,c['board'])))
               argv=['qemu-aarch64','-L','/usr/aarch64-linux-gnu']
               for e in env:argv.extend(['-E',e])
               argv.append(str(binary))
