@@ -1,0 +1,101 @@
+name: EdgeAI V14 verify original AArch64 cell and board stdout
+
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths:
+      - edgeai_probe/v14_original_print_probe.c
+      - edgeai_probe/v14_print_scenarios.json
+      - .github/workflows/edgeai-v14-original-arm64-print.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  original-elf-stdout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve exact 2048 stripped AArch64 ELF
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: original
+          run-id: 38969071956
+          github-token: ${{ github.token }}
+      - name: Install real AArch64 code execution runtime
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends qemu-user gcc-aarch64-linux-gnu libc6-dev-arm64-cross
+      - name: Compile source-independent ELF call shim
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          echo 'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b  original/2048-arm64-stripped.elf' | sha256sum -c -
+          chmod +x original/2048-arm64-stripped.elf
+          aarch64-linux-gnu-gcc -shared -fPIC -O2 -Wall -Wextra -Werror -fno-stack-protector \
+            -o output/v14_print_probe.so edgeai_probe/v14_original_print_probe.c
+          file original/2048-arm64-stripped.elf output/v14_print_probe.so
+      - name: Record unmodified ARM64 original stdout for 21 independent inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os,subprocess
+          root=Path.cwd()
+          config=json.loads((root/'edgeai_probe/v14_print_scenarios.json').read_text())
+          binary=root/'original/2048-arm64-stripped.elf'
+          probe=root/'output/v14_print_probe.so'
+          assert hashlib.sha256(binary.read_bytes()).hexdigest()==config['benchmark_elf_sha256']
+          assert len(config['cases'])==21
+          entries=[]
+          for i,c in enumerate(config['cases']):
+              assert c['type'] in ('CELL','BOARD')
+              assert c['entry'] in ('0x401004','0x401404')
+              env=[f'LD_PRELOAD={probe}',f'EDGEAI_ENTRY={c["entry"]}',
+                   f'EDGEAI_MODE={c["type"]}']
+              if c['type']=='CELL':
+                  assert c['entry']=='0x401004'
+                  env.extend([f'EDGEAI_VALUE={c["value"]}',
+                              f'EDGEAI_ROW={c["row"]}',f'EDGEAI_COL={c["col"]}'])
+              else:
+                  assert c['entry']=='0x401404' and len(c['board'])==16
+                  env.append('EDGEAI_BOARD='+','.join(map(str,c['board'])))
+              argv=['qemu-aarch64','-L','/usr/aarch64-linux-gnu']
+              for e in env:argv.extend(['-E',e])
+              argv.append(str(binary))
+              result=subprocess.run(argv,capture_output=True,timeout=15)
+              if result.returncode:
+                  print('QEMU FAILURE:',i,'return',result.returncode,'stderr',result.stderr[:500])
+                  raise SystemExit(result.returncode)
+              if not result.stdout:
+                  raise ValueError('no original machine function output: '+str(i))
+              outfile=root/'output'/f'original_case_{i:02d}.bin'
+              outfile.write_bytes(result.stdout)
+              entries.append({'case':i,'mode':c['type'],'entry':c['entry'],
+                 'sha256':hashlib.sha256(result.stdout).hexdigest(),
+                 'bytes':len(result.stdout),'input':c})
+              print('ORIGINAL_ELF_ARM64',i,c['type'],len(result.stdout),entries[-1]['sha256'])
+          report={'run':'original unmodified stripped 2048 ARM64 ELF QEMU user-mode',
+              'elf_sha256':config['benchmark_elf_sha256'],
+              'source_used_during_reference_generation':False,
+              'game_symbols_used':False,'scenarios':len(entries),
+              'stdout_bytes':sum(x['bytes'] for x in entries),
+              'cases':entries,'compare_to_generated_cpp_pending':True}
+          (root/'output/original_stdout_manifest.json').write_text(json.dumps(report,indent=2)+'\n')
+          print('ORIGINAL_DONE',len(entries),report['stdout_bytes'])
+          PY
+      - name: Upload original ARM64 real stdout and SHA-bound input manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-v14-original-arm64-print-stdout
+          path: |
+            output/original_case_*.bin
+            output/original_stdout_manifest.json
+          if-no-files-found: error
+          retention-days: 14
