@@ -19,7 +19,9 @@ TARGET=[
  "dao_zhan_nawuqi01",
  "dao_zhan_shouwuqi01",
  "dao_zhan_rush_front01",
- "zhan_stand01"
+ "zhan_stand01",
+ "zhan_run_front02",
+ "zhan_run_back02"
 ]
 def enc(v):
  if isinstance(v,bytes):return {"bytes_hex":v[:256].hex(),"bytes_length":len(v)}
