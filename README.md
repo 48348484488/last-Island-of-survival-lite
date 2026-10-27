@@ -35,7 +35,7 @@ last-island-survival-lite/
 ├── tools/                              # Scripts de decodificacao de animacoes Unity
 │   └── extract_authentic_animations.py # Parser de curvas DenseClip e quaternions
 │
-└── cpp_game/                           # Cliente 3D funcional em Python / PyOpenGL
+└── last_island_recreated_game/                           # Cliente 3D COMPLETO recriado via engenharia reversa (Pronto para jogar)
     ├── skinned_character.py            # Skinning LBS matricial e socket M_gl autentico
     ├── viewer3d.py                     # Loop do jogo, HUD, combate e coleta
     └── authentic_animations.npz        # 23 animacoes autenticas extraidas
