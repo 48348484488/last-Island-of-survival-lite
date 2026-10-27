@@ -21,7 +21,7 @@ def main():
     ret = {"source_npz": str(DATA.relative_to(ROOT)), "source_ab": str(SOURCE.relative_to(ROOT)),
            "stored": [], "raw_candidates": [], "raw_animation_count": 0, "raw_errors": [],
            "preferred_candidates": [], "bone_parent_status": ""}
-    with np.load(DATA, allow_pickle=False) as f:
+    with np.load(DATA, allow_pickle=True) as f:
         keys = set(f.files)
         if "_bone_parent_json" in keys:
             par = json.loads(str(f["_bone_parent_json"][0]))
