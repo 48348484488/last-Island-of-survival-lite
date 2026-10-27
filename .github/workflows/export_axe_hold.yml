@@ -1,0 +1,55 @@
+name: Export original axe hold candidates GLB
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/export_axe_hold_animation.py"
+      - ".github/workflows/export_axe_hold.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install numpy
+        run: python -m pip install "numpy==1.26.4"
+      - name: Export skinned character, real animations and axe attachment
+        run: python tools/export_axe_hold_animation.py
+      - name: Validate GLB header, components, and animation count
+        run: |
+          python - <<'PY'
+          import json,struct
+          from pathlib import Path
+          p=Path("axe_hold_extracted/original_axe_holding_candidates.glb")
+          b=p.read_bytes()
+          magic,version,size=struct.unpack_from("<4sII",b)
+          assert magic==b"glTF" and version==2 and size==len(b)
+          n,typ=struct.unpack_from("<I4s",b,12)
+          assert typ==b"JSON"
+          j=json.loads(b[20:20+n])
+          assert len(j["animations"])>=2, "expected multiple original hold candidates"
+          assert len(j["skins"])==7, "skinned character should include all 7 mesh parts"
+          assert any(n.get("name")=="StoneAxe_wq_shifu" for n in j["nodes"])
+          assert any(n.get("name")=="wuqi_guadian" for n in j["nodes"])
+          for ani in j["animations"]:
+              assert ani["channels"] and len(ani["channels"])==len(ani["samplers"])
+          print("GLB_VALIDATED",p, "bytes",size,
+                "animation_clips",[a["name"] for a in j["animations"]],
+                "skins",len(j["skins"]),"nodes",len(j["nodes"]))
+          PY
+      - name: Upload original axe holding animations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: last-island-axe-holding-original-animation-glb
+          path: axe_hold_extracted/
+          if-no-files-found: warn
