@@ -1,0 +1,26 @@
+name: Export true original stone axe prefab
+on:
+  push:
+    branches: [main]
+    paths:
+      - tools/extract_original_wq_shifu_prefab.py
+      - .github/workflows/true_axe_prefab.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  extract-source-prefab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install "UnityPy>=1.20,<2" numpy
+      - run: python tools/extract_original_wq_shifu_prefab.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-wq-shifu-unity-prefab
+          path: stone_axe_prefab_source/
