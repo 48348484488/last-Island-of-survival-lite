@@ -1,17 +1,23 @@
-# Etapa 1 — Corrida rápida com machado (extraída do original)
+# Corrida normal original — pronta para revisão
 
-- **Integrado no código do jogo:** \`last_island_recreated_game/viewer3d.py\`
-  seleciona \`dao_zhan_rush_front01\` quando o jogador segura machado,
-  corre para frente e segura Shift.
-- **Arquivo 3D:** \`corrida_original_machado_3d.glb\` inclui a animação
-  original de 18 quadros a 30 FPS e o machado alinhado ao
-  prefab original \`wq_shifu.ab\`.
-- **Estado fonte:** \`FullBody Layer.HoldJinzhanWeapon.dao_zhan_rush_front01\`.
-- **Ainda não feito:** a corrida normal \`zhan_run_front02\`, pulo e
-  a troca/sacar arma. Não incluir essas etapas sem aprovação da imagem.
+A animação \`zhan_run_front02\` foi localizada no \`role.ab\`
+(PathID \`7186278071774183593\`) e extraída de
+\`animationbundle.ab\`. Possui **22 quadros a 30 FPS**.
 
-O jogo Python não lê GLB diretamente; utiliza \`authentic_animations.npz\`
-e \`skinned_character.py\`. O GLB é para inspecionar o resultado e
-permitir integração com outros motores. Testes unitários da escolha da
-animação e validação dos AssetBundles passaram; validação visual
-durante execução do jogo ainda está pendente.
+O jogo Python agora contém **24 animações** em
+\`last_island_recreated_game/authentic_animations.npz\`.
+A animação de corrida normal frontal foi corrigida em
+\`last_island_recreated_game/viewer3d.py\`.
+
+O arquivo \`corrida_normal_original_zhan_run_front02.glb\`
+é uma **visualização 3D independente** da animação original.
+O motor Python usa o NPZ, não carrega o GLB.
+
+Importante: a corrida rápida \`dao_zhan_rush_front01\` do pacote
+anterior não foi aprovada visualmente: o NPZ antigo não reproduzia
+os ossos móveis. Enquanto não for reconstruída corretamente,
+o jogo reproduz o clipe normal validado com velocidade maior
+quando Shift é pressionado. Não é a corrida rápida exata do original.
+
+Pulo, sacar arma e troca de arma **ainda não foram alterados**.
+A imagem deve ser conferida antes de iniciar a próxima etapa.

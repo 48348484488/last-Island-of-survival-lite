@@ -1,27 +1,35 @@
 {
-  "name": "Corrida rápida original do machado",
-  "result": "Installed corrected clip selection into game code; source-verified GLB packaged",
-  "source": "FullBody Layer.HoldJinzhanWeapon.dao_zhan_rush_front01",
-  "source_clip": "dao_zhan_rush_front01",
-  "original_path_ids": [
-    "-2537489020083551270",
-    "-2537489020083551270"
+  "status": "Original normal forward melee running restored to game NPZ and selected in viewer3d.py",
+  "source_animation": "zhan_run_front02",
+  "original_path_id": "7186278071774183593",
+  "controller_state": "Base Layer.Stand.jinzhan.f",
+  "controller_references": [
+    "7186278071774183593",
+    "2004069720870033944",
+    "478632484180849614"
   ],
-  "frames": 18,
+  "frames": 22,
   "fps": 30.0,
-  "bone_count": 64,
-  "weapon_attachment": "wuqi_guadian",
-  "game_code_test": {
-    "idle": "zhan_stand01",
-    "forward_axe_sprint": "dao_zhan_rush_front01",
-    "normal_move_not_yet_changed": "zhan_run_front01",
-    "clip_samples": 3
+  "bones": 64,
+  "leg_angle_ranges_degrees": {
+    "Bip001 L Thigh": 58.75,
+    "Bip001 R Thigh": 80.48,
+    "Bip001 L Calf": 101.24,
+    "Bip001 R Calf": 58.73
   },
-  "sha256": "93dd9dd4d665a99d1ae4399fe6798132397b137d7ce636c5f11d145ac4347229",
-  "limitations": "Screenshot is reconstructed from source-animated 3D mesh, not gameplay capture. Running animation visually unverified in game.",
-  "next_stages": [
-    "Corrida normal frente/trás/lados: extract original zhan_run_front02 separately",
-    "Pulo",
-    "Sacar/trocar arma"
+  "scale_key_max_diff_from_one": 2.000000238418579,
+  "model": "corrida_normal_original_zhan_run_front02.glb",
+  "sha256": "804f76c2e38b2fa06bf4c87e4eaac7ec13632179c7b3df4ca86bb52ec054851b",
+  "tests": [
+    "original Unity AnimatorController clip link",
+    "decoded streamed bone rotation and position tracks",
+    "measured leg movements in original clip",
+    "game controller normal-run and sprint fallback selection"
+  ],
+  "not_done": [
+    "authentic sprint rush track with Euler curves",
+    "jump",
+    "weapon equip/draw",
+    "on-device visual playback"
   ]
 }

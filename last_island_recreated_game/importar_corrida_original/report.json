@@ -18,10 +18,10 @@
       "source": "Original decoded Unity AnimationClip"
     },
     {
-      "name": "dao_zhan_rush_front01",
-      "frames": 18,
+      "name": "zhan_run_front02",
+      "frames": 22,
       "fps": 30.0,
-      "duration_s": 0.567,
+      "duration_s": 0.7,
       "animated_bones": 64,
       "source": "Original decoded Unity AnimationClip"
     }
@@ -37,5 +37,5 @@
     "axe"
   ],
   "file": "original_axe_holding_candidates.glb",
-  "bytes": 3308940
+  "bytes": 3316120
 }
