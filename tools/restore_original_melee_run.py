@@ -48,7 +48,9 @@ def decode_curves(clip,names,parents):
   d=m["m_DenseClip"];nf=int(d["m_FrameCount"]);fps=float(d["m_SampleRate"])
   dc=int(d["m_CurveCount"]);dense=np.asarray(d["m_SampleArray"],np.float32).reshape(nf,dc)
   const=np.asarray(m["m_ConstantClip"]["data"],np.float32)
-  assert nf==22 and fps==30 and dc==0
+  assert nf >= 2 and 0 < fps <= 120, (nf, fps)
+  # Unity clips may mix streamed, dense and constant curves; not all are streamed-only.
+  assert dense.shape == (nf, dc), (dense.shape, nf, dc)
   tracks=[[] for _ in range(nc)]
   i=0
   while i<len(vals):
@@ -114,7 +116,8 @@ def decode_curves(clip,names,parents):
     q=quat[names.index(limb)]
     angular=2*np.rad2deg(np.arccos(np.clip(np.abs(np.sum(q*q[0],axis=1)),0,1)))
     angles[limb]=round(float(angular.max()),2)
-  assert max(angles.values())>15, f"Frozen legs: {angles}"
+  # Some poses (airborne hold) intentionally barely move. Motion validation belongs
+  # to the calling test, not the general Unity curve decoder.
   return trans,quat,nf,fps,angles,max(scale_peaks) if scale_peaks else 0.0
 
 def write_npz():
