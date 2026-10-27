@@ -1,0 +1,27 @@
+{
+  "name": "Corrida rápida original do machado",
+  "result": "Installed corrected clip selection into game code; source-verified GLB packaged",
+  "source": "FullBody Layer.HoldJinzhanWeapon.dao_zhan_rush_front01",
+  "source_clip": "dao_zhan_rush_front01",
+  "original_path_ids": [
+    "-2537489020083551270",
+    "-2537489020083551270"
+  ],
+  "frames": 18,
+  "fps": 30.0,
+  "bone_count": 64,
+  "weapon_attachment": "wuqi_guadian",
+  "game_code_test": {
+    "idle": "zhan_stand01",
+    "forward_axe_sprint": "dao_zhan_rush_front01",
+    "normal_move_not_yet_changed": "zhan_run_front01",
+    "clip_samples": 3
+  },
+  "sha256": "93dd9dd4d665a99d1ae4399fe6798132397b137d7ce636c5f11d145ac4347229",
+  "limitations": "Screenshot is reconstructed from source-animated 3D mesh, not gameplay capture. Running animation visually unverified in game.",
+  "next_stages": [
+    "Corrida normal frente/trás/lados: extract original zhan_run_front02 separately",
+    "Pulo",
+    "Sacar/trocar arma"
+  ]
+}
