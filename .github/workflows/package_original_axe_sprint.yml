@@ -1,0 +1,32 @@
+name: Install and test original axe sprint only
+on:
+  push:
+    paths: [tools/package_original_axe_sprint.py, .github/workflows/package_original_axe_sprint.yml]
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  original-sprint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy trimesh Pillow "UnityPy>=1.20,<2"
+      - run: python tools/package_original_axe_sprint.py
+      - name: Commit sprint package to game directory
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/importar_corrida_original/
+          if ! git diff --staged --quiet; then
+            git commit -m "Package source-confirmed sprint animation (axe)"
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: last-island-real-sprint-review
+          path: last_island_recreated_game/importar_corrida_original/
+          if-no-files-found: warn
