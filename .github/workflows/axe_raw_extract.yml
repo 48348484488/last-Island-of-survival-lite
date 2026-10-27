@@ -1,0 +1,33 @@
+name: Recover raw original axe animation curves
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/extract_original_axe_clips.py"
+      - ".github/workflows/axe_raw_extract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  decode-raw-originals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Unity AssetBundle decoder
+        run: python -m pip install "UnityPy>=1.20,<2"
+      - name: Inspect source animation clips and original weapon prefab
+        run: python tools/extract_original_axe_clips.py
+      - name: Preserve full original clip serialization
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: last-island-axe-original-raw-source-curves
+          path: original_axe_source_extraction/
+          if-no-files-found: warn
