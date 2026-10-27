@@ -105,6 +105,8 @@ class AuthenticAnimController:
     AXE_RUN_LEFT = 'zhan_run_left01'     # A key strafes left -> left clip
     AXE_RUN_RGHT = 'zhan_run_right01'    # D key strafes right -> right clip
     AXE_ATTACK   = 'fu_zhan_attack_01'
+    # Original FullBody Layer.HoldJinzhanWeapon.dao_zhan_rush_front01, original clip at 30fps.
+    AXE_SPRINT_FWD = 'dao_zhan_rush_front01'
 
     # M4A1 Rifle animations (extracted directly from role/animationbundle.ab)
     GUN_IDLE     = 'wq_m4_1_zhan_miaozhun_stand01'
@@ -135,6 +137,7 @@ class AuthenticAnimController:
             run_left    = self.GUN_RUN_LEFT
             run_right   = self.GUN_RUN_RGHT
             attack_clip = self.GUN_SHOOT
+            sprint_fwd  = None
         else:
             idle_clip   = self.AXE_IDLE
             run_fwd     = self.AXE_RUN_FWD
@@ -142,13 +145,17 @@ class AuthenticAnimController:
             run_left    = self.AXE_RUN_LEFT
             run_right   = self.AXE_RUN_RGHT
             attack_clip = self.AXE_ATTACK
+            sprint_fwd  = self.AXE_SPRINT_FWD
 
         if is_attacking:
             target_clip = attack_clip
             self.attack_time += dt * (3.5 if equipped_slot == 1 else 1.3)
         elif is_moving and is_grounded:
             if abs(local_fwd) >= abs(local_right):
-                target_clip = run_fwd if local_fwd >= 0.0 else run_back
+                if local_fwd >= 0.0 and is_running and sprint_fwd:
+                    target_clip = sprint_fwd
+                else:
+                    target_clip = run_fwd if local_fwd >= 0.0 else run_back
             else:
                 target_clip = run_right if local_right >= 0.0 else run_left
             speed = 1.4 if is_running else 1.0
@@ -172,7 +179,7 @@ class AuthenticAnimController:
 
         def get_clip_time(clip):
             if clip in (self.AXE_ATTACK, self.GUN_SHOOT): return self.attack_time
-            if clip in (self.AXE_RUN_FWD, self.AXE_RUN_BACK, self.AXE_RUN_LEFT, self.AXE_RUN_RGHT,
+            if clip in (self.AXE_SPRINT_FWD, self.AXE_RUN_FWD, self.AXE_RUN_BACK, self.AXE_RUN_LEFT, self.AXE_RUN_RGHT,
                         self.GUN_RUN_FWD, self.GUN_RUN_BACK, self.GUN_RUN_LEFT, self.GUN_RUN_RGHT):
                 return self.walk_time
             return self.idle_time
