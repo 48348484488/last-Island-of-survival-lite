@@ -1,0 +1,27 @@
+name: Rebuild verified original stone axe 3D
+on:
+  push:
+    branches: [main]
+    paths:
+      - tools/export_original_stone_axe_3d.py
+      - .github/workflows/rebuild_original_stone_axe_3d.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rebuild-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install "UnityPy>=1.20,<2" numpy trimesh Pillow
+      - name: Check controller and prefab; export corrected animated GLB
+        run: python tools/export_original_stone_axe_3d.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stone-axe-original-animation-corrected-3d
+          path: original_axe_3d_verified/
