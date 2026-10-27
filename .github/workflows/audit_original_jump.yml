@@ -1,7 +1,7 @@
 name: Audit original jump, airborne and landing clips
 on:
   push:
-    paths: [tools/audit_original_jump.py,.github/workflows/audit_original_jump.yml]
+    paths: [tools/audit_original_jump.py,tools/restore_original_melee_run.py,.github/workflows/audit_original_jump.yml]
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
