@@ -1,0 +1,33 @@
+name: Find original melee Animator state mapping
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/locate_original_animators.py"
+      - ".github/workflows/locate_original_animators.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  locate-original-controllers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install asset decoder
+        run: python -m pip install "UnityPy>=1.20,<2"
+      - name: Find original AnimatorController assets
+        run: python tools/locate_original_animators.py
+      - name: Upload original controller inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-last-island-controller-mapping
+          path: original_animator_controller/
+          if-no-files-found: warn
