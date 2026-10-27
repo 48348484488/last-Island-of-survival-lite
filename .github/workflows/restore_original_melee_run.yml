@@ -1,0 +1,32 @@
+name: Restore true source melee run clip in game
+on:
+  push:
+    paths: [tools/restore_original_melee_run.py,.github/workflows/restore_original_melee_run.yml]
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  restore-source-clip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install numpy trimesh Pillow "UnityPy>=1.20,<2"
+      - name: Rebuild real source animation and test locomotion
+        run: python tools/restore_original_melee_run.py
+      - name: Store updated game animations and original GLB
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/authentic_animations.npz last_island_recreated_game/importar_corrida_original/
+          if ! git diff --staged --quiet; then
+            git commit -m "Restore original 22-frame zhan_run_front02 bone animation to game"
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-running-22-frames-source-correct
+          path: last_island_recreated_game/importar_corrida_original/
+          if-no-files-found: warn
