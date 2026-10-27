@@ -100,13 +100,16 @@ class AuthenticAnimController:
     """
     # Axe animations
     AXE_IDLE     = 'zhan_stand01'
-    AXE_RUN_FWD  = 'zhan_run_front01'
+    # Exact Base Layer.Stand.jinzhan.f forward locomotion in original role.ab.
+    AXE_RUN_FWD  = 'zhan_run_front02'
     AXE_RUN_BACK = 'zhan_run_back01'
     AXE_RUN_LEFT = 'zhan_run_left01'     # A key strafes left -> left clip
     AXE_RUN_RGHT = 'zhan_run_right01'    # D key strafes right -> right clip
     AXE_ATTACK   = 'fu_zhan_attack_01'
-    # Original FullBody Layer.HoldJinzhanWeapon.dao_zhan_rush_front01, original clip at 30fps.
-    AXE_SPRINT_FWD = 'dao_zhan_rush_front01'
+    # Temporary forward-sprint fallback: use verified run clip faster until
+    # the original separate full-body sprint's Euler rotation curves are decoded.
+    # Do NOT use the old NPZ 'dao_zhan_rush_front01': its legs were nearly static.
+    AXE_SPRINT_FWD = AXE_RUN_FWD
 
     # M4A1 Rifle animations (extracted directly from role/animationbundle.ab)
     GUN_IDLE     = 'wq_m4_1_zhan_miaozhun_stand01'
