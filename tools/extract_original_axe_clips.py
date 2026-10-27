@@ -48,14 +48,16 @@ def main():
  findings={"asset_bundle":"raw_assets/assets/role/animationbundle.ab",
            "object_counts":dict(counts),"found":[],"missing":[],"errors":[]}
  seen=set()
+ clip_index={}
  for o in env.objects:
   if o.type.name!="AnimationClip":continue
   a=o.read()
   name=str(a.m_Name)
+  clip_index[str(o.path_id)]=name
   if name not in TARGET:continue
   d,err=describe(o)
   # Save original unmodified clip fields, including native streams/samples, for independent inspection.
-  f=OUT/("animation_"+name+".json")
+  f=OUT/("animation_"+name+"_"+str(o.path_id)+".json")
   f.write_text(json.dumps(d,default=enc,ensure_ascii=False),encoding="utf-8")
   keys=list(d.keys())
   mc=d.get("m_MuscleClip",{})
@@ -66,6 +68,7 @@ def main():
          "type_error":err}
   findings["found"].append(piece)
   seen.add(name)
+ (OUT/"clip_index.json").write_text(json.dumps(clip_index,ensure_ascii=False,indent=2),encoding="utf-8")
  for name in TARGET:
   if name not in seen:findings["missing"].append(name)
  try:
