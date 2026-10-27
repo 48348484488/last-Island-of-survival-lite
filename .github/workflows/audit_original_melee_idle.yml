@@ -1,0 +1,29 @@
+name: Verify original axe holding state linkage
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/audit_original_melee_idle.py"
+      - ".github/workflows/audit_original_melee_idle.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-source-linkage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install "UnityPy>=1.20,<2"
+      - name: Audit original clip references, not guessed idle pose
+        run: python tools/audit_original_melee_idle.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: original-stone-axe-animation-trace
+          path: axe_original_mapping_review/source_state_mapping.json
