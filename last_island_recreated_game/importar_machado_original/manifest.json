@@ -1,0 +1,59 @@
+{
+  "name": "Last Island of Survival LITE — stone axe 3D source asset handoff",
+  "status": "Game Python renderer updated to the original Unity weapon mesh matrix; no visual live game test",
+  "package_file": "machado_original_postura_e_golpe_3d.glb",
+  "sha256": "416f7b357704e7693de28df8a6e653c07efe938b8d5b97be54664854a335d2fc",
+  "bytes": 3641844,
+  "target_game": "last_island_recreated_game/viewer3d.py",
+  "game_runtime": "last_island_recreated_game/skinned_character.py",
+  "item_id": 55001,
+  "original_weapon_bundle": "raw_assets/assets/model/wq_shifu.ab",
+  "original_animation_bundle": "raw_assets/assets/role/animationbundle.ab",
+  "original_animator_bundle": "raw_assets/assets/role/role.ab",
+  "weapon_socket": "wuqi_guadian",
+  "weapon_prefab_bone_id": "3361691403366330175",
+  "original_weapon_local_matrix": [
+    [
+      -1.538598558604292e-14,
+      0.34202009205731837,
+      0.9396927300357005,
+      0.015891372194590133
+    ],
+    [
+      -1.0000000000001978,
+      7.094480100341046e-08,
+      -2.582187595904861e-08,
+      0.0006359957858742658
+    ],
+    [
+      -7.549799039913576e-08,
+      -0.9396927300354962,
+      0.34202009205724404,
+      -0.1284298390020046
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "animations": [
+    {
+      "name": "zhan_stand01",
+      "state": "Base Layer.Stand.jinzhan.f",
+      "clip_path_id": "2004069720870033944",
+      "validated": "melee idle state, not exclusively axe"
+    },
+    {
+      "name": "fu_zhan_attack_01",
+      "state": "FullBody Layer.Attack.fu_zhan_attack_01",
+      "clip_path_id": "4382079750961674410",
+      "validated": "axe attack, source AttackState.cs weapon ids 55001..55005"
+    }
+  ],
+  "limitations": [
+    "This GLB is an exported preview/handoff; Python OpenGL game uses NPZ, OBJ and the socket matrix rather than loading GLB.",
+    "Not visually verified against in-game Unity runtime: IK, layer masks and extra rig logic may differ."
+  ]
+}

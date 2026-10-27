@@ -1,0 +1,56 @@
+{
+  "source_prefab": "raw_assets/assets/model/wq_shifu.ab",
+  "source_controller": "raw_assets/assets/role/role.ab",
+  "source_animations": "raw_assets/assets/role/animationbundle.ab",
+  "weapon_root_socket": "wuqi_guadian",
+  "weapon_root_local_position": [
+    0,
+    0,
+    0
+  ],
+  "weapon_bone_path_id": "3361691403366330175",
+  "original_weapon_mesh_matrix": [
+    [
+      -1.538598558604292e-14,
+      0.34202009205731837,
+      0.9396927300357005,
+      0.015891372194590133
+    ],
+    [
+      -1.0000000000001978,
+      7.094480100341046e-08,
+      -2.582187595904861e-08,
+      0.0006359957858742658
+    ],
+    [
+      -7.549799039913576e-08,
+      -0.9396927300354962,
+      0.34202009205724404,
+      -0.1284298390020046
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "controller_state_references": {
+    "Base Layer.Stand.jinzhan.f": [
+      "7186278071774183593",
+      "2004069720870033944",
+      "478632484180849614"
+    ],
+    "FullBody Layer.Attack.fu_zhan_attack_01": [
+      "4382079750961674410"
+    ]
+  },
+  "meshes": 8,
+  "axe_vertices": 408,
+  "animated_clips": [
+    "fu_zhan_attack_01",
+    "zhan_stand01"
+  ],
+  "model_validation": "trimesh load PASS",
+  "limitation": "Source assets reconstructed. Not proven pixel-identical to live gameplay."
+}
