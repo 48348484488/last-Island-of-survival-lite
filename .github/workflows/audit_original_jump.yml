@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install numpy "UnityPy>=1.20,<2"
+      - run: pip install numpy trimesh "UnityPy>=1.20,<2"
       - run: python tools/audit_original_jump.py
       - uses: actions/upload-artifact@v4
         if: always()
