@@ -1247,6 +1247,9 @@ def main():
                     dx=0.0, dy=0.0, touch_id=0))
             _source_to_finger('jump', 1001, FINGERDOWN)
             _source_to_finger('attack', 1002, FINGERDOWN)
+            if equipped_slot == 1:
+                _source_to_finger('aim', 1004, FINGERDOWN)
+                _source_to_finger('reload', 1005, FINGERDOWN)
             # Third finger tests the actual source joystick drag:
             # source m_littleYaogan center and m_YaoganBG radius.
             _joy_x, _joy_y = touch.joystick['center']
@@ -1259,7 +1262,7 @@ def main():
                 x=_joy_x/1920, y=(_joy_y-_radius*.75)/1080,
                 dx=0.0, dy=-_radius*.75/1080, touch_id=0))
         elif smoke_touch and smoke_count == 2:
-            for finger_id in (1001,1002,1003):
+            for finger_id in (1001,1002,1003,1004,1005):
                 pygame.event.post(pygame.event.Event(
                     FINGERUP, finger_id=finger_id, x=0.0, y=0.0,
                     dx=0.0, dy=0.0, touch_id=0))
@@ -1628,6 +1631,11 @@ def main():
                         raise RuntimeError('Source jump button did not raise player off ground')
                     if math.hypot(px,pz) <= 0.001:
                         raise RuntimeError('Source joystick did not move the player')
+                    if equipped_slot == 1:
+                        if not {'aim','reload'} <= touch_actions_seen:
+                            raise RuntimeError('Source rifle aim/reload touch events missing')
+                        if not is_aiming or ammo_cur != ammo_max:
+                            raise RuntimeError('Source rifle aim/reload did not update gameplay')
                     print('LIOS_ORIGINAL_TOUCH_REAL_GAMEPLAY_PASS',
                           'source_actions=' + repr(sorted(touch_actions_seen)),
                           'attacks=' + str(touch_gameplay_attacks),
