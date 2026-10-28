@@ -1,0 +1,32 @@
+name: Restore source original jump to recreated game
+on:
+  push:
+    paths: [tools/restore_original_jump.py,.github/workflows/restore_original_jump.yml]
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  source-jump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install numpy trimesh Pillow "UnityPy>=1.20,<2"
+      - name: Extract source Jump Fall Land into game NPZ and test phase transitions
+        run: python tools/restore_original_jump.py
+      - name: Commit verified jump animations and standalone 3D
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/authentic_animations.npz last_island_recreated_game/importar_pulo_original/
+          if ! git diff --staged --quiet; then
+            git commit -m "Restore original Jump Fall Land animation phases and 3D sample"
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-last-island-jump-3d-review
+          path: last_island_recreated_game/importar_pulo_original/
+          if-no-files-found: warn
