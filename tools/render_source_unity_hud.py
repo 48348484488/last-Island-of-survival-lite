@@ -18,7 +18,7 @@ import argparse, json, math
 BUNDLE="assets/ui/battlepanel.ab"
 
 class SourceHUD:
-    def __init__(self,assets,canvas=(1920,1080),map_uv=(0.5,0.5),map_window=896):
+    def __init__(self,assets,canvas=(1920,1080),map_uv=(0.5,0.5),map_window=896,heading_deg=0.0):
         self.assets=Path(assets)
         self.canvas=canvas
         a=json.loads((self.assets/"manifest_original.json").read_text(encoding="utf8"))
@@ -41,6 +41,7 @@ class SourceHUD:
         assert 64<=int(map_window)<=2048,map_window
         self.map_uv=tuple(map(float,map_uv))
         self.map_window=int(map_window)
+        self.heading_deg=float(heading_deg)%360.0
         meta=self.assets/"hud_source_sprite_borders.json"
         self.sprite_borders=json.loads(meta.read_text(encoding="utf8")) if meta.exists() else {}
         self.vitals_values=None
@@ -150,6 +151,7 @@ class SourceHUD:
         self.calls.append({"go":label,"sprite":sprite["file"] if sprite else "source Map_map",
                            "x":left,"y":top,"w":w,"h":h})
         if sprite:self._source_hits[sprite["path_id"]]+=1
+        if label=="m_compassImage":self.calls[-1]["sprite"]="compass_original_source.png"
 
     def node(self,go,depth=3,exclude=()):
         if isinstance(go,str):go=self.go(go)
@@ -171,6 +173,50 @@ class SourceHUD:
                 child=self.t.get(tid)
                 if child and child["go"] in self.g:
                     self.node(self.g[child["go"]],depth-1,exclude)
+
+    def render_compass(self):
+        """Draw original m_compassImage RawImage, masked with original UI fade.
+
+        Never typeset compass degrees by hand: the Texture2D is taken from the
+        exact m_Texture local PathID in original assets/ui/battlepanel.ab.
+        """
+        imgfile=self.assets/"compass_original_source.png"
+        metadata=self.assets/"compass_original_source.json"
+        if not (imgfile.is_file() and metadata.is_file()):
+            self.node("m_kedu",3,exclude={"m_vehicleSound","m_gunSound","m_wurenjiSound"})
+            self.notes.append("Original compass RawImage not yet extracted")
+            return
+        doc=json.loads(metadata.read_text(encoding="utf8"))
+        raw=doc["rawimage_component"]
+        assert raw["m_Texture"]["m_PathID"]==int(doc["textures"][0]["path_id"])
+        compass=self.go("m_compassImage")
+        t=self.bygo[compass["path_id"]]
+        parent=self.t[t["father"]]
+        box=self.rect(parent["path_id"])
+        _,_,cw,ch=box
+        cw,ch=max(1,round(cw)),max(1,round(ch))
+        _,_,fullw,fullh=self.rect(t["path_id"])
+        fw,fh=max(cw,round(abs(fullw))),max(ch,round(abs(fullh)))
+        with Image.open(imgfile) as rawimg:
+            full=rawimg.convert("RGBA").resize((fw,fh),Image.Resampling.LANCZOS)
+        # Heading is a runtime camera input; 0 degrees is the test fallback.
+        xshift=round(self.heading_deg/360.0*fw)
+        full=ImageChops.offset(full,-xshift,0)
+        left=(fw-cw)//2;top=max(0,(fh-ch)//2)
+        tile=full.crop((left,top,left+cw,top+ch))
+        srclist=self.sprite_names.get("mask_leftrightfade",[])
+        assert srclist,"Original Unity source compass fade mask absent"
+        fade=next((r for r in srclist if r["bundle"]=="common.ab"),srclist[0])
+        with Image.open(self.assets/fade["file"]) as png:
+            alpha=png.convert("RGBA").getchannel("A").resize((cw,ch),Image.Resampling.BILINEAR)
+        tile.putalpha(ImageChops.multiply(tile.getchannel("A"),alpha))
+        self.stamp(None,box,"m_compassImage",image=tile)
+        self.notes.append("Compass RawImage from exact source m_Texture PathID")
+        root=self.go("m_kedu")
+        for childtid in self.bygo[root["path_id"]]["children"]:
+            rt=self.t.get(childtid)
+            child=self.g.get(rt["go"]) if rt else None
+            if child and child["name"]=="Image (2)":self.node(child,0)
 
     def render_map(self):
         # Use the actual Map_map Texture2D as a preview, never a web map crop.
@@ -297,8 +343,9 @@ class SourceHUD:
             self.vitals_values=vitals
         # Deterministic ON-FOOT subset: do not draw mutually exclusive vehicle,
         # build, diving, store and parachute UI states simultaneously.
-        for name in ("btn_info","btn_baseUpgrade","btn_Baserank","btn_help","m_kedu"):
+        for name in ("btn_info","btn_baseUpgrade","btn_Baserank","btn_help"):
             self.node(name,3,exclude={"m_red_info","m_red_baseUpdate"})
+        self.render_compass()
         self.render_map()
         self.vitals()
         for name in ("btn_setting","btn_quckChat","btn_diuShiDongXi","btn_quick_mark"):
@@ -327,7 +374,7 @@ def main():
     state=json.loads(Path(args.state).read_text(encoding="utf8")) if args.state else {}
     assert isinstance(state,dict),"HUD state must be a JSON object"
     hud=SourceHUD(args.assets,map_uv=state.get("map_uv",[.5,.5]),
-                  map_window=state.get("map_window",896))
+                  map_window=state.get("map_window",896),heading_deg=state.get("heading_deg",0))
     profile=state.get("profile",args.profile)
     centers=hud.render(samples=args.demo_items,profile=profile,items=state.get("items"),vitals=state.get("vitals"))
     dst=Path(args.output);dst.parent.mkdir(parents=True,exist_ok=True)
@@ -344,6 +391,7 @@ def main():
        "reference_canvas":[1920,1080],"profile":profile,
        "map_uv_source":"provided at runtime" if args.state and "map_uv" in state else "illustrative center",
        "map_uv":hud.map_uv,"map_window":hud.map_window,
+       "camera_heading_degrees":hud.heading_deg,
        "sprites_from_original_xapk":len(hud._source_hits),
        "sample_items_are_illustrative":args.demo_items,
        "recttransform_local_scale_enabled":True,
