@@ -216,7 +216,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--state",type=Path)
     parser.add_argument("--demo-items",action="store_true")
-    parser.add_argument("--profile",choices=["on-foot-melee","on-foot-rifle"],default="on-foot-melee")
+    parser.add_argument("--profile",choices=["on-foot-melee","on-foot-rifle","on-foot-build"],default="on-foot-melee")
     parser.add_argument("--assets",type=Path,default=ASSETS)
     parser.add_argument("--output",type=Path,
        default=ASSETS/"complete_source_mapping/hud_v7_original_dynamic_texts.png")
