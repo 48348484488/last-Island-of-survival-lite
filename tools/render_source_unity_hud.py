@@ -215,7 +215,36 @@ class SourceHUD:
         for name in ("m_xue","m_jie","m_bodyWater"):
             self.node(name,4,exclude={"btn_smartHp","btn_smartFood","btn_smartWater",
                                       "m_reduceHp10","m_reduceHp","m_myarmorSlilder"})
-        self.notes.append("Actual health/food/water values are dynamic, not serialized in this prefab.")
+        # Original Slider fill Images use source Sprite, tint and runtime value.
+        # Their rect may be zero width in unloaded prefabs, so use source
+        # background Image bounds only when a real state ratio is supplied.
+        if self.vitals_values is not None:
+            mapping=(("health","m_xue","m_mybloodtmpFillImage"),
+                     ("food","m_jie","m_myhungerFillImage"),
+                     ("water","m_bodyWater","m_myWaterFillImage"))
+            for key,rootname,fillname in mapping:
+                if key not in self.vitals_values:continue
+                pct=float(self.vitals_values[key])
+                assert 0<=pct<=1,(key,pct)
+                root=self.go(rootname)
+                refs=[]
+                for child in self.bygo[root["path_id"]]["children"]:
+                    rt=self.t.get(child)
+                    if rt and self.g.get(rt["go"],{}).get("name")=="Image":refs.append(rt)
+                if not refs:continue
+                box=self.rect(refs[0]["path_id"])
+                fillgo=self.go(fillname)
+                comp=next((self.images[c] for c in fillgo["components"] if c in self.images and self.images[c].get("sprite") in self.sprites),None)
+                if not comp:continue
+                source=self.sprites[comp["sprite"]]
+                bx,by,bw,bh=box
+                bx+=2.5;bw=max(1,bw-5)
+                if pct>0:
+                    self.stamp(source,(bx-bw*(1-pct)/2,by,bw*pct,bh-2),
+                               fillname+"_runtime",{**comp,"type":0})
+            self.notes.append("Vital ratios supplied by explicit runtime state, using original Sprite colors.")
+        else:
+            self.notes.append("Actual health/food/water values are dynamic, not serialized in this prefab.")
 
     def hotbar(self,samples=False,items=None):
         test_items=("tb_cl_mt","tb_cl_st","tb_yurou_1","tb_cl_tiek",
@@ -248,10 +277,13 @@ class SourceHUD:
         assert len(centers)==7
         return centers
 
-    def render(self,samples=False,profile="on-foot-melee",items=None):
+    def render(self,samples=False,profile="on-foot-melee",items=None,vitals=None):
         if profile not in ("on-foot-melee","on-foot-rifle"):
             raise ValueError("Unknown Unity gameplay mode: "+str(profile))
         self.profile=profile
+        if vitals is not None:
+            assert isinstance(vitals,dict)
+            self.vitals_values=vitals
         # Deterministic ON-FOOT subset: do not draw mutually exclusive vehicle,
         # build, diving, store and parachute UI states simultaneously.
         for name in ("btn_info","btn_baseUpgrade","btn_Baserank","btn_help","m_kedu"):
@@ -286,7 +318,7 @@ def main():
     hud=SourceHUD(args.assets,map_uv=state.get("map_uv",[.5,.5]),
                   map_window=state.get("map_window",896))
     profile=state.get("profile",args.profile)
-    centers=hud.render(samples=args.demo_items,profile=profile,items=state.get("items"))
+    centers=hud.render(samples=args.demo_items,profile=profile,items=state.get("items"),vitals=state.get("vitals"))
     dst=Path(args.output);dst.parent.mkdir(parents=True,exist_ok=True)
     # Independent RGBA layer: can later be used as texture over a 3D scene.
     rgba=dst.with_name("hud_original_overlay_rgba.png")
@@ -304,12 +336,15 @@ def main():
        "sprites_from_original_xapk":len(hud._source_hits),
        "sample_items_are_illustrative":args.demo_items,
        "recttransform_local_scale_enabled":True,
+       "recttransform_anchors_calculated_from_parent_rect_center":True,
+       "source_9slice_border_metadata":len(hud.sprite_borders),
+       "vital_ratios_from_runtime_state":bool(hud.vitals_values),
        "unity_image_filled_alpha_enabled":True,
        "unity_minimap_stencil_approximation":"circular alpha mask, not actual Unity shader",
        "draw_calls":hud.calls,"draw_count":len(hud.calls),
        "hotbar_slot_centers":centers,"notes":hud.notes,
        "reproducible_script":"tools/render_source_unity_hud.py",
-       "known_limits":["UGUI nine-slice, native shader and runtime masking not exactly reproduced",
+       "known_limits":["UGUI nine-slice when original Sprite.m_Border absent, native shader and runtime masking not exactly reproduced",
          "runtime CanvasScaler and custom positions unresolved",
          "preview map viewport position/zoom is demonstrative",
          "some state toggles and runtime-generated data not recovered"]}
