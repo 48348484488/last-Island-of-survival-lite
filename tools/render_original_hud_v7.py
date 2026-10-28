@@ -58,7 +58,13 @@ class HudV7(v6.HudSourceOrdered):
             raise ValueError(f"Original Unity {name} child not unique under {go_id}: {len(matches)}")
         return matches[0]
 
-    def _source_text(self,go_id,value,*,align="center"):
+    def _source_text(self,go_id,value,*,align=None):
+        """Render native UGUI Text geometry and size, with fallback font glyphs.
+
+        Reads m_FontData.m_FontSize and m_Alignment from original battlepanel.ab
+        (TextAnchor: 0..8). Original Font PPtr remains external to the prefab:
+        its glyph rasterization is NOT asserted identical to Unity.
+        """
         assert isinstance(value,str) and value.isdecimal(),value
         go=self.game_objects[go_id]
         comps=[self.source_comps[v["path_id"]] for v in go["components"]
@@ -70,37 +76,48 @@ class HudV7(v6.HudSourceOrdered):
         source_rect=self.bygo[go_id]
         x,y,w,h=self.rect(source_rect["path_id"])
         if not (w>0 and h>0):return
-        font_size=max(10,min(20,round(h*.70)))
-        fontfile=Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
-        if fontfile.is_file():
-            font=ImageFont.truetype(str(fontfile),font_size)
-        else:
-            font=ImageFont.load_default()
+        original_font_data=text_component.get("font_data") or {}
+        original_size=original_font_data.get("m_FontSize")
+        original_alignment=original_font_data.get("m_Alignment")
+        if original_size is None or original_alignment is None:
+            raise ValueError("Original m_FontData missing from Unity text "+go["name"])
+        font_size=int(original_size)
+        assert 1<=font_size<=128,(go["name"],font_size)
+        original_alignment=int(original_alignment)
+        assert 0<=original_alignment<=8,original_alignment
+        font_style=int(original_font_data.get("m_FontStyle") or 0)
+        # Unity original font is external. Liberation Sans is only the nearest
+        # installed system fallback, never called an original game asset.
+        prefix="/usr/share/fonts/truetype/liberation2/LiberationSans"
+        candidate=Path(prefix+("-Bold.ttf" if font_style in (1,3) else "-Regular.ttf"))
+        if not candidate.is_file():
+            candidate=Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+        font=ImageFont.truetype(str(candidate),font_size) if candidate.is_file() else ImageFont.load_default()
         draw=ImageDraw.Draw(self.layer)
         color=text_component.get("color") or {}
         rgb=tuple(int(max(0,min(1,float(color.get(k,1))))*255) for k in ("r","g","b"))
         alpha=int(max(0,min(1,float(color.get("a",1))))*255)
-        # PIL uses source-origin top-left; Unity RectTransform origin is bottom-left.
         top=self.canvas[1]-y-h/2
         left=x-w/2
-        if align=="right":
-            dx=left+w-3
-            anchor="ra"
-        elif align=="left":
-            dx=left+3
-            anchor="la"
-        else:
-            dx=x
-            anchor="ma"
-        dy=top+(h-font_size)/2
-        draw.text((round(dx),round(dy)),value,font=font,fill=(*rgb,alpha),
-                  anchor=anchor)
+        # Unity TextAnchor: UpperLeft/Center/Right (0..2),
+        # MiddleLeft/Center/Right (3..5), LowerLeft/Center/Right (6..8).
+        h_align=("l","m","r")[original_alignment%3]
+        v_align=("t","m","b")[original_alignment//3]
+        px={"l":left,"m":x,"r":left+w}[h_align]
+        py={"t":top,"m":top+h/2,"b":top+h}[v_align]
+        draw.text((round(px),round(py)),value,font=font,
+                  fill=(*rgb,alpha),anchor=h_align+v_align)
+        original_font_ref=text_component.get("font") or {"file_id":0,"path_id":"0"}
         self.text_draws.append({
             "object":go["name"],"source_gameobject_path_id":go_id,
             "source_component_path_id":text_component["source_path_id"],
             "source_rect_path_id":source_rect["path_id"],
             "value":value,
-            "font_origin":"fallback, original m_Font PathID=0",
+            "original_unity_text_font_size":font_size,
+            "original_unity_alignment":original_alignment,
+            "original_unity_font_style":font_style,
+            "original_font_reference":original_font_ref,
+            "font_origin":"system fallback; exact original Unity glyph shapes not verified",
             "pixel_bounds":[round(left,3),round(top,3),round(left+w,3),round(top+h,3)]
         })
 
