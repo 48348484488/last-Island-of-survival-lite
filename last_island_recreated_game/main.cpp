@@ -11,6 +11,8 @@
 #include "rlgl.h"
 #include "native_original_animation.hpp"
 #include "mobile_original_hud_layout.hpp"
+#include "mobile_hud_input.hpp"
+#include "mobile_audio.hpp"
 
 #include <vector>
 #include <string>
@@ -174,30 +176,30 @@ int main() {
     // -------------------------------------------------------------------------------------
     // Character Parts
     Model modelTorso   = LoadModel("assets/man_clothes_chushijuese_01.obj");
-    Texture2D texTorso = LoadTexture("assets/man_clothes_chushijuese_01_ba.png");
+    Texture2D texTorso = LoadTexture("assets/native_man_clothes_chushijuese_01_ba.png");
     if (modelTorso.meshCount > 0 && texTorso.id > 0)
         SetMaterialTexture(&modelTorso.materials[0], MATERIAL_MAP_DIFFUSE, texTorso);
 
     Model modelPants   = LoadModel("assets/man_trousers_chushijuese_01.obj");
-    Texture2D texPants = LoadTexture("assets/man_trousers_chushijuese_01_ba.png");
+    Texture2D texPants = LoadTexture("assets/native_man_trousers_chushijuese_01_ba.png");
     if (modelPants.meshCount > 0 && texPants.id > 0)
         SetMaterialTexture(&modelPants.materials[0], MATERIAL_MAP_DIFFUSE, texPants);
 
     Model modelHead    = LoadModel("assets/man_head_chushijuese_01.obj");
-    Texture2D texHead  = LoadTexture("assets/man_head_chushijuese_01_ba.png");
+    Texture2D texHead  = LoadTexture("assets/native_man_head_chushijuese_01_ba.png");
     if (modelHead.meshCount > 0 && texHead.id > 0)
         SetMaterialTexture(&modelHead.materials[0], MATERIAL_MAP_DIFFUSE, texHead);
 
     Model modelHair    = LoadModel("assets/man_hair_chushijuese_01.obj");
-    Texture2D texHair  = LoadTexture("assets/man_hair_chushijuese_01_ba.png");
+    Texture2D texHair  = LoadTexture("assets/native_man_hair_chushijuese_01_ba.png");
     if (modelHair.meshCount > 0 && texHair.id > 0)
         SetMaterialTexture(&modelHair.materials[0], MATERIAL_MAP_DIFFUSE, texHair);
 
     Model modelShoes   = LoadModel("assets/man_shoes_chushijuese_01.obj");
-    Texture2D texShoes = LoadTexture("assets/man_shoes_chushijuese_01_ba.png");
+    Texture2D texShoes = LoadTexture("assets/native_man_shoes_chushijuese_01_ba.png");
     // The desktop original rig uses this DIFFERENT skin atlas for its
     // exposed skin and gloves. v0.13 incorrectly substituted the head atlas.
-    Texture2D texSkin = LoadTexture("assets/man_clothes_yf_0_ba.png");
+    Texture2D texSkin = LoadTexture("assets/native_man_clothes_yf_0_ba.png");
     TraceLog(LOG_INFO,"LIOS_ORIGINAL_CHARACTER_ATLASES skin=%u torso=%u pants=%u head=%u hair=%u shoes=%u",
              texSkin.id,texTorso.id,texPants.id,texHead.id,texHair.id,texShoes.id);
     if (modelShoes.meshCount > 0 && texShoes.id > 0)
@@ -217,6 +219,9 @@ int main() {
     }
     float animationIdleTime=0, animationWalkTime=0, animationJumpTime=0;
     float animationCrossFade=1.f;
+    // Original assets contain packed smoothness in albedo alpha, not body opacity.
+    // The native_* copies are generated at build time, leaving Unity originals intact.
+
     std::string animationCurrent="zhan_stand01", animationPrevious="zhan_stand01";
 
     // Weapons
@@ -316,6 +321,427 @@ int main() {
     // -------------------------------------------------------------------------------------
     // Main Game Loop
     // -------------------------------------------------------------------------------------
+    LIOS_INPUT::Controller hudInput;
+    LIOS_AUDIO::Audio sound;
+    sound.init();
+    bool autoRun=false,aim=false,crouch=false,prone=false;
+    int activePanel=0; // 0=game, 1=bag, 2=craft, 3=settings, 4=chat
+    int selectedResource=-1,magazine=30,reserveAmmo=90;
+    float shotCooldown=0.f,stepTimer=0.f;
+    bool wasOnGround=true;
+    while (!WindowShouldClose()) {
+        float dt = GetFrameTime();
+        if (dt > 0.05f) dt = 0.05f; // Clamp delta time
+
+        // Desktop toggle cursor lock
+        if (IsKeyPressed(KEY_ESCAPE)) {
+            cursorLocked = !cursorLocked;
+            if (cursorLocked) DisableCursor();
+            else EnableCursor();
+        }
+
+        // Toggle camera with TAB or V
+        if (IsKeyPressed(KEY_TAB) || IsKeyPressed(KEY_V)) {
+            player.thirdPerson = !player.thirdPerson;
+        }
+
+        // Switch Weapon with Keys 1 and 2
+        if (IsKeyPressed(KEY_ONE)) player.equippedSlot = 0;
+        if (IsKeyPressed(KEY_TWO)) player.equippedSlot = 1;
+
+        // ---------------------------------------------------------------------------------
+        // Touch Input Processing (Multi-touch support for Mobile)
+        // ---------------------------------------------------------------------------------
+        int touchCount = GetTouchPointCount();
+        bool hasTouchActive = (touchCount > 0);
+
+        // The original battlepanel.ab hitboxes are consumed by ONE action per
+        // stable Android finger. Raylib synthesizes a mouse click for touchscreen
+        // activity; it must NEVER be interpreted as a separate global attack.
+        hudInput.frame(player.equippedSlot==1,(float)GetScreenWidth(),(float)GetScreenHeight());
+        using HA=LIOS_INPUT::Action;
+        btnAttack.isPressed=hudInput.isHeld(HA::Attack);
+        btnJump.isPressed=hudInput.isHeld(HA::Jump);
+        btnSprint.isPressed=hudInput.isHeld(HA::AutoRun);
+        btnCam.isPressed=false;
+        btnSlot0.isPressed=hudInput.isHeld(HA::Slot0);
+        btnSlot1.isPressed=hudInput.isHeld(HA::Slot1);
+        const Vector2 touchMoveDir=hudInput.stick;
+        float canvasScale=std::min(float(GetScreenWidth())/1920.f,float(GetScreenHeight())/1080.f);
+        float canvasLeft=(GetScreenWidth()-1920.f*canvasScale)/2;
+        float canvasTop=(GetScreenHeight()-1080.f*canvasScale)/2;
+        auto unityRect=[&](float l,float t,float r,float b)->Rectangle{
+            return {canvasLeft+l*canvasScale,canvasTop+t*canvasScale,
+                    (r-l)*canvasScale,(b-t)*canvasScale};
+        };
+        auto sourceRect=[&](LIOS_HUD::Rect bounds)->Rectangle {
+            return unityRect(bounds.left,bounds.top,bounds.right,bounds.bottom);
+        };
+        if(hasOriginalHud){
+            leftStick.center={
+                canvasLeft+LIOS_HUD::JoystickCenterX*canvasScale,
+                canvasTop+LIOS_HUD::JoystickCenterY*canvasScale
+            };
+            leftStick.radius=LIOS_HUD::JoystickRadius*canvasScale;
+            leftStick.knob=hudInput.stickPoint;
+            leftStick.active=hudInput.owner.size()>0&&
+                (std::fabs(hudInput.stick.x)+std::fabs(hudInput.stick.y)>0.002f);
+        }
+        // Touch events (edge-triggered unless the action is explicitly held).
+        if(hudInput.justPressed(HA::Slot0)){player.equippedSlot=0;aim=false;}
+        if(hudInput.justPressed(HA::Slot1))player.equippedSlot=1;
+        for(int i=0;i<5;i++)if(hudInput.justPressed(
+            static_cast<HA>(int(HA::Slot2)+i))){selectedResource=i;activePanel=1;}
+        if(hudInput.justPressed(HA::AutoRun))autoRun=!autoRun;
+        if(hudInput.justPressed(HA::Crouch)){crouch=!crouch;prone=false;}
+        if(hudInput.justPressed(HA::Prone)){prone=!prone;crouch=false;}
+        if(hudInput.justPressed(HA::Aim)&&player.equippedSlot==1)aim=!aim;
+        if(hudInput.justPressed(HA::Reload)&&player.equippedSlot==1&&magazine<30&&reserveAmmo>0){
+            int n=std::min(30-magazine,reserveAmmo);
+            magazine+=n;reserveAmmo-=n;
+        }
+        if(hudInput.justPressed(HA::Inventory))activePanel=(activePanel==1?0:1);
+        if(hudInput.justPressed(HA::Craft))activePanel=(activePanel==2?0:2);
+        if(hudInput.justPressed(HA::Settings))activePanel=(activePanel==3?0:3);
+        if(hudInput.justPressed(HA::QuickChat))activePanel=(activePanel==4?0:4);
+        if(activePanel!=0&&hudInput.justPressed(HA::Attack)){
+            // A gameplay command outside a panel does not implicitly close it
+            // or fire the weapon. Menus have explicit source touch owners.
+        }
+        player.yaw-=hudInput.lookDelta.x*0.005f;
+        player.pitch-=hudInput.lookDelta.y*0.005f;
+
+/*******************************************************************************************
+*
+*   Last Day Rules: Survival (Last Island of Survival LITE) - C++ Native Game Engine
+*   Ready for PC (Windows/Linux) and Mobile (Android / iOS)
+*   Powered by Raylib - Ultra-lightweight, zero overhead, native touch & gamepad support.
+*
+********************************************************************************************/
+
+#include "raylib.h"
+#include "raymath.h"
+#include "rlgl.h"
+#include "native_original_animation.hpp"
+#include "mobile_original_hud_layout.hpp"
+#include "mobile_hud_input.hpp"
+#include "mobile_audio.hpp"
+
+#include <vector>
+#include <string>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+
+// -----------------------------------------------------------------------------------------
+// Global Definitions & Data Structures
+// -----------------------------------------------------------------------------------------
+enum WeaponType {
+    WEAPON_AXE = 0,
+    WEAPON_M4A1 = 1,
+    WEAPON_COUNT = 2
+};
+
+enum ResourceType {
+    RES_TREE,
+    RES_SULFUR,
+    RES_IRON,
+    RES_STONE
+};
+
+struct ResourceNode {
+    Vector3 position;
+    ResourceType type;
+    float health;
+    float maxHealth;
+    float scale;
+    float rotation;
+    bool active;
+};
+
+struct HitParticle {
+    Vector3 position;
+    Vector3 velocity;
+    Color color;
+    float life;
+    float maxLife;
+    float size;
+};
+
+struct FloatingNotification {
+    std::string text;
+    Vector2 screenPos;
+    Color color;
+    float life;
+    float maxLife;
+};
+
+struct VirtualJoystick {
+    Vector2 center;
+    Vector2 knob;
+    float radius;
+    bool active;
+    int touchId;
+};
+
+struct TouchButton {
+    Rectangle bounds;
+    const char* label;
+    Color baseColor;
+    Color activeColor;
+    bool isPressed;
+    int touchId;
+};
+
+// -----------------------------------------------------------------------------------------
+// Game State
+// -----------------------------------------------------------------------------------------
+struct Player {
+    Vector3 position;
+    float yaw;
+    float pitch;
+    float speed;
+    float verticalVelocity;
+    bool isGrounded;
+    bool isRunning;
+    bool thirdPerson;
+
+    // Vitals
+    float health;
+    float maxHealth;
+    float stamina;
+    float maxStamina;
+    float hunger;
+    float thirst;
+
+    // Inventory / Weapon
+    int equippedSlot;
+    bool isAttacking;
+    float attackTimer;
+    float attackDuration;
+    bool attackHitRegistered;
+
+    // Resources collected
+    int woodCount;
+    int sulfurCount;
+    int ironCount;
+    int stoneCount;
+
+    // Procedural animation
+    float walkCycle;
+};
+
+// -----------------------------------------------------------------------------------------
+// Main Entry Point
+// -----------------------------------------------------------------------------------------
+int main() {
+    const int screenWidth = 1280;
+    const int screenHeight = 720;
+
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    InitWindow(screenWidth, screenHeight, "Last Island of Survival - C++ Engine (Mobile Ready)");
+    SetTargetFPS(60);
+
+    // Initial cursor state: locked for desktop, unlocked if touch
+    bool cursorLocked = true;
+    DisableCursor();
+
+    // Setup 3D Camera
+    Camera3D camera = { 0 };
+    camera.position = (Vector3){ 0.0f, 2.0f, 4.0f };
+    camera.target = (Vector3){ 0.0f, 1.5f, 0.0f };
+    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };
+    camera.fovy = 65.0f;
+    camera.projection = CAMERA_PERSPECTIVE;
+
+    // Player Initialization
+    Player player = { 0 };
+    player.position = (Vector3){ 0.0f, 0.0f, 0.0f };
+    player.yaw = 0.0f;
+    player.pitch = 0.1f;
+    player.speed = 5.5f;
+    player.verticalVelocity = 0.0f;
+    player.isGrounded = true;
+    player.isRunning = false;
+    player.thirdPerson = true;
+
+    player.health = 100.0f;
+    player.maxHealth = 100.0f;
+    player.stamina = 100.0f;
+    player.maxStamina = 100.0f;
+    player.hunger = 95.0f;
+    player.thirst = 90.0f;
+
+    player.equippedSlot = 0; // 0 = Axe, 1 = M4A1
+    player.isAttacking = false;
+    player.attackTimer = 0.0f;
+    player.attackDuration = 0.6f;
+    player.attackHitRegistered = false;
+
+    player.woodCount = 0;
+    player.sulfurCount = 0;
+    player.ironCount = 0;
+    player.stoneCount = 0;
+    player.walkCycle = 0.0f;
+
+    // -------------------------------------------------------------------------------------
+    // Load Authentic 3D Models & Textures from assets/
+    // -------------------------------------------------------------------------------------
+    // Character Parts
+    Model modelTorso   = LoadModel("assets/man_clothes_chushijuese_01.obj");
+    Texture2D texTorso = LoadTexture("assets/native_man_clothes_chushijuese_01_ba.png");
+    if (modelTorso.meshCount > 0 && texTorso.id > 0)
+        SetMaterialTexture(&modelTorso.materials[0], MATERIAL_MAP_DIFFUSE, texTorso);
+
+    Model modelPants   = LoadModel("assets/man_trousers_chushijuese_01.obj");
+    Texture2D texPants = LoadTexture("assets/native_man_trousers_chushijuese_01_ba.png");
+    if (modelPants.meshCount > 0 && texPants.id > 0)
+        SetMaterialTexture(&modelPants.materials[0], MATERIAL_MAP_DIFFUSE, texPants);
+
+    Model modelHead    = LoadModel("assets/man_head_chushijuese_01.obj");
+    Texture2D texHead  = LoadTexture("assets/native_man_head_chushijuese_01_ba.png");
+    if (modelHead.meshCount > 0 && texHead.id > 0)
+        SetMaterialTexture(&modelHead.materials[0], MATERIAL_MAP_DIFFUSE, texHead);
+
+    Model modelHair    = LoadModel("assets/man_hair_chushijuese_01.obj");
+    Texture2D texHair  = LoadTexture("assets/native_man_hair_chushijuese_01_ba.png");
+    if (modelHair.meshCount > 0 && texHair.id > 0)
+        SetMaterialTexture(&modelHair.materials[0], MATERIAL_MAP_DIFFUSE, texHair);
+
+    Model modelShoes   = LoadModel("assets/man_shoes_chushijuese_01.obj");
+    Texture2D texShoes = LoadTexture("assets/native_man_shoes_chushijuese_01_ba.png");
+    // The desktop original rig uses this DIFFERENT skin atlas for its
+    // exposed skin and gloves. v0.13 incorrectly substituted the head atlas.
+    Texture2D texSkin = LoadTexture("assets/native_man_clothes_yf_0_ba.png");
+    TraceLog(LOG_INFO,"LIOS_ORIGINAL_CHARACTER_ATLASES skin=%u torso=%u pants=%u head=%u hair=%u shoes=%u",
+             texSkin.id,texTorso.id,texPants.id,texHead.id,texHair.id,texShoes.id);
+    if (modelShoes.meshCount > 0 && texShoes.id > 0)
+        SetMaterialTexture(&modelShoes.materials[0], MATERIAL_MAP_DIFFUSE, texShoes);
+
+    // Original 64-bone, 33-clip Unity rig imported from PC data, not fake
+    // procedural movement. A missing/corrupt asset falls back to legacy meshes.
+    LIOS::OriginalAnimation unityRig;
+    bool hasUnityRig = unityRig.load("assets/lios_skeleton_v1.bin");
+    if (hasUnityRig) {
+        hasUnityRig = unityRig.upload();
+        if (hasUnityRig) {
+            unityRig.setTextures(texPants, texTorso, texSkin, texShoes, texHead, texHair);
+            TraceLog(LOG_INFO, "LIOS_NATIVE_UNITY_RIG_READY bones=%d clips=%d meshes=%d",
+                     (int)unityRig.boneNames.size(),(int)unityRig.clips.size(),(int)unityRig.parts.size());
+        }
+    }
+    float animationIdleTime=0, animationWalkTime=0, animationJumpTime=0;
+    float animationCrossFade=1.f;
+    // Original assets contain packed smoothness in albedo alpha, not body opacity.
+    // The native_* copies are generated at build time, leaving Unity originals intact.
+
+    std::string animationCurrent="zhan_stand01", animationPrevious="zhan_stand01";
+
+    // Weapons
+    Model modelAxe   = LoadModel("assets/wq_shifu.obj");
+    Texture2D texAxe = LoadTexture("assets/wq_shifu_ba.png");
+    if (modelAxe.meshCount > 0 && texAxe.id > 0)
+        SetMaterialTexture(&modelAxe.materials[0], MATERIAL_MAP_DIFFUSE, texAxe);
+
+    Model modelRifle   = LoadModel("assets/wq_m4_1.obj");
+    Texture2D texRifle = LoadTexture("assets/wq_m4_1_ba.png");
+    if (modelRifle.meshCount > 0 && texRifle.id > 0)
+        SetMaterialTexture(&modelRifle.materials[0], MATERIAL_MAP_DIFFUSE, texRifle);
+
+    // World Objects
+    Model modelHouse   = LoadModel("assets/Building_baopo_tiefang.obj");
+    Texture2D texHouse = LoadTexture("assets/Building_baopo_tiefang_ba.png");
+    if (modelHouse.meshCount > 0 && texHouse.id > 0)
+        SetMaterialTexture(&modelHouse.materials[0], MATERIAL_MAP_DIFFUSE, texHouse);
+
+    Model modelTree    = LoadModel("assets/tree_baihuashu_03.obj");
+    Texture2D texTree  = LoadTexture("assets/tree_baihuashu_03_d.png");
+    if (modelTree.meshCount > 0 && texTree.id > 0)
+        SetMaterialTexture(&modelTree.materials[0], MATERIAL_MAP_DIFFUSE, texTree);
+
+    Model modelSulfur   = LoadModel("assets/ore_liuhuangkuang_01.obj");
+    Texture2D texSulfur = LoadTexture("assets/ore_liuhuangkuang_01_d.png");
+    if (modelSulfur.meshCount > 0 && texSulfur.id > 0)
+        SetMaterialTexture(&modelSulfur.materials[0], MATERIAL_MAP_DIFFUSE, texSulfur);
+
+    Model modelIron   = LoadModel("assets/ore_tiekuang_01.obj");
+    Texture2D texIron = LoadTexture("assets/ore_tiekuang_01_d.png");
+    if (modelIron.meshCount > 0 && texIron.id > 0)
+        SetMaterialTexture(&modelIron.materials[0], MATERIAL_MAP_DIFFUSE, texIron);
+
+    // Transparent original Unity battlepanel sprites, not the handmade HUD.
+    // Both full on-foot panels are regenerated from ORIGINAL Unity sprites,
+    // per-mode sibling draw order and RectTransforms (no static fake selection).
+    Texture2D originalHudMelee=LoadTexture("assets/hud_original_melee.png");
+    Texture2D originalHudRifle=LoadTexture("assets/hud_original_rifle.png");
+    Texture2D originalThumb=LoadTexture("assets/hud_original_joystick_knob.png");
+    Texture2D sourceResources[4]={
+        LoadTexture("assets/icon_resource_wood.png"),
+        LoadTexture("assets/icon_resource_metal.png"),
+        LoadTexture("assets/icon_resource_stone.png"),
+        LoadTexture("assets/icon_resource_sulfur.png"),
+    };
+    bool hasOriginalHud=originalHudMelee.id>0&&originalHudRifle.id>0;
+    if(hasOriginalHud)TraceLog(LOG_INFO,"LIOS_ORIGINAL_UNITY_HUD_PROFILES source=melee+rifle; slots=7; touch=11");
+
+    Model modelStone   = LoadModel("assets/ore_yanshikuang_01.obj");
+    Texture2D texStone = LoadTexture("assets/ore_yanshikuang_01_d.png");
+    if (modelStone.meshCount > 0 && texStone.id > 0)
+        SetMaterialTexture(&modelStone.materials[0], MATERIAL_MAP_DIFFUSE, texStone);
+
+    // -------------------------------------------------------------------------------------
+    // Spawn Resource Nodes in the World
+    // -------------------------------------------------------------------------------------
+    std::vector<ResourceNode> nodes = {
+        // Trees
+        { { -14.0f, 0.0f,  -8.0f }, RES_TREE,   100.0f, 100.0f, 1.1f,  45.0f, true },
+        { { -22.0f, 0.0f,  12.0f }, RES_TREE,   100.0f, 100.0f, 1.0f,  90.0f, true },
+        { {  18.0f, 0.0f, -18.0f }, RES_TREE,   100.0f, 100.0f, 1.3f, 120.0f, true },
+        { {  16.0f, 0.0f,  20.0f }, RES_TREE,   100.0f, 100.0f, 1.1f,  30.0f, true },
+        { { -28.0f, 0.0f, -22.0f }, RES_TREE,   100.0f, 100.0f, 1.2f,  75.0f, true },
+        { {  30.0f, 0.0f,   8.0f }, RES_TREE,   100.0f, 100.0f, 1.2f, 210.0f, true },
+        { {   0.0f, 0.0f,  28.0f }, RES_TREE,   100.0f, 100.0f, 1.1f, 150.0f, true },
+        // Ores
+        { {  -8.0f, 0.0f,  -5.0f }, RES_SULFUR,  80.0f,  80.0f, 1.0f,  15.0f, true },
+        { {  10.0f, 0.0f,  12.0f }, RES_SULFUR,  80.0f,  80.0f, 0.9f,  60.0f, true },
+        { {  -6.0f, 0.0f,  16.0f }, RES_IRON,    90.0f,  90.0f, 1.1f,  45.0f, true },
+        { {  24.0f, 0.0f,  -6.0f }, RES_IRON,    90.0f,  90.0f, 1.0f,  80.0f, true },
+        { {   8.0f, 0.0f,  -8.0f }, RES_STONE,  100.0f, 100.0f, 1.2f, 110.0f, true },
+        { { -18.0f, 0.0f,  -4.0f }, RES_STONE,  100.0f, 100.0f, 1.0f,  35.0f, true }
+    };
+
+    std::vector<HitParticle> particles;
+    std::vector<FloatingNotification> notifications;
+
+    // -------------------------------------------------------------------------------------
+    // Mobile On-Screen Virtual Controls Setup
+    // -------------------------------------------------------------------------------------
+    VirtualJoystick leftStick;
+    leftStick.center = (Vector2){ 140.0f, (float)screenHeight - 140.0f };
+    leftStick.knob = leftStick.center;
+    leftStick.radius = 70.0f;
+    leftStick.active = false;
+    leftStick.touchId = -1;
+
+    // Touch Action Buttons (Mobile HUD)
+    TouchButton btnAttack  = { { (float)screenWidth - 130.0f, (float)screenHeight - 130.0f, 90.0f, 90.0f }, "GOLPE",  (Color){ 200, 50, 50, 180 },  (Color){ 255, 80, 80, 240 }, false, -1 };
+    TouchButton btnJump    = { { (float)screenWidth - 210.0f, (float)screenHeight - 80.0f,  65.0f, 65.0f }, "PULO",   (Color){ 60, 140, 200, 180 }, (Color){ 90, 180, 255, 240 }, false, -1 };
+    TouchButton btnSprint  = { { (float)screenWidth - 80.0f,  (float)screenHeight - 210.0f, 65.0f, 65.0f }, "CORRER", (Color){ 220, 160, 30, 180 }, (Color){ 255, 200, 50, 240 }, false, -1 };
+    TouchButton btnCam     = { { (float)screenWidth - 90.0f,  20.0f,                         70.0f, 40.0f }, "1P/3P",  (Color){ 70, 70, 80, 180 },   (Color){ 120, 120, 140, 240 }, false, -1 };
+    TouchButton btnSlot0   = { { (float)screenWidth/2 - 70,   (float)screenHeight - 65.0f,   60.0f, 55.0f }, "[1] MACH", (Color){ 60, 60, 70, 200 }, (Color){ 200, 160, 50, 240 }, false, -1 };
+    TouchButton btnSlot1   = { { (float)screenWidth/2 + 10,   (float)screenHeight - 65.0f,   60.0f, 55.0f }, "[2] M4A1", (Color){ 60, 60, 70, 200 }, (Color){ 200, 160, 50, 240 }, false, -1 };
+
+    // -------------------------------------------------------------------------------------
+    // Main Game Loop
+    // -------------------------------------------------------------------------------------
+    LIOS_INPUT::Controller hudInput;
+    LIOS_AUDIO::Audio sound;
+    sound.init();
+    bool autoRun=false,aim=false,crouch=false,prone=false;
+    int activePanel=0; // 0=game, 1=bag, 2=craft, 3=settings, 4=chat
+    int selectedResource=-1,magazine=30,reserveAmmo=90;
+    float shotCooldown=0.f,stepTimer=0.f;
+    bool wasOnGround=true;
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
         if (dt > 0.05f) dt = 0.05f; // Clamp delta time
@@ -502,10 +928,18 @@ int main() {
         }
 
         // Sprint logic
-        player.isRunning = (IsKeyDown(KEY_LEFT_SHIFT) || btnSprint.isPressed) && (player.stamina > 5.0f);
-        float currentSpeed = player.speed * (player.isRunning ? 1.75f : 1.0f);
+        player.isRunning = (IsKeyDown(KEY_LEFT_SHIFT) || autoRun) && (player.stamina > 5.0f);
+        float currentSpeed = player.speed * (player.isRunning ? 1.75f : 1.0f) *
+            (prone?.35f:(crouch?.65f:1.f));
 
         if (Vector3Length(moveDir) > 0.05f) {
+            if(player.isGrounded){
+                stepTimer+=dt;
+                if(stepTimer>=(player.isRunning?.28f:.46f)){
+                    sound.play(sound.step,player.isRunning?.57f:.42f);
+                    stepTimer=0;
+                }
+            }
             moveDir = Vector3Normalize(moveDir);
             player.position = Vector3Add(player.position, Vector3Scale(moveDir, currentSpeed * dt));
             player.walkCycle += dt * (player.isRunning ? 12.0f : 8.0f);
@@ -515,6 +949,7 @@ int main() {
                 if (player.stamina < 0.0f) player.stamina = 0.0f;
             }
         } else {
+            stepTimer=0;
             // Regenerate stamina when not running
             if (player.stamina < player.maxStamina) {
                 player.stamina += dt * 12.0f;
@@ -530,6 +965,7 @@ int main() {
                 player.verticalVelocity = 8.5f;
                 player.isGrounded = false;
                 player.stamina -= 10.0f;
+                sound.play(sound.jump,.7f);
             }
         } else {
             player.verticalVelocity -= gravity * dt;
@@ -538,25 +974,44 @@ int main() {
                 player.position.y = 0.0f;
                 player.verticalVelocity = 0.0f;
                 player.isGrounded = true;
+                sound.play(sound.land,.7f);
             }
         }
 
         // ---------------------------------------------------------------------------------
         // Attack & Resource Gathering System
         // ---------------------------------------------------------------------------------
-        bool wantAttack = (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && cursorLocked) || btnAttack.isPressed;
-
-        if (wantAttack && !player.isAttacking) {
-            player.isAttacking = true;
-            player.attackTimer = 0.0f;
-            player.attackHitRegistered = false;
+        // Touchscreen events are also exposed as mouse clicks by raylib on
+        // Android. Do not make EVERY button / drag fire the weapon.
+        bool wantAttack=btnAttack.isPressed;
+#if !defined(__ANDROID__)
+        if(!hasTouchActive && cursorLocked && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            wantAttack=true;
+#endif
+        if(activePanel!=0)wantAttack=false;
+        shotCooldown=std::max(0.f,shotCooldown-dt);
+        if(wantAttack && !player.isAttacking && shotCooldown<=0.f){
+            if(player.equippedSlot==0){
+                player.attackDuration=.6f;
+                sound.play(sound.axe,.8f);
+            }else if(magazine>0){
+                player.attackDuration=.125f;
+                magazine--;
+                shotCooldown=.13f;
+                sound.play(sound.m4,.8f);
+            }
+            if(player.equippedSlot==0||magazine>=0&&shotCooldown>0.f){
+                player.isAttacking=true;
+                player.attackTimer=0.0f;
+                player.attackHitRegistered=false;
+            }
         }
 
         if (player.isAttacking) {
             player.attackTimer += dt;
 
             // Register hit at impact peak (halfway through swing: ~0.25s)
-            if (player.attackTimer >= 0.22f && !player.attackHitRegistered) {
+            if (player.attackTimer >= (player.equippedSlot==1?.07f:.22f) && !player.attackHitRegistered) {
                 player.attackHitRegistered = true;
 
                 // Hit check in front of player
@@ -591,6 +1046,8 @@ int main() {
                             particles.push_back(part);
                         }
 
+                        if(player.equippedSlot==0)
+                            sound.play(node.type==RES_TREE?sound.wood:sound.ore,.65f);
                         // Harvest resources
                         FloatingNotification notif;
                         notif.screenPos = (Vector2){ (float)screenWidth / 2.0f + 50.0f, (float)screenHeight / 2.0f - 20.0f };
@@ -704,21 +1161,22 @@ int main() {
             cosf(player.yaw) * cosf(player.pitch)
         };
 
+        camera.fovy=aim&&player.equippedSlot==1?48.0f:65.0f;
         if (player.thirdPerson) {
             // Match the working desktop viewer3d.py gluLookAt exactly.
             // At yaw=0 the avatar walks towards +Z and the camera MUST be
             // at negative Z, showing the BACK of the correctly skinned model.
-            const float camDist=3.8f;
+            const float camDist=aim&&player.equippedSlot==1?2.3f:3.8f;
             Vector3 shoulderOffset=Vector3Scale(right,0.35f);
             Vector3 shoulderTarget=Vector3Add(player.position,shoulderOffset);
             camera.position={
                 shoulderTarget.x-lookDir.x*camDist,
-                player.position.y+1.65f-lookDir.y*camDist,
+                player.position.y+(prone?.65f:crouch?1.20f:1.65f)-lookDir.y*camDist,
                 shoulderTarget.z-lookDir.z*camDist
             };
             camera.target={
                 shoulderTarget.x+lookDir.x*2.0f,
-                player.position.y+1.45f+lookDir.y*2.0f,
+                player.position.y+(prone?.5f:crouch?1.0f:1.45f)+lookDir.y*2.0f,
                 shoulderTarget.z+lookDir.z*2.0f
             };
         } else {
@@ -769,7 +1227,12 @@ int main() {
                 rlPushMatrix();
                 rlTranslatef(player.position.x,player.position.y,player.position.z);
                 rlRotatef(player.yaw*RAD2DEG,0,1,0);
+                // Unity's original renderer never culls the exported skinned
+                // vertices by their Blender/OpenGL winding. Raylib defaults
+                // to backface culling and could discard the full avatar.
+                rlDisableBackfaceCulling();
                 unityRig.draw();
+                rlEnableBackfaceCulling();
                 rlPopMatrix();
             }
             // Explicit fallback for a missing or corrupt native asset.
@@ -920,6 +1383,44 @@ int main() {
                 }
                 sourceText(TextFormat("%d",counts[i]),sourceCountRects[i]);
             }
+            // Live states on source buttons. The visual base is the real
+            // original UI; functional panels remain native provisional UI.
+            if(autoRun)DrawRectangleLinesEx(sourceRect(LIOS_HUD::Sprint),2*canvasScale,GREEN);
+            if(crouch)DrawRectangleLinesEx(sourceRect(LIOS_HUD::Crouch),2*canvasScale,SKYBLUE);
+            if(prone)DrawRectangleLinesEx(sourceRect(LIOS_HUD::Prone),2*canvasScale,SKYBLUE);
+            if(aim&&player.equippedSlot==1)DrawRectangleLinesEx(sourceRect(LIOS_HUD::Aim),2*canvasScale,GREEN);
+            if(player.equippedSlot==1){
+                sourceText(TextFormat("%d / %d",magazine,reserveAmmo),
+                    LIOS_HUD::SlotCount1);
+            }
+            if(activePanel!=0){
+                Rectangle panel={canvasLeft+620*canvasScale,
+                                 canvasTop+180*canvasScale,680*canvasScale,510*canvasScale};
+                DrawRectangleRec(panel,Fade(BLACK,.87f));
+                DrawRectangleLinesEx(panel,2*canvasScale,RAYWHITE);
+                int fs=std::max(12,int(33*canvasScale));
+                const char* titles[]={"","MOCHILA","FABRICAR","CONFIGURACOES","CHAT RAPIDO"};
+                DrawText(titles[activePanel],int(panel.x+35*canvasScale),
+                         int(panel.y+32*canvasScale),fs,WHITE);
+                int bs=std::max(10,int(24*canvasScale));
+                if(activePanel==1){
+                    DrawText(TextFormat("Madeira: %d   Metal: %d",player.woodCount,player.ironCount),
+                        int(panel.x+35*canvasScale),int(panel.y+120*canvasScale),bs,RAYWHITE);
+                    DrawText(TextFormat("Pedra: %d   Enxofre: %d",player.stoneCount,player.sulfurCount),
+                        int(panel.x+35*canvasScale),int(panel.y+170*canvasScale),bs,RAYWHITE);
+                }else if(activePanel==2){
+                    DrawText("Receitas originais ainda nao reconstruidas",
+                        int(panel.x+35*canvasScale),int(panel.y+140*canvasScale),bs,RAYWHITE);
+                }else if(activePanel==3){
+                    DrawText("Som: ativado (audio original M4, machado, coleta)",
+                        int(panel.x+35*canvasScale),int(panel.y+140*canvasScale),bs,RAYWHITE);
+                }else if(activePanel==4){
+                    DrawText("Chat multiplayer indisponivel no modo offline",
+                        int(panel.x+35*canvasScale),int(panel.y+140*canvasScale),bs,RAYWHITE);
+                }
+                DrawText("Toque no botao novamente para fechar",
+                    int(panel.x+30*canvasScale),int(panel.y+435*canvasScale),bs,GRAY);
+            }
             // The PNGs intentionally omit m_littleYaogan: render original
             // Unity thumb Sprite once at its actual touch-controlled position.
             if(originalThumb.id){
@@ -1036,6 +1537,7 @@ int main() {
     // -------------------------------------------------------------------------------------
     // Cleanup Resources
     // -------------------------------------------------------------------------------------
+    sound.shutdown();
     unityRig.unload();
     if(originalHudMelee.id)UnloadTexture(originalHudMelee);
     if(originalHudRifle.id)UnloadTexture(originalHudRifle);
