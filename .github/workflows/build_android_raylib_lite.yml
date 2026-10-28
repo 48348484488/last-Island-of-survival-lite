@@ -5,6 +5,9 @@ on:
     paths:
       - last_island_recreated_game/main.cpp
       - last_island_recreated_game/native_original_animation.hpp
+      - last_island_recreated_game/mobile_hud_input.hpp
+      - last_island_recreated_game/mobile_audio.hpp
+      - tools/prepare_mobile_character_textures.py
       - tools/export_mobile_skeletal_animation.py
       - tools/export_mobile_original_hud.py
       - tools/test_android_character_parity.py
@@ -26,6 +29,8 @@ jobs:
           sparse-checkout: |
             last_island_recreated_game/main.cpp
             last_island_recreated_game/native_original_animation.hpp
+            last_island_recreated_game/mobile_hud_input.hpp
+            last_island_recreated_game/mobile_audio.hpp
             last_island_recreated_game/original_hud_bindings.py
             last_island_recreated_game/original_hud_touch.py
             last_island_recreated_game/original_hud_runtime.py
@@ -39,6 +44,7 @@ jobs:
             tools/render_original_hud_v6.py
             tools/render_source_unity_hud.py
             tools/unity_ugui_raster.py
+            tools/prepare_mobile_character_textures.py
             tools/test_android_character_parity.py
             last_island_recreated_game/viewer3d.py
           sparse-checkout-cone-mode: false
@@ -76,16 +82,19 @@ jobs:
           set -euo pipefail
           cp last_island_recreated_game/main.cpp /tmp/lios-raymob/app/src/main/cpp/main.cpp
           cp last_island_recreated_game/native_original_animation.hpp /tmp/lios-raymob/app/src/main/cpp/native_original_animation.hpp
+          cp last_island_recreated_game/mobile_hud_input.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_hud_input.hpp
+          cp last_island_recreated_game/mobile_audio.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_audio.hpp
           rm /tmp/lios-raymob/app/src/main/cpp/main.c
           python tools/package_android_assets.py             last_island_recreated_game/main.cpp             last_island_recreated_game/assets             /tmp/lios-raymob/app/src/main/assets/assets
           python tools/export_mobile_skeletal_animation.py --output /tmp/lios-raymob/app/src/main/assets/assets/lios_skeleton_v1.bin
+          python tools/prepare_mobile_character_textures.py last_island_recreated_game/assets /tmp/lios-raymob/app/src/main/assets/assets/
           python -u tools/export_mobile_original_hud.py --destination /tmp/lios-original-hud
           cp /tmp/lios-original-hud/mobile_original_hud_layout.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_original_hud_layout.hpp
           cp /tmp/lios-original-hud/*.png /tmp/lios-raymob/app/src/main/assets/assets/
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_melee.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_rifle.png
           cd /tmp/lios-raymob
-          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.14.0-exact-unity-hud/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
+          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.15.0-audio-touch-opaque/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
@@ -123,6 +132,16 @@ jobs:
               'assets/assets/icon_resource_stone.png',
               'assets/assets/icon_resource_sulfur.png',
               'assets/assets/man_clothes_yf_0_ba.png',
+              'assets/assets/native_man_clothes_chushijuese_01_ba.png',
+              'assets/assets/native_man_clothes_yf_0_ba.png',
+              'assets/assets/native_man_trousers_chushijuese_01_ba.png',
+              'assets/assets/native_man_shoes_chushijuese_01_ba.png',
+              'assets/assets/native_man_head_chushijuese_01_ba.png',
+              'assets/assets/native_man_hair_chushijuese_01_ba.png',
+              'assets/assets/m4a1_fire.wav',
+              'assets/assets/axe_swing_miss.wav',
+              'assets/assets/axe_chop_tree.wav',
+              'assets/assets/axe_mine_ore.wav',
             }
             missing=needed-names
             assert not missing,missing
@@ -137,6 +156,18 @@ jobs:
             rifle=Image.open(io.BytesIO(z.read('assets/assets/hud_original_rifle.png'))).convert('RGBA')
             assert melee.size==rifle.size==(1920,1080)
             assert ImageChops.difference(melee,rifle).getbbox() is not None
+            for suffix in ('man_clothes_chushijuese_01_ba.png',
+                           'man_clothes_yf_0_ba.png',
+                           'man_trousers_chushijuese_01_ba.png',
+                           'man_shoes_chushijuese_01_ba.png',
+                           'man_head_chushijuese_01_ba.png'):
+              src=Image.open(io.BytesIO(z.read('assets/assets/'+suffix))).convert('RGBA')
+              dst=Image.open(io.BytesIO(z.read('assets/assets/native_'+suffix))).convert('RGBA')
+              assert src.getchannel('A').getextrema()[0]<255
+              assert dst.getchannel('A').getextrema()==(255,255),suffix
+              assert dst.convert('RGB').tobytes()==src.convert('RGB').tobytes(),suffix
+            assert set(['assets/assets/m4a1_fire.wav','assets/assets/axe_swing_miss.wav'])<=names
+            print('LIOS_ANDROID_OPAQUE_CHARACTER_AND_ORIGINAL_AUDIO_PASS')
             print("LIOS_ANDROID_TWO_ORIGINAL_UNITY_HUD_MODES_PASS")
             print("LIOS_ANDROID_ANIMATIONS_VERIFIED",bones,meshes,clips,len(skeleton))
             print("LIOS_ANDROID_NATIVE_APK_STRUCTURE_PASS",
@@ -148,7 +179,7 @@ jobs:
       - name: Copy named downloadable APK
         run: |
           mkdir -p dist
-          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/Last-Island-LITE-Recriado-Android-ARM64-v0.14.0-exact-unity-hud.apk
+          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/Last-Island-LITE-Recriado-Android-ARM64-v0.15.0-audio-touch-opaque.apk
           sha256sum dist/*.apk
 
       - name: Upload Android APK for phone testing
