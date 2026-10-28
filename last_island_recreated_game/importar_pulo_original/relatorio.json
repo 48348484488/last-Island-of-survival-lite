@@ -1,0 +1,122 @@
+{
+  "source": "Last Island of Survival LITE 7.3 Unity AssetBundles",
+  "status": "Jump, Fall, Land installed into recreated game",
+  "controller_states": {
+    "Base Layer.Jump.kongshou": [
+      "1718510388457734182",
+      "371640738070943523"
+    ],
+    "Base Layer.Fall.kongshou": [
+      "2232039169493632919",
+      "-2093151076388574590"
+    ],
+    "Base Layer.Land.kongshou": [
+      "7879379039287101303",
+      "7736794628134902726"
+    ]
+  },
+  "clips": {
+    "kongshou_zhan_jumpback_up02": {
+      "phase": "up",
+      "direction": "back",
+      "source_path_id": "1718510388457734182",
+      "frames": 15,
+      "fps": 30.0,
+      "leg_motion_deg": {
+        "Bip001 L Thigh": 76.78,
+        "Bip001 R Thigh": 56.19,
+        "Bip001 L Calf": 111.89,
+        "Bip001 R Calf": 94.15
+      },
+      "scale_key_peak": 0.0
+    },
+    "kongshou_zhan_jump_up02": {
+      "phase": "up",
+      "direction": "front",
+      "source_path_id": "371640738070943523",
+      "frames": 19,
+      "fps": 30.0,
+      "leg_motion_deg": {
+        "Bip001 L Thigh": 47.24,
+        "Bip001 R Thigh": 67.17,
+        "Bip001 L Calf": 98.67,
+        "Bip001 R Calf": 107.99
+      },
+      "scale_key_peak": 0.0
+    },
+    "kongshou_zhan_jumpback_idle02": {
+      "phase": "air",
+      "direction": "back",
+      "source_path_id": "2232039169493632919",
+      "frames": 22,
+      "fps": 30.0,
+      "leg_motion_deg": {
+        "Bip001 L Thigh": 11.13,
+        "Bip001 R Thigh": 2.49,
+        "Bip001 L Calf": 12.24,
+        "Bip001 R Calf": 12.92
+      },
+      "scale_key_peak": 2.0
+    },
+    "kongshou_zhan_jump_idle02": {
+      "phase": "air",
+      "direction": "front",
+      "source_path_id": "-2093151076388574590",
+      "frames": 22,
+      "fps": 30.0,
+      "leg_motion_deg": {
+        "Bip001 L Thigh": 16.27,
+        "Bip001 R Thigh": 6.56,
+        "Bip001 L Calf": 15.85,
+        "Bip001 R Calf": 16.08
+      },
+      "scale_key_peak": 2.0
+    },
+    "kongshou_zhan_jumpback_down02": {
+      "phase": "down",
+      "direction": "back",
+      "source_path_id": "7879379039287101303",
+      "frames": 19,
+      "fps": 30.0,
+      "leg_motion_deg": {
+        "Bip001 L Thigh": 17.56,
+        "Bip001 R Thigh": 35.41,
+        "Bip001 L Calf": 50.93,
+        "Bip001 R Calf": 20.08
+      },
+      "scale_key_peak": 2.0
+    },
+    "kongshou_zhan_jump_down02": {
+      "phase": "down",
+      "direction": "front",
+      "source_path_id": "7736794628134902726",
+      "frames": 11,
+      "fps": 30.0,
+      "leg_motion_deg": {
+        "Bip001 L Thigh": 25.82,
+        "Bip001 R Thigh": 34.43,
+        "Bip001 L Calf": 52.33,
+        "Bip001 R Calf": 40.28
+      },
+      "scale_key_peak": 2.0
+    }
+  },
+  "npz_total_clips": 30,
+  "runtime_test": {
+    "forward_phase_sequence": [
+      "zhan_stand01",
+      "kongshou_zhan_jump_up02",
+      "kongshou_zhan_jump_idle02",
+      "kongshou_zhan_jump_down02"
+    ],
+    "backward_phase_sequence": [
+      "zhan_stand01",
+      "kongshou_zhan_jumpback_up02",
+      "kongshou_zhan_jumpback_idle02",
+      "kongshou_zhan_jumpback_down02"
+    ]
+  },
+  "model": "pulo_original_machado_3d.glb",
+  "sha256": "2c4efa16e643b7e448236db4b695b29e2fffbb5f60ad78c640ab35da09efabfa",
+  "status_limitations": "No verified visual screenshot from running Unity APK; source curves were resampled by decoder."
+}

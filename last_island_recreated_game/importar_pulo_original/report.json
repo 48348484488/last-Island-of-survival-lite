@@ -1,0 +1,81 @@
+{
+  "result": "Exported authentic sampled animation curves (NOT new synthesized animations)",
+  "original_asset": "raw_assets/assets/role/animationbundle.ab",
+  "derived_source": "last_island_recreated_game/authentic_animations.npz",
+  "original_weapon": "raw_assets/assets/model/wq_shifu.ab",
+  "weapon_mesh": "last_island_recreated_game/assets/wq_shifu.obj",
+  "attachment_bone": "wuqi_guadian",
+  "original_socket_parent": "Bip001 R Hand",
+  "pose_validation": "Original AnimatorController layer selection not independently proven",
+  "important": "First two are HOLDING STANCE CANDIDATES; compare them to original gameplay before claiming exact axe hold.",
+  "animations": [
+    {
+      "name": "zhan_stand01",
+      "frames": 50,
+      "fps": 30.0,
+      "duration_s": 1.633,
+      "animated_bones": 64,
+      "source": "Original decoded Unity AnimationClip"
+    },
+    {
+      "name": "kongshou_zhan_jumpback_up02",
+      "frames": 15,
+      "fps": 30.0,
+      "duration_s": 0.467,
+      "animated_bones": 64,
+      "source": "Original decoded Unity AnimationClip"
+    },
+    {
+      "name": "kongshou_zhan_jump_up02",
+      "frames": 19,
+      "fps": 30.0,
+      "duration_s": 0.6,
+      "animated_bones": 64,
+      "source": "Original decoded Unity AnimationClip"
+    },
+    {
+      "name": "kongshou_zhan_jumpback_idle02",
+      "frames": 22,
+      "fps": 30.0,
+      "duration_s": 0.7,
+      "animated_bones": 64,
+      "source": "Original decoded Unity AnimationClip"
+    },
+    {
+      "name": "kongshou_zhan_jump_idle02",
+      "frames": 22,
+      "fps": 30.0,
+      "duration_s": 0.7,
+      "animated_bones": 64,
+      "source": "Original decoded Unity AnimationClip"
+    },
+    {
+      "name": "kongshou_zhan_jumpback_down02",
+      "frames": 19,
+      "fps": 30.0,
+      "duration_s": 0.6,
+      "animated_bones": 64,
+      "source": "Original decoded Unity AnimationClip"
+    },
+    {
+      "name": "kongshou_zhan_jump_down02",
+      "frames": 11,
+      "fps": 30.0,
+      "duration_s": 0.333,
+      "animated_bones": 64,
+      "source": "Original decoded Unity AnimationClip"
+    }
+  ],
+  "meshes": [
+    "pants",
+    "torso",
+    "skin",
+    "shoes",
+    "gloves",
+    "head",
+    "hair",
+    "axe"
+  ],
+  "file": "original_axe_holding_candidates.glb",
+  "bytes": 3614716
+}
