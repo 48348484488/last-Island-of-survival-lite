@@ -1,0 +1,46 @@
+{
+  "source": "original cfg.ItemCfg.oc and original install_time_asset_pack.apk",
+  "cfg_sha256": "73b367cda026cfeeb59ba7ad3c309d1eb88e68b4e2765041ad6c3946e4aa8629",
+  "cfg_links": [
+    {
+      "item": "stone_axe",
+      "icon": "tubiao1/cj_sf",
+      "modelPath": "model/wq_shifu.ab",
+      "icon_offset": 303069,
+      "model_offset": 303176,
+      "offset_distance": 107,
+      "evidence": "exact Octets length-prefixed UTF-8 in original cfg.ItemCfg.oc"
+    },
+    {
+      "item": "m4_rifle",
+      "icon": "gun/m4",
+      "modelPath": "model/wq_m4_1.ab",
+      "icon_offset": 222455,
+      "model_offset": 222555,
+      "offset_distance": 100,
+      "evidence": "exact Octets length-prefixed UTF-8 in original cfg.ItemCfg.oc"
+    }
+  ],
+  "sprites": [
+    {
+      "item": "m4_rifle",
+      "name": "m4",
+      "bundle": "assets/icon/gun.ab",
+      "path_id": "919133799852272780",
+      "file": "complete_source_mapping/weapon_verified/gun_m4_919133799852272780.png",
+      "width": 120,
+      "height": 120,
+      "pixel_sha256": "489a6112a0e755e51a9584e34f40b94a5feb64466a320ea9045f9cbc364971b3"
+    },
+    {
+      "item": "stone_axe",
+      "name": "cj_sf",
+      "bundle": "assets/icon/tubiao1.ab",
+      "path_id": "4568438245182409447",
+      "file": "sprites/tubiao1/cj_sf_4568438245182409447.png",
+      "width": 120,
+      "height": 120,
+      "pixel_sha256": "f95d2a10bdd903a5bfc47f9516000297835c8ce2508dc113074231f2b77d4581"
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "source": "Last Island LITE 7.3 original XAPK install-time asset pack",
+  "comparison": "decoded Sprite RGBA pixels, not PNG file bytes",
+  "reference_cached_icons": {
+    "wq_shifu": {
+      "width": 484,
+      "height": 164,
+      "pixel_sha256": "2c6a7367f3ec444b03dd96f99d2844ad16689942de5602a1ebb76208408641f8"
+    },
+    "m4_icon": {
+      "width": 120,
+      "height": 38,
+      "pixel_sha256": "0e910afddb76f229a7be0f80b43c8d5572a8c8dddccdbe941d74612ae7b64920"
+    }
+  },
+  "scanned_bundles": [
+    {
+      "bundle": "assets/icon/common.ab",
+      "size": 574295,
+      "sprites": 318,
+      "decoded": 318,
+      "errors": []
+    },
+    {
+      "bundle": "assets/icon/equip.ab",
+      "size": 136503,
+      "sprites": 48,
+      "decoded": 48,
+      "errors": []
+    },
+    {
+      "bundle": "assets/icon/equippart.ab",
+      "size": 9694,
+      "sprites": 10,
+      "decoded": 10,
+      "errors": []
+    },
+    {
+      "bundle": "assets/icon/gun.ab",
+      "size": 392094,
+      "sprites": 134,
+      "decoded": 134,
+      "errors": []
+    },
+    {
+      "bundle": "assets/icon/gunpf.ab",
+      "size": 268977,
+      "sprites": 98,
+      "decoded": 98,
+      "errors": []
+    },
+    {
+      "bundle": "assets/icon/parts.ab",
+      "size": 155854,
+      "sprites": 43,
+      "decoded": 43,
+      "errors": []
+    },
+    {
+      "bundle": "assets/icon/rareitem.ab",
+      "size": 1021694,
+      "sprites": 141,
+      "decoded": 141,
+      "errors": []
+    }
+  ],
+  "exact_pixel_matches": [
+    {
+      "matched_reference_icons": [
+        "m4_icon"
+      ],
+      "sprite_name": "m4_xiao",
+      "original_sprite_path_id": "-4675425783228314699",
+      "original_bundle": "assets/icon/gun.ab",
+      "width": 120,
+      "height": 38,
+      "pixel_sha256": "0e910afddb76f229a7be0f80b43c8d5572a8c8dddccdbe941d74612ae7b64920",
+      "source_png": "complete_source_mapping/weapon_verified/gun_-4675425783228314699.png"
+    }
+  ],
+  "name_only_candidates": [
+    {
+      "name": "m4",
+      "bundle": "assets/icon/gun.ab",
+      "path_id": "919133799852272780",
+      "dimensions": [
+        120,
+        120
+      ],
+      "pixel_sha256": "489a6112a0e755e51a9584e34f40b94a5feb64466a320ea9045f9cbc364971b3"
+    }
+  ],
+  "unsupported_replacements": [],
+  "itemcfg_sha256": "73b367cda026cfeeb59ba7ad3c309d1eb88e68b4e2765041ad6c3946e4aa8629",
+  "cfg_original_weapon_links": [
+    {
+      "item": "stone_axe",
+      "icon": "tubiao1/cj_sf",
+      "modelPath": "model/wq_shifu.ab",
+      "icon_offset": 303069,
+      "model_offset": 303176,
+      "offset_distance": 107,
+      "evidence": "exact Octets length-prefixed UTF-8 in original cfg.ItemCfg.oc"
+    },
+    {
+      "item": "m4_rifle",
+      "icon": "gun/m4",
+      "modelPath": "model/wq_m4_1.ab",
+      "icon_offset": 222455,
+      "model_offset": 222555,
+      "offset_distance": 100,
+      "evidence": "exact Octets length-prefixed UTF-8 in original cfg.ItemCfg.oc"
+    }
+  ],
+  "verified_source_item_icons": [
+    {
+      "item": "m4_rifle",
+      "name": "m4",
+      "bundle": "assets/icon/gun.ab",
+      "path_id": "919133799852272780",
+      "file": "complete_source_mapping/weapon_verified/gun_m4_919133799852272780.png",
+      "width": 120,
+      "height": 120,
+      "pixel_sha256": "489a6112a0e755e51a9584e34f40b94a5feb64466a320ea9045f9cbc364971b3"
+    },
+    {
+      "item": "stone_axe",
+      "name": "cj_sf",
+      "bundle": "assets/icon/tubiao1.ab",
+      "path_id": "4568438245182409447",
+      "file": "sprites/tubiao1/cj_sf_4568438245182409447.png",
+      "width": 120,
+      "height": 120,
+      "pixel_sha256": "f95d2a10bdd903a5bfc47f9516000297835c8ce2508dc113074231f2b77d4581"
+    }
+  ],
+  "verified_original_ui_items": [
+    "m4_icon"
+  ],
+  "not_pixel_verified": [
+    "wq_shifu"
+  ]
+}
