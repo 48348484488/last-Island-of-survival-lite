@@ -10,6 +10,7 @@
 #include "raymath.h"
 #include "rlgl.h"
 #include "native_original_animation.hpp"
+#include "mobile_original_hud_layout.hpp"
 
 #include <vector>
 #include <string>
@@ -251,10 +252,19 @@ int main() {
         SetMaterialTexture(&modelIron.materials[0], MATERIAL_MAP_DIFFUSE, texIron);
 
     // Transparent original Unity battlepanel sprites, not the handmade HUD.
-    Texture2D originalHudTexture=LoadTexture("assets/hud_original_overlay_rgba.png");
-    bool hasOriginalHud=originalHudTexture.id>0;
-    Texture2D itemAxeIcon=LoadTexture("assets/icon_cj_sf.png");
-    Texture2D itemRifleIcon=LoadTexture("assets/icon_m4.png");
+    // Both full on-foot panels are regenerated from ORIGINAL Unity sprites,
+    // per-mode sibling draw order and RectTransforms (no static fake selection).
+    Texture2D originalHudMelee=LoadTexture("assets/hud_original_melee.png");
+    Texture2D originalHudRifle=LoadTexture("assets/hud_original_rifle.png");
+    Texture2D originalThumb=LoadTexture("assets/hud_original_joystick_knob.png");
+    Texture2D sourceResources[4]={
+        LoadTexture("assets/icon_resource_wood.png"),
+        LoadTexture("assets/icon_resource_metal.png"),
+        LoadTexture("assets/icon_resource_stone.png"),
+        LoadTexture("assets/icon_resource_sulfur.png"),
+    };
+    bool hasOriginalHud=originalHudMelee.id>0&&originalHudRifle.id>0;
+    if(hasOriginalHud)TraceLog(LOG_INFO,"LIOS_ORIGINAL_UNITY_HUD_PROFILES source=melee+rifle; slots=7; touch=11");
 
     Model modelStone   = LoadModel("assets/ore_yanshikuang_01.obj");
     Texture2D texStone = LoadTexture("assets/ore_yanshikuang_01_d.png");
@@ -351,61 +361,99 @@ int main() {
             return {canvasLeft+l*canvasScale,canvasTop+t*canvasScale,
                     (r-l)*canvasScale,(b-t)*canvasScale};
         };
+        auto sourceRect=[&](LIOS_HUD::Rect bounds)->Rectangle {
+            return unityRect(bounds.left,bounds.top,bounds.right,bounds.bottom);
+        };
         if(hasOriginalHud){
-            btnAttack.bounds=unityRect(1501.60001f,674.70001f,1683.60001f,856.70001f);
-            btnJump.bounds=unityRect(1769.48796f,724.97160f,1899.49836f,854.98200f);
-            btnSprint.bounds=unityRect(276.3f,334.6f,365.3f,423.6f);
-            // Hotbar placement follows the on-foot battlepanel bottom rail.
-            btnSlot0.bounds=unityRect(781,930,866,1018);
-            btnSlot1.bounds=unityRect(875,930,960,1018);
-            leftStick.center={canvasLeft+326.3f*canvasScale,canvasTop+794.7f*canvasScale};
-            leftStick.radius=165.f*canvasScale;
+            btnAttack.bounds=sourceRect(LIOS_HUD::Attack);
+            btnJump.bounds=sourceRect(LIOS_HUD::Jump);
+            btnSprint.bounds=sourceRect(LIOS_HUD::Sprint);
+            btnSlot0.bounds=sourceRect(LIOS_HUD::SlotBox0);
+            btnSlot1.bounds=sourceRect(LIOS_HUD::SlotBox1);
+            // The source battlepanel has NO camera-toggle GameObject among
+            // its selected on-foot controls: suppress the fake UI hitbox.
+            btnCam.bounds={-10000,-10000,0,0};
+            leftStick.center={
+                canvasLeft+LIOS_HUD::JoystickCenterX*canvasScale,
+                canvasTop+LIOS_HUD::JoystickCenterY*canvasScale,
+            };
+            leftStick.radius=LIOS_HUD::JoystickRadius*canvasScale;
+            if(!leftStick.active)leftStick.knob=leftStick.center;
         }
 
-        // Process all active touches
-        for (int i = 0; i < touchCount; i++) {
-            Vector2 touchPos = GetTouchPosition(i);
+        // GetTouchPointId is stable when Android reorders active pointers;
+        // using the array index here previously caused stuck joystick input.
+        static int cameraFinger=-1;
+        static Vector2 prevCameraFinger={0,0};
+        bool joystickSeen=false,cameraSeen=false;
+        for (int i=0;i<touchCount;i++){
+            const int finger=GetTouchPointId(i);
+            const Vector2 pos=GetTouchPosition(i);
+            const bool inJoystick=hasOriginalHud?
+                CheckCollisionPointRec(pos,sourceRect(LIOS_HUD::JoystickTrigger)):
+                (pos.x<float(GetScreenWidth())*.45f&&pos.y>float(GetScreenHeight())*.4f);
 
-            // Left Joystick interaction (left side of screen)
-            if ((hasOriginalHud && CheckCollisionPointRec(touchPos,unityRect(41.425f,454.8f,611.425f,965.2f))) ||
-                (!hasOriginalHud && touchPos.x < (float)screenWidth * 0.45f && touchPos.y > (float)screenHeight * 0.4f)) {
-                if (!leftStick.active) {
-                    leftStick.active = true;
-                    if (!hasOriginalHud)leftStick.center = touchPos;
-                    leftStick.knob = touchPos;
-                    leftStick.touchId = i;
-                } else if (leftStick.touchId == i) {
-                    Vector2 diff = Vector2Subtract(touchPos, leftStick.center);
-                    float dist = Vector2Length(diff);
-                    if (dist > leftStick.radius) {
-                        diff = Vector2Scale(Vector2Normalize(diff), leftStick.radius);
-                    }
-                    leftStick.knob = Vector2Add(leftStick.center, diff);
-                    touchMoveDir = Vector2Scale(diff, 1.0f / leftStick.radius);
+            if((leftStick.active&&finger==leftStick.touchId)||
+               (!leftStick.active&&inJoystick)){
+                if(!leftStick.active){
+                    leftStick.active=true;
+                    leftStick.touchId=finger;
+                    if(!hasOriginalHud)leftStick.center=pos;
                 }
+                joystickSeen=true;
+                Vector2 diff=Vector2Subtract(pos,leftStick.center);
+                float dist=Vector2Length(diff);
+                if(dist>leftStick.radius&&dist>0.001f)
+                    diff=Vector2Scale(diff,leftStick.radius/dist);
+                leftStick.knob=Vector2Add(leftStick.center,diff);
+                touchMoveDir=Vector2Scale(diff,1.0f/leftStick.radius);
+                continue;
             }
 
-            // Right side swipe camera look (if not pressing buttons)
-            if (touchPos.x > (float)screenWidth * 0.5f && touchPos.y < (float)screenHeight - 160.0f) {
-                Vector2 delta = GetMouseDelta();
-                player.yaw -= delta.x * 0.005f;
-                player.pitch -= delta.y * 0.005f;
+            const bool attack=CheckCollisionPointRec(pos,btnAttack.bounds);
+            const bool jump=CheckCollisionPointRec(pos,btnJump.bounds);
+            const bool sprint=CheckCollisionPointRec(pos,btnSprint.bounds);
+            const bool cam=CheckCollisionPointRec(pos,btnCam.bounds);
+            const bool slot0=CheckCollisionPointRec(pos,btnSlot0.bounds);
+            const bool slot1=CheckCollisionPointRec(pos,btnSlot1.bounds);
+            btnAttack.isPressed|=attack;
+            btnJump.isPressed|=jump;
+            btnSprint.isPressed|=sprint;
+            btnCam.isPressed|=cam;
+            btnSlot0.isPressed|=slot0;
+            btnSlot1.isPressed|=slot1;
+
+            const bool otherOriginal=hasOriginalHud&&(
+                CheckCollisionPointRec(pos,sourceRect(LIOS_HUD::Crouch))||
+                CheckCollisionPointRec(pos,sourceRect(LIOS_HUD::Prone))||
+                CheckCollisionPointRec(pos,sourceRect(LIOS_HUD::Inventory))||
+                CheckCollisionPointRec(pos,sourceRect(LIOS_HUD::Craft))||
+                CheckCollisionPointRec(pos,sourceRect(LIOS_HUD::Settings))||
+                CheckCollisionPointRec(pos,sourceRect(LIOS_HUD::QuickChat))||
+                (player.equippedSlot==1&&(
+                  CheckCollisionPointRec(pos,sourceRect(LIOS_HUD::Aim))||
+                  CheckCollisionPointRec(pos,sourceRect(LIOS_HUD::Reload)))));
+            if(attack||jump||sprint||cam||slot0||slot1||otherOriginal)
+                continue;  // Pressing HUD must NOT rotate camera.
+            if(pos.x>=float(GetScreenWidth())*.48f){
+                if(cameraFinger<0){
+                    cameraFinger=finger;
+                    prevCameraFinger=pos;
+                }else if(cameraFinger==finger){
+                    const Vector2 delta=Vector2Subtract(pos,prevCameraFinger);
+                    player.yaw-=delta.x*.005f;
+                    player.pitch-=delta.y*.005f;
+                    prevCameraFinger=pos;
+                }
+                if(finger==cameraFinger)cameraSeen=true;
             }
-
-            // Buttons check
-            if (CheckCollisionPointRec(touchPos, btnAttack.bounds)) btnAttack.isPressed = true;
-            if (CheckCollisionPointRec(touchPos, btnJump.bounds)) btnJump.isPressed = true;
-            if (CheckCollisionPointRec(touchPos, btnSprint.bounds)) btnSprint.isPressed = true;
-            if (CheckCollisionPointRec(touchPos, btnCam.bounds)) btnCam.isPressed = true;
-            if (CheckCollisionPointRec(touchPos, btnSlot0.bounds)) btnSlot0.isPressed = true;
-            if (CheckCollisionPointRec(touchPos, btnSlot1.bounds)) btnSlot1.isPressed = true;
         }
-
-        if (touchCount == 0) {
-            leftStick.active = false;
-            leftStick.knob = leftStick.center;
-            leftStick.touchId = -1;
+        if(!joystickSeen){
+            leftStick.active=false;
+            leftStick.knob=leftStick.center;
+            leftStick.touchId=-1;
         }
+        if(!cameraSeen)cameraFinger=-1;
 
         // Touch edge triggers: holding a button must not switch cameras
         // back and forth every frame.
@@ -829,40 +877,59 @@ int main() {
         // 2D HUD / SURVIVAL INTERFACE (Optimized for Mobile & Desktop)
         // ---------------------------------------------------------------------------------
         if (hasOriginalHud) {
-            DrawTexturePro(originalHudTexture,
-                {0,0,float(originalHudTexture.width),float(originalHudTexture.height)},
+            // Both layers are generated directly from the Unity UGUI renderer:
+            // includes source-selected slot highlight, weapon icons, controls,
+            // compass, minimap and the correct rifle-only aim/reload buttons.
+            const Texture2D &base=(player.equippedSlot==1)?originalHudRifle:originalHudMelee;
+            DrawTexturePro(base,{0,0,float(base.width),float(base.height)},
                 {canvasLeft,canvasTop,1920.f*canvasScale,1080.f*canvasScale},
                 {0,0},0,WHITE);
-            // Overlay the missing dynamic values. Base sprites/positions are
-            // original Unity, while text uses Raylib's replacement font.
-            int fontpx=std::max(11,int(20*canvasScale));
-            auto label=[&](const char* value,float x,float y,Color tint){
-                DrawText(value,int(canvasLeft+x*canvasScale),
-                         int(canvasTop+y*canvasScale),fontpx,tint);
+            auto sourceText=[&](const char* value,LIOS_HUD::Text origin){
+                const Rectangle rect=sourceRect(origin.bounds);
+                const int size=std::max(8,int(origin.fontSize*canvasScale));
+                const int length=MeasureText(value,size);
+                const int hGroup=origin.align%3;
+                const int vGroup=origin.align/3;
+                float x=rect.x+(hGroup==0?0.0f:hGroup==1?
+                    (rect.width-length)/2.0f:rect.width-length);
+                float y=rect.y+(vGroup==0?0.0f:vGroup==1?
+                    (rect.height-size)/2.0f:rect.height-size);
+                DrawText(value,int(x),int(y),size,
+                    {origin.r,origin.g,origin.b,origin.a});
             };
-            label(TextFormat("%d",int(player.health)),888,1035,WHITE);
-            label(TextFormat("%d",int(player.hunger)),1052,1035,WHITE);
-            label(TextFormat("%d",int(player.thirst)),1170,1035,WHITE);
-            label(TextFormat("%d",player.woodCount),1110,965,WHITE);
-            label(TextFormat("%d",player.ironCount),1198,965,WHITE);
-            label(TextFormat("%d",player.stoneCount),1280,965,WHITE);
-            label(TextFormat("%d",player.sulfurCount),1360,965,WHITE);
-            // Item icons were proven against cfg.ItemCfg.oc and Unity Sprite
-            // PathIDs (tubiao1/cj_sf and gun/m4).
-            auto itemIcon=[&](Texture2D icon,float x,float y){
-                if(icon.id)DrawTexturePro(icon,
-                    {0,0,float(icon.width),float(icon.height)},
-                    {canvasLeft+x*canvasScale,canvasTop+y*canvasScale,
-                      66*canvasScale,66*canvasScale},{0,0},0,WHITE);
-            };
-            itemIcon(itemAxeIcon,791,936);itemIcon(itemRifleIcon,885,936);
-            // Keep the original joystick graphic, animate thumb position.
-            if(leftStick.active){
-                DrawCircleV(leftStick.knob,18*canvasScale,Fade(WHITE,.55f));
+            sourceText(TextFormat("%d",int(player.health)),LIOS_HUD::Health);
+            sourceText(TextFormat("%d",int(player.hunger)),LIOS_HUD::Food);
+            sourceText(TextFormat("%d",int(player.thirst)),LIOS_HUD::Water);
+            // Original equipped icons/selection are baked into correct
+            // per-weapon source UGUI profile. Draw ONLY runtime resource slots.
+            const int counts[4]={player.woodCount,player.ironCount,
+                                 player.stoneCount,player.sulfurCount};
+            const LIOS_HUD::Rect sourceIcons[4]={
+                LIOS_HUD::Slot2,LIOS_HUD::Slot3,
+                LIOS_HUD::Slot4,LIOS_HUD::Slot5};
+            const LIOS_HUD::Text sourceCountRects[4]={
+                LIOS_HUD::SlotCount2,LIOS_HUD::SlotCount3,
+                LIOS_HUD::SlotCount4,LIOS_HUD::SlotCount5};
+            for(int i=0;i<4;i++){
+                if(counts[i]<=0)continue;
+                const Texture2D icon=sourceResources[i];
+                if(icon.id){
+                    Rectangle b=sourceRect(sourceIcons[i]);
+                    DrawTexturePro(icon,{0,0,float(icon.width),float(icon.height)},
+                                   b,{0,0},0,WHITE);
+                }
+                sourceText(TextFormat("%d",counts[i]),sourceCountRects[i]);
             }
-            if(player.equippedSlot==0){
-                DrawRectangleLinesEx(btnSlot0.bounds,3*canvasScale,GOLD);
-            } else DrawRectangleLinesEx(btnSlot1.bounds,3*canvasScale,GOLD);
+            // The PNGs intentionally omit m_littleYaogan: render original
+            // Unity thumb Sprite once at its actual touch-controlled position.
+            if(originalThumb.id){
+                Rectangle b=sourceRect(LIOS_HUD::JoystickThumb);
+                b.x=leftStick.knob.x-b.width/2.f;
+                b.y=leftStick.knob.y-b.height/2.f;
+                DrawTexturePro(originalThumb,
+                    {0,0,float(originalThumb.width),float(originalThumb.height)},
+                    b,{0,0},0,WHITE);
+            }
         } else {
         // Crosshair in center
         int cx = screenWidth / 2;
@@ -970,9 +1037,10 @@ int main() {
     // Cleanup Resources
     // -------------------------------------------------------------------------------------
     unityRig.unload();
-    if(originalHudTexture.id)UnloadTexture(originalHudTexture);
-    if(itemAxeIcon.id)UnloadTexture(itemAxeIcon);
-    if(itemRifleIcon.id)UnloadTexture(itemRifleIcon);
+    if(originalHudMelee.id)UnloadTexture(originalHudMelee);
+    if(originalHudRifle.id)UnloadTexture(originalHudRifle);
+    if(originalThumb.id)UnloadTexture(originalThumb);
+    for(auto &icon:sourceResources)if(icon.id)UnloadTexture(icon);
     UnloadModel(modelTorso);   UnloadTexture(texTorso);
     UnloadModel(modelPants);   UnloadTexture(texPants);
     UnloadModel(modelHead);    UnloadTexture(texHead);
