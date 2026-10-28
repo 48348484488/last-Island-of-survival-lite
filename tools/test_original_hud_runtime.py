@@ -48,10 +48,13 @@ def main():
     assert state["selected_slot"] == 1
     assert state["heading_deg"] == 25.0
     assert state["vitals"] == {"health": .82, "food": .66, "water": .25}
+    icon_proof = (ROOT / "last_island_recreated_game/assets/hud_original_xapk/"
+                  "complete_source_mapping/verified_equipped_weapon_icons.json")
+    weapon_names = ["cj_sf", "m4"] if icon_proof.is_file() else []
     assert [x["count"] if x else None for x in state["inventory"]] == [
-        None, None, 41, 12, 7, 3, None]
+        *([1,1] if weapon_names else [None,None]), 41, 12, 7, 3, None]
     assert [x["sprite"] for x in state["inventory"] if x] == [
-        "tb_cl_mt", "tb_cl_tiek", "tb_cl_st", "ks_lhk"]
+        *weapon_names, "tb_cl_mt", "tb_cl_tiek", "tb_cl_st", "ks_lhk"]
     assert viewport_bounds(960, 540) == (0, 0, 960, 540)
     assert viewport_bounds(2340, 1080) == (210, 0, 1920, 1080)
     assert viewport_to_original(480, 270, 960, 540) == (960, 540)
@@ -66,7 +69,7 @@ def main():
     assert audit["runtime_inventory_values_supplied"]
     assert audit["selected_hotbar_slot"] == 1
     assert "btn_kaijing" in audit["source_hierarchy_order"]
-    assert len(audit["original_item_icon_rectangles"]) == 4
+    assert len(audit["original_item_icon_rectangles"]) == 4 + len(weapon_names)
     assert audit["original_text_components_drawn_with_fallback"] >= 7
     assert all(x.get("original_sprite_path_id")
                for x in audit["original_item_icon_rectangles"])
@@ -76,7 +79,9 @@ def main():
         equipped_slot=0, wood=0, metal=0, stone=0, sulfur=0)
     assert empty["profile"] == "on-foot-melee"
     assert empty["vitals"] == {"health": 0, "food": 1, "water": 0}
-    assert empty["inventory"] == [None] * 7
+    assert empty["inventory"] == (
+        ([{"sprite":"cj_sf","count":1},{"sprite":"m4","count":1}]+[None]*5)
+        if icon_proof.is_file() else [None]*7)
 
     output = ROOT / "last_island_recreated_game/assets/hud_original_xapk/" \
         "complete_source_mapping/hud_v9_live_bridge_synthetic_test.png"
@@ -86,7 +91,8 @@ def main():
         "reference_canvas": list(layer.size),
         "status": "headless source render validated",
         "source_slot_count": len(state["inventory"]),
-        "real_source_resource_icons": len(audit["original_item_icon_rectangles"]),
+        "real_source_inventory_icons": len(audit["original_item_icon_rectangles"]),
+        "verified_equipped_weapon_icons": weapon_names,
         "rendered_texts_fallback_font": audit["original_text_components_drawn_with_fallback"],
         "profile": state["profile"],
         "source_components_drawn": audit["source_image_components_drawn_unique"],
