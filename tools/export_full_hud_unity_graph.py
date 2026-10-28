@@ -17,6 +17,27 @@ OUT=ASSETS/"complete_source_mapping"
 OUT.mkdir(parents=True,exist_ok=True)
 assert SRC.is_file()
 env=UnityPy.load(str(SRC))
+# Unity external fileIDs are not arbitrary: file_id=N indexes source AB's
+# m_Externals[N-1]. Retain their names/CAB GUIDs to resolve missing sprites.
+debug_files=[]
+external_records=[]
+for k,v in getattr(env,"files",{}).items():
+    attrs=[a for a in dir(v) if "extern" in a.lower()]
+    debug_files.append({"key":str(k),"external_attributes":attrs,
+      "type":type(v).__name__})
+    for attr in attrs:
+        try:
+            value=getattr(v,attr)
+            if isinstance(value,list):
+                for i,e in enumerate(value):
+                    external_records.append({"file_id":i+1,"field":attr,
+                      "path_name":str(getattr(e,"path_name",getattr(e,"m_PathName",""))),
+                      "asset_name":str(getattr(e,"asset_name",getattr(e,"m_AssetName",""))),
+                      "guid":str(getattr(e,"guid",getattr(e,"m_GUID",""))),
+                      "repr":str(e)[:220]})
+        except Exception as ex:pass
+print("ORIGINAL_UI_BUNDLE_EXTERNALS",json.dumps(external_records,ensure_ascii=False)[:10000],flush=True)
+print("ORIGINAL_UI_DEBUG_FILES",json.dumps(debug_files,ensure_ascii=False)[:1500],flush=True)
 original_manifest=json.loads((ASSETS/"manifest_original.json").read_text(encoding="utf8"))
 atlas={str(x["path_id"]):x for x in original_manifest["sprites"]}
 objs={str(o.path_id):o for o in env.objects}
@@ -27,6 +48,7 @@ def clipcolor(v):
     return {k:float(v[k]) for k in ("r","g","b","a")} if isinstance(v,dict) and all(k in v for k in ("r","g","b","a")) else None
 report={
  "original_bundle":"install_time_asset_pack.apk/assets/ui/battlepanel.ab",
+ "external_dependencies":external_records,
  "source_bundle_sha256":hashlib.sha256(SRC.read_bytes()).hexdigest(),
  "atlases_from_original_XAPK":sorted(set(a["bundle"] for a in original_manifest["sprites"])),
  "objects":{},"rects":{},"components":{},"sprite_assets":{},"canvases":[],
