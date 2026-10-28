@@ -1,6 +1,7 @@
 #pragma once
-// Audio: original extracted WAVs where present; procedural placeholders for
-// steps/jump/landing (original footsteps/jump AudioClips not yet extracted).
+// Audio: source-named Unity M4 outdoor loop and loop-end samples, plus
+// previously recovered axe samples. Steps/jump/landing are TEMPORARY
+// synthesized placeholders pending source AudioClip verification.
 #include "raylib.h"
 #include <algorithm>
 #include <cmath>
@@ -8,8 +9,8 @@
 #include <vector>
 namespace LIOS_AUDIO {
 struct Audio {
- bool initialized=false,enabled=true;
- Sound m4={},axe={},wood={},ore={},step={},jump={},land={};
+ bool initialized=false,enabled=true,m4Shooting=false;
+ Sound m4={},m4End={},axe={},wood={},ore={},step={},jump={},land={};
  static Sound synth(bool jumpSound,bool landing){
     constexpr int hz=22050;
     const float duration=landing?0.15f:(jumpSound?0.19f:0.085f);
@@ -33,23 +34,37 @@ struct Audio {
     InitAudioDevice();
     initialized=IsAudioDeviceReady();
     if(!initialized){TraceLog(LOG_WARNING,"LIOS_AUDIO_DEVICE_NOT_READY");return;}
-    m4=LoadSound("assets/m4a1_fire.wav");
+    // Exact source-labeled Unity weapon event: wq_m4_1 outdoor fire loop
+    // and its release tail. Do not play a 2.62s burst for each single shot.
+    m4=LoadSound("assets/wq_m4_1_gunshot outdoor loop.wav");
+    m4End=LoadSound("assets/wq_m4_1_gunshot outdoor loop end.wav");
     axe=LoadSound("assets/axe_swing_miss.wav");
     wood=LoadSound("assets/axe_chop_tree.wav");
     ore=LoadSound("assets/axe_mine_ore.wav");
     step=synth(false,false);jump=synth(true,false);land=synth(false,true);
     SetMasterVolume(.78f);
-    TraceLog(LOG_INFO,"LIOS_AUDIO_READY original_m4=%u original_axe=%u original_wood=%u original_ore=%u footsteps_and_jump=synthesized",
-             m4.frameCount,axe.frameCount,wood.frameCount,ore.frameCount);
+    TraceLog(LOG_INFO,"LIOS_AUDIO_READY unity_m4_outdoor_loop=%u loop_end=%u axe=%u wood=%u ore=%u; step_jump=synthesized",
+             m4.frameCount,m4End.frameCount,axe.frameCount,wood.frameCount,ore.frameCount);
  }
  void play(Sound &s,float volume=1.f){
     if(initialized&&enabled&&s.frameCount){
        SetSoundVolume(s,volume);PlaySound(s);
     }
  }
+ void fireM4(){
+    if(!initialized||!enabled||!m4.frameCount)return;
+    if(!IsSoundPlaying(m4))play(m4,.8f);
+    m4Shooting=true;
+ }
+ void releaseM4(){
+    if(!m4Shooting)return;
+    if(m4.frameCount&&IsSoundPlaying(m4))StopSound(m4);
+    if(m4End.frameCount)play(m4End,.72f);
+    m4Shooting=false;
+ }
  void shutdown(){
     if(!initialized)return;
-    for(Sound *s:{&m4,&axe,&wood,&ore,&step,&jump,&land})
+    for(Sound *s:{&m4,&m4End,&axe,&wood,&ore,&step,&jump,&land})
         if(s->frameCount)UnloadSound(*s);
     CloseAudioDevice();initialized=false;
  }
