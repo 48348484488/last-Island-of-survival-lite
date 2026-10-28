@@ -1,0 +1,23 @@
+{
+  "source_XAPK": "Last Island of Survival LITE 7.3 original",
+  "status": "All nonempty Unity Image.m_Sprite pointers are matched to original PNGs",
+  "components": {
+    "image_components_total": 910,
+    "nonzero_original_source_sprite_refs": 848,
+    "original_source_sprite_links_resolved": 848,
+    "no_sprite_expected": 62,
+    "source_missing_files": [],
+    "other_source_components": 1755
+  },
+  "mapped_recttransforms": 1716,
+  "touch_hitboxes": 119,
+  "original_external_assetbundles": 16,
+  "external_source_sprite_files": 52,
+  "prefab_local_sprites": 7,
+  "on_foot_preview_draw_calls": 58,
+  "limitations": [
+    "Serialized prefab has no runtime player values and all GameObjects have active_self=True.",
+    "Dynamic visibility, Unity animations, native shaders, masking, full CanvasScaler and device safe area are not validated 1:1.",
+    "Current game still uses its own on-screen HUD renderer; this source-based renderer is an independently generated overlay."
+  ]
+}
