@@ -1,0 +1,26 @@
+name: Extract real HUD from XAPK asset-pack APK
+on:
+  push:
+    paths:
+      - tools/extract_real_hud_asset_pack.py
+      - .github/workflows/extract_real_hud_asset_pack.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  extract-source-hud:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install Pillow "UnityPy>=1.20,<2"
+      - name: Extract genuine sprites from install_time_asset_pack APK
+        run: python -u tools/extract_real_hud_asset_pack.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-Last-Island-HUD-XAPK-provenance
+          path: hud_original_comprovacao_xapk/
+          if-no-files-found: warn
