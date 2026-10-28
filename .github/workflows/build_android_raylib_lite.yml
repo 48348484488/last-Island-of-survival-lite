@@ -39,7 +39,7 @@ jobs:
           ls "$ANDROID_HOME/ndk" || true
           ls "$ANDROID_HOME/cmake" || true
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install             "platforms;android-34" "build-tools;34.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install             "platforms;android-34" "build-tools;34.0.0" "ndk;27.2.12479018" "cmake;3.30.3"
 
       - name: Clone official raymob Android host and raylib via git submodules
         run: |
@@ -55,7 +55,6 @@ jobs:
           python tools/package_android_assets.py             last_island_recreated_game/main.cpp             last_island_recreated_game/assets             /tmp/lios-raymob/app/src/main/assets/assets
           cd /tmp/lios-raymob
           sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.12.1-preview/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
-          sed -i "s/version '3.30.3'/version '3.22.1'/" app/build.gradle
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
