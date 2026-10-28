@@ -44,6 +44,12 @@ assert ImageChops.difference(melee.layer.convert("RGB"),another.layer.convert("R
 
 manifest=json.loads((args.assets/"manifest_original.json").read_text(encoding="utf8"))
 original_files={v["file"] for v in manifest["sprites"]}
+external=args.assets/"complete_source_mapping/external_hud_sprites_index.json"
+if external.is_file():
+    original_files.update(v["file"] for v in json.loads(external.read_text(encoding="utf8")).get("sprites",[]))
+local=args.assets/"complete_source_mapping/original_unity_all_hud_components.json"
+if local.is_file():
+    original_files.update(v["file"] for v in json.loads(local.read_text(encoding="utf8")).get("sprite_assets",{}).values() if v.get("file"))
 assert all(c["sprite"] in original_files or c["sprite"] in ("source Map_map","compass_original_source.png") for c in melee.calls)
 print("HUD_V2_TESTS_PASS: seven source slots, correct melee/rifle states, source sprites only")
 print("HUD_V2_TESTS_PASS: source-derived circular minimap, data-driven position, no mixed ladder/glider icons")
