@@ -796,7 +796,8 @@ int main() {
                 for(size_t k=0;k<unityRig.boneNames.size();k++)
                     if(unityRig.boneNames[k]=="wuqi_guadian"){socket=int(k);break;}
                 if(socket>=0){
-                    LIOS::Mat LH={1,0,0,0,0,1,0,0,0,0,-1,0,0,0,0,1};
+                    // Same M_U2GL @ RX90 = identity as original PC rig.
+                    LIOS::Mat LH=LIOS::ident();
                     LIOS::Mat m=LIOS::multiply(LH,unityRig.world[socket]);
                     float columnMajor[16];
                     for(int row=0;row<4;row++)for(int col=0;col<4;col++)
