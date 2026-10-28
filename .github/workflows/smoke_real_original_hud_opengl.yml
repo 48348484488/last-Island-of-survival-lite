@@ -1,0 +1,64 @@
+name: Smoke-test original Unity HUD in real OpenGL game
+on:
+  push:
+    paths:
+      - last_island_recreated_game/viewer3d.py
+      - last_island_recreated_game/original_hud_runtime.py
+      - tools/render_source_unity_hud.py
+      - .github/workflows/smoke_real_original_hud_opengl.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-opengl-source-hud:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [melee, rifle]
+    env:
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      MESA_GL_VERSION_OVERRIDE: '2.1'
+      SDL_AUDIODRIVER: dummy
+      LIOS_HUD_MODE: source
+      LIOS_STRICT_HUD: '1'
+      LIOS_SMOKE_FRAMES: '3'
+      LIOS_SMOKE_PROFILE: ${{ matrix.profile }}
+      LIOS_SMOKE_SCREENSHOT: /tmp/last-island-original-hud-${{ matrix.profile }}.png
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install virtual X display and Mesa OpenGL
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0 libglu1-mesa
+      - name: Install game dependencies
+        run: python -m pip install numpy Pillow pygame PyOpenGL
+      - name: Verify GL window and render actual recreated game with Unity HUD
+        run: |
+          timeout 200s xvfb-run -a -s '-screen 0 1280x720x24 +extension GLX' \
+            python -u last_island_recreated_game/viewer3d.py
+          test -s "$LIOS_SMOKE_SCREENSHOT"
+      - name: Verify screenshot has visual content (not empty or solid color)
+        run: |
+          python - <<'PY'
+          from PIL import Image, ImageStat
+          import os
+          path = os.environ["LIOS_SMOKE_SCREENSHOT"]
+          img=Image.open(path).convert("RGB")
+          assert img.size == (960,540), img.size
+          stat=ImageStat.Stat(img)
+          print("REAL_GL_SCREENSHOT_STATS", img.size, stat.stddev)
+          assert max(stat.stddev)>8, "Captured frame is almost uniform"
+          PY
+      - name: Upload real OpenGL screenshot for visual inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-opengl-last-island-hud-${{ matrix.profile }}
+          path: /tmp/last-island-original-hud-${{ matrix.profile }}.png
+          if-no-files-found: warn
