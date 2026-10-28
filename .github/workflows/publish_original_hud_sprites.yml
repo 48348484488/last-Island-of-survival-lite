@@ -1,0 +1,44 @@
+name: Publish original source HUD sprites in game directory
+on:
+  push:
+    branches: [main]
+    paths:
+      - tools/export_verified_hud_sprites.py
+      - .github/workflows/publish_original_hud_sprites.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  original-hud-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install "UnityPy>=1.20,<2" Pillow
+      - name: Load original XAPK Unity bundles from completed source audit
+        uses: actions/download-artifact@v4
+        with:
+          name: original-Last-Island-HUD-XAPK-provenance
+          run-id: 40611088431
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: hud_original_comprovacao_xapk
+      - name: Export original sprites, prefab anchors and proof image
+        run: python -u tools/export_verified_hud_sprites.py
+      - name: Commit original 3D game HUD source sprite package
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/assets/hud_original_xapk/
+          if ! git diff --staged --quiet; then
+            git commit -m "Publish pixel-verified original Unity HUD source sprites and prefab mapping"
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-verified-original-HUD-textures-and-layout
+          path: last_island_recreated_game/assets/hud_original_xapk/
+          if-no-files-found: warn
