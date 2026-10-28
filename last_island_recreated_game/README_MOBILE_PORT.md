@@ -45,3 +45,34 @@ nem garante desempenho adequado.
 O código e os assets recuperados do jogo original são usados para fins de
 análise e testes neste projeto; distribuição pública requer avaliação dos
 direitos sobre os materiais.
+
+
+## Porta nativa C++ v0.13 — 33 animações originais
+
+Agora o C++ contém um port efetivo do pipeline do cliente Python:
+
+- Exportador `tools/export_mobile_skeletal_animation.py` lê
+  `authentic_animations.npz` e `master_character.npz`. A auditoria encontrou
+  **33 clipes**, **64 ossos** e **7 malhas** (pants, torso, skin, shoes, gloves,
+  head, hair). O formato `LIOSSKN1` gerado tem ~2,2 MB.
+- `native_original_animation.hpp` decodifica o binário no Android,
+  interpola as rotações por quaternion SLERP, calcula hierarquia dos ossos (FK),
+  aplica pesos/bindposes (LBS) e envia os vértices deformados a buffers
+  dinâmicos OpenGL ES do Raylib.
+- `main.cpp` substitui o corpo estático pelo esqueleto com os clipes de
+  repouso, deslocamento direcional, salto e ataques do machado/M4.
+  A arma é anexada ao osso original `wuqi_guadian`.
+- Foi integrada a camada de sprites original recuperada do `battlepanel.ab`,
+  com ícones `cj_sf` e `m4`, números de recursos e hitboxes de ataque/pulo
+  derivadas do Canvas 1920x1080. Esta ainda é uma **adaptação de primeira fase**:
+  nem todos os componentes dinâmicos, efeitos, máscaras ou painéis completos
+  do HUD do PC estão disponíveis no C++.
+
+O job `build_android_raylib_lite.yml` exporta os dados durante a compilação
+e verifica que os 33 clipes, 64 ossos, 7 malhas e PNGs do HUD aparecem no APK.
+
+A aprovação de compilação e verificação de assinatura **não garante** que todos
+os clipes estejam corretos visualmente, nem substitui testes de FPS e exibição
+em Android real. Verificar o cenário, o corpo animado, os ícones, ações de
+pulo/ataque e performance no aparelho ainda é necessário. Sem dados de uma
+execução em aparelho, não afirmar compatibilidade 1:1 com o cliente de PC.
