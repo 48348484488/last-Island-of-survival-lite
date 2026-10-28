@@ -18,6 +18,13 @@ def main():
     root=Path(sys.argv[2])
     dest=Path(sys.argv[3])
     program=source.read_text(encoding="utf8")
+    # Original audio WAVs are referenced from the native audio header,
+    # not directly from main.cpp. Scan both actual source units so the
+    # runtime never ships with silent missing assets.
+    audio_header=source.parent/"mobile_audio.hpp"
+    if not audio_header.is_file():
+        raise FileNotFoundError(audio_header)
+    program+="\n"+audio_header.read_text(encoding="utf8")
     names=sorted(set(re.findall(r'"assets/([^"\\]+\.(?:obj|png|wav|ogg))"',program)))
     # Generated skeletal binary and original Unity GUI sprites are copied from
     # recovered asset locations in the workflow, not the flat OBJ directory.
