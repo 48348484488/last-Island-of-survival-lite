@@ -1,0 +1,33 @@
+name: Recover original weapon icon config references from XAPK
+on:
+  push:
+    paths:
+      - tools/audit_original_weapon_icon_sources.py
+      - .github/workflows/audit_original_weapon_icon_sources.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-icon-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            xapk_original
+            tools
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Reassemble exact source and map cfg.ItemCfg.icon evidence
+        run: |
+          python -m py_compile tools/audit_original_weapon_icon_sources.py
+          python -u tools/audit_original_weapon_icon_sources.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: last-island-original-weapon-icon-config-audit
+          path: last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/original_weapon_icon_config_audit.json
+          if-no-files-found: warn
