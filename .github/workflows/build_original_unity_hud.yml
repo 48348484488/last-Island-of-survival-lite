@@ -4,6 +4,9 @@ on:
     branches: [main]
     paths:
       - tools/render_source_unity_hud.py
+      - tools/test_source_hud_v2.py
+      - tools/test_source_hud_v3.py
+      - tools/extract_hud_sprite_borders.py
       - .github/workflows/build_original_unity_hud.yml
   workflow_dispatch:
 permissions: {contents: write, actions: read}
@@ -42,6 +45,11 @@ jobs:
         run: |
           printf '%s\n' '{"profile":"on-foot-melee","map_uv":[0.55,0.45],"vitals":{"health":0.84,"food":0.56,"water":0.72}}' > /tmp/original_hud_preview_state.json
           python -u tools/render_source_unity_hud.py --demo-items             --state /tmp/original_hud_preview_state.json             --output last_island_recreated_game/assets/hud_original_xapk/review/hud_v3_estado_de_teste.png
+      - name: Render original compass at ninety degrees (dynamic heading)
+        run: |
+          printf '%s\n' '{"profile":"on-foot-melee","heading_deg":90,"vitals":{"health":0.84,"food":0.56,"water":0.72}}' > /tmp/original_hud_compass_90.json
+          python -u tools/render_source_unity_hud.py --state /tmp/original_hud_compass_90.json \
+            --output last_island_recreated_game/assets/hud_original_xapk/review/hud_compass_90_original.png
       - name: Render separate firearm HUD with aim and reload controls
         run: |
           python -u tools/render_source_unity_hud.py --demo-items --profile on-foot-rifle             --output last_island_recreated_game/assets/hud_original_xapk/review_rifle/hud_fuzil_original.png
@@ -66,6 +74,9 @@ jobs:
             last_island_recreated_game/assets/hud_original_xapk/hud_gerado_do_prefab_auditoria.json
             last_island_recreated_game/assets/hud_original_xapk/review/hud_exemplo_itens_originais.png
             last_island_recreated_game/assets/hud_original_xapk/review/hud_v3_estado_de_teste.png
+            last_island_recreated_game/assets/hud_original_xapk/review/hud_compass_90_original.png
+            last_island_recreated_game/assets/hud_original_xapk/compass_original_source.png
+            last_island_recreated_game/assets/hud_original_xapk/compass_original_source.json
             last_island_recreated_game/assets/hud_original_xapk/hud_source_sprite_borders.json
             last_island_recreated_game/assets/hud_original_xapk/review_rifle/hud_fuzil_original.png
           if-no-files-found: warn
