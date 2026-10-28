@@ -72,7 +72,7 @@ def recover():
  with np.load(tmp,allow_pickle=True) as f:
   assert all(x[2]+"_rots" in f for x in ORIGINAL.values())
   count=sum(k.endswith("_rots") for k in f.files)
-  assert count==34, count
+  assert count==33, count  # dao_zhan_nawuqi01 already existed among the 30 game clips
  tmp.replace(target)
  return reports,count
 def export_preview():
@@ -127,7 +127,7 @@ def main():
 O arquivo \`sacar_guardar_original_machado_3d.glb\` contém o personagem com
 o machado de pedra e as curvas originais dos clipes de empunhar e guardar.
 
-As **quatro animações de 14 quadros / 30 FPS** estão agora no
+As **quatro animações de 14 quadros / 30 FPS** estão no
 \`authentic_animations.npz\` do jogo:
 - \`dao_zhan_shouwuqi01\` (guardar machado)
 - \`dao_zhan_nawuqi01\` (sacar machado)
@@ -137,7 +137,7 @@ As **quatro animações de 14 quadros / 30 FPS** estão agora no
 O GLB é só para visualizar: a malha de arma incluída é o machado.
 **Não** use o GLB como prévia da arma M4A1, embora seus clipes de
 movimento estejam presentes. Os estados/IDs vêm do Unity \`role.ab\`.
-O código original troca a arma da mão em 0,4s guardando e 0,2s sacando.
+Um dos clipes de sacar machado já existia no NPZ, portanto são **33 clipes únicos** após importar os três restantes e atualizar o quarto.\nO código original troca a arma da mão em 0,4s guardando e 0,2s sacando.
 
 Ainda não foi ativada a troca animada no jogo Python; aguardamos
 avaliação visual do saque/guarda antes de alterar a jogabilidade.
