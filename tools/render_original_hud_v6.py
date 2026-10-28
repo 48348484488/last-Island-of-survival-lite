@@ -119,7 +119,7 @@ class HudSourceOrdered(base.SourceHUD):
                     self.node(self.g[c["go"]],depth-1,exclude)
 
     def render_ordered(self,*,profile="on-foot-melee",items=None,vitals=None,samples=False):
-        if profile not in ("on-foot-melee","on-foot-rifle"):
+        if profile not in ("on-foot-melee","on-foot-rifle","on-foot-build"):
             raise ValueError("Unknown Unity on-foot profile: "+str(profile))
         self.profile=profile
         self.vitals_values=vitals
@@ -134,6 +134,12 @@ class HudSourceOrdered(base.SourceHUD):
           "btn_autoRun","btn_fire","btn_up2","btn_crouch2","btn_pa2")
         if profile=="on-foot-rifle":
             selected+=("btn_kaijing","btn_changeBullet")
+        elif profile=="on-foot-build":
+            # Mode is explicitly selected by the preview/game state.
+            # 'btn_build' and 'btn_fire' use the same source RectTransform
+            # coordinates; Unity shows them in mutually exclusive modes.
+            selected=tuple("btn_build" if n=="btn_fire" else n for n in selected)
+            selected+=("m_buildPartTypes","btn_freeBuildModel")
         excludes={"m_autoRunChoosed","EF_btn_autoRun","btn_crouching2",
           "btn_paing2","btn_jump2","m_jindutiao","m_rechargeEffect",
           "m_PatiziImage","m_openGliderIcon","m_flyEffect",
@@ -178,6 +184,7 @@ class HudSourceOrdered(base.SourceHUD):
           "source_hierarchy_order":ordered,
           "source_hierarchy_sort_keys":{name:self.z_key(name) for name in ordered},
           "on_foot_runtime_selection_not_proven":True,
+          "build_mode_is_source_derived_but_runtime_activation_unverified":profile=="on-foot-build",
           "unsupported_native_unity_features":[
              "dynamic GameObject state machines",
              "Unity UGUI native shader, mask, rect-clipping and full nine-slice mesh",
@@ -194,7 +201,7 @@ class HudSourceOrdered(base.SourceHUD):
 
 def main():
     ap=argparse.ArgumentParser()
-    ap.add_argument("--profile",choices=("on-foot-melee","on-foot-rifle"),
+    ap.add_argument("--profile",choices=("on-foot-melee","on-foot-rifle","on-foot-build"),
                     default="on-foot-melee")
     ap.add_argument("--state",type=Path)
     ap.add_argument("--assets",type=Path,default=ASSETS)
