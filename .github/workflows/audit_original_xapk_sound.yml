@@ -1,0 +1,37 @@
+name: Audit real LITE 7.3 original SoundCfg and jump/walk AudioClips
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/audit_original_xapk_sound.py
+      - .github/workflows/audit_original_xapk_sound.yml
+permissions: {contents: read}
+jobs:
+  source-sound:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            xapk_original
+            tools/audit_original_xapk_sound.py
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install Unity AssetBundle AudioClip reader
+        run: python -m pip install UnityPy
+      - name: Index original XAPK, cfg.SoundCfg and selected exact AudioClips
+        run: |
+          python -u tools/audit_original_xapk_sound.py
+          test -s /tmp/lios-original-sound-audit/source_audio_index.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Source-XAPK-LITE-7-3-Audio-Cfg-And-Selected-Clips
+          path: |
+            /tmp/lios-original-sound-audit/source_audio_index.json
+            /tmp/lios-original-sound-audit/decoded_original_audio
+          if-no-files-found: warn
+          retention-days: 14
