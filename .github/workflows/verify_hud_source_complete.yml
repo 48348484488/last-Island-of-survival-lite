@@ -1,0 +1,44 @@
+name: Verify all original Unity HUD sprites and generate reviewed source preview
+on:
+  push:
+    paths:
+      - tools/verify_hud_source_complete.py
+      - .github/workflows/verify_hud_source_complete.yml
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  complete:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install Pillow
+      - name: Refresh all RectTransforms using newly recovered original Sprite files
+        run: python -u tools/map_original_hud_coordinates.py
+      - name: Verify every original Sprite PPtr, source PNG and layout hitbox
+        run: python -u tools/verify_hud_source_complete.py
+      - name: Render source HUD with all verified sprites, original items and a sample state
+        run: |
+          printf '%s\n' '{"profile":"on-foot-melee","map_uv":[0.55,0.45],"heading_deg":20,"vitals":{"health":0.84,"food":0.56,"water":0.72}}' > /tmp/source_7_3_preview.json
+          python -u tools/render_source_unity_hud.py --demo-items --state /tmp/source_7_3_preview.json             --output last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_fonte_integral_v5_previa.png
+      - name: Commit verified source HUD mapping and preview to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/
+          if ! git diff --staged --quiet; then
+            git commit -m "Verify all HUD sprites against source XAPK and refresh fully mapped UI geometry"
+            git pull --rebase origin main
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: last-island-HUD-complete-original-source-registry-and-preview
+          path: |
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/validated_source_coverage.json
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_original_all_positions.json
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_fonte_integral_v5_previa.png
+          if-no-files-found: warn
