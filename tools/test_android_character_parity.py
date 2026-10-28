@@ -42,7 +42,7 @@ def main():
     # Match the working desktop third-person camera, including shoulder,
     # pitch, distance and the forward-facing look-ahead target.
     assert "cam_dist = True, 3.8" in PC
-    assert "const float camDist=3.8f;" in CPP
+    assert "const float camDist=aim&&player.equippedSlot==1?2.3f:3.8f;" in CPP
     assert "Vector3Scale(right,0.35f)" in CPP
     assert "shoulderTarget.z-lookDir.z*camDist" in CPP
     assert "shoulderTarget.z+lookDir.z*2.0f" in CPP
@@ -67,10 +67,14 @@ def main():
         desktop_key="clothes" if k=="torso" else k
         assert "'%s':"%desktop_key in PC,(k,"desktop texture absent")
         assert filename in PC,(k,"desktop file path")
-        assert ('"assets/'+filename+'"') in CPP,(k,"native source file path")
+        assert ('"assets/native_'+filename+'"') in CPP,(k,"native opaque material path")
     assert "unityRig.setTextures(texPants, texTorso, texSkin, texShoes, texHead, texHair);" in CPP
-    assert 'Texture2D texSkin = LoadTexture("assets/man_clothes_yf_0_ba.png");' in CPP
+    assert 'Texture2D texSkin = LoadTexture("assets/native_man_clothes_yf_0_ba.png");' in CPP
     assert "UpdateMeshBuffer(gpu,2,normals.data()" in NATIVE, "Skin normal GPU updates missing"
+    assert "rlDisableBackfaceCulling();" in CPP and "rlEnableBackfaceCulling();" in CPP
+    assert "if(!hasTouchActive && cursorLocked && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))" in CPP
+    assert 'sound.play(sound.m4,.8f);' in CPP
+    assert 'sound.play(sound.jump,.7f);' in CPP
     assert "SetMaterialTexture(&p.model.materials[0],MATERIAL_MAP_DIFFUSE,tex);" in NATIVE
     print("LIOS_ANDROID_CAMERA_TEXTURE_PARITY_PASS",
           "UnityFKRoot=identity", "camera_distance=3.8",
