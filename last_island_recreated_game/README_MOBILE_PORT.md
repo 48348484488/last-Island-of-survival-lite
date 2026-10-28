@@ -76,3 +76,29 @@ os clipes estejam corretos visualmente, nem substitui testes de FPS e exibição
 em Android real. Verificar o cenário, o corpo animado, os ícones, ações de
 pulo/ataque e performance no aparelho ainda é necessário. Sem dados de uma
 execução em aparelho, não afirmar compatibilidade 1:1 com o cliente de PC.
+
+
+## Android v0.13.1: correcoes orientacao e materiais
+
+Corrigidos dois erros da v0.13.0 relatados no teste em telefone:
+
+- `native_original_animation.hpp` tinha uma reflexao incorreta `Z=-Z`
+  no termo esquerdo da matriz de skinning. O cliente PC usa
+  `M_U2GL @ RX90 == Identidade`, o que foi restaurado no corpo e no
+  encaixe original da arma. O espelhamento anterior podia mostrar a
+  frente do personagem para uma camera corretamente posicionada atras,
+  bem como inverter o sentido dos triangulos.
+- `main.cpp` agora usa a mesma camera de ombro do PC (`3.8` unidades
+  para tras, `0.35` unidade a direita e alvo 2 unidades para frente).
+- A malha `skin` recebe `man_clothes_yf_0_ba.png` (que ja era usada
+  pela versao de PC), nao a textura da cabeca. As 6 texturas do
+  personagem sao empacotadas, e os vertices **e normais** sao
+  atualizados nos buffers dinamicos durante as animacoes.
+- `tools/test_android_character_parity.py` confere as matrizes, os
+  5 casos de orientacao da camera, nomes dos atlas e vinculacao
+  das texturas antes de compilar o APK.
+- A Action confere o asset de pele dentro do APK final.
+
+A compilacao ARM64 e os testes de correspondencia nao substituem
+uma verificacao visual no proprio Android; ajustes de orientacao do
+personagem, shaders e desempenho podem continuar necessarios.
