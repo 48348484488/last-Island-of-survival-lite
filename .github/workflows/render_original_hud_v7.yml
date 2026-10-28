@@ -32,8 +32,12 @@ jobs:
           git add last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v7*
           if ! git diff --staged --quiet; then
             git commit -m "Render original HUD item counts and status numbers from source Unity text positions"
-            git pull --rebase origin main
-            git push
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep 2
+            done
           fi
       - uses: actions/upload-artifact@v4
         if: always()
