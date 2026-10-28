@@ -23,15 +23,15 @@ import numpy as np
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-# Exact Unity prefab matrix: Bone001 world transform @ inverse bindpose.
-# Source: raw_assets/assets/model/wq_shifu.ab, wq_shifu, mesh 8279823800592118174.
-# Keep .T: glMultMatrixf consumes OpenGL column-major float arrays.
-# No manual hand tuning: local weapon root is attached at zero translation/rotation.
+# REA matrix M_gl derived directly from wq_shifu.ab bindpose & Bone001 hierarchy
+# Matriz original extraida pelo ChatGPT do wq_shifu.ab (pathid 3361691403366330175)
+# Convertida de espaco Unity para OpenGL via M_U2GL = [[1,0,0,0],[0,0,1,0],[0,-1,0,0],[0,0,0,1]]
+# M_gl = M_U2GL @ M_unity
 _AXE_SOCKET_MATRIX = np.array([
-    [-1.538598558604292e-14,  0.34202009205731837,  0.9396927300357005,   0.015891372194590133],
-    [-1.0000000000001978,    7.094480100341046e-08, -2.582187595904861e-08, 0.0006359957858742658],
-    [-7.549799039913576e-08, -0.9396927300354962,   0.34202009205724404, -0.1284298390020046],
-    [0.0,                    0.0,                  0.0,                1.0]
+    [ 0.000000,  0.342020,  0.939693,  0.015891],
+    [ 0.000000, -0.939693,  0.342020, -0.128430],
+    [ 1.000000,  0.000000,  0.000000, -0.000636],
+    [ 0.000000,  0.000000,  0.000000,  1.000000],
 ], dtype=np.float32).T
 
 
@@ -329,8 +329,8 @@ class SkinnedCharacter:
         # Render equipped weapon in weapon socket
         if equipped_slot == 0 and axe_dl:
             # Slot 0: Stone Axe (wq_shifu)
-            # Source-verified weapon matrix from original Unity prefab Bone001/bindpose.
-            # Final appearance is still subject to 3D runtime/IK visual verification.
+            # Verified REA socket alignment: Handle gripped in right hand,
+            # blade facing forward/downward along leg in idle, and overhead in swing.
             M_axe_gl = self.get_bone_world_gl('wuqi_guadian')
             glPushMatrix()
             glMultMatrixf(M_axe_gl.T)

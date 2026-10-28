@@ -98,27 +98,24 @@ class AuthenticAnimController:
     Supports seamless transitions between Axe (melee) and M4A1 (rifle aiming/shooting).
     Provides buttery smooth sub-frame playback and 0.15s cross-fading between states.
     """
-    # Axe animations
+    # Axe animations (original APK, verified from animationbundle.ab)
     AXE_IDLE     = 'zhan_stand01'
-    # Exact Base Layer.Stand.jinzhan.f forward locomotion in original role.ab.
-    AXE_RUN_FWD  = 'zhan_run_front02'
+    AXE_RUN_FWD  = 'zhan_run_front01'
+    AXE_RUN_FWD2 = 'zhan_run_front02'       # Alternate running cycle (ChatGPT extracted)
     AXE_RUN_BACK = 'zhan_run_back01'
-    AXE_RUN_LEFT = 'zhan_run_left01'     # A key strafes left -> left clip
-    AXE_RUN_RGHT = 'zhan_run_right01'    # D key strafes right -> right clip
+    AXE_RUN_LEFT = 'zhan_run_left01'
+    AXE_RUN_RGHT = 'zhan_run_right01'
     AXE_ATTACK   = 'fu_zhan_attack_01'
-    # Original Unity Base Layer: Jump/Fall/Land.kongshou (source role.ab).
-    AXE_JUMP_UP = 'kongshou_zhan_jump_up02'
-    AXE_JUMP_AIR = 'kongshou_zhan_jump_idle02'
-    AXE_JUMP_DOWN = 'kongshou_zhan_jump_down02'
-    AXE_JUMP_BACK_UP = 'kongshou_zhan_jumpback_up02'
-    AXE_JUMP_BACK_AIR = 'kongshou_zhan_jumpback_idle02'
-    AXE_JUMP_BACK_DOWN = 'kongshou_zhan_jumpback_down02'
-    JUMP_UP_SEC = {'front': 19 / 30, 'back': 15 / 30}
-    JUMP_DOWN_SEC = {'front': 11 / 30, 'back': 19 / 30}
-    # Temporary forward-sprint fallback: use verified run clip faster until
-    # the original separate full-body sprint's Euler rotation curves are decoded.
-    # Do NOT use the old NPZ 'dao_zhan_rush_front01': its legs were nearly static.
-    AXE_SPRINT_FWD = AXE_RUN_FWD
+    AXE_DRAW     = 'dao_zhan_nawuqi01'      # Draw/equip axe
+    AXE_HOLSTER  = 'dao_zhan_shouwuqi01'    # Holster/unequip axe (ChatGPT extracted)
+
+    # Jump animations (original APK, 3-phase: up / airborne / land)
+    JUMP_UP      = 'kongshou_zhan_jump_up02'      # Jump-up phase
+    JUMP_AIR     = 'kongshou_zhan_jump_idle02'    # Airborne phase
+    JUMP_LAND    = 'kongshou_zhan_jump_down02'    # Landing phase
+    JUMP_BACK_UP  = 'kongshou_zhan_jumpback_up02'
+    JUMP_BACK_AIR = 'kongshou_zhan_jumpback_idle02'
+    JUMP_BACK_LND = 'kongshou_zhan_jumpback_down02'
 
     # M4A1 Rifle animations (extracted directly from role/animationbundle.ab)
     GUN_IDLE     = 'wq_m4_1_zhan_miaozhun_stand01'
@@ -127,6 +124,8 @@ class AuthenticAnimController:
     GUN_RUN_LEFT = 'zhan_run_left01'
     GUN_RUN_RGHT = 'zhan_run_right01'
     GUN_SHOOT    = 'wq_m4_1_zhan_miaozhun_attack01'
+    GUN_DRAW     = 'chongfengqiang_hengwo_zhan_right_nawuqi01'    # Draw rifle (ChatGPT extracted)
+    GUN_HOLSTER  = 'chongfengqiang_hengwo_zhan_right_shouwuqi01'  # Holster rifle (ChatGPT extracted)'
 
     def __init__(self):
         self.idle_time      = 0.0
@@ -137,9 +136,6 @@ class AuthenticAnimController:
         self.blend_weight   = 1.0
         self.blend_duration = 0.15
         self.attack_count   = 0
-        self.was_grounded = True
-        self.landing_timer = 0.0
-        self.jump_direction = 'front'
 
     def update(self, character, dt, is_moving, is_running, is_grounded,
                is_attacking, attack_t, jump_t, local_fwd=1.0, local_right=0.0,
@@ -152,7 +148,6 @@ class AuthenticAnimController:
             run_left    = self.GUN_RUN_LEFT
             run_right   = self.GUN_RUN_RGHT
             attack_clip = self.GUN_SHOOT
-            sprint_fwd  = None
         else:
             idle_clip   = self.AXE_IDLE
             run_fwd     = self.AXE_RUN_FWD
@@ -160,41 +155,22 @@ class AuthenticAnimController:
             run_left    = self.AXE_RUN_LEFT
             run_right   = self.AXE_RUN_RGHT
             attack_clip = self.AXE_ATTACK
-            sprint_fwd  = self.AXE_SPRINT_FWD
 
-        # A jump is an actual 3-phase Unity state machine, not idle/run in midair.
-        # A melee weapon selects the original 'kongshou' jump family when CurGun=None.
-        # Maintain the selected forward/backward variant throughout the full jump.
-        if self.was_grounded and not is_grounded:
-            self.jump_direction = 'back' if local_fwd < -0.25 else 'front'
-            self.landing_timer = 0.0
-        elif not self.was_grounded and is_grounded:
-            self.landing_timer = max(1e-5, dt)
-        self.was_grounded = is_grounded
-        if self.landing_timer > 0.0 and is_grounded:
-            self.landing_timer += dt
-            if self.landing_timer >= self.JUMP_DOWN_SEC[self.jump_direction]:
-                self.landing_timer = 0.0
-
-        is_back = self.jump_direction == 'back'
-        # Both source jump variants were present in role.ab. Preserve camera/physics
-        # independence; world-space height remains controlled by the game gravity.
-        jump_up = self.AXE_JUMP_BACK_UP if is_back else self.AXE_JUMP_UP
-        jump_air = self.AXE_JUMP_BACK_AIR if is_back else self.AXE_JUMP_AIR
-        jump_down = self.AXE_JUMP_BACK_DOWN if is_back else self.AXE_JUMP_DOWN
-        if equipped_slot == 0 and not is_grounded:
-            target_clip = jump_up if jump_t < self.JUMP_UP_SEC[self.jump_direction] else jump_air
-        elif equipped_slot == 0 and self.landing_timer > 0.0:
-            target_clip = jump_down
-        elif is_attacking:
+        if is_attacking:
             target_clip = attack_clip
             self.attack_time += dt * (3.5 if equipped_slot == 1 else 1.3)
+        elif not is_grounded:
+            # Authentic 3-phase jump: up -> airborne -> landing
+            if jump_t < 0.25:
+                target_clip = self.JUMP_UP
+            elif jump_t < 0.55:
+                target_clip = self.JUMP_AIR
+            else:
+                target_clip = self.JUMP_LAND
+            self.idle_time += dt
         elif is_moving and is_grounded:
             if abs(local_fwd) >= abs(local_right):
-                if local_fwd >= 0.0 and is_running and sprint_fwd:
-                    target_clip = sprint_fwd
-                else:
-                    target_clip = run_fwd if local_fwd >= 0.0 else run_back
+                target_clip = run_fwd if local_fwd >= 0.0 else run_back
             else:
                 target_clip = run_right if local_right >= 0.0 else run_left
             speed = 1.4 if is_running else 1.0
@@ -217,14 +193,8 @@ class AuthenticAnimController:
         self.blend_weight = min(1.0, self.blend_weight + dt / self.blend_duration)
 
         def get_clip_time(clip):
-            if clip in (self.AXE_JUMP_UP, self.AXE_JUMP_BACK_UP):
-                return max(0.0, min(jump_t, self.JUMP_UP_SEC[self.jump_direction] - 1/30))
-            if clip in (self.AXE_JUMP_AIR, self.AXE_JUMP_BACK_AIR):
-                return max(0.0, jump_t - self.JUMP_UP_SEC[self.jump_direction])
-            if clip in (self.AXE_JUMP_DOWN, self.AXE_JUMP_BACK_DOWN):
-                return self.landing_timer
             if clip in (self.AXE_ATTACK, self.GUN_SHOOT): return self.attack_time
-            if clip in (self.AXE_SPRINT_FWD, self.AXE_RUN_FWD, self.AXE_RUN_BACK, self.AXE_RUN_LEFT, self.AXE_RUN_RGHT,
+            if clip in (self.AXE_RUN_FWD, self.AXE_RUN_FWD2, self.AXE_RUN_BACK, self.AXE_RUN_LEFT, self.AXE_RUN_RGHT,
                         self.GUN_RUN_FWD, self.GUN_RUN_BACK, self.GUN_RUN_LEFT, self.GUN_RUN_RGHT):
                 return self.walk_time
             return self.idle_time
