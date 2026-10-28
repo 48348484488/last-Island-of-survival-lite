@@ -27,15 +27,23 @@ jobs:
         run: |
           cp hud_canvas_source_audit/original_canvas_components.json last_island_recreated_game/assets/hud_original_xapk/
           cp hud_canvas_source_audit/source_map_-945003921129902140.png last_island_recreated_game/assets/hud_original_xapk/map_original_7_3.png
-      - name: Render source-based HUD and create transparent RGBA overlay
-        run: python -u tools/render_source_unity_hud.py --demo-items
+      - name: Validate original Unity Sprite bindings and separate gameplay modes
+        run: python -u tools/test_source_hud_v2.py
+      - name: Render the original empty inventory HUD and reusable RGBA overlay
+        run: python -u tools/render_source_unity_hud.py --profile on-foot-melee
+      - name: Render review of genuine source item sprites (sample inventory)
+        run: |
+          python -u tools/render_source_unity_hud.py --demo-items --profile on-foot-melee             --output last_island_recreated_game/assets/hud_original_xapk/review/hud_exemplo_itens_originais.png
+      - name: Render separate firearm HUD with aim and reload controls
+        run: |
+          python -u tools/render_source_unity_hud.py --demo-items --profile on-foot-rifle             --output last_island_recreated_game/assets/hud_original_xapk/review_rifle/hud_fuzil_original.png
       - name: Store reproducible render plus its source dependencies
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add last_island_recreated_game/assets/hud_original_xapk/
           if ! git diff --staged --quiet; then
-            git commit -m "Reconstruct HUD with original prefab component mappings, sprites and map Texture2D"
+            git commit -m "Improve source-based HUD rendering with map masking, original item slots and state visibility"
             git push
           fi
       - uses: actions/upload-artifact@v4
@@ -47,4 +55,6 @@ jobs:
             last_island_recreated_game/assets/hud_original_xapk/hud_gerado_do_prefab.png
             last_island_recreated_game/assets/hud_original_xapk/hud_original_overlay_rgba.png
             last_island_recreated_game/assets/hud_original_xapk/hud_gerado_do_prefab_auditoria.json
+            last_island_recreated_game/assets/hud_original_xapk/review/hud_exemplo_itens_originais.png
+            last_island_recreated_game/assets/hud_original_xapk/review_rifle/hud_fuzil_original.png
           if-no-files-found: warn
