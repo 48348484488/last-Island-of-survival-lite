@@ -1,0 +1,1598 @@
+{
+  "source": "Last Island LITE 7.3 original Unity battlepanel.ab",
+  "render_mode": "on-foot-build",
+  "drawn_operations": 104,
+  "source_image_components_total": 848,
+  "source_image_components_drawn_unique": 91,
+  "source_image_components_not_drawn": 757,
+  "all_source_sprite_links_resolved": true,
+  "source_hierarchy_order": [
+    "btn_pack",
+    "m_buildPartTypes",
+    "btn_freeBuildModel",
+    "m_bagItems",
+    "btn_zhizao",
+    "m_kedu",
+    "btn_baseUpgrade",
+    "btn_info",
+    "btn_Baserank",
+    "btn_help",
+    "m_JoystackType2",
+    "btn_autoRun",
+    "btn_build",
+    "btn_up2",
+    "btn_crouch2",
+    "btn_pa2",
+    "m_map",
+    "m_xue",
+    "m_jie",
+    "m_bodyWater",
+    "btn_setting",
+    "btn_quckChat",
+    "btn_diuShiDongXi",
+    "btn_quick_mark"
+  ],
+  "source_hierarchy_sort_keys": {
+    "btn_pack": [
+      0,
+      1,
+      1,
+      1,
+      2
+    ],
+    "m_buildPartTypes": [
+      0,
+      1,
+      1,
+      1,
+      3
+    ],
+    "btn_freeBuildModel": [
+      0,
+      1,
+      1,
+      1,
+      5
+    ],
+    "m_bagItems": [
+      0,
+      1,
+      1,
+      2,
+      0
+    ],
+    "btn_zhizao": [
+      0,
+      1,
+      2
+    ],
+    "m_kedu": [
+      0,
+      2
+    ],
+    "btn_baseUpgrade": [
+      0,
+      3,
+      0
+    ],
+    "btn_info": [
+      0,
+      3,
+      1
+    ],
+    "btn_Baserank": [
+      0,
+      3,
+      9
+    ],
+    "btn_help": [
+      0,
+      3,
+      10
+    ],
+    "m_JoystackType2": [
+      0,
+      4,
+      1,
+      0,
+      0
+    ],
+    "btn_autoRun": [
+      0,
+      4,
+      1,
+      0,
+      2
+    ],
+    "btn_build": [
+      0,
+      4,
+      2,
+      2,
+      0,
+      0,
+      2,
+      1
+    ],
+    "btn_up2": [
+      0,
+      4,
+      2,
+      2,
+      0,
+      1,
+      0
+    ],
+    "btn_crouch2": [
+      0,
+      4,
+      2,
+      2,
+      0,
+      1,
+      1
+    ],
+    "btn_pa2": [
+      0,
+      4,
+      2,
+      2,
+      0,
+      1,
+      2
+    ],
+    "m_map": [
+      0,
+      5,
+      0
+    ],
+    "m_xue": [
+      0,
+      5,
+      1,
+      0
+    ],
+    "m_jie": [
+      0,
+      5,
+      1,
+      1
+    ],
+    "m_bodyWater": [
+      0,
+      5,
+      1,
+      2
+    ],
+    "btn_setting": [
+      0,
+      5,
+      3
+    ],
+    "btn_quckChat": [
+      0,
+      5,
+      4
+    ],
+    "btn_diuShiDongXi": [
+      0,
+      5,
+      5
+    ],
+    "btn_quick_mark": [
+      0,
+      5,
+      18
+    ]
+  },
+  "on_foot_runtime_selection_not_proven": true,
+  "build_mode_is_source_derived_but_runtime_activation_unverified": true,
+  "unsupported_native_unity_features": [
+    "dynamic GameObject state machines",
+    "Unity UGUI native shader, mask, rect-clipping and full nine-slice mesh",
+    "localized TrueType / bitmap fonts and player event-driven text",
+    "Unity CanvasScaler safe-area/orientation adaptation",
+    "exact map viewport and UI animation/easing"
+  ],
+  "suppressed_component_counts": {
+    "mode_excluded": 19,
+    "font_and_runtime_text_not_reproduced": 28
+  },
+  "source_pixel_provenance": "Original Unity sprite files keyed by FileID and PathID",
+  "special_source_textures": [
+    "Map_map Texture2D from original XAPK",
+    "BattlePanel_kedu_zw RawImage exact local PPtr"
+  ],
+  "original_text_components_drawn_with_fallback": 9,
+  "texts": [
+    {
+      "object": "txt_num",
+      "source_gameobject_path_id": "6035373946456316547",
+      "source_component_path_id": "-6615293943575496370",
+      "source_rect_path_id": "292887681835563071",
+      "value": "20",
+      "font_origin": "fallback, original m_Font PathID=0",
+      "pixel_bounds": [
+        762.574,
+        995.243,
+        810.363,
+        1018.995
+      ]
+    },
+    {
+      "object": "txt_num",
+      "source_gameobject_path_id": "9197597753775586639",
+      "source_component_path_id": "5502149049269948269",
+      "source_rect_path_id": "-827906231139247453",
+      "value": "30",
+      "font_origin": "fallback, original m_Font PathID=0",
+      "pixel_bounds": [
+        857.581,
+        995.244,
+        905.374,
+        1018.998
+      ]
+    },
+    {
+      "object": "txt_num",
+      "source_gameobject_path_id": "2667355636640068417",
+      "source_component_path_id": "-8412418372899084515",
+      "source_rect_path_id": "303789204333610780",
+      "value": "10",
+      "font_origin": "fallback, original m_Font PathID=0",
+      "pixel_bounds": [
+        952.589,
+        995.244,
+        1000.381,
+        1018.998
+      ]
+    },
+    {
+      "object": "txt_num",
+      "source_gameobject_path_id": "6846872702984833216",
+      "source_component_path_id": "3926640069805255529",
+      "source_rect_path_id": "9136410427194391396",
+      "value": "3",
+      "font_origin": "fallback, original m_Font PathID=0",
+      "pixel_bounds": [
+        1047.596,
+        995.244,
+        1095.389,
+        1018.998
+      ]
+    },
+    {
+      "object": "txt_num",
+      "source_gameobject_path_id": "2850761940206969544",
+      "source_component_path_id": "-8276369476636718043",
+      "source_rect_path_id": "9014908692453156809",
+      "value": "2",
+      "font_origin": "fallback, original m_Font PathID=0",
+      "pixel_bounds": [
+        1142.604,
+        995.244,
+        1190.397,
+        1018.998
+      ]
+    },
+    {
+      "object": "txt_num",
+      "source_gameobject_path_id": "39913804148956246",
+      "source_component_path_id": "4008965986097518637",
+      "source_rect_path_id": "1503799635019544563",
+      "value": "8",
+      "font_origin": "fallback, original m_Font PathID=0",
+      "pixel_bounds": [
+        1237.612,
+        995.243,
+        1285.401,
+        1018.995
+      ]
+    },
+    {
+      "object": "txt_mybloodNum",
+      "source_gameobject_path_id": "-1481264937018602298",
+      "source_component_path_id": "-6076195701971340670",
+      "source_rect_path_id": "2081166362718012268",
+      "value": "84",
+      "font_origin": "fallback, original m_Font PathID=0",
+      "pixel_bounds": [
+        1464.673,
+        76.613,
+        1624.565,
+        107.281
+      ]
+    },
+    {
+      "object": "txt_hunger",
+      "source_gameobject_path_id": "-8577044498318964234",
+      "source_component_path_id": "3949072366455316945",
+      "source_rect_path_id": "344877162487318943",
+      "value": "56",
+      "font_origin": "fallback, original m_Font PathID=0",
+      "pixel_bounds": [
+        1463.038,
+        124.323,
+        1623.18,
+        155.473
+      ]
+    },
+    {
+      "object": "txt_bodyWater",
+      "source_gameobject_path_id": "-4308033266597812681",
+      "source_component_path_id": "-8095787416876729918",
+      "source_rect_path_id": "-3723180914051164495",
+      "value": "72",
+      "font_origin": "fallback, original m_Font PathID=0",
+      "pixel_bounds": [
+        1463.004,
+        168.241,
+        1624.696,
+        199.335
+      ]
+    }
+  ],
+  "original_item_icon_rectangles": [
+    {
+      "slot_index": 0,
+      "source_slot": "2413458356804806977",
+      "source_icon_rect": "6180009934263658793",
+      "original_sprite_file": "sprites/tubiao/tb_cl_mt_1047593260391222174.png",
+      "original_sprite_path_id": "1047593260391222174",
+      "count": 1
+    },
+    {
+      "slot_index": 1,
+      "source_slot": "-7377291968926980826",
+      "source_icon_rect": "-6398183612760615790",
+      "original_sprite_file": "sprites/tubiao/tb_cl_st_-6161476993414394690.png",
+      "original_sprite_path_id": "-6161476993414394690",
+      "count": 20
+    },
+    {
+      "slot_index": 2,
+      "source_slot": "-1853407859126965000",
+      "source_icon_rect": "-8859058464353756908",
+      "original_sprite_file": "sprites/tubiao/tb_yurou_1_-5595481497417969910.png",
+      "original_sprite_path_id": "-5595481497417969910",
+      "count": 30
+    },
+    {
+      "slot_index": 3,
+      "source_slot": "-5262530337358157557",
+      "source_icon_rect": "3288910214393123094",
+      "original_sprite_file": "sprites/tubiao/tb_cl_tiek_-5409680548475430017.png",
+      "original_sprite_path_id": "-5409680548475430017",
+      "count": 10
+    },
+    {
+      "slot_index": 4,
+      "source_slot": "-7903224161763178058",
+      "source_icon_rect": "5721588780893194766",
+      "original_sprite_file": "sprites/tubiao/tb_sg_-8090483557887250535.png",
+      "original_sprite_path_id": "-8090483557887250535",
+      "count": 3
+    },
+    {
+      "slot_index": 5,
+      "source_slot": "-5003853041380665046",
+      "source_icon_rect": "-6216747368788562907",
+      "original_sprite_file": "sprites/tubiao/wupin_shuihu_1_-1475266076374094172.png",
+      "original_sprite_path_id": "-1475266076374094172",
+      "count": 2
+    },
+    {
+      "slot_index": 6,
+      "source_slot": "-264218345426510196",
+      "source_icon_rect": "7169377741901244975",
+      "original_sprite_file": "sprites/tubiao/tb_cl_st_-6161476993414394690.png",
+      "original_sprite_path_id": "-6161476993414394690",
+      "count": 8
+    }
+  ],
+  "selected_hotbar_slot": 0,
+  "preview_inventory_is_demonstrative": true,
+  "runtime_inventory_values_supplied": false,
+  "original_unity_font_available": false,
+  "font_fidelity_note": "Text is positioned from original Unity RectTransform and colored by original component but rendered with a fallback font because original m_Font PathID=0.",
+  "render_preview": "last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v8_build_source_preview.png",
+  "transparent_overlay": "last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v8_build_source_preview_transparent.png",
+  "draw_calls": [
+    {
+      "go": "btn_pack",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 468,
+      "y": 932,
+      "w": 90,
+      "h": 90,
+      "original_file_id": 1,
+      "original_path_id": "-9056563195613175944",
+      "original_component_path_id": "1188140009944684106",
+      "original_gameobject_path_id": "3694177321274107552"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanell_bb_-8339622856558486473.png",
+      "x": 467,
+      "y": 928,
+      "w": 93,
+      "h": 98,
+      "original_file_id": 1,
+      "original_path_id": "-8339622856558486473",
+      "original_component_path_id": "795830641283459272",
+      "original_gameobject_path_id": "3874834752464712696"
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 526,
+      "y": 982,
+      "w": 85,
+      "h": 85,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "-1045476703055311820",
+      "original_gameobject_path_id": "-3321820547308803457"
+    },
+    {
+      "go": "Checkmark",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 528,
+      "y": 984,
+      "w": 81,
+      "h": 81,
+      "original_file_id": 1,
+      "original_path_id": "-9056563195613175944",
+      "original_component_path_id": "7097710862276629057",
+      "original_gameobject_path_id": "2636375604948267806"
+    },
+    {
+      "go": "icon",
+      "sprite": "sprites/battlepanel/shortcut_01_-6221668167541799249.png",
+      "x": 537,
+      "y": 1001,
+      "w": 63,
+      "h": 46,
+      "original_file_id": 1,
+      "original_path_id": "-6221668167541799249",
+      "original_component_path_id": "-6508130952373876983",
+      "original_gameobject_path_id": "160675134641579249"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_zt_peijiandi_-4503668560354980599.png",
+      "x": 553,
+      "y": 1047,
+      "w": 31,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-4503668560354980599",
+      "original_component_path_id": "-7267114151388761699",
+      "original_gameobject_path_id": "2592116198155488668"
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 526,
+      "y": 982,
+      "w": 85,
+      "h": 85,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "-4711333923932332616",
+      "original_gameobject_path_id": "-1282773148645787867"
+    },
+    {
+      "go": "Checkmark",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 528,
+      "y": 984,
+      "w": 81,
+      "h": 81,
+      "original_file_id": 1,
+      "original_path_id": "-9056563195613175944",
+      "original_component_path_id": "5240257263581617704",
+      "original_gameobject_path_id": "8349422274440033690"
+    },
+    {
+      "go": "icon",
+      "sprite": "sprites/battlepanel/1BattlePanel_tb_ck_-4383998472178192918.png",
+      "x": 512,
+      "y": 967,
+      "w": 114,
+      "h": 114,
+      "original_file_id": 1,
+      "original_path_id": "-4383998472178192918",
+      "original_component_path_id": "8158078590482871917",
+      "original_gameobject_path_id": "154254968610582832"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_zt_peijiandi_-4503668560354980599.png",
+      "x": 553,
+      "y": 1047,
+      "w": 31,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-4503668560354980599",
+      "original_component_path_id": "-8655633983230746137",
+      "original_gameobject_path_id": "8538076657583188113"
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 526,
+      "y": 981,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "3746398803412859288",
+      "original_gameobject_path_id": "-1137751347981332398"
+    },
+    {
+      "go": "Checkmark",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 528,
+      "y": 984,
+      "w": 81,
+      "h": 81,
+      "original_file_id": 1,
+      "original_path_id": "-9056563195613175944",
+      "original_component_path_id": "8259365685198689972",
+      "original_gameobject_path_id": "-2151308757950712251"
+    },
+    {
+      "go": "icon",
+      "sprite": "sprites/battlepanel/1BattlePanel_tb_lz_8742372393265580160.png",
+      "x": 512,
+      "y": 967,
+      "w": 114,
+      "h": 114,
+      "original_file_id": 1,
+      "original_path_id": "8742372393265580160",
+      "original_component_path_id": "291669830016609185",
+      "original_gameobject_path_id": "-8034313729870714758"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_zt_peijiandi_-4503668560354980599.png",
+      "x": 553,
+      "y": 1047,
+      "w": 31,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-4503668560354980599",
+      "original_component_path_id": "-3633520607939995617",
+      "original_gameobject_path_id": "-6951513105883301674"
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 526,
+      "y": 981,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "-5696879943405978419",
+      "original_gameobject_path_id": "-6919636482352332911"
+    },
+    {
+      "go": "Checkmark",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 528,
+      "y": 984,
+      "w": 81,
+      "h": 81,
+      "original_file_id": 1,
+      "original_path_id": "-9056563195613175944",
+      "original_component_path_id": "3716773069317736640",
+      "original_gameobject_path_id": "5174543197588623489"
+    },
+    {
+      "go": "icon",
+      "sprite": "sprites/battlepanel/1BattlePanel_tb_db_-2246881289303052092.png",
+      "x": 512,
+      "y": 967,
+      "w": 114,
+      "h": 114,
+      "original_file_id": 1,
+      "original_path_id": "-2246881289303052092",
+      "original_component_path_id": "-5433021751954009627",
+      "original_gameobject_path_id": "556103772781159163"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_zt_peijiandi_-4503668560354980599.png",
+      "x": 553,
+      "y": 1047,
+      "w": 31,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-4503668560354980599",
+      "original_component_path_id": "-4572623927387610544",
+      "original_gameobject_path_id": "-917699112475118538"
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 526,
+      "y": 981,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "7657111811987398906",
+      "original_gameobject_path_id": "-2063005462718215310"
+    },
+    {
+      "go": "Checkmark",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 528,
+      "y": 984,
+      "w": 81,
+      "h": 81,
+      "original_file_id": 1,
+      "original_path_id": "-9056563195613175944",
+      "original_component_path_id": "-3956983825988835364",
+      "original_gameobject_path_id": "5052743447849284477"
+    },
+    {
+      "go": "icon",
+      "sprite": "sprites/battlepanel/1BattlePanel_tb_lt_1846925645715432301.png",
+      "x": 512,
+      "y": 967,
+      "w": 114,
+      "h": 114,
+      "original_file_id": 1,
+      "original_path_id": "1846925645715432301",
+      "original_component_path_id": "9096222927728575669",
+      "original_gameobject_path_id": "7859026391039132814"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_zt_peijiandi_-4503668560354980599.png",
+      "x": 553,
+      "y": 1047,
+      "w": 31,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-4503668560354980599",
+      "original_component_path_id": "-5424523438642694813",
+      "original_gameobject_path_id": "-2946432348956420015"
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 526,
+      "y": 981,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "-4702679597905684752",
+      "original_gameobject_path_id": "-5630962473328405355"
+    },
+    {
+      "go": "Checkmark",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 528,
+      "y": 984,
+      "w": 81,
+      "h": 81,
+      "original_file_id": 1,
+      "original_path_id": "-9056563195613175944",
+      "original_component_path_id": "6374976147991149152",
+      "original_gameobject_path_id": "-1881063952521223676"
+    },
+    {
+      "go": "icon",
+      "sprite": "sprites/battlepanel/1BattlePanel_tb_ch_-3961718644174788932.png",
+      "x": 512,
+      "y": 967,
+      "w": 114,
+      "h": 114,
+      "original_file_id": 1,
+      "original_path_id": "-3961718644174788932",
+      "original_component_path_id": "9037001011091038258",
+      "original_gameobject_path_id": "-6094190333895030221"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_zt_peijiandi_-4503668560354980599.png",
+      "x": 553,
+      "y": 1047,
+      "w": 31,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-4503668560354980599",
+      "original_component_path_id": "967263773872518411",
+      "original_gameobject_path_id": "-6698797152566537785"
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 526,
+      "y": 981,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "6868609720356392403",
+      "original_gameobject_path_id": "-5077637350045823825"
+    },
+    {
+      "go": "Checkmark",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 528,
+      "y": 984,
+      "w": 81,
+      "h": 81,
+      "original_file_id": 1,
+      "original_path_id": "-9056563195613175944",
+      "original_component_path_id": "8317171863732538331",
+      "original_gameobject_path_id": "-2495942580138685324"
+    },
+    {
+      "go": "icon",
+      "sprite": "sprites/battlepanel/1BattlePanel_tb_q_-1119412944228292320.png",
+      "x": 512,
+      "y": 967,
+      "w": 114,
+      "h": 114,
+      "original_file_id": 1,
+      "original_path_id": "-1119412944228292320",
+      "original_component_path_id": "-1993729713299220589",
+      "original_gameobject_path_id": "8620088997763010070"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_zt_peijiandi_-4503668560354980599.png",
+      "x": 553,
+      "y": 1047,
+      "w": 31,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-4503668560354980599",
+      "original_component_path_id": "8851248755735863195",
+      "original_gameobject_path_id": "6122640255363380176"
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 526,
+      "y": 982,
+      "w": 85,
+      "h": 85,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "6489423629954447812",
+      "original_gameobject_path_id": "6576518006061975001"
+    },
+    {
+      "go": "Checkmark",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 528,
+      "y": 984,
+      "w": 81,
+      "h": 81,
+      "original_file_id": 1,
+      "original_path_id": "-9056563195613175944",
+      "original_component_path_id": "6449623379184648065",
+      "original_gameobject_path_id": "-7816924704489625647"
+    },
+    {
+      "go": "icon",
+      "sprite": "sprites/battlepanel/1BattlePanel_tb_dj_7891230758882651160.png",
+      "x": 512,
+      "y": 967,
+      "w": 114,
+      "h": 114,
+      "original_file_id": 1,
+      "original_path_id": "7891230758882651160",
+      "original_component_path_id": "-5575018957089479935",
+      "original_gameobject_path_id": "-9136310446700438322"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_zt_peijiandi_-4503668560354980599.png",
+      "x": 553,
+      "y": 1047,
+      "w": 31,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-4503668560354980599",
+      "original_component_path_id": "4212687517407390463",
+      "original_gameobject_path_id": "616528330369816580"
+    },
+    {
+      "go": "Off",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_32_-3461201934130496850.png",
+      "x": 1320,
+      "y": 819,
+      "w": 63,
+      "h": 63,
+      "original_file_id": 1,
+      "original_path_id": "-3461201934130496850",
+      "original_component_path_id": "1013933322579433157",
+      "original_gameobject_path_id": "-6536200368144157846"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_qiehuan_2_-4298228217637279808.png",
+      "x": 1311,
+      "y": 798,
+      "w": 80,
+      "h": 80,
+      "original_file_id": 1,
+      "original_path_id": "-4298228217637279808",
+      "original_component_path_id": "-5213316630054544015",
+      "original_gameobject_path_id": "-651880580921344585"
+    },
+    {
+      "go": "On",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 1320,
+      "y": 819,
+      "w": 63,
+      "h": 63,
+      "original_file_id": 1,
+      "original_path_id": "-9056563195613175944",
+      "original_component_path_id": "494712948600357332",
+      "original_gameobject_path_id": "4590026782892892670"
+    },
+    {
+      "go": "On (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_qiehuan_1_-3966316806556921395.png",
+      "x": 1314,
+      "y": 801,
+      "w": 74,
+      "h": 74,
+      "original_file_id": 1,
+      "original_path_id": "-3966316806556921395",
+      "original_component_path_id": "456832962036694667",
+      "original_gameobject_path_id": "1056111790095370478"
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 632,
+      "y": 936,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "-4548647086922458747",
+      "original_gameobject_path_id": "-8219038898443976661"
+    },
+    {
+      "go": "m_heightLignt",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 634,
+      "y": 938,
+      "w": 81,
+      "h": 81,
+      "original_file_id": 1,
+      "original_path_id": "-9056563195613175944",
+      "original_component_path_id": "-8366551762627034794",
+      "original_gameobject_path_id": "-3992532271880758739"
+    },
+    {
+      "go": "m_Item1.runtime_m_icon",
+      "sprite": "sprites/tubiao/tb_cl_mt_1047593260391222174.png",
+      "x": 634,
+      "y": 938,
+      "w": 81,
+      "h": 81
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 727,
+      "y": 936,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "9076275211722321189",
+      "original_gameobject_path_id": "6788720545119697675"
+    },
+    {
+      "go": "m_Item2.runtime_m_icon",
+      "sprite": "sprites/tubiao/tb_cl_st_-6161476993414394690.png",
+      "x": 729,
+      "y": 938,
+      "w": 81,
+      "h": 81
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 822,
+      "y": 936,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "-4416049948645666767",
+      "original_gameobject_path_id": "-8895290484451667831"
+    },
+    {
+      "go": "m_Item3.runtime_m_icon",
+      "sprite": "sprites/tubiao/tb_yurou_1_-5595481497417969910.png",
+      "x": 824,
+      "y": 938,
+      "w": 81,
+      "h": 81
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 917,
+      "y": 936,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "-3261425398856329952",
+      "original_gameobject_path_id": "-1739788680474808924"
+    },
+    {
+      "go": "m_Item4.runtime_m_icon",
+      "sprite": "sprites/tubiao/tb_cl_tiek_-5409680548475430017.png",
+      "x": 920,
+      "y": 938,
+      "w": 81,
+      "h": 81
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 1012,
+      "y": 936,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "-4464120732399521279",
+      "original_gameobject_path_id": "8112479612661238982"
+    },
+    {
+      "go": "m_Item5.runtime_m_icon",
+      "sprite": "sprites/tubiao/tb_sg_-8090483557887250535.png",
+      "x": 1015,
+      "y": 938,
+      "w": 81,
+      "h": 81
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 1107,
+      "y": 936,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "-1091742017250579780",
+      "original_gameobject_path_id": "8437803460147139042"
+    },
+    {
+      "go": "m_Item6.runtime_m_icon",
+      "sprite": "sprites/tubiao/wupin_shuihu_1_-1475266076374094172.png",
+      "x": 1110,
+      "y": 938,
+      "w": 81,
+      "h": 81
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 1202,
+      "y": 936,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "2502764458735635252",
+      "original_component_path_id": "-4420461202592134110",
+      "original_gameobject_path_id": "-3841632391740881305"
+    },
+    {
+      "go": "m_Item7.runtime_m_icon",
+      "sprite": "sprites/tubiao/tb_cl_st_-6161476993414394690.png",
+      "x": 1205,
+      "y": 938,
+      "w": 81,
+      "h": 81
+    },
+    {
+      "go": "btn_zhizao",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 11,
+      "y": 975,
+      "w": 100,
+      "h": 100,
+      "original_file_id": 3,
+      "original_path_id": "-5434031170515894608",
+      "original_component_path_id": "8995982828578535642",
+      "original_gameobject_path_id": "210616117287627897"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_zhizuo_-6504062924326004834.png",
+      "x": 18,
+      "y": 982,
+      "w": 86,
+      "h": 86,
+      "original_file_id": 1,
+      "original_path_id": "-6504062924326004834",
+      "original_component_path_id": "-7091719345708280171",
+      "original_gameobject_path_id": "-6103989134154778644"
+    },
+    {
+      "go": "m_chilun",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_3_1765268713649345837.png",
+      "x": 5,
+      "y": 969,
+      "w": 112,
+      "h": 112,
+      "original_file_id": 3,
+      "original_path_id": "1765268713649345837",
+      "original_component_path_id": "-3839076624876598889",
+      "original_gameobject_path_id": "-8644932865115240449"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_cl_2_4478498591411063686.png",
+      "x": 50,
+      "y": 996,
+      "w": 40,
+      "h": 40,
+      "original_file_id": 1,
+      "original_path_id": "4478498591411063686",
+      "original_component_path_id": "-6456743367843627036",
+      "original_gameobject_path_id": "-2215132938873578123"
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_cl_1_8185958170878533540.png",
+      "x": 33,
+      "y": 1026,
+      "w": 30,
+      "h": 30,
+      "original_file_id": 1,
+      "original_path_id": "8185958170878533540",
+      "original_component_path_id": "-5376184173670148050",
+      "original_gameobject_path_id": "7836950076356098831"
+    },
+    {
+      "go": "m_compassImage",
+      "sprite": "compass_original_source.png",
+      "x": 635,
+      "y": 0,
+      "w": 650,
+      "h": 50
+    },
+    {
+      "go": "Image (2)",
+      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_jt_-3990784314408679073.png",
+      "x": 950,
+      "y": 0,
+      "w": 21,
+      "h": 18,
+      "original_file_id": 1,
+      "original_path_id": "-3990784314408679073",
+      "original_component_path_id": "-6015921975366375149",
+      "original_gameobject_path_id": "1131900845665680613"
+    },
+    {
+      "go": "btn_baseUpgrade",
+      "sprite": "sprites/battlepanel/1BattlePanel_zuo_shang_infoBG_1_-4183463095593411494.png",
+      "x": 14,
+      "y": 130,
+      "w": 311,
+      "h": 39,
+      "original_file_id": 1,
+      "original_path_id": "-4183463095593411494",
+      "original_component_path_id": "3033302895605249371",
+      "original_gameobject_path_id": "-6925039311841286634"
+    },
+    {
+      "go": "m_base_image",
+      "sprite": "sprites/battlepanel/1BattlePanel_zuo_shang_infojj_8599354916655188648.png",
+      "x": 20,
+      "y": 133,
+      "w": 31,
+      "h": 33,
+      "original_file_id": 1,
+      "original_path_id": "8599354916655188648",
+      "original_component_path_id": "-8662545019489049643",
+      "original_gameobject_path_id": "8955669893132149121"
+    },
+    {
+      "go": "btn_info",
+      "sprite": "sprites/battlepanel2/BattlePanel2_Di_1_-2969211243965973680.png",
+      "x": 1,
+      "y": -2,
+      "w": 154,
+      "h": 124,
+      "original_file_id": 3,
+      "original_path_id": "-2969211243965973680",
+      "original_component_path_id": "-3047138740735082593",
+      "original_gameobject_path_id": "7205916825363284973"
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel2/BattlePanel2_home_4729969317431840499.png",
+      "x": 43,
+      "y": 1,
+      "w": 70,
+      "h": 59,
+      "original_file_id": 3,
+      "original_path_id": "4729969317431840499",
+      "original_component_path_id": "6228350701088450441",
+      "original_gameobject_path_id": "-6572314960713051537"
+    },
+    {
+      "go": "btn_Baserank",
+      "sprite": "sprites/battlepanel2/BattlePanel2_diban_1_4391931977596235993.png",
+      "x": 482,
+      "y": -1,
+      "w": 105,
+      "h": 80,
+      "original_file_id": 3,
+      "original_path_id": "4391931977596235993",
+      "original_component_path_id": "4764017626880385408",
+      "original_gameobject_path_id": "3299813927808528165"
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_zuo_shang_infophb_-971367810713531017.png",
+      "x": 499,
+      "y": -7,
+      "w": 70,
+      "h": 70,
+      "original_file_id": 1,
+      "original_path_id": "-971367810713531017",
+      "original_component_path_id": "1855704650309804278",
+      "original_gameobject_path_id": "7381458315268303640"
+    },
+    {
+      "go": "btn_help",
+      "sprite": "sprites/battlepanel2/BattlePanel2_diban_1_4391931977596235993.png",
+      "x": 588,
+      "y": -1,
+      "w": 105,
+      "h": 80,
+      "original_file_id": 3,
+      "original_path_id": "4391931977596235993",
+      "original_component_path_id": "4234202573682340124",
+      "original_gameobject_path_id": "-4344836791496844008"
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "complete_source_mapping/external_sprites/file19/sprite_-6534490175548794981.png",
+      "x": 616,
+      "y": 4,
+      "w": 49,
+      "h": 49,
+      "original_file_id": 19,
+      "original_path_id": "-6534490175548794981",
+      "original_component_path_id": "-5133496676017304534",
+      "original_gameobject_path_id": "-976240182916230991"
+    },
+    {
+      "go": "m_YaoganBG",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_1_-6137401648909176546.png",
+      "x": 161,
+      "y": 630,
+      "w": 330,
+      "h": 330,
+      "original_file_id": 3,
+      "original_path_id": "-6137401648909176546",
+      "original_component_path_id": "-3787303374678863354",
+      "original_gameobject_path_id": "-6367394256365834225"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_2_-5376360766746200822.png",
+      "x": 247,
+      "y": 716,
+      "w": 158,
+      "h": 158,
+      "original_file_id": 3,
+      "original_path_id": "-5376360766746200822",
+      "original_component_path_id": "-3633901487741964113",
+      "original_gameobject_path_id": "4328329022984874880"
+    },
+    {
+      "go": "btn_autoRun",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 276,
+      "y": 335,
+      "w": 89,
+      "h": 89,
+      "original_file_id": 3,
+      "original_path_id": "-5434031170515894608",
+      "original_component_path_id": "-8510889980267519098",
+      "original_gameobject_path_id": "-5816811536278523149"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_zidongbengpao2_-4638175421644290377.png",
+      "x": 285,
+      "y": 351,
+      "w": 72,
+      "h": 56,
+      "original_file_id": 3,
+      "original_path_id": "-4638175421644290377",
+      "original_component_path_id": "-2020152636449684735",
+      "original_gameobject_path_id": "8269755527971096107"
+    },
+    {
+      "go": "btn_build",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_5_6816472486429899996.png",
+      "x": 1502,
+      "y": 675,
+      "w": 182,
+      "h": 182,
+      "original_file_id": 3,
+      "original_path_id": "6816472486429899996",
+      "original_component_path_id": "-2838177364699209432",
+      "original_gameobject_path_id": "-693847203543473374"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_3_1765268713649345837.png",
+      "x": 1503,
+      "y": 676,
+      "w": 180,
+      "h": 180,
+      "original_file_id": 3,
+      "original_path_id": "1765268713649345837",
+      "original_component_path_id": "-2441924618845137402",
+      "original_gameobject_path_id": "-8300547572145585321"
+    },
+    {
+      "go": "icon",
+      "sprite": "sprites/battlepanel/1BattlePanel_sj_3_-764588019628858274.png",
+      "x": 1522,
+      "y": 701,
+      "w": 141,
+      "h": 129,
+      "original_file_id": 1,
+      "original_path_id": "-764588019628858274",
+      "original_component_path_id": "-6849078714445656479",
+      "original_gameobject_path_id": "-6780748442990276804"
+    },
+    {
+      "go": "btn_up2",
+      "sprite": "sprites/battlepanel2/BattlePanel2_st_an___-7168935225424053362.png",
+      "x": 1769,
+      "y": 725,
+      "w": 130,
+      "h": 130,
+      "original_file_id": 3,
+      "original_path_id": "-7168935225424053362",
+      "original_component_path_id": "7773525954630362473",
+      "original_gameobject_path_id": "6868289150097382791"
+    },
+    {
+      "go": "m_JumpImage",
+      "sprite": "sprites/battlepanel/1BattlePanel_cz_t_-5766048973405338036.png",
+      "x": 1780,
+      "y": 736,
+      "w": 108,
+      "h": 108,
+      "original_file_id": 1,
+      "original_path_id": "-5766048973405338036",
+      "original_component_path_id": "8131093303953847057",
+      "original_gameobject_path_id": "4052448149449211443"
+    },
+    {
+      "go": "btn_crouch2",
+      "sprite": "sprites/battlepanel2/BattlePanel2_st_an___-7168935225424053362.png",
+      "x": 1662,
+      "y": 881,
+      "w": 130,
+      "h": 130,
+      "original_file_id": 3,
+      "original_path_id": "-7168935225424053362",
+      "original_component_path_id": "6797456885413961950",
+      "original_gameobject_path_id": "-3937205834846164131"
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_cz_dun_7816152445154004946.png",
+      "x": 1667,
+      "y": 886,
+      "w": 120,
+      "h": 120,
+      "original_file_id": 1,
+      "original_path_id": "7816152445154004946",
+      "original_component_path_id": "-936687700975307459",
+      "original_gameobject_path_id": "8997343443322281357"
+    },
+    {
+      "go": "btn_pa2",
+      "sprite": "sprites/battlepanel2/BattlePanel2_st_an___-7168935225424053362.png",
+      "x": 1449,
+      "y": 881,
+      "w": 130,
+      "h": 130,
+      "original_file_id": 3,
+      "original_path_id": "-7168935225424053362",
+      "original_component_path_id": "1485486997780102014",
+      "original_gameobject_path_id": "-1572329945056109206"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_cz_pa_6380483222475970638.png",
+      "x": 1460,
+      "y": 892,
+      "w": 108,
+      "h": 108,
+      "original_file_id": 1,
+      "original_path_id": "6380483222475970638",
+      "original_component_path_id": "-846769986651813486",
+      "original_gameobject_path_id": "7762640600253200133"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel2/BattlePanel2_dt_bg_1_6069250624512689768.png",
+      "x": 1637,
+      "y": 67,
+      "w": 260,
+      "h": 260
+    },
+    {
+      "go": "ditu(Map_map original)",
+      "sprite": "source Map_map",
+      "x": 1637,
+      "y": 67,
+      "w": 260,
+      "h": 260
+    },
+    {
+      "go": "m_dayDi",
+      "sprite": "sprites/battlepanel/1BattlePanel_tq_bg_-7551180080870847355.png",
+      "x": 1573,
+      "y": 30,
+      "w": 348,
+      "h": 29,
+      "original_file_id": 1,
+      "original_path_id": "-7551180080870847355",
+      "original_component_path_id": "3469774400114656554",
+      "original_gameobject_path_id": "-547318594380851795"
+    },
+    {
+      "go": "m_dayIcon",
+      "sprite": "sprites/battlepanel/1BattlePanel_zhouye_ty_-5377527645028882103.png",
+      "x": 1865,
+      "y": 20,
+      "w": 45,
+      "h": 45,
+      "original_file_id": 1,
+      "original_path_id": "-5377527645028882103",
+      "original_component_path_id": "-3347634169518963519",
+      "original_gameobject_path_id": "-2670089461348800638"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_xue_bg_1_-6084483306043380781.png",
+      "x": 1463,
+      "y": 76,
+      "w": 161,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-6084483306043380781",
+      "original_component_path_id": "7062402499630912460",
+      "original_gameobject_path_id": "8410007506830023929"
+    },
+    {
+      "go": "m_mybloodtmpFillImage",
+      "sprite": "sprites/battlepanel/1BattlePanel_di_cb_1866784226681164571.png",
+      "x": 1463,
+      "y": 77,
+      "w": 161,
+      "h": 30,
+      "original_file_id": 1,
+      "original_path_id": "1866784226681164571",
+      "original_component_path_id": "44417375454546538",
+      "original_gameobject_path_id": "-8565662694760459101"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_buff_xue_6505484593731425225.png",
+      "x": 1429,
+      "y": 76,
+      "w": 32,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "6505484593731425225",
+      "original_component_path_id": "-5206805177447186381",
+      "original_gameobject_path_id": "5962942654408125376"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_xue_bg_1_-6084483306043380781.png",
+      "x": 1463,
+      "y": 124,
+      "w": 160,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-6084483306043380781",
+      "original_component_path_id": "-3931058753306389278",
+      "original_gameobject_path_id": "-4337920992725211268"
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_buff_jie_-7429908483174830653.png",
+      "x": 1429,
+      "y": 124,
+      "w": 32,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-7429908483174830653",
+      "original_component_path_id": "-5383070099965703175",
+      "original_gameobject_path_id": "-6934820201975838695"
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_xue_bg_1_-6084483306043380781.png",
+      "x": 1463,
+      "y": 168,
+      "w": 162,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-6084483306043380781",
+      "original_component_path_id": "-2978103989291608977",
+      "original_gameobject_path_id": "3366496668512977068"
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_buff_shui_-4534881768859244425.png",
+      "x": 1430,
+      "y": 168,
+      "w": 31,
+      "h": 31,
+      "original_file_id": 1,
+      "original_path_id": "-4534881768859244425",
+      "original_component_path_id": "5910444952285151297",
+      "original_gameobject_path_id": "1829240946900830910"
+    },
+    {
+      "go": "m_mybloodtmpFillImage_runtime",
+      "sprite": "sprites/battlepanel/1BattlePanel_di_cb_1866784226681164571.png",
+      "x": 1468,
+      "y": 77,
+      "w": 131,
+      "h": 29
+    },
+    {
+      "go": "m_myhungerFillImage_runtime",
+      "sprite": "sprites/battlepanel/1BattlePanel_di_cb_1866784226681164571.png",
+      "x": 1468,
+      "y": 125,
+      "w": 87,
+      "h": 29
+    },
+    {
+      "go": "m_myWaterFillImage_runtime",
+      "sprite": "sprites/battlepanel/1BattlePanel_di_cb_1866784226681164571.png",
+      "x": 1468,
+      "y": 169,
+      "w": 113,
+      "h": 29
+    },
+    {
+      "go": "btn_setting",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 1830,
+      "y": 330,
+      "w": 50,
+      "h": 50,
+      "original_file_id": 3,
+      "original_path_id": "-5434031170515894608",
+      "original_component_path_id": "-2105700935456680928",
+      "original_gameobject_path_id": "5039290222044803911"
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_sz_-1887600901866073155.png",
+      "x": 1820,
+      "y": 320,
+      "w": 70,
+      "h": 69,
+      "original_file_id": 1,
+      "original_path_id": "-1887600901866073155",
+      "original_component_path_id": "-4223892848990780380",
+      "original_gameobject_path_id": "373401475043081790"
+    },
+    {
+      "go": "btn_quckChat",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 1651,
+      "y": 330,
+      "w": 50,
+      "h": 50,
+      "original_file_id": 3,
+      "original_path_id": "-5434031170515894608",
+      "original_component_path_id": "1728346733332597937",
+      "original_gameobject_path_id": "-4815198517615772893"
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_sz_bg_5_-5062069000559337827.png",
+      "x": 1641,
+      "y": 320,
+      "w": 70,
+      "h": 70,
+      "original_file_id": 1,
+      "original_path_id": "-5062069000559337827",
+      "original_component_path_id": "-3586386009836815971",
+      "original_gameobject_path_id": "-4077525021409956481"
+    },
+    {
+      "go": "m_quickChatCd",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 1651,
+      "y": 330,
+      "w": 50,
+      "h": 50,
+      "original_file_id": 3,
+      "original_path_id": "-5434031170515894608",
+      "original_component_path_id": "-3552090263463169164",
+      "original_gameobject_path_id": "374782319331117663"
+    },
+    {
+      "go": "m_red_competition",
+      "sprite": "sprites/common/com_tip_ts_-1248732371203954598.png",
+      "x": 1684,
+      "y": 326,
+      "w": 24,
+      "h": 24,
+      "original_file_id": 4,
+      "original_path_id": "-1248732371203954598",
+      "original_component_path_id": "7253639411239229591",
+      "original_gameobject_path_id": "-3523051529794512639"
+    },
+    {
+      "go": "btn_diuShiDongXi",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 1774,
+      "y": 330,
+      "w": 50,
+      "h": 50,
+      "original_file_id": 3,
+      "original_path_id": "-5434031170515894608",
+      "original_component_path_id": "8545269640043602832",
+      "original_gameobject_path_id": "4588551370357889805"
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_TIP_23_7022945330196084483.png",
+      "x": 1743,
+      "y": 299,
+      "w": 112,
+      "h": 112,
+      "original_file_id": 1,
+      "original_path_id": "7022945330196084483",
+      "original_component_path_id": "-8317479286285347566",
+      "original_gameobject_path_id": "4104021828335195984"
+    },
+    {
+      "go": "btn_quick_mark",
+      "sprite": "sprites/battlepanel2/BattlePanel2_quick_mark_-5736820139208292708.png",
+      "x": 1649,
+      "y": 388,
+      "w": 56,
+      "h": 56,
+      "original_file_id": 3,
+      "original_path_id": "-5736820139208292708",
+      "original_component_path_id": "-4045483184563160275",
+      "original_gameobject_path_id": "-1784449167588597494"
+    }
+  ]
+}
