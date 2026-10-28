@@ -38,7 +38,10 @@ assert all(t["source_gameobject_path_id"] in a.game_objects for t in texts)
 assert all(t["source_rect_path_id"] in a.t for t in texts)
 assert all(t["source_component_path_id"] in a.source_comps for t in texts)
 assert all(a.source_comps[t["source_component_path_id"]]["type"]=="Text" for t in texts)
-assert all(t["font_origin"]=="fallback, original m_Font PathID=0" for t in texts)
+assert all(t["font_origin"].startswith("system fallback;") for t in texts)
+assert {t["original_unity_text_font_size"] for t in texts}=={22,25}
+assert {t["original_unity_alignment"] for t in texts}=={4,5}
+assert all(t["original_font_reference"]["file_id"]==7 for t in texts)
 assert all((a.assets/r["original_sprite_file"]).is_file() for r in result["original_item_icon_rectangles"])
 assert all(r["source_icon_rect"] in a.t for r in result["original_item_icon_rectangles"])
 assert len(result["source_hierarchy_order"])==22
@@ -79,6 +82,7 @@ print("HUD_V7_SOURCE_TESTS_PASS",json.dumps({
     "state_item_icons":len(result["original_item_icon_rectangles"]),
     "original_text_rects":True,
     "original_unity_font_substitution_explicit":True,
+    "source_text_font_sizes":[22,25],
     "melee_draws":len(a.calls),
     "rifle_draws":len(rifle.calls),
 },ensure_ascii=False))
