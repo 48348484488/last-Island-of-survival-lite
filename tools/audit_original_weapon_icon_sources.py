@@ -151,6 +151,13 @@ def main():
                             report["config_files"].append(itemmeta)
                             if item.file_size>12*1024*1024:continue
                             data=nested.read(item)
+                            if item.filename.endswith("/cfg.ItemCfg.oc"):
+                                itemmeta["header_hex"]=data[:64].hex()
+                                itemmeta["tail_hex"]=data[-32:].hex()
+                                itemmeta["sha256"]=sha(data)
+                                (OUT/"original_itemcfg_source.oc").write_bytes(data)
+                                print("ORIGINAL_ITEMCFG_BINARY_HEADER",
+                                      itemmeta["header_hex"],flush=True)
                             try:
                                 decoded=parse_itemcfg_exact(data)
                                 itemmeta["parse"]="ItemCfg Octets success"
