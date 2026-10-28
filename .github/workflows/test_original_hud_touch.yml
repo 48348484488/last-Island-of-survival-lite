@@ -1,0 +1,31 @@
+name: Validate real Unity touch and joystick controls
+on:
+  push:
+    paths:
+      - last_island_recreated_game/original_hud_touch.py
+      - last_island_recreated_game/original_hud_bindings.py
+      - last_island_recreated_game/original_hud_runtime.py
+      - tools/test_original_hud_touch.py
+      - .github/workflows/test_original_hud_touch.yml
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  source-touch-headless:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            last_island_recreated_game/original_hud_touch.py
+            last_island_recreated_game/original_hud_bindings.py
+            last_island_recreated_game/original_hud_runtime.py
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_original_all_positions.json
+            tools/test_original_hud_touch.py
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          python -m py_compile last_island_recreated_game/original_hud_touch.py
+          python -u tools/test_original_hud_touch.py
