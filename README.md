@@ -25,8 +25,9 @@ Para reconstruir o XAPK original: `python xapk_original/reassemble_xapk.py` (con
 
 ## Estado e limites
 
-- **Implementado:** APK nativo ARM64, cenário 3D, itens, machado/M4, câmera, controles e 33 clipes de animação importados.
-- **HUD:** sprites originais reconstruídos do `battlepanel.ab`, perfis machado/M4 e áreas de toque de origem Unity. Ainda faltam fontes originais, alguns painéis, efeitos e calibração completa de `CanvasScaler`.
+- **Implementado:** APK nativo ARM64, cenário 3D, itens, machado/M4, câmera, 33 clipes importados, toque por dedo e áudio original de M4/machado/coleta.
+- **HUD:** sprites e hitboxes do `battlepanel.ab` para machado/M4; controles isolados para não atacar ao tocar em outros lugares. Mochila, craft, configurações e chat ainda são painéis provisórios, não reconstruções completas.
+- **Personagem e áudio:** as cópias de textura para Android corrigem a opacidade dos canais alfa de materiais Unity, sem modificar os PNGs originais. Passos/salto/pouso usam sons sintetizados temporários; os clipes originais dessas ações ainda não foram extraídos.
 - **Teste:** [compilação Android](https://github.com/48348484488/last-Island-of-survival-lite/actions/workflows/build_android_raylib_lite.yml) e [auditoria do HUD](https://github.com/48348484488/last-Island-of-survival-lite/actions/workflows/test_mobile_original_hud_export.yml).
 
 **Observação:** os assets e o jogo original pertencem aos respectivos titulares; a presença dos arquivos neste repositório não concede direitos de redistribuição comercial.
