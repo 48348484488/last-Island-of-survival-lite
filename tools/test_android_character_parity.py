@@ -64,7 +64,8 @@ def main():
     for k,filename in maps.items():
         assert (ASSET/filename).is_file(),(k,filename)
         assert (ASSET/filename).stat().st_size>1000,(k,filename)
-        assert "'%s':"%k in PC,(k,"desktop texture absent")
+        desktop_key="clothes" if k=="torso" else k
+        assert "'%s':"%desktop_key in PC,(k,"desktop texture absent")
         assert filename in PC,(k,"desktop file path")
         assert ('"assets/'+filename+'"') in CPP,(k,"native source file path")
     assert "unityRig.setTextures(texPants, texTorso, texSkin, texShoes, texHead, texHair);" in CPP
