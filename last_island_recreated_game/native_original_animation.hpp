@@ -146,7 +146,14 @@ public:
             mesh.indices=(unsigned short*)MemAlloc(p.triangles.size()*sizeof(uint16_t));
             std::memcpy(mesh.vertices,p.bindVerts.data(),n*3*sizeof(float));
             std::memcpy(mesh.normals,p.normals.data(),n*3*sizeof(float));
-            std::memcpy(mesh.texcoords,p.uvs.data(),n*2*sizeof(float));
+            // Desktop viewer3d.py uploads textures bottom-up (Pillow RGBA
+            // raw stride -1) while Raylib LoadTexture uploads top-down. Unity
+            // UV (v=0 at image bottom) therefore needs v -> 1-v here.
+            // This does not modify original source UVs / skins / PNG assets.
+            for(size_t v=0;v<n;v++){
+                mesh.texcoords[2*v]=p.uvs[2*v];
+                mesh.texcoords[2*v+1]=1.0f-p.uvs[2*v+1];
+            }
             std::memcpy(mesh.indices,p.triangles.data(),p.triangles.size()*sizeof(uint16_t));
             UploadMesh(&mesh,true);  // dynamic VBO: original pose changes per frame
             p.model=LoadModelFromMesh(mesh);
