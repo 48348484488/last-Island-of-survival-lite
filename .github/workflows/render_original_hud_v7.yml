@@ -1,0 +1,45 @@
+name: Build original HUD V7 source-positioned texts and inventory
+on:
+  push:
+    paths:
+      - tools/render_original_hud_v7.py
+      - tools/test_original_hud_v7.py
+      - .github/workflows/render_original_hud_v7.yml
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  original-hud-v7:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install Pillow
+      - name: Test real Unity text RectTransforms, all seven slots and runtime values
+        run: python -u tools/test_original_hud_v7.py
+      - name: Render source on-foot HUD with numeric status and example item quantities
+        run: |
+          printf '%s\n' '{"profile":"on-foot-melee","selected_slot":2,"heading_deg":55,"map_uv":[0.55,0.45],"vitals":{"health":0.84,"food":0.56,"water":0.72}}' > /tmp/original_hud_v7_state.json
+          python -u tools/render_original_hud_v7.py --demo-items             --state /tmp/original_hud_v7_state.json             --output last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v7_original_source_preview.png
+      - name: Render source rifle HUD with separate source controls and empty inventory
+        run: |
+          python -u tools/render_original_hud_v7.py --profile on-foot-rifle             --output last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v7_original_rifle_preview.png
+      - name: Preserve reproducible V7 screenshots, RGBA overlays and audit reports
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v7*
+          if ! git diff --staged --quiet; then
+            git commit -m "Render original HUD item counts and status numbers from source Unity text positions"
+            git pull --rebase origin main
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: authentic-Last-Island-HUD-v7-source-texts-inventory-and-preview
+          path: |
+            tools/render_original_hud_v7.py
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v7*
+          if-no-files-found: warn
