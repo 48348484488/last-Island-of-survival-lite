@@ -111,6 +111,34 @@ def main():
                       _text_for_id(hud,num),
                       "unity_item_path_id":go["path_id"]})
     geometry["hotbar"]=icons
+    # Each of the seven Unity m_ItemN objects has its own m_heightLignt
+    # Image. Extract the REAL selected-state graphic per slot. The atlas
+    # lets the Android renderer move the highlight without baking a fake
+    # or leaving two slots highlighted when the user switches equipment.
+    selection_tiles=[]
+    for i in range(7):
+        item_go=hud.go("m_Item"+str(i+1))
+        selected_go=hud._descendant(item_go["path_id"],"m_heightLignt")
+        bounds=source_rect(hud,selected_go)
+        crop=tuple(round(bounds[k]) for k in ("left","top","right","bottom"))
+        selection_layer=HudV7(ASSETS,heading_deg=0,map_uv=[.5,.5])
+        selection_layer.node(selection_layer.g[selected_go],depth=0)
+        tile=selection_layer.layer.crop(crop)
+        if tile.width<=0 or tile.height<=0 or tile.getbbox() is None:
+            raise ValueError("Original Unity selection highlight absent: "+str(i))
+        selection_tiles.append(tile)
+        icons[i]["selected_bounds"]=bounds
+        icons[i]["selected_source_path_id"]=selected_go
+    selection_width=max(tile.width for tile in selection_tiles)
+    selection_height=max(tile.height for tile in selection_tiles)
+    selection_atlas=Image.new("RGBA",(7*selection_width,selection_height))
+    for i,tile in enumerate(selection_tiles):
+        selection_atlas.alpha_composite(tile,(i*selection_width,0))
+    selection_atlas.save(dest/"hud_original_hotbar_selection.png",optimize=True)
+    geometry["selection_atlas"]={"slots":7,"tile_width":selection_width,
+                                 "tile_height":selection_height}
+    print("LIOS_UNITY_ORIGINAL_HOTBAR_SELECTION",selection_atlas.size,
+          "slots",7,flush=True)
     geometry["texts"]={k:text_info(hud,n) for k,n in TEXTS.items()}
     geometry["buttons"]={}
     for profile in ("on-foot-melee","on-foot-rifle"):
@@ -122,10 +150,11 @@ def main():
             if prev is not None and prev!=rect_info:
                 raise ValueError("Source UGUI action bounds differ across profiles: "+action)
             geometry["buttons"][action]=rect_info
-        # Each original canvas includes the exact source-selected 7-slot bar.
+        # Draw the original base WITHOUT the selected sprite; the seven
+        # source-correct m_heightLignt graphics are composited at runtime.
         # No text here: numeric values are redrawn live from the C++ state.
         layer=NativeMobileHud(ASSETS,heading_deg=0,map_uv=[.5,.5])
-        layer.selected_slot=0 if profile=="on-foot-melee" else 1
+        layer.selected_slot=-1
         audit=layer.render_ordered(profile=profile,items=ITEMS,vitals=None,samples=False)
         outfile=dest/("hud_original_melee.png" if profile=="on-foot-melee" else "hud_original_rifle.png")
         layer.layer.save(outfile,optimize=True)
@@ -238,6 +267,8 @@ def main():
     for i,item in enumerate(icons):
         lines.append("static constexpr Rect SlotBox"+str(i)+"="+literal_rect(item["slot"])+";")
         lines.append("static constexpr Rect Slot"+str(i)+"="+literal_rect(item["icon"])+";")
+        lines.append("static constexpr Rect SlotHighlight"+str(i)+"="+
+                     literal_rect(item["selected_bounds"])+";")
         info=item["count"];col=info["color"]
         lines.append("static constexpr Text SlotCount"+str(i)+"={"+literal_rect(info["bounds"])+
                      ",%d,%d,%d,%d,%d,%d};"%(info["font_size"],info["align"],*col))
@@ -245,6 +276,10 @@ def main():
         col=info["color"]
         lines.append("static constexpr Text "+key+"={"+literal_rect(info["bounds"])+
                      ",%d,%d,%d,%d,%d,%d};"%(info["font_size"],info["align"],*col))
+    lines.append("static constexpr int HotbarHighlightTileW=%d;"%
+                 selection_width)
+    lines.append("static constexpr int HotbarHighlightTileH=%d;"%
+                 selection_height)
     compass=geometry["compass"]
     lines.append("static constexpr Rect Compass="+literal_rect(compass["bounds"])+";")
     lines.append("static constexpr int CompassTileW=%d;"%compass["tile_width"])
