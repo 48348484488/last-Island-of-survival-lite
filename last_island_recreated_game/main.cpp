@@ -120,7 +120,7 @@ int main() {
     const int screenWidth = 1280;
     const int screenHeight = 720;
 
-    SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_RESIZABLE);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "Last Island of Survival - C++ Engine (Mobile Ready)");
     SetTargetFPS(60);
 
