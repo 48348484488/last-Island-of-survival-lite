@@ -97,3 +97,31 @@ aw_assets/assets/role/animationbundle.ab
      - IDs de som: 480 (corte de arvore), 481 (mineracao de rocha/minerio), 163/164 (impacto em jogador).
      - Efeitos visuais: kanshu_01.ab e wakuang_01.ab.
      - Alcance autentico: ~2.8 metros com verificacao vetorial frontal.
+
+---
+
+## HUD original V9 integrado ao jogo recriado
+
+A interface do `last_island_recreated_game/viewer3d.py` agora usa, por padrao, a
+renderizacao do `battlepanel.ab` extraido do XAPK original. Diferente do HUD
+manual anterior, a camada visual usa os sprites originais identificados por
+Unity FileID/PathID, a ordem dos GameObjects e as coordenadas RectTransform.
+Nao usa recortes de screenshots.
+
+- `last_island_recreated_game/original_hud_runtime.py`: ponte entre estado real
+  do jogo (vida, fome, sede, direcao, inventario coletado) e HUD original.
+- `tools/render_original_hud_v7.py`: reconstrucao visual do prefab com numeros
+  e quantidades dinamicas, sem itens inventados na partida.
+- `tools/test_original_hud_runtime.py`: teste sem GPU que gera uma previa
+  *sintetica* usando assets originais (nao e screenshot do jogo).
+- `LIOS_HUD_MODE=legacy`: volta ao HUD antigo para diagnostico.
+
+**Limitacoes verificadas:** fonte original nao recuperada (usa glifos de
+substituicao), mascara/shader e CanvasScaler/safe area nao equivalentes 1:1;
+mapa mostra recorte central de demonstracao ate recuperar a transformacao das
+coordenadas de mundo; icones de machado/fuzil ainda nao possuem vinculo
+original comprovado no prefab. A camada OpenGL foi ligada ao cliente desktop,
+mas esta versao ainda nao foi validada visualmente em uma partida nem
+empacotada/testada como APK Android.
+
+[Teste automatizado V9](https://github.com/48348484488/last-Island-of-survival-lite/actions/workflows/validate_original_hud_runtime_v9.yml)
