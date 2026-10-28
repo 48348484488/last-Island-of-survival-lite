@@ -1,0 +1,15 @@
+{
+  "source": "Exact Unity original Font PPtr from battlepanel.ab Text.m_FontData",
+  "resolved_original_font_references": [],
+  "unresolved_original_font_references": [
+    {
+      "file_id": 7,
+      "path_id": "-4720046316774500430",
+      "cab": "096add6cdbb7663c007ed458ab0c7475",
+      "reason": "Original CAB not found in install_time_asset_pack.apk bundles"
+    }
+  ],
+  "font_binary_exported": false,
+  "font_asset_found_in_install_time_asset_pack": false,
+  "limitation": "Font name/bytes not proven when the target CAB is absent from the install-time AssetBundle pack. Text sizes/alignments still come from original Unity source; glyphs remain system fallback."
+}
