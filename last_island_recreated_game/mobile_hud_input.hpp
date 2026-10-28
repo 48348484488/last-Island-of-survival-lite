@@ -25,25 +25,26 @@ struct Controller {
  std::map<int,Action> owner;
  std::set<Action> held,pressed,released;
  Vector2 stick={0,0},lookDelta={0,0},stickPoint={0,0};
- Vector2 fingerLast[1]={{0,0}}; // no indexing by touch array/unstable id
+ // Stable touch IDs are stored exclusively in owner/cameraPrevious.
  std::map<int,Vector2> cameraPrevious;
  bool isHeld(Action a)const{return held.count(a)>0;}
  bool justPressed(Action a)const{return pressed.count(a)>0;}
  static Action hit(float x,float y,bool rifle) {
-    // Specific UI wins over general actions. Source UGUI buttons and the
-    // 7 inventory backgrounds must never inherit the attack command.
+    // Specific UI wins over general actions. Use the FULL original Unity
+    // Background RectTransforms, not the smaller icon Rects (and never the
+    // zero-sized m_Item anchors), so taps anywhere on a slot change items.
     const struct Candidate{Action a;LIOS_HUD::Rect r;bool rifleOnly;} candidates[]={
       {Action::Settings,LIOS_HUD::Settings,false},
       {Action::QuickChat,LIOS_HUD::QuickChat,false},
       {Action::Craft,LIOS_HUD::Craft,false},
       {Action::Inventory,LIOS_HUD::Inventory,false},
-      {Action::Slot0,LIOS_HUD::Slot0,false},
-      {Action::Slot1,LIOS_HUD::Slot1,false},
-      {Action::Slot2,LIOS_HUD::Slot2,false},
-      {Action::Slot3,LIOS_HUD::Slot3,false},
-      {Action::Slot4,LIOS_HUD::Slot4,false},
-      {Action::Slot5,LIOS_HUD::Slot5,false},
-      {Action::Slot6,LIOS_HUD::Slot6,false},
+      {Action::Slot0,LIOS_HUD::SlotBox0,false},
+      {Action::Slot1,LIOS_HUD::SlotBox1,false},
+      {Action::Slot2,LIOS_HUD::SlotBox2,false},
+      {Action::Slot3,LIOS_HUD::SlotBox3,false},
+      {Action::Slot4,LIOS_HUD::SlotBox4,false},
+      {Action::Slot5,LIOS_HUD::SlotBox5,false},
+      {Action::Slot6,LIOS_HUD::SlotBox6,false},
       {Action::Aim,LIOS_HUD::Aim,true},
       {Action::Reload,LIOS_HUD::Reload,true},
       {Action::Crouch,LIOS_HUD::Crouch,false},
