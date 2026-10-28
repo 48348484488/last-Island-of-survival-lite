@@ -125,3 +125,23 @@ mas esta versao ainda nao foi validada visualmente em uma partida nem
 empacotada/testada como APK Android.
 
 [Teste automatizado V9](https://github.com/48348484488/last-Island-of-survival-lite/actions/workflows/validate_original_hud_runtime_v9.yml)
+
+### V10 - renderizacao OpenGL realmente executada e fotografada pelo CI
+
+O jogo Python `viewer3d.py` foi executado com Mesa/OpenGL 2.1 e Xvfb em
+GitHub Actions (sem GPU dedicada, sem Android fisico). Nos modos `melee` e
+`rifle`, o jogo completou tres frames, desenhou o HUD de sprites originais e
+salvou screenshots **do framebuffer real** 960x540. O modo estrito
+(`LIOS_STRICT_HUD=1`) rejeita a substituicao silenciosa pelo HUD legado.
+
+- [Execucao completa com screenshots reais](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40631809546) - ambos os jobs verdes; artifacts por modo
+- [Execucao otimizada (checkout parcial)](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40631866768) - ambos os jobs verdes
+- Workflow: `.github/workflows/smoke_real_original_hud_opengl.yml`
+- Ambiente de teste: `LIOS_HUD_MODE=source LIOS_STRICT_HUD=1 LIOS_SMOKE_FRAMES=3 LIOS_SMOKE_PROFILE=melee|rifle`
+
+**Auditoria das imagens:** HUD original visualmente presente, dados de
+vida/fome/agua, mapa, controles e icones de materiais. Os slots de machado e
+fuzil continuam **sem icones de item**, pois o prefab deixa estes m_Sprite
+como zero e o vinculo original de inventario nao foi recuperado. O mapa usa
+uma posicao ilustrativa; dados de CanvasScaler, shaders e fonte original
+permanecem incompletos. Esta validacao e de desktop/Mesa, nao de APK Android.
