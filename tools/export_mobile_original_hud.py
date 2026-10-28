@@ -29,6 +29,14 @@ spec=importlib.util.spec_from_file_location("ilios_v7",ROOT/"tools/render_origin
 v7=importlib.util.module_from_spec(spec);spec.loader.exec_module(v7)
 HudV7=v7.HudV7
 
+class NativeMobileHud(HudV7):
+    """Keep source joystick knob separate so it can move with the finger."""
+    def node(self,go,depth=3,exclude=()):
+        name=go if isinstance(go,str) else go["name"]
+        if name=="m_littleYaogan":
+            return
+        return super().node(go,depth=depth,exclude=exclude)
+
 ACTIONS={
     "attack":"Attack","jump":"Jump","auto_run":"Sprint",
     "crouch":"Crouch","prone":"Prone","inventory":"Inventory",
@@ -79,7 +87,8 @@ def main():
         go=hud.go("m_Item"+str(i+1))
         child=hud._descendant(go["path_id"],"m_icon")
         num=hud._descendant(go["path_id"],"txt_num")
-        icons.append({"index":i,"icon":source_rect(hud,child),
+        icons.append({"index":i,"slot":source_rect(hud,go["path_id"]),
+                      "icon":source_rect(hud,child),
                       "count":text_info(hud,hud.game_objects[num]["name"]) if False else
                       _text_for_id(hud,num),
                       "unity_item_path_id":go["path_id"]})
@@ -97,7 +106,7 @@ def main():
             geometry["buttons"][action]=rect_info
         # Each original canvas includes the exact source-selected 7-slot bar.
         # No text here: numeric values are redrawn live from the C++ state.
-        layer=HudV7(ASSETS,heading_deg=0,map_uv=[.5,.5])
+        layer=NativeMobileHud(ASSETS,heading_deg=0,map_uv=[.5,.5])
         layer.selected_slot=0 if profile=="on-foot-melee" else 1
         audit=layer.render_ordered(profile=profile,items=ITEMS,vitals=None,samples=False)
         outfile=dest/("hud_original_melee.png" if profile=="on-foot-melee" else "hud_original_rifle.png")
@@ -111,6 +120,18 @@ def main():
             "source_hierarchy_order":audit["source_hierarchy_order"],
         }
     geometry["joystick"]=original_joystick()
+    knob=hud.go("m_littleYaogan")
+    knob_comps=[hud.source_comps[p["path_id"]] for p in
+        hud.game_objects[knob["path_id"]]["components"]
+        if p["path_id"] in hud.source_comps and
+        hud.source_comps[p["path_id"]]["type"]=="Image"]
+    if len(knob_comps)!=1 or not knob_comps[0].get("resolved_sprite_file"):
+        raise ValueError("Original Unity joystick thumb sprite is not uniquely resolved")
+    knob_path=ASSETS/knob_comps[0]["resolved_sprite_file"]
+    with Image.open(knob_path) as im:
+        im.convert("RGBA").save(dest/"hud_original_joystick_knob.png",optimize=True)
+    geometry["joystick"]["thumb_rect"]=source_rect(hud,knob["path_id"])
+    geometry["joystick"]["thumb_sprite_source"]=str(knob_comps[0]["resolved_sprite_file"])
     geometry["resource_icons"]={}
     for name,sprite in RESOURCES.items():
         entries=hud.sprite_names.get(sprite)
@@ -135,6 +156,7 @@ def main():
     for action,rc in geometry["buttons"].items():
         lines.append("static constexpr Rect "+ACTIONS[action]+"="+literal_rect(rc)+";")
     for i,item in enumerate(icons):
+        lines.append("static constexpr Rect SlotBox"+str(i)+"="+literal_rect(item["slot"])+";")
         lines.append("static constexpr Rect Slot"+str(i)+"="+literal_rect(item["icon"])+";")
         info=item["count"];col=info["color"]
         lines.append("static constexpr Text SlotCount"+str(i)+"={"+literal_rect(info["bounds"])+
@@ -145,6 +167,7 @@ def main():
                      ",%d,%d,%d,%d,%d,%d};"%(info["font_size"],info["align"],*col))
     j=geometry["joystick"];cx,cy=j["center"]
     lines.append("static constexpr Rect JoystickTrigger="+literal_rect(j["trigger"])+";")
+    lines.append("static constexpr Rect JoystickThumb="+literal_rect(j["thumb_rect"])+";")
     lines.append("static constexpr float JoystickCenterX="+fmt(cx)+";")
     lines.append("static constexpr float JoystickCenterY="+fmt(cy)+";")
     lines.append("static constexpr float JoystickRadius="+fmt(j["radius"])+";")
