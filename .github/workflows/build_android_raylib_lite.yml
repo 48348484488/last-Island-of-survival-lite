@@ -38,6 +38,7 @@ jobs:
             tools/render_original_hud_v7.py
             tools/render_original_hud_v6.py
             tools/render_source_unity_hud.py
+            tools/unity_ugui_raster.py
             tools/test_android_character_parity.py
             last_island_recreated_game/viewer3d.py
           sparse-checkout-cone-mode: false
