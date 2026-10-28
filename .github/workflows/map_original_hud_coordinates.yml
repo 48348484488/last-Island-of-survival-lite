@@ -1,0 +1,34 @@
+name: Reconstruct original HUD coordinates for every Unity component
+on:
+  push:
+    paths:
+      - tools/map_original_hud_coordinates.py
+      - .github/workflows/map_original_hud_coordinates.yml
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install Pillow
+      - name: Map every Unity original HUD RectTransform to exact screen geometry
+        run: python -u tools/map_original_hud_coordinates.py
+      - name: Save full original button and widget coordinate registry
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_original_all_positions.json
+          if ! git diff --staged --quiet; then
+            git commit -m "Export full original Unity HUD coordinate layout for all components"
+            git pull --rebase origin main
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-HUD-all-coordinates-and-touch-hitboxes
+          path: last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_original_all_positions.json
