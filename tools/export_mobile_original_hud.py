@@ -86,7 +86,17 @@ def main():
     for i in range(7):
         go=hud.go("m_Item"+str(i+1))
         child=hud._descendant(go["path_id"],"m_icon")
-        background=hud._descendant(go["path_id"],"Background")
+        # The source contains multiple nested GameObjects named Background.
+        # Unity hotbar() explicitly draws the DIRECT child named Background;
+        # resolve by parent RectTransform rather than a recursive name search.
+        direct=[]
+        for tid in hud.bygo[go["path_id"]]["children"]:
+            rect=hud.t.get(tid)
+            if rect and hud.g.get(rect["go"],{}).get("name")=="Background":
+                direct.append(rect["go"])
+        if len(direct)!=1:
+            raise ValueError(f"Unity m_Item{i+1} direct Background not unique: {direct}")
+        background=direct[0]
         num=hud._descendant(go["path_id"],"txt_num")
         # m_ItemN is a zero-size Unity anchor! Its child Background is the
         # actual visible 95x95 hotbar hit area. Using the parent prevented
