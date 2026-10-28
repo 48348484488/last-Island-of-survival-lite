@@ -439,9 +439,15 @@ int main() {
         if (player.pitch > 1.35f) player.pitch = 1.35f;
         if (player.pitch < -1.35f) player.pitch = -1.35f;
 
-        // Calculate direction vectors from player yaw
+        // Unity character's forward is +Z. IMPORTANT: with this camera
+        // looking toward +Z, the SCREEN-RIGHT vector is forward x world-up
+        // = (-cos(yaw), 0, sin(yaw)). Previous Android code used +cos here,
+        // so strafing physically opposed the original desktop controller and
+        // its signed left/right animation selection. The camera shoulder uses
+        // a separate geometric offset and is intentionally NOT flipped.
         Vector3 forward = { sinf(player.yaw), 0.0f, cosf(player.yaw) };
         Vector3 right   = { cosf(player.yaw), 0.0f, -sinf(player.yaw) };
+        const Vector3 screenRight={-right.x,0.0f,-right.z};
 
         // ---------------------------------------------------------------------------------
         // Player Movement Logic (Keyboard + Mobile Joystick)
@@ -451,14 +457,20 @@ int main() {
         // Keyboard input
         if (IsKeyDown(KEY_W)) moveDir = Vector3Add(moveDir, forward);
         if (IsKeyDown(KEY_S)) moveDir = Vector3Subtract(moveDir, forward);
-        if (IsKeyDown(KEY_D)) moveDir = Vector3Add(moveDir, right);
-        if (IsKeyDown(KEY_A)) moveDir = Vector3Subtract(moveDir, right);
+        if (IsKeyDown(KEY_D)) moveDir = Vector3Add(moveDir, screenRight);
+        if (IsKeyDown(KEY_A)) moveDir = Vector3Subtract(moveDir, screenRight);
 
         // Add Touch Joystick movement
         if (leftStick.active) {
+            // A nearly vertical thumb drag should not add an unintended
+            // sideways component. Preserve deliberate diagonal movement.
+            float inputSide=touchMoveDir.x;
+            float inputFwd=-touchMoveDir.y;
+            if(std::fabs(inputSide)<std::fabs(inputFwd)*0.20f)inputSide=0.0f;
+            if(std::fabs(inputFwd)<std::fabs(inputSide)*0.12f)inputFwd=0.0f;
             Vector3 stickMove = Vector3Add(
-                Vector3Scale(forward, -touchMoveDir.y),
-                Vector3Scale(right, touchMoveDir.x)
+                Vector3Scale(forward, inputFwd),
+                Vector3Scale(screenRight, inputSide)
             );
             moveDir = Vector3Add(moveDir, stickMove);
         }
@@ -640,7 +652,9 @@ int main() {
             if(!player.isGrounded)animationJumpTime+=dt;
             else animationJumpTime=0;
             float localFwd=Vector3DotProduct(moveDir,forward);
-            float localRight=Vector3DotProduct(moveDir,right);
+            // Select the same signed local locomotion clip as viewer3d.py:
+            // joystick left -> zhan_run_left01, right -> zhan_run_right01.
+            float localRight=Vector3DotProduct(moveDir,screenRight);
             std::string target;
             if(player.isAttacking)
                 target=player.equippedSlot==1?"wq_m4_1_zhan_miaozhun_attack01":"fu_zhan_attack_01";
