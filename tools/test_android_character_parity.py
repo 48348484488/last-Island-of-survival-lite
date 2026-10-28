@@ -74,11 +74,47 @@ def main():
     assert "rlDisableBackfaceCulling();" in CPP and "rlEnableBackfaceCulling();" in CPP
     assert "if(!hasTouchActive && cursorLocked && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))" in CPP
     assert 'sound.fireM4();' in CPP and 'sound.releaseM4();' in CPP
-    assert 'if (IsKeyDown(KEY_D)) moveDir = Vector3Add(moveDir, right);' in CPP
-    assert 'if (IsKeyDown(KEY_A)) moveDir = Vector3Subtract(moveDir, right);' in CPP
-    assert 'Vector3Scale(right, touchMoveDir.x)' in CPP
-    assert 'float localRight=Vector3DotProduct(moveDir,right);' in CPP
+    # Camera-space right is (-X,+Z yaw-dependent) when looking down +Z.
+    # The previous Android +X vector inverted screen-relative locomotion.
+    assert "s_rx = -math.cos(yaw); s_rz = math.sin(yaw)" in PC
+    assert 'const Vector3 screenRight={-right.x,0.0f,-right.z};' in CPP
+    assert 'if (IsKeyDown(KEY_D)) moveDir = Vector3Add(moveDir, screenRight);' in CPP
+    assert 'if (IsKeyDown(KEY_A)) moveDir = Vector3Subtract(moveDir, screenRight);' in CPP
+    assert 'Vector3Scale(screenRight, inputSide)' in CPP
+    assert 'float localRight=Vector3DotProduct(moveDir,screenRight);' in CPP
     assert 'target=localRight>=0?"zhan_run_right01":"zhan_run_left01";' in CPP
+    for yaw in (0.0, 0.4, math.pi/2, math.pi, -math.pi/2):
+        fwd=np.array([math.sin(yaw),0.0,math.cos(yaw)])
+        screen_right=np.array([-math.cos(yaw),0.0,math.sin(yaw)])
+        assert abs(float(fwd@screen_right))<1e-6, yaw
+        assert abs(np.linalg.norm(screen_right)-1)<1e-6
+        forward_move=fwd.copy()
+        left_move=-screen_right
+        right_move=screen_right
+        assert abs(float(forward_move@screen_right))<1e-6, yaw
+        assert float(left_move@screen_right)<-.9999, yaw
+        assert float(right_move@screen_right)>.9999, yaw
+    # Do not interpret a slight horizontal finger wobble as diagonal walking.
+    def axis_snap(x,y):
+        side=x;front=-y
+        if abs(side)<abs(front)*0.20:side=0.0
+        if abs(front)<abs(side)*0.12:front=0.0
+        return side,front
+    assert axis_snap(.12,-.96)==(0.0,.96)
+    assert axis_snap(-.12,-.96)==(0.0,.96)
+    assert axis_snap(-.85,0.0)==(-.85,0.0)
+    assert axis_snap(.75,-.72)==(.75,.72)
+    assert 'const float driveScale=std::min(1.0f,moveAmount);' in CPP
+    assert 'currentSpeed * driveScale * dt' in CPP
+    assert 'animationWalkTime+=dt*(currentSpeed/player.speed)*driveScale;' in CPP
+    # Distance and gait phase share the same speed ratio.
+    for speed_ratio in (0.30,0.65,1.0,1.75):
+        world_move=5.5*speed_ratio*.016
+        phase=.016*(5.5*speed_ratio/5.5)
+        assert abs(world_move/phase-5.5)<1e-8
+    print("LIOS_LOCOMOTION_SCREEN_RIGHT_AND_GAIT_PASS",
+          "yaw_samples=5","forward_zero_lateral=true",
+          "left_negative_right_positive=true","analog_speed_matches_gait=true")
     assert 'mesh.texcoords[2*v+1]=1.0f-p.uvs[2*v+1];' in NATIVE
     assert (ASSET/'wq_m4_1_gunshot outdoor loop.wav').is_file()
     assert (ASSET/'wq_m4_1_gunshot outdoor loop end.wav').is_file()
