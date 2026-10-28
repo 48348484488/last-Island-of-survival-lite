@@ -1,0 +1,24 @@
+name: Audit source Unity touch regions and joystick
+on:
+  push:
+    paths:
+      - tools/audit_original_hud_touches.py
+      - .github/workflows/audit_original_hud_touches.yml
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  original-hud-touch-regions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            last_island_recreated_game/original_hud_bindings.py
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_original_all_positions.json
+            tools/audit_original_hud_touches.py
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -u tools/audit_original_hud_touches.py
