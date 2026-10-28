@@ -194,6 +194,11 @@ int main() {
 
     Model modelShoes   = LoadModel("assets/man_shoes_chushijuese_01.obj");
     Texture2D texShoes = LoadTexture("assets/man_shoes_chushijuese_01_ba.png");
+    // The desktop original rig uses this DIFFERENT skin atlas for its
+    // exposed skin and gloves. v0.13 incorrectly substituted the head atlas.
+    Texture2D texSkin = LoadTexture("assets/man_clothes_yf_0_ba.png");
+    TraceLog(LOG_INFO,"LIOS_ORIGINAL_CHARACTER_ATLASES skin=%u torso=%u pants=%u head=%u hair=%u shoes=%u",
+             texSkin.id,texTorso.id,texPants.id,texHead.id,texHair.id,texShoes.id);
     if (modelShoes.meshCount > 0 && texShoes.id > 0)
         SetMaterialTexture(&modelShoes.materials[0], MATERIAL_MAP_DIFFUSE, texShoes);
 
@@ -204,7 +209,7 @@ int main() {
     if (hasUnityRig) {
         hasUnityRig = unityRig.upload();
         if (hasUnityRig) {
-            unityRig.setTextures(texPants, texTorso, texHead, texShoes, texHead, texHair);
+            unityRig.setTextures(texPants, texTorso, texSkin, texShoes, texHead, texHair);
             TraceLog(LOG_INFO, "LIOS_NATIVE_UNITY_RIG_READY bones=%d clips=%d meshes=%d",
                      (int)unityRig.boneNames.size(),(int)unityRig.clips.size(),(int)unityRig.parts.size());
         }
@@ -652,19 +657,21 @@ int main() {
         };
 
         if (player.thirdPerson) {
-            float camDist = 3.6f;
-            Vector3 camOffset = Vector3Scale(lookDir, -camDist);
-            // Right shoulder offset for third-person perspective (like original Last Island)
-            Vector3 shoulderOffset = Vector3Scale(right, 0.4f);
-            camera.position = (Vector3){
-                player.position.x + camOffset.x + shoulderOffset.x,
-                player.position.y + 1.65f + camOffset.y,
-                player.position.z + camOffset.z + shoulderOffset.z
+            // Match the working desktop viewer3d.py gluLookAt exactly.
+            // At yaw=0 the avatar walks towards +Z and the camera MUST be
+            // at negative Z, showing the BACK of the correctly skinned model.
+            const float camDist=3.8f;
+            Vector3 shoulderOffset=Vector3Scale(right,0.35f);
+            Vector3 shoulderTarget=Vector3Add(player.position,shoulderOffset);
+            camera.position={
+                shoulderTarget.x-lookDir.x*camDist,
+                player.position.y+1.65f-lookDir.y*camDist,
+                shoulderTarget.z-lookDir.z*camDist
             };
-            camera.target = (Vector3){
-                player.position.x + shoulderOffset.x,
-                player.position.y + 1.45f,
-                player.position.z + shoulderOffset.z
+            camera.target={
+                shoulderTarget.x+lookDir.x*2.0f,
+                player.position.y+1.45f+lookDir.y*2.0f,
+                shoulderTarget.z+lookDir.z*2.0f
             };
         } else {
             // First Person mode
@@ -865,7 +872,9 @@ int main() {
         // Top Status Header
         DrawRectangle(10, 10, 360, 80, Fade(BLACK, 0.65f));
         DrawText("LAST ISLAND OF SURVIVAL", 20, 16, 16, GOLD);
-        DrawText("Native C++ / Raylib Engine (Android/PC Ready)", 20, 36, 12, RAYWHITE);
+        DrawText(hasUnityRig ? "Original 33 Unity Animations / Native Android" :
+                  "Original skinning unavailable - simplified fallback",
+                  20, 36, 12, RAYWHITE);
         DrawText(TextFormat("FPS: %i | Coletados: Made=%i Enx=%i Fer=%i Ped=%i",
             GetFPS(), player.woodCount, player.sulfurCount, player.ironCount, player.stoneCount),
             20, 56, 12, GREEN);
@@ -968,6 +977,7 @@ int main() {
     UnloadModel(modelHead);    UnloadTexture(texHead);
     UnloadModel(modelHair);    UnloadTexture(texHair);
     UnloadModel(modelShoes);   UnloadTexture(texShoes);
+    if(texSkin.id)UnloadTexture(texSkin);
     UnloadModel(modelAxe);     UnloadTexture(texAxe);
     UnloadModel(modelRifle);   UnloadTexture(texRifle);
     UnloadModel(modelHouse);   UnloadTexture(texHouse);
