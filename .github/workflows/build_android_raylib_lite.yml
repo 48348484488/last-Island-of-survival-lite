@@ -94,7 +94,7 @@ jobs:
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_melee.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_rifle.png
           cd /tmp/lios-raymob
-          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.15.1-touch-slots-audio/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
+          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.16.0-lateral-uv-unity-m4/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
@@ -154,7 +154,8 @@ jobs:
               'assets/assets/native_man_shoes_chushijuese_01_ba.png',
               'assets/assets/native_man_head_chushijuese_01_ba.png',
               'assets/assets/native_man_hair_chushijuese_01_ba.png',
-              'assets/assets/m4a1_fire.wav',
+              'assets/assets/wq_m4_1_gunshot outdoor loop.wav',
+              'assets/assets/wq_m4_1_gunshot outdoor loop end.wav',
               'assets/assets/axe_swing_miss.wav',
               'assets/assets/axe_chop_tree.wav',
               'assets/assets/axe_mine_ore.wav',
@@ -182,8 +183,10 @@ jobs:
               assert src.getchannel('A').getextrema()[0]<255
               assert dst.getchannel('A').getextrema()==(255,255),suffix
               assert dst.convert('RGB').tobytes()==src.convert('RGB').tobytes(),suffix
-            assert set(['assets/assets/m4a1_fire.wav','assets/assets/axe_swing_miss.wav'])<=names
-            print('LIOS_ANDROID_OPAQUE_CHARACTER_AND_ORIGINAL_AUDIO_PASS')
+            assert set(['assets/assets/wq_m4_1_gunshot outdoor loop.wav',
+                        'assets/assets/wq_m4_1_gunshot outdoor loop end.wav',
+                        'assets/assets/axe_swing_miss.wav'])<=names
+            print('LIOS_ANDROID_OPAQUE_CHARACTER_AND_UNITY_M4_AUDIO_PASS')
             print("LIOS_ANDROID_TWO_ORIGINAL_UNITY_HUD_MODES_PASS")
             print("LIOS_ANDROID_ANIMATIONS_VERIFIED",bones,meshes,clips,len(skeleton))
             print("LIOS_ANDROID_NATIVE_APK_STRUCTURE_PASS",
