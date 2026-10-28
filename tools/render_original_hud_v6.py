@@ -101,7 +101,9 @@ class HudSourceOrdered(base.SourceHUD):
                       "color":comp.get("color"),
                       "fill_amount":comp.get("fill_amount"),
                       "fill_method":comp.get("fill_method"),
-                      "fill_origin":comp.get("fill_origin")}
+                      "fill_origin":comp.get("fill_origin"),
+                      "fill_clockwise":comp.get("fill_clockwise"),
+                      "preserve_aspect":comp.get("preserve_aspect")}
             prior=len(self.calls)
             self.stamp(png,bounds,go["name"],settings)
             if len(self.calls)>prior:
