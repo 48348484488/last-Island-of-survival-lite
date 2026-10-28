@@ -94,7 +94,7 @@ jobs:
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_melee.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_rifle.png
           cd /tmp/lios-raymob
-          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.16.0-lateral-uv-unity-m4/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
+          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.16.1-dynamic-original-compass/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
@@ -142,6 +142,7 @@ jobs:
               'assets/assets/lios_skeleton_v1.bin',
               'assets/assets/hud_original_melee.png',
               'assets/assets/hud_original_rifle.png',
+              'assets/assets/hud_original_compass_strip.png',
               'assets/assets/hud_original_joystick_knob.png',
               'assets/assets/icon_resource_wood.png',
               'assets/assets/icon_resource_metal.png',
@@ -173,6 +174,12 @@ jobs:
             rifle=Image.open(io.BytesIO(z.read('assets/assets/hud_original_rifle.png'))).convert('RGBA')
             assert melee.size==rifle.size==(1920,1080)
             assert ImageChops.difference(melee,rifle).getbbox() is not None
+            atlas=Image.open(io.BytesIO(z.read('assets/assets/hud_original_compass_strip.png'))).convert('RGBA')
+            assert atlas.getbbox() is not None
+            assert atlas.width%4==0 and atlas.height%18==0
+            wc,hc=atlas.width//4,atlas.height//18
+            assert ImageChops.difference(atlas.crop((0,0,wc,hc)),atlas.crop((wc,0,2*wc,hc))).getbbox() is not None
+            print('LIOS_UNITY_DYNAMIC_COMPASS_72_SOURCE_FRAMES_PASS',wc,hc,atlas.size)
             for suffix in ('man_clothes_chushijuese_01_ba.png',
                            'man_clothes_yf_0_ba.png',
                            'man_trousers_chushijuese_01_ba.png',
@@ -198,7 +205,7 @@ jobs:
       - name: Copy named downloadable APK
         run: |
           mkdir -p dist
-          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/Last-Island-LITE-Recriado-Android-ARM64-v0.15.1-touch-slots-audio.apk
+          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.16.1-ARM64.apk
           sha256sum dist/*.apk
 
       - name: Upload Android APK for phone testing
