@@ -1,0 +1,31 @@
+name: Audit authentic Unity HUD active states and map textures
+on:
+  push:
+    paths:
+      - tools/audit_original_canvas_source.py
+      - .github/workflows/audit_original_canvas_source.yml
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  source-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install "UnityPy>=1.20,<2" Pillow
+      - name: Download verified original XAPK asset-pack map bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: original-Last-Island-HUD-XAPK-provenance
+          run-id: 40611088431
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: hud_original_comprovacao_xapk/
+      - run: python -u tools/audit_original_canvas_source.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: raw-unity-hud-component-states-and-original-minimap
+          path: hud_canvas_source_audit/
+          if-no-files-found: warn
