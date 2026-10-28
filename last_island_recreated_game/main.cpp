@@ -437,14 +437,14 @@ int main() {
         // Keyboard input
         if (IsKeyDown(KEY_W)) moveDir = Vector3Add(moveDir, forward);
         if (IsKeyDown(KEY_S)) moveDir = Vector3Subtract(moveDir, forward);
-        if (IsKeyDown(KEY_D)) moveDir = Vector3Subtract(moveDir, right);
-        if (IsKeyDown(KEY_A)) moveDir = Vector3Add(moveDir, right);
+        if (IsKeyDown(KEY_D)) moveDir = Vector3Add(moveDir, right);
+        if (IsKeyDown(KEY_A)) moveDir = Vector3Subtract(moveDir, right);
 
         // Add Touch Joystick movement
         if (leftStick.active) {
             Vector3 stickMove = Vector3Add(
                 Vector3Scale(forward, -touchMoveDir.y),
-                Vector3Scale(right, -touchMoveDir.x)
+                Vector3Scale(right, touchMoveDir.x)
             );
             moveDir = Vector3Add(moveDir, stickMove);
         }
@@ -619,7 +619,7 @@ int main() {
             if(!player.isGrounded)animationJumpTime+=dt;
             else animationJumpTime=0;
             float localFwd=Vector3DotProduct(moveDir,forward);
-            float localRight=-Vector3DotProduct(moveDir,right);
+            float localRight=Vector3DotProduct(moveDir,right);
             std::string target;
             if(player.isAttacking)
                 target=player.equippedSlot==1?"wq_m4_1_zhan_miaozhun_attack01":"fu_zhan_attack_01";
@@ -753,7 +753,11 @@ int main() {
                 // vertices by their Blender/OpenGL winding. Raylib defaults
                 // to backface culling and could discard the full avatar.
                 rlDisableBackfaceCulling();
+                // PC uses uncullled Unity skinned triangles. Unity winding
+                // can differ from raylib's OBJ default and hide the body.
+                rlDisableBackfaceCulling();
                 unityRig.draw();
+                rlEnableBackfaceCulling();
                 rlEnableBackfaceCulling();
                 rlPopMatrix();
             }
