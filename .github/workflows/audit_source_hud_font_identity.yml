@@ -1,0 +1,33 @@
+name: Verify original Unity HUD Font identity by exact external CAB
+on:
+  push:
+    paths:
+      - tools/audit_source_hud_font_identity.py
+      - .github/workflows/audit_source_hud_font_identity.yml
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  source-font:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install "UnityPy>=1.20,<2"
+      - run: python -u tools/audit_source_hud_font_identity.py
+      - name: Commit only original Font metadata, not font bytes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/original_font_identity_NO_FONT_FILE.json
+          if ! git diff --staged --quiet; then
+            git commit -m "Document exact source Unity Font identity without exporting font bytes"
+            git pull --rebase origin main
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-HUD-font-identity-metadata-only
+          path: last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/original_font_identity_NO_FONT_FILE.json
