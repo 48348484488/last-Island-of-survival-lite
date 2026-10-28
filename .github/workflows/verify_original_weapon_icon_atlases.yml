@@ -1,0 +1,34 @@
+name: Verify exact original Last Island weapon icon atlas sprites
+on:
+  push:
+    paths:
+      - tools/verify_original_weapon_icon_atlases.py
+      - .github/workflows/verify_original_weapon_icon_atlases.yml
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  icon-origin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            xapk_original
+            tools
+            last_island_recreated_game/assets/ui_hud
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install 'UnityPy>=1.20,<2' Pillow
+      - name: Prove image bytes from original Sprite PathIDs
+        run: python -u tools/verify_original_weapon_icon_atlases.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: last-island-original-weapon-icon-atlas-evidence
+          path: |
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/original_weapon_icon_atlas_provenance.json
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/weapon_verified/
+          if-no-files-found: warn
