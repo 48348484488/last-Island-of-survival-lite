@@ -26,6 +26,9 @@ jobs:
           sparse-checkout: |
             last_island_recreated_game/main.cpp
             last_island_recreated_game/native_original_animation.hpp
+            last_island_recreated_game/original_hud_bindings.py
+            last_island_recreated_game/original_hud_touch.py
+            last_island_recreated_game/original_hud_runtime.py
             last_island_recreated_game/authentic_animations.npz
             last_island_recreated_game/master_character.npz
             last_island_recreated_game/assets
