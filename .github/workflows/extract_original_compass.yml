@@ -1,0 +1,39 @@
+name: Recover original Unity HUD compass RawImage
+on:
+  push:
+    paths: [tools/extract_original_compass.py,.github/workflows/extract_original_compass.yml]
+  workflow_dispatch:
+permissions: {contents: write, actions: read}
+jobs:
+  compass:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install "UnityPy>=1.20,<2" Pillow
+      - uses: actions/download-artifact@v4
+        with:
+          name: original-Last-Island-HUD-XAPK-provenance
+          run-id: 40611088431
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: hud_original_comprovacao_xapk/
+      - run: python -u tools/extract_original_compass.py
+      - name: Save exact original Compass RawImage and source metadata
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/assets/hud_original_xapk/compass_original_source.*
+          if ! git diff --staged --quiet; then
+            git commit -m "Restore source Unity HUD compass RawImage and source reference"
+            git pull --rebase origin main
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-compass-texture-rawimage-reference
+          path: |
+            last_island_recreated_game/assets/hud_original_xapk/compass_original_source.png
+            last_island_recreated_game/assets/hud_original_xapk/compass_original_source.json
