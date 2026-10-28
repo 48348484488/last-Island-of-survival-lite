@@ -1,0 +1,25 @@
+name: Verify genuine HUD textures against original XAPK
+on:
+  push:
+    paths:
+      - tools/audit_original_hud.py
+      - .github/workflows/audit_original_hud.yml
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  forensic-hud-assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install Pillow
+      - name: Reassemble XAPK and extract source UI AssetBundles
+        run: python tools/audit_original_hud.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: last-island-original-HUD-source-audit
+          path: hud_original_auditoria/
+          if-no-files-found: warn
