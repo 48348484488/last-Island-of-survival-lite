@@ -1086,6 +1086,13 @@ def main():
         pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
     except Exception:
         pass
+    # Automated real-OpenGL CI smoke capture, disabled during regular play.
+    smoke_frames = max(0, int(os.environ.get('LIOS_SMOKE_FRAMES', '0')))
+    smoke_profile = os.environ.get('LIOS_SMOKE_PROFILE', 'melee').lower()
+    smoke_capture = os.environ.get('LIOS_SMOKE_SCREENSHOT', '')
+    strict_hud = os.environ.get('LIOS_STRICT_HUD', '0') == '1'
+    if smoke_frames and smoke_profile not in ('melee', 'rifle'):
+        raise ValueError('Invalid LIOS_SMOKE_PROFILE')
     W, H = 960, 540
     screen = pygame.display.set_mode((W, H), OPENGL | DOUBLEBUF | RESIZABLE)
     pygame.display.set_caption('Last Day Rules: Survival')
@@ -1178,12 +1185,17 @@ def main():
     is_moving, is_running = False, False
     attack_t, is_attacking = 0.0, False
     attack_hit_done = False
-    equipped_slot = 0    # 0 = Stone Axe, 1 = M4A1 Assault Rifle
+    equipped_slot = (1 if smoke_frames and smoke_profile == 'rifle' else 0)
+    # 0 = Stone Axe, 1 = M4A1 Assault Rifle
     is_aiming = False    # ADS (Aim Down Sights) zoom & centering
     ammo_cur, ammo_max = 30, 30
     health, stamina = 100.0, 100.0
     food, water = 100.0, 100.0
     wood, metal, stone, sulfur = 0, 0, 0, 0
+    if smoke_frames:
+        # Distinct synthetic amounts make the verified source-text overlays
+        # visible in CI captures, without altering ordinary game inventory.
+        wood, metal, stone, sulfur = 41, 12, 7, 3
     msg, msg_t = '', 0.0
     jump_t = 0.0
 
@@ -1198,6 +1210,7 @@ def main():
     print('Jogo pronto! WASD mover, SHIFT correr, SPACE pular, TAB camera, ESC cursor.')
 
     running = True
+    smoke_count = 0
     while running:
         dt = min(clock.tick(60) / 1000.0, 0.05)
 
@@ -1492,6 +1505,8 @@ def main():
                 import traceback
                 print('Source HUD renderer failed; switching to legacy:', exc)
                 traceback.print_exc()
+                if strict_hud:
+                    raise RuntimeError('Original source HUD cannot render in strict smoke mode') from exc
                 original_hud.close()
                 original_hud = None
                 hud = FastHUD(A)
@@ -1502,8 +1517,31 @@ def main():
                      equipped_slot=equipped_slot, is_aiming=is_aiming,
                      ammo_cur=ammo_cur, ammo_max=ammo_max)
 
+        if smoke_frames:
+            smoke_count += 1
+            if smoke_count >= smoke_frames:
+                if strict_hud and original_hud is None:
+                    raise RuntimeError('Game fell back to legacy HUD during strict GL smoke test')
+                if smoke_capture:
+                    from pathlib import Path
+                    from PIL import Image
+                    from OpenGL.GL import GL_RGBA, GL_UNSIGNED_BYTE, glFinish, glReadPixels
+                    glFinish()
+                    raw = bytes(glReadPixels(0, 0, W, H, GL_RGBA, GL_UNSIGNED_BYTE))
+                    if len(raw) != W * H * 4:
+                        raise RuntimeError(f'OpenGL readback incomplete: {len(raw)} bytes')
+                    capture = Path(smoke_capture)
+                    capture.parent.mkdir(parents=True, exist_ok=True)
+                    Image.frombytes('RGBA', (W, H), raw).transpose(
+                        Image.Transpose.FLIP_TOP_BOTTOM).convert('RGB').save(capture)
+                    print('LIOS_REAL_OPENGL_SCREENSHOT', capture, capture.stat().st_size)
+                print('LIOS_REAL_OPENGL_SMOKE_PASS', smoke_count, smoke_profile,
+                      'original_hud=' + str(original_hud is not None))
+                running = False
         pygame.display.flip()
 
+    if original_hud is not None:
+        original_hud.close()
     pygame.quit()
 
 if __name__ == '__main__':
