@@ -50,6 +50,22 @@ class SourceHUD:
                 self.sprites[v["path_id"]]=v
                 self.sprite_names[v["name"]].append(v)
                 self.external_original_sprites+=1
+        # A few Sprite objects live INSIDE the original UI prefab but their
+        # Texture2D is in a different original CAB. Once decoded, use those
+        # exact local PathIDs and never a lookalike texture.
+        embedded=self.assets/"complete_source_mapping/original_unity_all_hud_components.json"
+        self.embedded_original_sprites=0
+        if embedded.is_file():
+            graph=json.loads(embedded.read_text(encoding="utf8"))
+            for pid,v in graph.get("sprite_assets",{}).items():
+                if not v.get("file"):continue
+                if not (self.assets/v["file"]).is_file():
+                    raise FileNotFoundError("Original HUD embedded source missing: "+v["file"])
+                if pid in self.sprites and self.sprites[pid]["file"]!=v["file"]:
+                    raise ValueError("Conflicting source local Sprite ID "+pid)
+                self.sprites[pid]=v
+                self.sprite_names[v["name"]].append(v)
+                self.embedded_original_sprites+=1
         self.layer=Image.new("RGBA",canvas)
         self.calls=[];self.notes=[]
         self._source_hits=Counter()
@@ -412,6 +428,7 @@ def main():
        "camera_heading_degrees":hud.heading_deg,
        "sprites_from_original_xapk":len(hud._source_hits),
        "additional_original_CAB_sprites_loaded":hud.external_original_sprites,
+       "additional_prefab_embedded_sprites_loaded":hud.embedded_original_sprites,
        "sample_items_are_illustrative":args.demo_items,
        "recttransform_local_scale_enabled":True,
        "recttransform_anchors_calculated_from_parent_rect_center":True,
