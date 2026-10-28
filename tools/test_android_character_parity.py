@@ -73,7 +73,20 @@ def main():
     assert "UpdateMeshBuffer(gpu,2,normals.data()" in NATIVE, "Skin normal GPU updates missing"
     assert "rlDisableBackfaceCulling();" in CPP and "rlEnableBackfaceCulling();" in CPP
     assert "if(!hasTouchActive && cursorLocked && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))" in CPP
-    assert 'sound.play(sound.m4,.8f);' in CPP
+    assert 'sound.fireM4();' in CPP and 'sound.releaseM4();' in CPP
+    assert 'if (IsKeyDown(KEY_D)) moveDir = Vector3Add(moveDir, right);' in CPP
+    assert 'if (IsKeyDown(KEY_A)) moveDir = Vector3Subtract(moveDir, right);' in CPP
+    assert 'Vector3Scale(right, touchMoveDir.x)' in CPP
+    assert 'float localRight=Vector3DotProduct(moveDir,right);' in CPP
+    assert 'target=localRight>=0?"zhan_run_right01":"zhan_run_left01";' in CPP
+    assert 'mesh.texcoords[2*v+1]=1.0f-p.uvs[2*v+1];' in NATIVE
+    assert (ASSET/'wq_m4_1_gunshot outdoor loop.wav').is_file()
+    assert (ASSET/'wq_m4_1_gunshot outdoor loop end.wav').is_file()
+    import wave
+    with wave.open(str(ASSET/'wq_m4_1_gunshot outdoor loop.wav'),'rb') as w:
+        assert w.getnframes()>60000 and w.getframerate()==44100
+    with wave.open(str(ASSET/'wq_m4_1_gunshot outdoor loop end.wav'),'rb') as w:
+        assert w.getnframes()>10000 and w.getframerate()==44100
     assert 'sound.play(sound.jump,.7f);' in CPP
     assert "SetMaterialTexture(&p.model.materials[0],MATERIAL_MAP_DIFFUSE,tex);" in NATIVE
     print("LIOS_ANDROID_CAMERA_TEXTURE_PARITY_PASS",
