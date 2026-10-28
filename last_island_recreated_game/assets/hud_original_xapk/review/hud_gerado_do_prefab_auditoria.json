@@ -16,6 +16,7 @@
   "map_window": 896,
   "camera_heading_degrees": 90.0,
   "sprites_from_original_xapk": 36,
+  "additional_original_CAB_sprites_loaded": 0,
   "sample_items_are_illustrative": false,
   "recttransform_local_scale_enabled": true,
   "recttransform_anchors_calculated_from_parent_rect_center": true,
