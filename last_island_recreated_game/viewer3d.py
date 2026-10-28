@@ -347,20 +347,26 @@ class FastHUD:
 
         # 4. Authentic Hotbar Slots & Icons (from battlepanel.ab & common.ab)
         self.tex_slot       = load_texture(u('1BattlePanel_buttle_fang_1.png'))
+        self.tex_slot_selected = load_texture(u('1BattlePanel_buttle_fang_3.png'))
         self.tex_backpack   = load_texture(u('1BattlePanell_bb.png'))
         self.tex_build_btn  = load_texture(u('com_xiulitubiao.png'))
 
         # 5. Authentic Action Buttons (from battlepanel.ab, common.ab & battlecustompanel.ab)
-        # Actual Unity Sprite assets from battlepanel2.ab, not the legacy painted composites.
-        self.tex_btn_attack = load_texture(u('BattlePanel2_st_an_2.png'))
-        self.tex_btn_attack_icon = load_texture(u('BattlePanel2_quick_icon_attack.png'))
-        self.tex_btn_vault  = load_texture(u('BattlePanel2_st_an_2.png'))
-        self.tex_btn_vault_icon = load_texture(u('1BattlePanel_cz_t.png'))
-        self.tex_btn_jump   = load_texture(u('1BattlePanel_cz_t.png'))
+        # Verified against original assets/ui/battlepanel.ab Image.m_Sprite pointers.
+        # btn_fire: Sprite PathIDs 6816472486429899996 + 1765268713649345837.
+        self.tex_btn_attack = load_texture(u('BattlePanel2_car_yaogan_5.png'))
+        self.tex_btn_attack_icon = load_texture(u('BattlePanel2_car_yaogan_3.png'))
+        # btn_autoRun, used by the local sprint shortcut (not a claim of identical behavior).
+        self.tex_btn_vault = load_texture(u('BattlePanel2_car_yaogan_4.png'))
+        self.tex_btn_vault_icon = load_texture(u('BattlePanel2_car_zidongbengpao2.png'))
+        # btn_up2, btn_crouch2 and btn_pa2 share a plate, with separate icon layers.
+        self.tex_btn_action_plate = load_texture(u('BattlePanel2_st_an_!.png'))
+        self.tex_btn_jump = load_texture(u('1BattlePanel_cz_t.png'))
         self.tex_btn_crouch = load_texture(u('1BattlePanel_cz_dun.png'))
-        self.tex_btn_prone  = load_texture(u('1BattlePanel_cz_pa.png'))
-        self.tex_btn_aim    = load_texture(u('BattlePanel2_st_an_2.png'))
-        self.tex_btn_aim_icon = load_texture(u('BattlePanel_cxfmt_zhunxing.png'))
+        self.tex_btn_prone = load_texture(u('1BattlePanel_cz_pa.png'))
+        # btn_kaijing points at original 1BattlePanel_sj_2; the crosshair is not an aim button.
+        self.tex_btn_aim = load_texture(u('BattlePanel2_car_yaogan_4.png'))
+        self.tex_btn_aim_icon = load_texture(u('1BattlePanel_sj_2.png'))
 
         # 6. Authentic Virtual Joystick (from battlepanel2.ab)
         self.tex_joy_base   = load_texture(u('BattlePanel2_car_yaogan_1.png'))
@@ -758,7 +764,8 @@ class FastHUD:
         # -------------------------------------------------------------
         slot_sz = max(36, int(42 * SCALE))
         gap = max(3, int(4 * SCALE))
-        num_slots = 6
+        # Source prefab has m_Item1 through m_Item7, spaced 100 Canvas units apart.
+        num_slots = 7
         total_hotbar_w = num_slots * slot_sz + (num_slots - 1) * gap
         hx = W // 2 - total_hotbar_w // 2
         hy = int(18 * SCALE)
@@ -788,14 +795,15 @@ class FastHUD:
             glTexCoord2f(0, 1); glVertex2f(build_x, hy + bp_sz)
             glEnd()
 
-        # Pure APK items: 1:Stone Axe, 2:M4A1 Rifle, 3:Juice, 4:Bandage, 5:Sulfur, 6:Wood/Metal
+        # Seven original HUD slots. Contents remain demonstration inventory items, not source gameplay data.
         item_icons = [
             self.tex_axe,
             self.tex_m4,
             self.tex_juice,
             self.tex_bandage,
             self.tex_sulfur if sulfur > 0 else self.tex_metal,
-            self.tex_wood if wood > 0 else 0
+            self.tex_wood if wood > 0 else 0,
+            self.tex_stone if stone > 0 else 0
         ]
 
         for idx in range(num_slots):
@@ -812,23 +820,16 @@ class FastHUD:
                 glTexCoord2f(0, 1); glVertex2f(sx, hy + slot_sz)
                 glEnd()
 
-            # Active Slot indicator (highlights equipped slot): lime-green left border & orange line below
-            if idx == equipped_slot:
-                glDisable(GL_TEXTURE_2D)
-                glColor4f(0.78, 0.92, 0.12, 1.0)
+            # m_ItemN/m_heightLignt original Sprite, no invented colored outlines.
+            if idx == equipped_slot and self.tex_slot_selected:
+                glEnable(GL_TEXTURE_2D)
+                glColor4f(1.0, 1.0, 1.0, 1.0)
+                glBindTexture(GL_TEXTURE_2D, self.tex_slot_selected)
                 glBegin(GL_QUADS)
-                glVertex2f(sx, hy)
-                glVertex2f(sx + 3, hy)
-                glVertex2f(sx + 3, hy + slot_sz)
-                glVertex2f(sx, hy + slot_sz)
-                glEnd()
-
-                glColor4f(0.96, 0.55, 0.18, 1.0)
-                glBegin(GL_QUADS)
-                glVertex2f(sx, hy - int(5 * SCALE))
-                glVertex2f(sx + int(slot_sz * 0.85), hy - int(5 * SCALE))
-                glVertex2f(sx + int(slot_sz * 0.85), hy - int(3 * SCALE))
-                glVertex2f(sx, hy - int(3 * SCALE))
+                glTexCoord2f(0, 0); glVertex2f(sx, hy)
+                glTexCoord2f(1, 0); glVertex2f(sx + slot_sz, hy)
+                glTexCoord2f(1, 1); glVertex2f(sx + slot_sz, hy + slot_sz)
+                glTexCoord2f(0, 1); glVertex2f(sx, hy + slot_sz)
                 glEnd()
 
             # Item Icon inside slot
@@ -891,7 +892,7 @@ class FastHUD:
             glEnable(GL_TEXTURE_2D)
             _jmp_c = 0.55 if 'jump' in btn_pressed else 1.0
             glColor4f(_jmp_c, _jmp_c, _jmp_c, 0.90)
-            glBindTexture(GL_TEXTURE_2D, self.tex_btn_jump)
+            glBindTexture(GL_TEXTURE_2D, self.tex_btn_action_plate)
             jx = W - int(72 * SCALE)
             jy = int(76 * SCALE)
             glBegin(GL_QUADS)
@@ -900,13 +901,14 @@ class FastHUD:
             glTexCoord2f(1, 1); glVertex2f(jx + btn_sz, jy + btn_sz)
             glTexCoord2f(0, 1); glVertex2f(jx, jy + btn_sz)
             glEnd()
+            self._draw_original_button_icon(self.tex_btn_jump, jx, jy, btn_sz, int(6 * SCALE))
 
         # Crouch / Aim (1BattlePanel_cz_dun.png)
         if self.tex_btn_crouch:
             glEnable(GL_TEXTURE_2D)
             _cr_c = 0.55 if 'crouch' in btn_pressed else 1.0
             glColor4f(_cr_c, _cr_c, _cr_c, 0.90)
-            glBindTexture(GL_TEXTURE_2D, self.tex_btn_crouch)
+            glBindTexture(GL_TEXTURE_2D, self.tex_btn_action_plate)
             cx = W - int(116 * SCALE)
             cy = int(22 * SCALE)
             glBegin(GL_QUADS)
@@ -915,13 +917,14 @@ class FastHUD:
             glTexCoord2f(1, 1); glVertex2f(cx + btn_sz, cy + btn_sz)
             glTexCoord2f(0, 1); glVertex2f(cx, cy + btn_sz)
             glEnd()
+            self._draw_original_button_icon(self.tex_btn_crouch, cx, cy, btn_sz, int(6 * SCALE))
 
         # Prone (1BattlePanel_cz_pa.png)
         if self.tex_btn_prone:
             glEnable(GL_TEXTURE_2D)
             _pr_c = 0.55 if 'prone' in btn_pressed else 1.0
             glColor4f(_pr_c, _pr_c, _pr_c, 0.90)
-            glBindTexture(GL_TEXTURE_2D, self.tex_btn_prone)
+            glBindTexture(GL_TEXTURE_2D, self.tex_btn_action_plate)
             px_b = bx_att - int(44 * SCALE)
             py_b = int(22 * SCALE)
             glBegin(GL_QUADS)
@@ -930,6 +933,7 @@ class FastHUD:
             glTexCoord2f(1, 1); glVertex2f(px_b + btn_sz, py_b + btn_sz)
             glTexCoord2f(0, 1); glVertex2f(px_b, py_b + btn_sz)
             glEnd()
+            self._draw_original_button_icon(self.tex_btn_prone, px_b, py_b, btn_sz, int(6 * SCALE))
 
         # ADS Aim button (appears/highlights when weapon equipped or aiming)
         if self.tex_btn_aim and equipped_slot == 1:
