@@ -1,0 +1,45 @@
+name: Render original HUD V6 in exact Unity source hierarchy order
+on:
+  push:
+    paths:
+      - tools/render_original_hud_v6.py
+      - tools/test_original_hud_v6.py
+      - .github/workflows/render_original_hud_v6.yml
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  hud-source-order:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install Pillow
+      - name: Test all original Image FileID + PathID references and sibling order
+        run: python -u tools/test_original_hud_v6.py
+      - name: Render melee HUD in exact Unity sibling order
+        run: |
+          printf '%s\n' '{"heading_deg":20,"map_uv":[0.55,0.45],"vitals":{"health":0.84,"food":0.56,"water":0.72}}' > /tmp/hud_v6_state.json
+          python -u tools/render_original_hud_v6.py --demo-items             --state /tmp/hud_v6_state.json
+      - name: Render authentic source rifle state with correct control visibility
+        run: |
+          python -u tools/render_original_hud_v6.py --profile on-foot-rifle             --output last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v6_original_rifle.png
+      - name: Commit V6 source order screenshots and provenance
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v6*
+          if ! git diff --staged --quiet; then
+            git commit -m "Render original HUD in native Unity sibling order and exact sprite FileID and PathID"
+            git pull --rebase origin main
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: last-island-HUD-V6-source-order-images-and-report
+          path: |
+            tools/render_original_hud_v6.py
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v6*
+          if-no-files-found: warn
