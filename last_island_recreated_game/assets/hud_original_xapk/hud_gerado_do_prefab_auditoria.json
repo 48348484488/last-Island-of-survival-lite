@@ -7,6 +7,18 @@
     1920,
     1080
   ],
+  "profile": "on-foot-melee",
+  "map_uv_source": "illustrative center",
+  "map_uv": [
+    0.5,
+    0.5
+  ],
+  "map_window": 896,
+  "sprites_from_original_xapk": 43,
+  "sample_items_are_illustrative": false,
+  "recttransform_local_scale_enabled": true,
+  "unity_image_filled_alpha_enabled": true,
+  "unity_minimap_stencil_approximation": "circular alpha mask, not actual Unity shader",
   "draw_calls": [
     {
       "go": "btn_info",
@@ -75,66 +87,66 @@
     {
       "go": "bg",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_jiaobu_di_-2530937214471986818.png",
-      "x": 938,
-      "y": 173,
-      "w": 45,
-      "h": 56
+      "x": 942,
+      "y": 157,
+      "w": 36,
+      "h": 45
     },
     {
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_jiaobu_s_-6532618611273286960.png",
-      "x": 940,
-      "y": 187,
-      "w": 40,
-      "h": 40
+      "x": 944,
+      "y": 169,
+      "w": 32,
+      "h": 32
     },
     {
       "go": "bg",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_di_-43881809000921824.png",
-      "x": 938,
-      "y": 173,
-      "w": 45,
-      "h": 56
+      "x": 942,
+      "y": 157,
+      "w": 36,
+      "h": 45
     },
     {
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_dis_-1780034560199882212.png",
-      "x": 940,
-      "y": 186,
-      "w": 40,
-      "h": 40
+      "x": 944,
+      "y": 168,
+      "w": 32,
+      "h": 32
     },
     {
       "go": "bg",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_zhandou_di_-2026295054211001088.png",
-      "x": 938,
-      "y": 173,
-      "w": 45,
-      "h": 56
+      "x": 942,
+      "y": 157,
+      "w": 36,
+      "h": 45
     },
     {
       "go": "image",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_qiang1_4060327712234828238.png",
-      "x": 940,
-      "y": 186,
-      "w": 40,
-      "h": 40
+      "x": 944,
+      "y": 168,
+      "w": 32,
+      "h": 32
     },
     {
       "go": "bg",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_di_-43881809000921824.png",
-      "x": 938,
-      "y": 173,
-      "w": 45,
-      "h": 56
+      "x": 942,
+      "y": 157,
+      "w": 36,
+      "h": 45
     },
     {
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_dis_-1780034560199882212.png",
-      "x": 940,
-      "y": 186,
-      "w": 40,
-      "h": 40
+      "x": 944,
+      "y": 168,
+      "w": 32,
+      "h": 32
     },
     {
       "go": "Image (2)",
@@ -179,58 +191,58 @@
     {
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanel_xue_bg_1_-6084483306043380781.png",
-      "x": 1468,
-      "y": 77,
-      "w": 141,
-      "h": 27
+      "x": 1463,
+      "y": 76,
+      "w": 161,
+      "h": 31
     },
     {
       "go": "m_mybloodtmpFillImage",
       "sprite": "sprites/battlepanel/1BattlePanel_di_cb_1866784226681164571.png",
-      "x": 1468,
+      "x": 1463,
       "y": 77,
-      "w": 141,
-      "h": 26
+      "w": 161,
+      "h": 30
     },
     {
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanel_buff_xue_6505484593731425225.png",
-      "x": 1438,
-      "y": 77,
-      "w": 28,
-      "h": 27
+      "x": 1429,
+      "y": 76,
+      "w": 32,
+      "h": 31
     },
     {
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanel_xue_bg_1_-6084483306043380781.png",
-      "x": 1474,
-      "y": 127,
-      "w": 140,
-      "h": 27
+      "x": 1463,
+      "y": 124,
+      "w": 160,
+      "h": 31
     },
     {
       "go": "Image (1)",
       "sprite": "sprites/battlepanel/1BattlePanel_buff_jie_-7429908483174830653.png",
-      "x": 1444,
-      "y": 127,
-      "w": 28,
-      "h": 27
+      "x": 1429,
+      "y": 124,
+      "w": 32,
+      "h": 31
     },
     {
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanel_xue_bg_1_-6084483306043380781.png",
-      "x": 1474,
-      "y": 175,
-      "w": 142,
-      "h": 27
+      "x": 1463,
+      "y": 168,
+      "w": 162,
+      "h": 31
     },
     {
       "go": "Image (1)",
       "sprite": "sprites/battlepanel/1BattlePanel_buff_shui_-4534881768859244425.png",
-      "x": 1445,
-      "y": 175,
-      "w": 27,
-      "h": 27
+      "x": 1430,
+      "y": 168,
+      "w": 31,
+      "h": 31
     },
     {
       "go": "btn_setting",
@@ -307,170 +319,82 @@
     {
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
-      "x": 615,
-      "y": 831,
-      "w": 90,
-      "h": 90
+      "x": 632,
+      "y": 841,
+      "w": 86,
+      "h": 86
     },
     {
       "go": "m_heightLignt",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
-      "x": 617,
-      "y": 833,
-      "w": 85,
-      "h": 85
-    },
-    {
-      "go": "m_Item1.sample",
-      "sprite": "sprites/tubiao/tb_cl_mt_1047593260391222174.png",
-      "x": 623,
-      "y": 839,
-      "w": 74,
-      "h": 74
+      "x": 634,
+      "y": 843,
+      "w": 81,
+      "h": 81
     },
     {
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
-      "x": 715,
-      "y": 831,
-      "w": 90,
-      "h": 90
-    },
-    {
-      "go": "m_Item2.sample",
-      "sprite": "sprites/tubiao/tb_cl_st_-6161476993414394690.png",
-      "x": 723,
-      "y": 839,
-      "w": 74,
-      "h": 74
+      "x": 727,
+      "y": 841,
+      "w": 86,
+      "h": 86
     },
     {
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
-      "x": 815,
-      "y": 831,
-      "w": 90,
-      "h": 90
-    },
-    {
-      "go": "m_Item3.sample",
-      "sprite": "sprites/tubiao/tb_yurou_1_-5595481497417969910.png",
-      "x": 823,
-      "y": 839,
-      "w": 74,
-      "h": 74
+      "x": 822,
+      "y": 841,
+      "w": 86,
+      "h": 86
     },
     {
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
-      "x": 915,
-      "y": 831,
-      "w": 90,
-      "h": 90
-    },
-    {
-      "go": "m_Item4.sample",
-      "sprite": "sprites/tubiao/tb_cl_tiek_-5409680548475430017.png",
-      "x": 923,
-      "y": 839,
-      "w": 74,
-      "h": 74
+      "x": 917,
+      "y": 841,
+      "w": 86,
+      "h": 86
     },
     {
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
-      "x": 1015,
-      "y": 831,
-      "w": 90,
-      "h": 90
-    },
-    {
-      "go": "m_Item5.sample",
-      "sprite": "sprites/tubiao/tb_sg_-8090483557887250535.png",
-      "x": 1023,
-      "y": 839,
-      "w": 74,
-      "h": 74
+      "x": 1012,
+      "y": 841,
+      "w": 86,
+      "h": 86
     },
     {
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
-      "x": 1115,
-      "y": 831,
-      "w": 90,
-      "h": 90
-    },
-    {
-      "go": "m_Item6.sample",
-      "sprite": "sprites/tubiao/wupin_shuihu_1_-1475266076374094172.png",
-      "x": 1123,
-      "y": 839,
-      "w": 74,
-      "h": 74
+      "x": 1107,
+      "y": 841,
+      "w": 86,
+      "h": 86
     },
     {
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
-      "x": 1215,
-      "y": 831,
-      "w": 90,
-      "h": 90
-    },
-    {
-      "go": "m_Item7.sample",
-      "sprite": "sprites/tubiao/tb_cl_st_-6161476993414394690.png",
-      "x": 1223,
-      "y": 839,
-      "w": 74,
-      "h": 74
+      "x": 1202,
+      "y": 841,
+      "w": 86,
+      "h": 86
     },
     {
       "go": "btn_pack",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
-      "x": 442,
-      "y": 826,
-      "w": 95,
-      "h": 95
+      "x": 468,
+      "y": 837,
+      "w": 90,
+      "h": 90
     },
     {
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanell_bb_-8339622856558486473.png",
-      "x": 440,
-      "y": 822,
-      "w": 98,
-      "h": 103
-    },
-    {
-      "go": "Background",
-      "sprite": "sprites/battlepanel/BattlePanel_dikuang_-2873014378393890984.png",
-      "x": 442,
-      "y": 826,
-      "w": 95,
-      "h": 95
-    },
-    {
-      "go": "Fill",
-      "sprite": "sprites/battlepanel/BattlePanel_jindutiao_-1061180438741798285.png",
-      "x": 442,
-      "y": 826,
-      "w": 95,
-      "h": 95
-    },
-    {
-      "go": "Image",
-      "sprite": "sprites/battlepanel/BattlePanel_chilun_-1406792474388956489.png",
-      "x": 460,
-      "y": 850,
-      "w": 53,
-      "h": 53
-    },
-    {
-      "go": "Image (1)",
-      "sprite": "sprites/battlepanel/BattlePanel_chilun2_-4678001988617627006.png",
-      "x": 492,
-      "y": 830,
-      "w": 36,
-      "h": 36
+      "x": 467,
+      "y": 833,
+      "w": 93,
+      "h": 98
     },
     {
       "go": "btn_zhizao",
@@ -563,7 +487,7 @@
     {
       "go": "btn_up2",
       "sprite": "sprites/battlepanel2/BattlePanel2_st_an___-7168935225424053362.png",
-      "x": 1770,
+      "x": 1769,
       "y": 725,
       "w": 130,
       "h": 130
@@ -571,26 +495,10 @@
     {
       "go": "m_JumpImage",
       "sprite": "sprites/battlepanel/1BattlePanel_cz_t_-5766048973405338036.png",
-      "x": 1774,
-      "y": 730,
-      "w": 120,
-      "h": 120
-    },
-    {
-      "go": "m_PatiziImage",
-      "sprite": "sprites/battlepanel2/BattlePanel2_cz_tz_-6469348664197767004.png",
-      "x": 1774,
-      "y": 730,
-      "w": 120,
-      "h": 120
-    },
-    {
-      "go": "m_openGliderIcon",
-      "sprite": "sprites/battlepanel2/BattlePanel2_penshe_-510595567409538199.png",
-      "x": 1774,
-      "y": 730,
-      "w": 120,
-      "h": 120
+      "x": 1780,
+      "y": 736,
+      "w": 108,
+      "h": 108
     },
     {
       "go": "btn_crouch2",
@@ -619,91 +527,50 @@
     {
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanel_cz_pa_6380483222475970638.png",
-      "x": 1454,
-      "y": 886,
-      "w": 120,
-      "h": 120
-    },
-    {
-      "go": "Image (1)",
-      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
-      "x": 1695,
-      "y": 504,
-      "w": 120,
-      "h": 120
-    },
-    {
-      "go": "Image",
-      "sprite": "sprites/battlepanel/1BattlePanel_sj_2_6967019743901829064.png",
-      "x": 1695,
-      "y": 504,
-      "w": 120,
-      "h": 120
-    },
-    {
-      "go": "Image (1)",
-      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
-      "x": 1704,
-      "y": 370,
-      "w": 120,
-      "h": 120
-    },
-    {
-      "go": "m_changeBulletIcon",
-      "sprite": "sprites/battlepanel/1BattlePanel_cz_hd_-4799276521966031049.png",
-      "x": 1704,
-      "y": 370,
-      "w": 120,
-      "h": 120
-    },
-    {
-      "go": "m_addOilIcon",
-      "sprite": "sprites/battlepanel/1BattlePanel_cz_hy_4614674307435979961.png",
-      "x": 1704,
-      "y": 370,
-      "w": 120,
-      "h": 120
+      "x": 1460,
+      "y": 892,
+      "w": 108,
+      "h": 108
     }
   ],
-  "draw_count": 82,
+  "draw_count": 64,
   "hotbar_slot_centers": [
     [
-      660.0,
-      204.4
+      674.9772,
+      196.3874
     ],
     [
-      760.0,
-      204.4
+      769.9848,
+      196.3874
     ],
     [
-      860.0,
-      204.4
+      864.9924,
+      196.3874
     ],
     [
       960.0,
-      204.4
+      196.3874
     ],
     [
-      1060.0,
-      204.4
+      1055.0076,
+      196.3874
     ],
     [
-      1160.0,
-      204.4
+      1150.0152,
+      196.3874
     ],
     [
-      1260.0,
-      204.4
+      1245.0228,
+      196.3874
     ]
   ],
   "notes": [
     "Map position and crop are demonstrative, actual player XY and zoom are unknown.",
-    "Actual health/food/water values are dynamic, not serialized in this prefab.",
-    "Item images are example original Sprite assets, not a real inventory state."
+    "Actual health/food/water values are dynamic, not serialized in this prefab."
   ],
   "reproducible_script": "tools/render_source_unity_hud.py",
   "known_limits": [
-    "UGUI nine-slice not reproduced exactly",
+    "UGUI nine-slice, native shader and runtime masking not exactly reproduced",
     "runtime CanvasScaler and custom positions unresolved",
     "preview map viewport position/zoom is demonstrative",
     "some state toggles and runtime-generated data not recovered"

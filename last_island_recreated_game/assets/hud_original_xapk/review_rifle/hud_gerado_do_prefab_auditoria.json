@@ -1,0 +1,667 @@
+{
+  "claim": "source-prefab reconstruction, NOT original Unity runtime screenshot",
+  "original_source_bundle": "assets/ui/battlepanel.ab",
+  "original_sprite_atlas": "assets/uiatlas/battlepanel*.ab",
+  "original_map_bundle": "assets/texture/map_map.ab",
+  "reference_canvas": [
+    1920,
+    1080
+  ],
+  "profile": "on-foot-rifle",
+  "map_uv_source": "illustrative center",
+  "map_uv": [
+    0.5,
+    0.5
+  ],
+  "map_window": 896,
+  "sprites_from_original_xapk": 51,
+  "sample_items_are_illustrative": true,
+  "recttransform_local_scale_enabled": true,
+  "unity_image_filled_alpha_enabled": true,
+  "unity_minimap_stencil_approximation": "circular alpha mask, not actual Unity shader",
+  "draw_calls": [
+    {
+      "go": "btn_info",
+      "sprite": "sprites/battlepanel2/BattlePanel2_Di_1_-2969211243965973680.png",
+      "x": 51,
+      "y": 48,
+      "w": 154,
+      "h": 124
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel2/BattlePanel2_home_4729969317431840499.png",
+      "x": 170,
+      "y": 113,
+      "w": 70,
+      "h": 59
+    },
+    {
+      "go": "btn_baseUpgrade",
+      "sprite": "sprites/battlepanel/1BattlePanel_zuo_shang_infoBG_1_-4183463095593411494.png",
+      "x": 64,
+      "y": 180,
+      "w": 311,
+      "h": 39
+    },
+    {
+      "go": "m_base_image",
+      "sprite": "sprites/battlepanel/1BattlePanel_zuo_shang_infojj_8599354916655188648.png",
+      "x": 70,
+      "y": 183,
+      "w": 31,
+      "h": 33
+    },
+    {
+      "go": "btn_Baserank",
+      "sprite": "sprites/battlepanel2/BattlePanel2_diban_1_4391931977596235993.png",
+      "x": 532,
+      "y": 49,
+      "w": 105,
+      "h": 80
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_zuo_shang_infophb_-971367810713531017.png",
+      "x": 549,
+      "y": 43,
+      "w": 70,
+      "h": 70
+    },
+    {
+      "go": "btn_help",
+      "sprite": "sprites/battlepanel2/BattlePanel2_diban_1_4391931977596235993.png",
+      "x": 638,
+      "y": 49,
+      "w": 105,
+      "h": 80
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/common/mask_leftrightfade_2373188531510254976.png",
+      "x": 635,
+      "y": 50,
+      "w": 650,
+      "h": 50
+    },
+    {
+      "go": "bg",
+      "sprite": "sprites/battlepanel/1BattlePanel_sy_jiaobu_di_-2530937214471986818.png",
+      "x": 942,
+      "y": 157,
+      "w": 36,
+      "h": 45
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_sy_jiaobu_s_-6532618611273286960.png",
+      "x": 944,
+      "y": 169,
+      "w": 32,
+      "h": 32
+    },
+    {
+      "go": "bg",
+      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_di_-43881809000921824.png",
+      "x": 942,
+      "y": 157,
+      "w": 36,
+      "h": 45
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_dis_-1780034560199882212.png",
+      "x": 944,
+      "y": 168,
+      "w": 32,
+      "h": 32
+    },
+    {
+      "go": "bg",
+      "sprite": "sprites/battlepanel/1BattlePanel_sy_zhandou_di_-2026295054211001088.png",
+      "x": 942,
+      "y": 157,
+      "w": 36,
+      "h": 45
+    },
+    {
+      "go": "image",
+      "sprite": "sprites/battlepanel/1BattlePanel_sy_qiang1_4060327712234828238.png",
+      "x": 944,
+      "y": 168,
+      "w": 32,
+      "h": 32
+    },
+    {
+      "go": "bg",
+      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_di_-43881809000921824.png",
+      "x": 942,
+      "y": 157,
+      "w": 36,
+      "h": 45
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_dis_-1780034560199882212.png",
+      "x": 944,
+      "y": 168,
+      "w": 32,
+      "h": 32
+    },
+    {
+      "go": "Image (2)",
+      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_jt_-3990784314408679073.png",
+      "x": 950,
+      "y": 50,
+      "w": 21,
+      "h": 18
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel2/BattlePanel2_dt_bg_1_6069250624512689768.png",
+      "x": 1472,
+      "y": 232,
+      "w": 260,
+      "h": 260
+    },
+    {
+      "go": "ditu(Map_map original)",
+      "sprite": "source Map_map",
+      "x": 1472,
+      "y": 232,
+      "w": 260,
+      "h": 260
+    },
+    {
+      "go": "m_dayDi",
+      "sprite": "sprites/battlepanel/1BattlePanel_tq_bg_-7551180080870847355.png",
+      "x": 1358,
+      "y": 245,
+      "w": 348,
+      "h": 29
+    },
+    {
+      "go": "m_dayIcon",
+      "sprite": "sprites/battlepanel/1BattlePanel_zhouye_ty_-5377527645028882103.png",
+      "x": 1650,
+      "y": 235,
+      "w": 45,
+      "h": 45
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_xue_bg_1_-6084483306043380781.png",
+      "x": 1463,
+      "y": 76,
+      "w": 161,
+      "h": 31
+    },
+    {
+      "go": "m_mybloodtmpFillImage",
+      "sprite": "sprites/battlepanel/1BattlePanel_di_cb_1866784226681164571.png",
+      "x": 1463,
+      "y": 77,
+      "w": 161,
+      "h": 30
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_buff_xue_6505484593731425225.png",
+      "x": 1429,
+      "y": 76,
+      "w": 32,
+      "h": 31
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_xue_bg_1_-6084483306043380781.png",
+      "x": 1463,
+      "y": 124,
+      "w": 160,
+      "h": 31
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_buff_jie_-7429908483174830653.png",
+      "x": 1429,
+      "y": 124,
+      "w": 32,
+      "h": 31
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_xue_bg_1_-6084483306043380781.png",
+      "x": 1463,
+      "y": 168,
+      "w": 162,
+      "h": 31
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_buff_shui_-4534881768859244425.png",
+      "x": 1430,
+      "y": 168,
+      "w": 31,
+      "h": 31
+    },
+    {
+      "go": "btn_setting",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 1830,
+      "y": 330,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_sz_-1887600901866073155.png",
+      "x": 1795,
+      "y": 345,
+      "w": 70,
+      "h": 69
+    },
+    {
+      "go": "btn_quckChat",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 1651,
+      "y": 330,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_sz_bg_5_-5062069000559337827.png",
+      "x": 1616,
+      "y": 345,
+      "w": 70,
+      "h": 70
+    },
+    {
+      "go": "m_quickChatCd",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 1626,
+      "y": 355,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "go": "m_red_competition",
+      "sprite": "sprites/common/com_tip_ts_-1248732371203954598.png",
+      "x": 1659,
+      "y": 351,
+      "w": 24,
+      "h": 24
+    },
+    {
+      "go": "btn_diuShiDongXi",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 1774,
+      "y": 330,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_TIP_23_7022945330196084483.png",
+      "x": 1718,
+      "y": 324,
+      "w": 112,
+      "h": 112
+    },
+    {
+      "go": "btn_quick_mark",
+      "sprite": "sprites/battlepanel2/BattlePanel2_quick_mark_-5736820139208292708.png",
+      "x": 1649,
+      "y": 388,
+      "w": 56,
+      "h": 56
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 632,
+      "y": 841,
+      "w": 86,
+      "h": 86
+    },
+    {
+      "go": "m_heightLignt",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 634,
+      "y": 843,
+      "w": 81,
+      "h": 81
+    },
+    {
+      "go": "m_Item1.source_item",
+      "sprite": "sprites/tubiao/tb_cl_mt_1047593260391222174.png",
+      "x": 638,
+      "y": 847,
+      "w": 74,
+      "h": 74
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 727,
+      "y": 841,
+      "w": 86,
+      "h": 86
+    },
+    {
+      "go": "m_Item2.source_item",
+      "sprite": "sprites/tubiao/tb_cl_st_-6161476993414394690.png",
+      "x": 733,
+      "y": 847,
+      "w": 74,
+      "h": 74
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 822,
+      "y": 841,
+      "w": 86,
+      "h": 86
+    },
+    {
+      "go": "m_Item3.source_item",
+      "sprite": "sprites/tubiao/tb_yurou_1_-5595481497417969910.png",
+      "x": 828,
+      "y": 847,
+      "w": 74,
+      "h": 74
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 917,
+      "y": 841,
+      "w": 86,
+      "h": 86
+    },
+    {
+      "go": "m_Item4.source_item",
+      "sprite": "sprites/tubiao/tb_cl_tiek_-5409680548475430017.png",
+      "x": 923,
+      "y": 847,
+      "w": 74,
+      "h": 74
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 1012,
+      "y": 841,
+      "w": 86,
+      "h": 86
+    },
+    {
+      "go": "m_Item5.source_item",
+      "sprite": "sprites/tubiao/tb_sg_-8090483557887250535.png",
+      "x": 1018,
+      "y": 847,
+      "w": 74,
+      "h": 74
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 1107,
+      "y": 841,
+      "w": 86,
+      "h": 86
+    },
+    {
+      "go": "m_Item6.source_item",
+      "sprite": "sprites/tubiao/wupin_shuihu_1_-1475266076374094172.png",
+      "x": 1113,
+      "y": 847,
+      "w": 74,
+      "h": 74
+    },
+    {
+      "go": "Background",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "x": 1202,
+      "y": 841,
+      "w": 86,
+      "h": 86
+    },
+    {
+      "go": "m_Item7.source_item",
+      "sprite": "sprites/tubiao/tb_cl_st_-6161476993414394690.png",
+      "x": 1208,
+      "y": 847,
+      "w": 74,
+      "h": 74
+    },
+    {
+      "go": "btn_pack",
+      "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
+      "x": 468,
+      "y": 837,
+      "w": 90,
+      "h": 90
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanell_bb_-8339622856558486473.png",
+      "x": 467,
+      "y": 833,
+      "w": 93,
+      "h": 98
+    },
+    {
+      "go": "btn_zhizao",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 11,
+      "y": 975,
+      "w": 100,
+      "h": 100
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_zhizuo_-6504062924326004834.png",
+      "x": 18,
+      "y": 982,
+      "w": 86,
+      "h": 86
+    },
+    {
+      "go": "m_chilun",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_3_1765268713649345837.png",
+      "x": 5,
+      "y": 969,
+      "w": 112,
+      "h": 112
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_cl_2_4478498591411063686.png",
+      "x": 50,
+      "y": 996,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_cl_1_8185958170878533540.png",
+      "x": 33,
+      "y": 1026,
+      "w": 30,
+      "h": 30
+    },
+    {
+      "go": "m_YaoganBG",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_1_-6137401648909176546.png",
+      "x": 432,
+      "y": 183,
+      "w": 330,
+      "h": 330
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_2_-5376360766746200822.png",
+      "x": 518,
+      "y": 269,
+      "w": 158,
+      "h": 158
+    },
+    {
+      "go": "btn_autoRun",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 459,
+      "y": -27,
+      "w": 89,
+      "h": 89
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_zidongbengpao2_-4638175421644290377.png",
+      "x": 512,
+      "y": -55,
+      "w": 72,
+      "h": 56
+    },
+    {
+      "go": "btn_fire",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_5_6816472486429899996.png",
+      "x": 1452,
+      "y": 625,
+      "w": 182,
+      "h": 182
+    },
+    {
+      "go": "m_fireImage",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_3_1765268713649345837.png",
+      "x": 1453,
+      "y": 626,
+      "w": 180,
+      "h": 180
+    },
+    {
+      "go": "btn_up2",
+      "sprite": "sprites/battlepanel2/BattlePanel2_st_an___-7168935225424053362.png",
+      "x": 1769,
+      "y": 725,
+      "w": 130,
+      "h": 130
+    },
+    {
+      "go": "m_JumpImage",
+      "sprite": "sprites/battlepanel/1BattlePanel_cz_t_-5766048973405338036.png",
+      "x": 1780,
+      "y": 736,
+      "w": 108,
+      "h": 108
+    },
+    {
+      "go": "btn_crouch2",
+      "sprite": "sprites/battlepanel2/BattlePanel2_st_an___-7168935225424053362.png",
+      "x": 1662,
+      "y": 881,
+      "w": 130,
+      "h": 130
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel/1BattlePanel_cz_dun_7816152445154004946.png",
+      "x": 1667,
+      "y": 886,
+      "w": 120,
+      "h": 120
+    },
+    {
+      "go": "btn_pa2",
+      "sprite": "sprites/battlepanel2/BattlePanel2_st_an___-7168935225424053362.png",
+      "x": 1449,
+      "y": 881,
+      "w": 130,
+      "h": 130
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_cz_pa_6380483222475970638.png",
+      "x": 1460,
+      "y": 892,
+      "w": 108,
+      "h": 108
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 1695,
+      "y": 504,
+      "w": 120,
+      "h": 120
+    },
+    {
+      "go": "Image",
+      "sprite": "sprites/battlepanel/1BattlePanel_sj_2_6967019743901829064.png",
+      "x": 1695,
+      "y": 504,
+      "w": 120,
+      "h": 120
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
+      "x": 1704,
+      "y": 370,
+      "w": 120,
+      "h": 120
+    },
+    {
+      "go": "m_changeBulletIcon",
+      "sprite": "sprites/battlepanel/1BattlePanel_cz_hd_-4799276521966031049.png",
+      "x": 1704,
+      "y": 370,
+      "w": 120,
+      "h": 120
+    }
+  ],
+  "draw_count": 75,
+  "hotbar_slot_centers": [
+    [
+      674.9772,
+      196.3874
+    ],
+    [
+      769.9848,
+      196.3874
+    ],
+    [
+      864.9924,
+      196.3874
+    ],
+    [
+      960.0,
+      196.3874
+    ],
+    [
+      1055.0076,
+      196.3874
+    ],
+    [
+      1150.0152,
+      196.3874
+    ],
+    [
+      1245.0228,
+      196.3874
+    ]
+  ],
+  "notes": [
+    "Map position and crop are demonstrative, actual player XY and zoom are unknown.",
+    "Actual health/food/water values are dynamic, not serialized in this prefab.",
+    "Item images are example original Sprite assets, not a real inventory state."
+  ],
+  "reproducible_script": "tools/render_source_unity_hud.py",
+  "known_limits": [
+    "UGUI nine-slice, native shader and runtime masking not exactly reproduced",
+    "runtime CanvasScaler and custom positions unresolved",
+    "preview map viewport position/zoom is demonstrative",
+    "some state toggles and runtime-generated data not recovered"
+  ]
+}
