@@ -188,7 +188,7 @@ class SourceHUD:
             for pid in go["components"]:
                 comp=self.images.get(pid)
                 spr=self.sprites.get(comp.get("sprite")) if comp else None
-                if spr:self.stamp(spr,self.rect(rr["path_id"]),go["name"],comp,circle_mask=True)
+                if spr:self.stamp(spr,self.rect(rr["path_id"]),go["name"],comp)
         maprect=next((self.t[tid] for tid in ft["children"] if tid in self.t and
                      self.g.get(self.t[tid]["go"],{}).get("name")=="ditu"),None)
         src=self.assets/"map_original_7_3.png"
@@ -204,7 +204,18 @@ class SourceHUD:
                 rectbox=self.rect(maprect["path_id"])
                 tw,th=max(1,abs(round(rectbox[2]))),max(1,abs(round(rectbox[3])))
                 tile=tile.resize((tw,th),Image.Resampling.LANCZOS)
-                self.stamp(None,rectbox,"ditu(Map_map original)",image=tile,circle_mask=True)
+                # 'ditu' is bound to source mask_sidesfade, a soft square alpha,
+                # not a circular cutout inferred from an arbitrary screenshot.
+                comp=next((self.images[c] for c in self.g[maprect["go"]]["components"]
+                           if c in self.images and self.images[c].get("sprite") in self.sprites),None)
+                mask_spr=self.sprites.get(comp["sprite"]) if comp else None
+                if mask_spr and mask_spr["name"]=="mask_sidesfade":
+                    with Image.open(self.assets/mask_spr["file"]) as source_mask:
+                        mask=source_mask.convert("RGBA").getchannel("A").resize((tw,th),Image.Resampling.BILINEAR)
+                    tile.putalpha(ImageChops.multiply(tile.getchannel("A"),mask))
+                else:
+                    self.notes.append("Source map edge mask missing: showing unmasked original map")
+                self.stamp(None,rectbox,"ditu(Map_map original)",image=tile)
             self.notes.append("Map position and crop are demonstrative, actual player XY and zoom are unknown.")
         for go in kids[1:]:
             self.node(go,depth=2,exclude={"m_nightDi","m_huanghunDi","m_qingchenDi","m_nightIcon",
@@ -340,7 +351,7 @@ def main():
        "source_9slice_border_metadata":len(hud.sprite_borders),
        "vital_ratios_from_runtime_state":bool(hud.vitals_values),
        "unity_image_filled_alpha_enabled":True,
-       "unity_minimap_stencil_approximation":"circular alpha mask, not actual Unity shader",
+       "unity_minimap_stencil_approximation":"source original mask_sidesfade alpha; native Unity shader still incomplete",
        "draw_calls":hud.calls,"draw_count":len(hud.calls),
        "hotbar_slot_centers":centers,"notes":hud.notes,
        "reproducible_script":"tools/render_source_unity_hud.py",
