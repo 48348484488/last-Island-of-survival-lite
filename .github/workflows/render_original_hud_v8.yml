@@ -1,0 +1,47 @@
+name: Render original Unity HUD V8 build mode and image fill geometry
+on:
+  push:
+    paths:
+      - tools/unity_ugui_raster.py
+      - tools/test_original_hud_v8.py
+      - .github/workflows/render_original_hud_v8.yml
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  ui-v8:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install Pillow
+      - name: Verify native Unity fill directions, source preserveAspect, and building controls
+        run: python -u tools/test_original_hud_v8.py
+      - name: Render improved construction mode from original Sprite and RectTransform hierarchy
+        run: |
+          printf '%s\n' '{"profile":"on-foot-build","selected_slot":0,"heading_deg":65,"map_uv":[0.55,0.45],"vitals":{"health":0.84,"food":0.56,"water":0.72}}' > /tmp/original_hud_build.json
+          python -u tools/render_original_hud_v7.py --demo-items             --state /tmp/original_hud_build.json             --output last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v8_build_source_preview.png
+      - name: Render original on-foot status and items with corrected Unity Image raster geometry
+        run: |
+          printf '%s\n' '{"profile":"on-foot-melee","selected_slot":2,"heading_deg":65,"map_uv":[0.55,0.45],"vitals":{"health":0.84,"food":0.56,"water":0.72}}' > /tmp/original_hud_onfoot.json
+          python -u tools/render_original_hud_v7.py --demo-items             --state /tmp/original_hud_onfoot.json             --output last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v8_onfoot_source_preview.png
+      - name: Commit original HUD V8 source build/onfoot previews with reports
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v8*
+          if ! git diff --staged --quiet; then
+            git commit -m "Improve original Unity HUD image fill, preserveAspect and source building mode"
+            git pull --rebase origin main
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: last-island-HUD-V8-original-source-melee-build-previews
+          path: |
+            tools/unity_ugui_raster.py
+            tools/test_original_hud_v8.py
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v8*
+          if-no-files-found: warn
