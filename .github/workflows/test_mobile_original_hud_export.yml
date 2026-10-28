@@ -1,0 +1,48 @@
+name: Verify authentic mobile Unity battlepanel HUD export
+on:
+  push:
+    paths:
+      - tools/export_mobile_original_hud.py
+      - .github/workflows/test_mobile_original_hud_export.yml
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  source-hud-export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            last_island_recreated_game
+            tools
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install Pillow
+      - name: Rebuild original Unity UGUI overlays and C++ coordinate header
+        run: |
+          python -u tools/export_mobile_original_hud.py --destination /tmp/lios-unity-android-hud
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image,ImageChops
+          d=Path('/tmp/lios-unity-android-hud')
+          j=json.loads((d/'hud_mobile_source_geometry.json').read_text())
+          assert len(j['buttons'])==11 and len(j['hotbar'])==7
+          assert 'aim' in j['buttons'] and 'reload' in j['buttons']
+          assert len(j['resource_icons'])==4
+          a=Image.open(d/'hud_original_melee.png').convert('RGBA')
+          b=Image.open(d/'hud_original_rifle.png').convert('RGBA')
+          assert a.size==b.size==(1920,1080)
+          assert ImageChops.difference(a,b).getbbox() is not None, 'Weapon modes identical!'
+          for im in [a,b]:
+            assert im.getbbox() is not None, 'Original HUD unexpectedly blank'
+          print('SOURCE_HUD_2_PROFILES_DISTINCT_PASS',a.size)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LastIsland-Mobile-Exact-Unity-HUD-Profiles-And-Layout
+          path: /tmp/lios-unity-android-hud
+          retention-days: 15
