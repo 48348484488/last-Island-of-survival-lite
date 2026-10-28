@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - last_island_recreated_game/main.cpp
+      - last_island_recreated_game/native_original_animation.hpp
+      - tools/export_mobile_skeletal_animation.py
       - .github/workflows/build_android_raylib_lite.yml
       - tools/package_android_assets.py
 permissions:
@@ -21,8 +23,12 @@ jobs:
         with:
           sparse-checkout: |
             last_island_recreated_game/main.cpp
+            last_island_recreated_game/native_original_animation.hpp
+            last_island_recreated_game/authentic_animations.npz
+            last_island_recreated_game/master_character.npz
             last_island_recreated_game/assets
             tools/package_android_assets.py
+            tools/export_mobile_skeletal_animation.py
           sparse-checkout-cone-mode: false
           filter: blob:none
 
@@ -47,14 +53,22 @@ jobs:
           test -f /tmp/lios-raymob/app/src/main/cpp/deps/raylib/CMakeLists.txt
           test -f /tmp/lios-raymob/gradlew
 
+      - name: Install converter dependency for 33 extracted animations
+        run: python -m pip install numpy
+
       - name: Inject game's real native C++ engine and verified model assets
         run: |
           set -euo pipefail
           cp last_island_recreated_game/main.cpp /tmp/lios-raymob/app/src/main/cpp/main.cpp
+          cp last_island_recreated_game/native_original_animation.hpp /tmp/lios-raymob/app/src/main/cpp/native_original_animation.hpp
           rm /tmp/lios-raymob/app/src/main/cpp/main.c
           python tools/package_android_assets.py             last_island_recreated_game/main.cpp             last_island_recreated_game/assets             /tmp/lios-raymob/app/src/main/assets/assets
+          python tools/export_mobile_skeletal_animation.py --output /tmp/lios-raymob/app/src/main/assets/assets/lios_skeleton_v1.bin
+          cp last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_original_overlay_rgba.png /tmp/lios-raymob/app/src/main/assets/assets/hud_original_overlay_rgba.png
+          cp last_island_recreated_game/assets/hud_original_xapk/sprites/tubiao1/cj_sf_4568438245182409447.png /tmp/lios-raymob/app/src/main/assets/assets/icon_cj_sf.png
+          cp last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/weapon_verified/gun_m4_919133799852272780.png /tmp/lios-raymob/app/src/main/assets/assets/icon_m4.png
           cd /tmp/lios-raymob
-          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.12.1-preview/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
+          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.13.0-native-original/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
@@ -83,9 +97,19 @@ jobs:
               'assets/assets/wq_shifu.obj',
               'assets/assets/wq_m4_1.obj',
               'assets/assets/tree_baihuashu_03.obj',
+              'assets/assets/lios_skeleton_v1.bin',
+              'assets/assets/hud_original_overlay_rgba.png',
+              'assets/assets/icon_cj_sf.png',
+              'assets/assets/icon_m4.png',
             }
             missing=needed-names
             assert not missing,missing
+            import struct
+            skeleton=z.read('assets/assets/lios_skeleton_v1.bin')
+            assert skeleton.startswith(b'LIOSSKN1')
+            version,bones,meshes,clips=struct.unpack_from('<4I',skeleton,8)
+            assert (version,bones,meshes,clips)==(1,64,7,33)
+            print("LIOS_ANDROID_ANIMATIONS_VERIFIED",bones,meshes,clips,len(skeleton))
             print("LIOS_ANDROID_NATIVE_APK_STRUCTURE_PASS",
                   str(apks[0]),apks[0].stat().st_size,
                   "packaged assets",len([n for n in names if n.startswith("assets/assets/")]))
