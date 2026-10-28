@@ -1,0 +1,38 @@
+{
+  "gameobject": "m_compassImage",
+  "gameobject_path_id": "-2733145146351845739",
+  "source_prefab": "assets/ui/battlepanel.ab",
+  "source_texture_bundle": "assets/texture/battlepanel_kedu_yw.ab",
+  "rawimage_component": {
+    "component_path_id": "-7585636340699229125",
+    "m_Texture": {
+      "m_FileID": 0,
+      "m_PathID": 7430988158235635878
+    },
+    "m_UVRect": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 1.0,
+      "height": 1.0
+    },
+    "m_Color": {
+      "r": 1.0,
+      "g": 1.0,
+      "b": 1.0,
+      "a": 1.0
+    }
+  },
+  "textures": [
+    {
+      "name": "BattlePanel_kedu_yw",
+      "path_id": "3061443839110694959",
+      "dimensions": [
+        2048,
+        64
+      ],
+      "file": "compass_original_source.png",
+      "original_texture_sha256": "8fa5b5664401578ccc2d1fc6a9155f8f23fb035641284f0ca33f08a4082d271c"
+    }
+  ],
+  "verified_source": "Original XAPK install_time_asset_pack.apk"
+}
