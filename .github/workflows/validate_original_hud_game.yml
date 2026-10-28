@@ -1,0 +1,45 @@
+name: Validate HUD source sprites in game and preserve exact UI prefab
+on:
+  push:
+    branches: [main]
+    paths:
+      - tools/validate_original_hud_game.py
+      - .github/workflows/validate_original_hud_game.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Restore original Canvas prefab and layout metadata
+        uses: actions/download-artifact@v4
+        with:
+          name: original-hud-recttransform-prefab-source
+          run-id: 40612181453
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: hud_original_prefab_fonte/
+      - run: python tools/validate_original_hud_game.py
+      - name: Save original Unity Canvas prefabs and runtime tests to game
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/assets/hud_original_xapk/
+          if ! git diff --staged --quiet; then
+            git commit -m "Preserve original Unity HUD canvas layout and validate runtime Sprite imports"
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: last-island-original-hud-verified-and-in-game
+          path: |
+            last_island_recreated_game/assets/hud_original_xapk/hud_integracao_testada.json
+            last_island_recreated_game/assets/hud_original_xapk/prova_hud_original_sprites_xapk.png
+            last_island_recreated_game/assets/hud_original_xapk/ui_prefabs_original/hud_button_coordinates.json
