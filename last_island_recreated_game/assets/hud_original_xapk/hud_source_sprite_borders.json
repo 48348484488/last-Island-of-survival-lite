@@ -1,0 +1,2917 @@
+{
+  "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-9056563195613175944",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zhixiang_2_-9046619493506402287.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-9046619493506402287",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_carrier_tanchu_-8818618348005636864.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-8818618348005636864",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_zsjzx_-8670023581344542700.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-8670023581344542700",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_new_nag_bz_2_-8652447810432251300.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-8652447810432251300",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_car_sc_-8640425964100462450.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-8640425964100462450",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zixingche_tiaoyue_-8442262658238027043.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-8442262658238027043",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_Map_lv_-8404998493670798139.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-8404998493670798139",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanell_bb_-8339622856558486473.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-8339622856558486473",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_single_icon_position_-7995233353353196527.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-7995233353353196527",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zz_2_-7845759465122886504.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-7845759465122886504",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_tq_bg_-7551180080870847355.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-7551180080870847355",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_buff_jie_-7429908483174830653.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-7429908483174830653",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_map_tb_kt_-7306547519783985659.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-7306547519783985659",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_shang_-7200855855265187113.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-7200855855265187113",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_car_js_-7190790765979272859.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-7190790765979272859",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_ann_f_-6746841543176887437.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-6746841543176887437",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zhixiang_fangxiang_-6608409126691984262.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-6608409126691984262",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/tb_biaojihong_01_-6588402867459642325.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-6588402867459642325",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sy_jiaobu_s_-6532618611273286960.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-6532618611273286960",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zhizuo_-6504062924326004834.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-6504062924326004834",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_zsjzd3_-6385713958713471410.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-6385713958713471410",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_tb_zz_2_-6321899002563036065.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-6321899002563036065",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/shortcut_01_-6221668167541799249.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-6221668167541799249",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_buff_xue_jia_-6168858490976078053.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-6168858490976078053",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_map_tb_fb_-6143068486784060021.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-6143068486784060021",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_xue_bg_1_-6084483306043380781.png": {
+    "border": {
+      "x": 10.0,
+      "y": 10.0,
+      "z": 10.0,
+      "w": 10.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-6084483306043380781",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_buttle_fang_energy_-5794504125176098752.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-5794504125176098752",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_cz_t_-5766048973405338036.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-5766048973405338036",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zt_xiaopeijian_-5606650981810611186.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-5606650981810611186",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_fire_-5387042545545589818.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-5387042545545589818",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_dj_ry_-5379206169522300802.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-5379206169522300802",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zhouye_ty_-5377527645028882103.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-5377527645028882103",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sz_bg_5_-5062069000559337827.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-5062069000559337827",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zunxing_5_-5045568222790742809.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-5045568222790742809",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_yy_qb_-4998068497425840728.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4998068497425840728",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_fei_2_-4964133465197295409.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4964133465197295409",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_xia_-4956588650790905465.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4956588650790905465",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_yy_jj_-4897440251300907260.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4897440251300907260",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sanjiao_-4830520337406124164.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4830520337406124164",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_cz_hd_-4799276521966031049.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4799276521966031049",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_chilun2_-4678001988617627006.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4678001988617627006",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_buff_shui_-4534881768859244425.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4534881768859244425",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zt_peijiandi_-4503668560354980599.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4503668560354980599",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_map_di_2_2_-4465087474658301745.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4465087474658301745",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanell_yy_qb_-4435320957168420029.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4435320957168420029",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_tb_ck_-4383998472178192918.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4383998472178192918",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_qiehuan_2_-4298228217637279808.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4298228217637279808",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel2_carrier_dazuo_2_-4224806943368514286.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4224806943368514286",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_xiexingdi_-4189106968867149628.png": {
+    "border": {
+      "x": 57.0,
+      "y": 0.0,
+      "z": 51.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4189106968867149628",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zuo_shang_infoBG_1_-4183463095593411494.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4183463095593411494",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/Battlepanel_jiangli1_-4031482984250188017.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-4031482984250188017",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sy_zaiju_jt_-3990784314408679073.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3990784314408679073",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_qiehuan_1_-3966316806556921395.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3966316806556921395",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_tb_ch_-3961718644174788932.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3961718644174788932",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanell_yj_-3826420207550557256.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3826420207550557256",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_time_-3694681542326482130.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3694681542326482130",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_map_tb_sw_-3646773826070639105.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3646773826070639105",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/guangdun_xuetiao_xue_-3635212489168648933.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3635212489168648933",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zixingche_jiasu_-3627721935063937046.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3627721935063937046",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_buttle_fang_32_-3461201934130496850.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3461201934130496850",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_shengmingzhidi_-3460721836814411703.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3460721836814411703",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sy_che_-3428068568357446232.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3428068568357446232",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_chat_2_-3239021829128665593.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3239021829128665593",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_zsjzd_-3215795441809703681.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3215795441809703681",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_paihang_-3068650550154091649.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3068650550154091649",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_h_k_1_-3032354661822172565.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-3032354661822172565",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sz_bg_3_-2931754645626534474.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-2931754645626534474",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_dikuang_-2873014378393890984.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-2873014378393890984",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel2_carrier_dazuo_3_-2806387499731345948.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-2806387499731345948",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zunxing_6_-2606611360337040591.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-2606611360337040591",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zhixiang_1_-2590718387311643834.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-2590718387311643834",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1battlePanel_czq_-2584035899474453303.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-2584035899474453303",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sy_jiaobu_di_-2530937214471986818.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-2530937214471986818",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zaiju_che_-2459899269325841847.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-2459899269325841847",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_tb_db_-2246881289303052092.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-2246881289303052092",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sy_zhandou_di_-2026295054211001088.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-2026295054211001088",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zhixiang_4_-1976533213159725250.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1976533213159725250",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sz_-1887600901866073155.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1887600901866073155",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_carrier_jiashi_1_-1881287198206269462.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1881287198206269462",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/tb_biaojicheng_02_-1865771945657318642.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1865771945657318642",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sy_zaiju_dis_-1780034560199882212.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1780034560199882212",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zuo_shang_info_-1777715857456380535.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1777715857456380535",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_cxfmt_penshe2_-1566647205416424647.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1566647205416424647",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_chilun_-1406792474388956489.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1406792474388956489",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_tb_q_-1119412944228292320.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1119412944228292320",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanell_sc_-1101410618580535785.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1101410618580535785",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_jindutiao_-1061180438741798285.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1061180438741798285",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zhixiang_5_-1036457471606134494.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1036457471606134494",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_cart_js_-1028922495775893672.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-1028922495775893672",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zuo_shang_infophb_-971367810713531017.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-971367810713531017",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zuo_shang_infogl_-905453428450281903.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-905453428450281903",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zunxing_4_-819775764501733339.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-819775764501733339",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/tb_fl_-768529580648145644.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-768529580648145644",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sj_3_-764588019628858274.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-764588019628858274",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_h_c_1_-733355644336059706.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-733355644336059706",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_Shell_-435125892147674171.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-435125892147674171",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zhouye_yl_-218301089929197503.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-218301089929197503",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zunxing_2_-154907137030876804.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-154907137030876804",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel2_carrier_dazuo_1_-128853745190571020.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-128853745190571020",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sy_zaiju_di_-43881809000921824.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "-43881809000921824",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1battlePanel_bt1_474874708873752861.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "474874708873752861",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_yy_dw_596632344764412718.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "596632344764412718",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zuo_shang_infoZZ_618144008529270412.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "618144008529270412",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePane_com_buff_rn_619058442238194793.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "619058442238194793",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_fei_1_622390369443736797.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "622390369443736797",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_h_k_854362437237909879.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "854362437237909879",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_qx_zt_kj_883924786126802174.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "883924786126802174",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/tb_biaojicheng_01_1225592534385530862.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "1225592534385530862",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_tb_zz_1_1227826822689983114.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "1227826822689983114",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/Battlepanel_shichao1_1289311398198095576.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "1289311398198095576",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sy_jiaobu_1407856987861088594.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "1407856987861088594",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_cxfmt_diban_1582863474883964826.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "1582863474883964826",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_tb_lt_1846925645715432301.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "1846925645715432301",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_di_cb_1866784226681164571.png": {
+    "border": {
+      "x": 15.0,
+      "y": 15.0,
+      "z": 15.0,
+      "w": 15.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "1866784226681164571",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zunxing_3_2005361175159434348.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2005361175159434348",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_map_huolun_2031811257405158772.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2031811257405158772",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_quick_bg_yellow_2040451461346170320.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2040451461346170320",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_h_c1_2186481136948109211.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2186481136948109211",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_cart_js_1_2207396553209708294.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2207396553209708294",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zunxing_1_2325138153913779916.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2325138153913779916",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_h_f_1_2478768448445928894.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2478768448445928894",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2502764458735635252",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sy_xy_2531085287272718967.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2531085287272718967",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/wurenji_button_2599574757529023964.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2599574757529023964",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_MachineGun_2747511224204905099.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2747511224204905099",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_yy_st_2772189477286325868.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2772189477286325868",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePane_setting_shiqu5_2775381961251526660.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2775381961251526660",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zhixiang_3_2971016023036323288.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "2971016023036323288",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_xuan8_3060837135906820359.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "3060837135906820359",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_h_f_3109376742589571876.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "3109376742589571876",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/battlepanel_mimamen_3160191534226593982.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "3160191534226593982",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_buff_fs_3381753154874307057.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "3381753154874307057",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_yy_ht_3498461653276809428.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "3498461653276809428",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zuo_shang_info2_3533063899670598319.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "3533063899670598319",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_car_lb_3589352517030830755.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "3589352517030830755",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanell_sy_qiang_3632901064521717747.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "3632901064521717747",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1battlePanel_bt2_3896764836908325464.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "3896764836908325464",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_Map_huang_3924826172084765333.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "3924826172084765333",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sy_qiang1_4060327712234828238.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "4060327712234828238",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/battlepanel_lj_4111220770512142749.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "4111220770512142749",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/guangdun_xuetiao_di_4437583190813417026.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "4437583190813417026",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_map_lingdigui_4445139762678479602.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "4445139762678479602",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_cl_2_4478498591411063686.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "4478498591411063686",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sz_bg_4_4495932028163406853.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "4495932028163406853",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_setting_shiqu2_4527578309442845645.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "4527578309442845645",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_cz_hy_4614674307435979961.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "4614674307435979961",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_bag_zd_5120343051741940041.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "5120343051741940041",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_fei_3_5124888482071072326.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "5124888482071072326",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_jz_di_1_5222416314484026870.png": {
+    "border": {
+      "x": 41.0,
+      "y": 0.0,
+      "z": 38.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "5222416314484026870",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_biaoxue_5631269254375734624.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "5631269254375734624",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_map_di_2_1_5667890320321743265.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "5667890320321743265",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_buttle_diban_5773725499337371930.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "5773725499337371930",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_cart_hz_5989257502786034036.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "5989257502786034036",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_quit_6011876716381543375.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "6011876716381543375",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_cart_dc_6126881004512415268.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "6126881004512415268",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_cz_pa_6380483222475970638.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "6380483222475970638",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_cxfmt_penshe3_6501870322366197532.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "6501870322366197532",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_buff_xue_6505484593731425225.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "6505484593731425225",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_dz_bt_6585358080114024615.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "6585358080114024615",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_dolphin_6593151677872473258.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "6593151677872473258",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_cxfmt_zhunxing_6647928780638098573.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "6647928780638098573",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_cxfmt_penshe1_6773097147023378873.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "6773097147023378873",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zuo_shang_infomx_6793900889331403452.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "6793900889331403452",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_sj_2_6967019743901829064.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "6967019743901829064",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_TIP_23_7022945330196084483.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "7022945330196084483",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_Map_lan_7046165464865536342.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "7046165464865536342",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_map_xiaojianjiao_7369806991476293786.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "7369806991476293786",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/tb_biaojihong_02_7379062011811531692.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "7379062011811531692",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/wurenji_map_7505366797278574852.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "7505366797278574852",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_yy_xz_7609938877061588866.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "7609938877061588866",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_Map_hong_7733724338977180109.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "7733724338977180109",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_cz_dun_7816152445154004946.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "7816152445154004946",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_tb_dj_7891230758882651160.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "7891230758882651160",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_Map_huibai_7901072812560143050.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "7901072812560143050",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_killAction1_8021614344518027858.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "8021614344518027858",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_single_bg_yellow_8141839195814280150.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "8141839195814280150",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_cl_1_8185958170878533540.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "8185958170878533540",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zuo_shang_infoBG_8364767316903931391.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "8364767316903931391",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_danger_user_8435350579313472478.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "8435350579313472478",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zuo_shang_infojj_8599354916655188648.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "8599354916655188648",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_badge_map_mark_8688198788430939931.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "8688198788430939931",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_killAction2_8692610614557806844.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "8692610614557806844",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_tb_lz_8742372393265580160.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "8742372393265580160",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_zuo_shang_infoGH_8744017812167373612.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "8744017812167373612",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/ActivityWar_small_8756830136313678405.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "8756830136313678405",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePane_setting_shiqu4_8888159496805978068.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "8888159496805978068",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/BattlePanel_zsjzd1_9002793572375547294.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "9002793572375547294",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel/1BattlePanel_chat_1_9108866364270098734.png": {
+    "border": {
+      "x": 40.0,
+      "y": 20.0,
+      "z": 40.0,
+      "w": 20.0
+    },
+    "original_bundle": "battlepanel.ab",
+    "unity_path_id": "9108866364270098734",
+    "source_sha256": "c69e5ee4431ffa9b41392f78de6e3263ecce9d4a8154d0041c077c8b5c1b11f3"
+  },
+  "sprites/battlepanel2/BattlePanel2_zhankai_-9080251693824046631.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-9080251693824046631",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_carrier_bg_1_-8827411486471476834.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-8827411486471476834",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_rocker_feiji_1_-8729975916619666158.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-8729975916619666158",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_YINGSHUI2_-8452700383774633413.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-8452700383774633413",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_car_fangxiangpan_-8211199664351043491.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-8211199664351043491",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/battlepanel_mimamen_-8111337826017956733.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-8111337826017956733",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_carrier_cat_you_-7748904892036725265.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-7748904892036725265",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_st_an___-7168935225424053362.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-7168935225424053362",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattleCar_arrow_-6856549117447293414.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-6856549117447293414",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePlane2_jiqiang_-6758913660696790717.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-6758913660696790717",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattleCar_BtnBG_-6584854384484314851.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-6584854384484314851",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_carrier_feiji_-6535059186077093750.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-6535059186077093750",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_cz_tz_-6469348664197767004.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-6469348664197767004",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_car_yaogan_1_-6137401648909176546.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-6137401648909176546",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_yy_xiaiqian_-6127884208429500735.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-6127884208429500735",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_carrier_car_1_-6074822581128192519.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-6074822581128192519",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_btn_1_-5825230166857873712.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-5825230166857873712",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_quick_mark_-5736820139208292708.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-5736820139208292708",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePlane2_zhunxing_-5491833846199496664.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-5491833846199496664",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_jiantou_-5471733165915811555.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-5471733165915811555",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-5434031170515894608",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_car_yaogan_2_-5376360766746200822.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-5376360766746200822",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_Haitun_js_-4745380152924668413.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-4745380152924668413",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_xue_-4719050014214841540.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-4719050014214841540",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_car_zidongbengpao2_-4638175421644290377.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-4638175421644290377",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_carrier_craft_-4504978001038594640.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-4504978001038594640",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_map_djs_-4495840383666025054.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-4495840383666025054",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_Yuzhouhj_kong_-4408762761147770495.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-4408762761147770495",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_car_fx_-4147969618079910830.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-4147969618079910830",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattleCar_BtnFg_-3711662701157319024.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-3711662701157319024",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_YINGHSUAI1_-3218965644446534171.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-3218965644446534171",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_Di_1_-2969211243965973680.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-2969211243965973680",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_ss_sj_-2260811304252838403.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-2260811304252838403",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_Yuzhouhj_shi_-2077585954871448826.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-2077585954871448826",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_carrier_zixingche_-1064474530582632977.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-1064474530582632977",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_quick_icon_medicine_-552064194760069124.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-552064194760069124",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_penshe_-510595567409538199.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-510595567409538199",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_quick_icon_equip_-501006248188689826.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-501006248188689826",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_dz_-288658905920454725.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-288658905920454725",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePlane2_zidan_-128349596253892940.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-128349596253892940",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_daojishidiban_-105831425662626128.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "-105831425662626128",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_quick_icon_defend_156405013911702740.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "156405013911702740",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_carrier_mt_1_745053233193210799.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "745053233193210799",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_daodan_907296344811774635.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "907296344811774635",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_quick_icon_vehicle_1050633592431254648.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "1050633592431254648",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_yy_shangfu_1054337079085544429.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "1054337079085544429",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_carrier_you_1_1342127327955851228.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "1342127327955851228",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_car_yaogan_3_1765268713649345837.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "1765268713649345837",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_jishiqi_2056650324395407187.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "2056650324395407187",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_quick_icon_attack_2255477384870362243.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "2255477384870362243",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_talent_2547166466510167874.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "2547166466510167874",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_gz_4_2658025591422502102.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "2658025591422502102",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_Yuzhouhj_2845260393342328308.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "2845260393342328308",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_you_3311231443256713559.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "3311231443256713559",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_carrier_chuan_4004849667662849536.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "4004849667662849536",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_diban_1_4391931977596235993.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "4391931977596235993",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_st_an_2_4449387293946013019.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "4449387293946013019",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_ss_lx_4639281836674767418.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "4639281836674767418",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_shouqi_4698139271576919426.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "4698139271576919426",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_home_4729969317431840499.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "4729969317431840499",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_zhanbao_4845680235653023252.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "4845680235653023252",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_xue_bg_4_4885131246385479012.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "4885131246385479012",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_shouce_5341425644355609534.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "5341425644355609534",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_tanhao_5412268154157070884.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "5412268154157070884",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattleCar_SheCheng_5432850746559817673.png": {
+    "border": {
+      "x": 0.0,
+      "y": 10.0,
+      "z": 0.0,
+      "w": 10.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "5432850746559817673",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_dt_bg_1_6069250624512689768.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "6069250624512689768",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_carrier_zuo_1_6183514525723458624.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "6183514525723458624",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattleCar_keduchi-2_6669574118829230261.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "6669574118829230261",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_car_yaogan_5_6816472486429899996.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "6816472486429899996",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_zd_bp_2_7065528221711098268.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "7065528221711098268",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/jy_yuzhouhaojiezsjxiaotubiao_7234413212836517737.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "7234413212836517737",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_carrier_xue_7651819425219166662.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "7651819425219166662",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_carrier_zuo_2_7725428724523238449.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "7725428724523238449",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattleCar_arrow2_7734493804449951626.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "7734493804449951626",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_quick_icon_assemble_8375564135475584295.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "8375564135475584295",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  },
+  "sprites/battlepanel2/BattlePanel2_shangdian_8494990132577306409.png": {
+    "border": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 0.0
+    },
+    "original_bundle": "battlepanel2.ab",
+    "unity_path_id": "8494990132577306409",
+    "source_sha256": "d7818c014cff99ea99c28f48d5377cca5bcac1b26f183aa97d2730e8d31fd063"
+  }
+}

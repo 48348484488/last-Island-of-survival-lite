@@ -17,62 +17,65 @@
   "sprites_from_original_xapk": 43,
   "sample_items_are_illustrative": false,
   "recttransform_local_scale_enabled": true,
+  "recttransform_anchors_calculated_from_parent_rect_center": true,
+  "source_9slice_border_metadata": 265,
+  "vital_ratios_from_runtime_state": false,
   "unity_image_filled_alpha_enabled": true,
   "unity_minimap_stencil_approximation": "circular alpha mask, not actual Unity shader",
   "draw_calls": [
     {
       "go": "btn_info",
       "sprite": "sprites/battlepanel2/BattlePanel2_Di_1_-2969211243965973680.png",
-      "x": 51,
-      "y": 48,
+      "x": 1,
+      "y": -2,
       "w": 154,
       "h": 124
     },
     {
       "go": "Image (1)",
       "sprite": "sprites/battlepanel2/BattlePanel2_home_4729969317431840499.png",
-      "x": 170,
-      "y": 113,
+      "x": 43,
+      "y": 1,
       "w": 70,
       "h": 59
     },
     {
       "go": "btn_baseUpgrade",
       "sprite": "sprites/battlepanel/1BattlePanel_zuo_shang_infoBG_1_-4183463095593411494.png",
-      "x": 64,
-      "y": 180,
+      "x": 14,
+      "y": 130,
       "w": 311,
       "h": 39
     },
     {
       "go": "m_base_image",
       "sprite": "sprites/battlepanel/1BattlePanel_zuo_shang_infojj_8599354916655188648.png",
-      "x": 70,
-      "y": 183,
+      "x": 20,
+      "y": 133,
       "w": 31,
       "h": 33
     },
     {
       "go": "btn_Baserank",
       "sprite": "sprites/battlepanel2/BattlePanel2_diban_1_4391931977596235993.png",
-      "x": 532,
-      "y": 49,
+      "x": 482,
+      "y": -1,
       "w": 105,
       "h": 80
     },
     {
       "go": "Image (1)",
       "sprite": "sprites/battlepanel/1BattlePanel_zuo_shang_infophb_-971367810713531017.png",
-      "x": 549,
-      "y": 43,
+      "x": 499,
+      "y": -7,
       "w": 70,
       "h": 70
     },
     {
       "go": "btn_help",
       "sprite": "sprites/battlepanel2/BattlePanel2_diban_1_4391931977596235993.png",
-      "x": 638,
-      "y": 49,
+      "x": 588,
+      "y": -1,
       "w": 105,
       "h": 80
     },
@@ -80,7 +83,7 @@
       "go": "Image",
       "sprite": "sprites/common/mask_leftrightfade_2373188531510254976.png",
       "x": 635,
-      "y": 50,
+      "y": 0,
       "w": 650,
       "h": 50
     },
@@ -88,7 +91,7 @@
       "go": "bg",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_jiaobu_di_-2530937214471986818.png",
       "x": 942,
-      "y": 157,
+      "y": 45,
       "w": 36,
       "h": 45
     },
@@ -96,7 +99,7 @@
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_jiaobu_s_-6532618611273286960.png",
       "x": 944,
-      "y": 169,
+      "y": 56,
       "w": 32,
       "h": 32
     },
@@ -104,7 +107,7 @@
       "go": "bg",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_di_-43881809000921824.png",
       "x": 942,
-      "y": 157,
+      "y": 45,
       "w": 36,
       "h": 45
     },
@@ -112,7 +115,7 @@
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_dis_-1780034560199882212.png",
       "x": 944,
-      "y": 168,
+      "y": 56,
       "w": 32,
       "h": 32
     },
@@ -120,7 +123,7 @@
       "go": "bg",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_zhandou_di_-2026295054211001088.png",
       "x": 942,
-      "y": 157,
+      "y": 45,
       "w": 36,
       "h": 45
     },
@@ -128,7 +131,7 @@
       "go": "image",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_qiang1_4060327712234828238.png",
       "x": 944,
-      "y": 168,
+      "y": 56,
       "w": 32,
       "h": 32
     },
@@ -136,7 +139,7 @@
       "go": "bg",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_di_-43881809000921824.png",
       "x": 942,
-      "y": 157,
+      "y": 45,
       "w": 36,
       "h": 45
     },
@@ -144,7 +147,7 @@
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_dis_-1780034560199882212.png",
       "x": 944,
-      "y": 168,
+      "y": 56,
       "w": 32,
       "h": 32
     },
@@ -152,39 +155,39 @@
       "go": "Image (2)",
       "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_jt_-3990784314408679073.png",
       "x": 950,
-      "y": 50,
+      "y": 0,
       "w": 21,
       "h": 18
     },
     {
       "go": "Image",
       "sprite": "sprites/battlepanel2/BattlePanel2_dt_bg_1_6069250624512689768.png",
-      "x": 1472,
-      "y": 232,
+      "x": 1637,
+      "y": 67,
       "w": 260,
       "h": 260
     },
     {
       "go": "ditu(Map_map original)",
       "sprite": "source Map_map",
-      "x": 1472,
-      "y": 232,
+      "x": 1637,
+      "y": 67,
       "w": 260,
       "h": 260
     },
     {
       "go": "m_dayDi",
       "sprite": "sprites/battlepanel/1BattlePanel_tq_bg_-7551180080870847355.png",
-      "x": 1358,
-      "y": 245,
+      "x": 1573,
+      "y": 30,
       "w": 348,
       "h": 29
     },
     {
       "go": "m_dayIcon",
       "sprite": "sprites/battlepanel/1BattlePanel_zhouye_ty_-5377527645028882103.png",
-      "x": 1650,
-      "y": 235,
+      "x": 1865,
+      "y": 20,
       "w": 45,
       "h": 45
     },
@@ -255,8 +258,8 @@
     {
       "go": "Image (1)",
       "sprite": "sprites/battlepanel/1BattlePanel_sz_-1887600901866073155.png",
-      "x": 1795,
-      "y": 345,
+      "x": 1820,
+      "y": 320,
       "w": 70,
       "h": 69
     },
@@ -271,24 +274,24 @@
     {
       "go": "Image (1)",
       "sprite": "sprites/battlepanel/1BattlePanel_sz_bg_5_-5062069000559337827.png",
-      "x": 1616,
-      "y": 345,
+      "x": 1641,
+      "y": 320,
       "w": 70,
       "h": 70
     },
     {
       "go": "m_quickChatCd",
       "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
-      "x": 1626,
-      "y": 355,
+      "x": 1651,
+      "y": 330,
       "w": 50,
       "h": 50
     },
     {
       "go": "m_red_competition",
       "sprite": "sprites/common/com_tip_ts_-1248732371203954598.png",
-      "x": 1659,
-      "y": 351,
+      "x": 1684,
+      "y": 326,
       "w": 24,
       "h": 24
     },
@@ -303,8 +306,8 @@
     {
       "go": "Image (1)",
       "sprite": "sprites/battlepanel/1BattlePanel_TIP_23_7022945330196084483.png",
-      "x": 1718,
-      "y": 324,
+      "x": 1743,
+      "y": 299,
       "w": 112,
       "h": 112
     },
@@ -320,7 +323,7 @@
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
       "x": 632,
-      "y": 841,
+      "y": 936,
       "w": 86,
       "h": 86
     },
@@ -328,7 +331,7 @@
       "go": "m_heightLignt",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
       "x": 634,
-      "y": 843,
+      "y": 938,
       "w": 81,
       "h": 81
     },
@@ -336,7 +339,7 @@
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
       "x": 727,
-      "y": 841,
+      "y": 936,
       "w": 86,
       "h": 86
     },
@@ -344,7 +347,7 @@
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
       "x": 822,
-      "y": 841,
+      "y": 936,
       "w": 86,
       "h": 86
     },
@@ -352,7 +355,7 @@
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
       "x": 917,
-      "y": 841,
+      "y": 936,
       "w": 86,
       "h": 86
     },
@@ -360,7 +363,7 @@
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
       "x": 1012,
-      "y": 841,
+      "y": 936,
       "w": 86,
       "h": 86
     },
@@ -368,7 +371,7 @@
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
       "x": 1107,
-      "y": 841,
+      "y": 936,
       "w": 86,
       "h": 86
     },
@@ -376,7 +379,7 @@
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
       "x": 1202,
-      "y": 841,
+      "y": 936,
       "w": 86,
       "h": 86
     },
@@ -384,7 +387,7 @@
       "go": "btn_pack",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png",
       "x": 468,
-      "y": 837,
+      "y": 932,
       "w": 90,
       "h": 90
     },
@@ -392,7 +395,7 @@
       "go": "Image",
       "sprite": "sprites/battlepanel/1BattlePanell_bb_-8339622856558486473.png",
       "x": 467,
-      "y": 833,
+      "y": 928,
       "w": 93,
       "h": 98
     },
@@ -439,48 +442,48 @@
     {
       "go": "m_YaoganBG",
       "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_1_-6137401648909176546.png",
-      "x": 432,
-      "y": 183,
+      "x": 161,
+      "y": 630,
       "w": 330,
       "h": 330
     },
     {
       "go": "Image",
       "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_2_-5376360766746200822.png",
-      "x": 518,
-      "y": 269,
+      "x": 247,
+      "y": 716,
       "w": 158,
       "h": 158
     },
     {
       "go": "btn_autoRun",
       "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png",
-      "x": 459,
-      "y": -27,
+      "x": 276,
+      "y": 335,
       "w": 89,
       "h": 89
     },
     {
       "go": "Image",
       "sprite": "sprites/battlepanel2/BattlePanel2_car_zidongbengpao2_-4638175421644290377.png",
-      "x": 512,
-      "y": -55,
+      "x": 285,
+      "y": 351,
       "w": 72,
       "h": 56
     },
     {
       "go": "btn_fire",
       "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_5_6816472486429899996.png",
-      "x": 1452,
-      "y": 625,
+      "x": 1502,
+      "y": 675,
       "w": 182,
       "h": 182
     },
     {
       "go": "m_fireImage",
       "sprite": "sprites/battlepanel2/BattlePanel2_car_yaogan_3_1765268713649345837.png",
-      "x": 1453,
-      "y": 626,
+      "x": 1503,
+      "y": 676,
       "w": 180,
       "h": 180
     },
@@ -537,31 +540,31 @@
   "hotbar_slot_centers": [
     [
       674.9772,
-      196.3874
+      101.3836
     ],
     [
       769.9848,
-      196.3874
+      101.3836
     ],
     [
       864.9924,
-      196.3874
+      101.3836
     ],
     [
       960.0,
-      196.3874
+      101.3836
     ],
     [
       1055.0076,
-      196.3874
+      101.3836
     ],
     [
       1150.0152,
-      196.3874
+      101.3836
     ],
     [
       1245.0228,
-      196.3874
+      101.3836
     ]
   ],
   "notes": [
@@ -570,7 +573,7 @@
   ],
   "reproducible_script": "tools/render_source_unity_hud.py",
   "known_limits": [
-    "UGUI nine-slice, native shader and runtime masking not exactly reproduced",
+    "UGUI nine-slice when original Sprite.m_Border absent, native shader and runtime masking not exactly reproduced",
     "runtime CanvasScaler and custom positions unresolved",
     "preview map viewport position/zoom is demonstrative",
     "some state toggles and runtime-generated data not recovered"
