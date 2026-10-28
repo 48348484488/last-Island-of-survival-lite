@@ -196,7 +196,12 @@ public:
             done[i]=1;busy[i]=0;
         };
         for(int i=0;i<bc;i++)calc(i);
-        const Mat LH={1,0,0,0,0,1,0,0,0,0,-1,0,0,0,0,1}; // M_U2GL @ Rx90 from PC
+        // Exactly reproduce skinned_character.py:
+        // M_U2GL = rotation(-90 deg X), RX90 = rotation(+90 deg X)
+        // M_U2GL @ RX90 = IDENTITY, NOT a Z reflection. The previous
+        // diag(1,1,-1) flipped the entire rig front-to-back and inverted
+        // triangle winding, making faces and materials appear incorrect.
+        const Mat LH=ident();
         for(auto &part:parts){
             std::vector<Mat> matrices;matrices.reserve(part.palette.size());
             for(size_t bi=0;bi<part.palette.size();bi++){
@@ -206,21 +211,34 @@ public:
                 matrices.push_back(multiply(multiply(LH,world[part.palette[bi]]),rhs));
             }
             std::vector<float> deformed(size_t(part.vertexCount)*3,0);
+            std::vector<float> normals(size_t(part.vertexCount)*3,0);
             for(int v=0;v<part.vertexCount;v++){
                 const float x=part.bindVerts[3*v],y=part.bindVerts[3*v+1],z=part.bindVerts[3*v+2];
+                const float nx=part.normals[3*v],ny=part.normals[3*v+1],nz=part.normals[3*v+2];
                 for(int influence=0;influence<part.influences;influence++){
                     int k=v*part.influences+influence;
                     float weight=part.weights[k];
                     if(weight<=0)continue;
                     const Mat &m=matrices[part.indices[k]];
-                    for(int row=0;row<3;row++)
+                    for(int row=0;row<3;row++){
                         deformed[3*v+row]+=weight*(m[row*4]*x+m[row*4+1]*y+
-                                                           m[row*4+2]*z+m[row*4+3]);
+                                                       m[row*4+2]*z+m[row*4+3]);
+                        // Original bone transforms are rigid, so their upper
+                        // 3x3 rotates normals without applying translation.
+                        normals[3*v+row]+=weight*(m[row*4]*nx+m[row*4+1]*ny+
+                                                      m[row*4+2]*nz);
+                    }
                 }
+                const float norm=std::sqrt(normals[3*v]*normals[3*v]+
+                          normals[3*v+1]*normals[3*v+1]+normals[3*v+2]*normals[3*v+2]);
+                if(norm>1e-7f)for(int axis=0;axis<3;axis++)normals[3*v+axis]/=norm;
             }
             if(part.uploaded){
-                std::memcpy(part.model.meshes[0].vertices,deformed.data(),deformed.size()*sizeof(float));
-                UpdateMeshBuffer(part.model.meshes[0],0,deformed.data(),int(deformed.size()*sizeof(float)),0);
+                Mesh &gpu=part.model.meshes[0];
+                std::memcpy(gpu.vertices,deformed.data(),deformed.size()*sizeof(float));
+                std::memcpy(gpu.normals,normals.data(),normals.size()*sizeof(float));
+                UpdateMeshBuffer(gpu,0,deformed.data(),int(deformed.size()*sizeof(float)),0);
+                UpdateMeshBuffer(gpu,2,normals.data(),int(normals.size()*sizeof(float)),0);
             }
         }
     }
@@ -230,7 +248,10 @@ public:
             Texture2D tex=skin;
             if(p.name=="pants")tex=pants;else if(p.name=="torso")tex=torso;
             else if(p.name=="shoes")tex=shoes;else if(p.name=="head")tex=head;else if(p.name=="hair")tex=hair;
-            SetMaterialTexture(&p.model.materials[0],MATERIAL_MAP_DIFFUSE,tex);
+            if(tex.id==0)TraceLog(LOG_WARNING,"LIOS_MISSING_ORIGINAL_SKIN_TEXTURE mesh=%s",p.name.c_str());
+            else TraceLog(LOG_INFO,"LIOS_CHARACTER_TEXTURE mesh=%s id=%u size=%dx%d",
+                          p.name.c_str(),tex.id,tex.width,tex.height);
+            if(p.model.materialCount>0)SetMaterialTexture(&p.model.materials[0],MATERIAL_MAP_DIFFUSE,tex);
         }
     }
     void draw()const{if(!ready)return;for(const auto &p:parts)if(p.uploaded)
