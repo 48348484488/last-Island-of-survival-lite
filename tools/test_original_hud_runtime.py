@@ -15,7 +15,31 @@ from original_hud_runtime import (
     game_hud_state, viewport_bounds, viewport_to_original, render_source_layer,
 )
 
+def verify_clipped_composite_pixel_identity():
+    # Reference: old full-canvas composite versus the optimized sprite-local
+    # composite. Both must be pixel-identical, including partial offscreen UI.
+    from PIL import Image
+    dst = Image.new("RGBA", (32, 20), (55, 75, 90, 130))
+    sprite = Image.new("RGBA", (12, 8))
+    for x in range(12):
+        for y in range(8):
+            sprite.putpixel((x, y), (x * 19, y * 30, 120, (x * y * 7) % 256))
+    for left, top in [(-7, -3), (2, 4), (27, 16), (36, 0), (0, -9)]:
+        full = Image.new("RGBA", dst.size)
+        full.paste(sprite, (left, top))
+        reference = Image.alpha_composite(dst, full)
+        clipped = dst.copy()
+        x0, y0 = max(0, left), max(0, top)
+        x1, y1 = min(32, left + 12), min(20, top + 8)
+        if x0 < x1 and y0 < y1:
+            clipped.alpha_composite(
+                sprite.crop((x0-left, y0-top, x1-left, y1-top)),
+                dest=(x0, y0))
+        assert clipped.tobytes() == reference.tobytes(), (left, top)
+
+
 def main():
+    verify_clipped_composite_pixel_identity()
     state = game_hud_state(
         health=82, food=66, water=25, yaw=math.radians(25),
         equipped_slot=1, wood=41, metal=12, stone=7, sulfur=3,
