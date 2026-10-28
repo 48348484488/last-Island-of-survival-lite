@@ -86,8 +86,12 @@ def main():
     for i in range(7):
         go=hud.go("m_Item"+str(i+1))
         child=hud._descendant(go["path_id"],"m_icon")
+        background=hud._descendant(go["path_id"],"Background")
         num=hud._descendant(go["path_id"],"txt_num")
-        icons.append({"index":i,"slot":source_rect(hud,go["path_id"]),
+        # m_ItemN is a zero-size Unity anchor! Its child Background is the
+        # actual visible 95x95 hotbar hit area. Using the parent prevented
+        # selection on Android even though the item icon was rendered.
+        icons.append({"index":i,"slot":source_rect(hud,background),
                       "icon":source_rect(hud,child),
                       "count":text_info(hud,hud.game_objects[num]["name"]) if False else
                       _text_for_id(hud,num),
@@ -181,6 +185,9 @@ def main():
     h=dest/"mobile_original_hud_layout.hpp";h.write_text("\n".join(lines)+"\n",encoding="utf8")
     # Generated provenance guards:
     assert len(icons)==7 and len(geometry["buttons"])==11
+    for slot in icons:
+        b=slot["slot"]
+        assert b["right"]-b["left"]>=50 and b["bottom"]-b["top"]>=50,slot
     assert all(p["draw_calls"]>40 for p in geometry["profiles"].values())
     print("LIOS_MOBILE_ORIGINAL_HUD_LAYOUT_PASS",
           "actions",len(geometry["buttons"]),"slots",len(icons),
