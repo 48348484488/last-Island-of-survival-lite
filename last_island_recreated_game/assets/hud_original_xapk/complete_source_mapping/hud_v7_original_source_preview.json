@@ -195,7 +195,14 @@
       "source_component_path_id": "-6615293943575496370",
       "source_rect_path_id": "292887681835563071",
       "value": "20",
-      "font_origin": "fallback, original m_Font PathID=0",
+      "original_unity_text_font_size": 25,
+      "original_unity_alignment": 5,
+      "original_unity_font_style": 0,
+      "original_font_reference": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_origin": "system fallback; exact original Unity glyph shapes not verified",
       "pixel_bounds": [
         762.574,
         995.243,
@@ -209,7 +216,14 @@
       "source_component_path_id": "5502149049269948269",
       "source_rect_path_id": "-827906231139247453",
       "value": "30",
-      "font_origin": "fallback, original m_Font PathID=0",
+      "original_unity_text_font_size": 25,
+      "original_unity_alignment": 5,
+      "original_unity_font_style": 0,
+      "original_font_reference": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_origin": "system fallback; exact original Unity glyph shapes not verified",
       "pixel_bounds": [
         857.581,
         995.244,
@@ -223,7 +237,14 @@
       "source_component_path_id": "-8412418372899084515",
       "source_rect_path_id": "303789204333610780",
       "value": "10",
-      "font_origin": "fallback, original m_Font PathID=0",
+      "original_unity_text_font_size": 25,
+      "original_unity_alignment": 5,
+      "original_unity_font_style": 0,
+      "original_font_reference": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_origin": "system fallback; exact original Unity glyph shapes not verified",
       "pixel_bounds": [
         952.589,
         995.244,
@@ -237,7 +258,14 @@
       "source_component_path_id": "3926640069805255529",
       "source_rect_path_id": "9136410427194391396",
       "value": "3",
-      "font_origin": "fallback, original m_Font PathID=0",
+      "original_unity_text_font_size": 25,
+      "original_unity_alignment": 5,
+      "original_unity_font_style": 0,
+      "original_font_reference": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_origin": "system fallback; exact original Unity glyph shapes not verified",
       "pixel_bounds": [
         1047.596,
         995.244,
@@ -251,7 +279,14 @@
       "source_component_path_id": "-8276369476636718043",
       "source_rect_path_id": "9014908692453156809",
       "value": "2",
-      "font_origin": "fallback, original m_Font PathID=0",
+      "original_unity_text_font_size": 25,
+      "original_unity_alignment": 5,
+      "original_unity_font_style": 0,
+      "original_font_reference": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_origin": "system fallback; exact original Unity glyph shapes not verified",
       "pixel_bounds": [
         1142.604,
         995.244,
@@ -265,7 +300,14 @@
       "source_component_path_id": "4008965986097518637",
       "source_rect_path_id": "1503799635019544563",
       "value": "8",
-      "font_origin": "fallback, original m_Font PathID=0",
+      "original_unity_text_font_size": 25,
+      "original_unity_alignment": 5,
+      "original_unity_font_style": 0,
+      "original_font_reference": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_origin": "system fallback; exact original Unity glyph shapes not verified",
       "pixel_bounds": [
         1237.612,
         995.243,
@@ -279,7 +321,14 @@
       "source_component_path_id": "-6076195701971340670",
       "source_rect_path_id": "2081166362718012268",
       "value": "84",
-      "font_origin": "fallback, original m_Font PathID=0",
+      "original_unity_text_font_size": 22,
+      "original_unity_alignment": 4,
+      "original_unity_font_style": 0,
+      "original_font_reference": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_origin": "system fallback; exact original Unity glyph shapes not verified",
       "pixel_bounds": [
         1464.673,
         76.613,
@@ -293,7 +342,14 @@
       "source_component_path_id": "3949072366455316945",
       "source_rect_path_id": "344877162487318943",
       "value": "56",
-      "font_origin": "fallback, original m_Font PathID=0",
+      "original_unity_text_font_size": 22,
+      "original_unity_alignment": 4,
+      "original_unity_font_style": 0,
+      "original_font_reference": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_origin": "system fallback; exact original Unity glyph shapes not verified",
       "pixel_bounds": [
         1463.038,
         124.323,
@@ -307,7 +363,14 @@
       "source_component_path_id": "-8095787416876729918",
       "source_rect_path_id": "-3723180914051164495",
       "value": "72",
-      "font_origin": "fallback, original m_Font PathID=0",
+      "original_unity_text_font_size": 22,
+      "original_unity_alignment": 4,
+      "original_unity_font_style": 0,
+      "original_font_reference": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_origin": "system fallback; exact original Unity glyph shapes not verified",
       "pixel_bounds": [
         1463.004,
         168.241,
