@@ -1,0 +1,718 @@
+{
+  "source": "Last Island LITE 7.3 XAPK / install_time_asset_pack.apk",
+  "prefab": "assets/ui/battlepanel.ab",
+  "external_dependency_guids_by_file_id": {
+    "1": "2c321042086139a67290fadcb8d82a1a",
+    "2": "95f94c8d52a40ea313dac31b9e39e614",
+    "3": "126847d5dc1f605e64f0af0270d43cee",
+    "4": "a541e3d1cd5f9c1efe430056ffe50cd6",
+    "5": "128cbfce05cfeb8547c22f2c7b9a8621",
+    "6": "84a7cb6700c0ea481eedd58f884f922c",
+    "7": "096add6cdbb7663c007ed458ab0c7475",
+    "8": "f32a321f5baa529ce19c54d7fc0d07b2",
+    "9": "f8c9f67500c0bc5b40565304360a5b96",
+    "10": "f20dbe888f313530e0ea9dd53e60f8be",
+    "11": "b99e201845a48115c6b6a24e89d01efe",
+    "12": "4c95d6824a933519070e15ca977b0b45",
+    "13": "bb0cfdc835fa64579cd5ed1bcfde71b6",
+    "15": "4ef2800f78a062221f5e9841aee5c859",
+    "16": "cf426974e55dc26e640d8fb5439d1d7f",
+    "18": "6f00d75dc2d1769c1e37c309e03faec1",
+    "19": "4b7090c6053791f816d82329875ee6d6",
+    "20": "446406f29bd2c8003b76a7b91298c562",
+    "21": "4f58d757ca8598ee22adf44323a05183",
+    "22": "96d6b073297076227680d56d703594ca",
+    "23": "8a615c033f9921061e9146bad2d02c23",
+    "24": "ecaca46eb4185b2dc1acefc63e00431f",
+    "25": "e092f98d49976de788bff7170c75f517",
+    "26": "59df03d77b5d690d5e059c3ddd98f0a6",
+    "27": "6ce28d6401adcdeae18ba9dbebc1af2a",
+    "28": "9c7abb8210ba7680545bba676285a52d",
+    "29": "c4e70bff8aa63ef9b2b405d157e67c33",
+    "30": "e3db4ffa5651e33e019d76e1a214b8a0"
+  },
+  "matching_bundles": {
+    "6f00d75dc2d1769c1e37c309e03faec1": [
+      "assets/uiatlas/achievementpanel.ab"
+    ],
+    "84a7cb6700c0ea481eedd58f884f922c": [
+      "assets/uiatlas/alertboxtwo.ab"
+    ],
+    "4c95d6824a933519070e15ca977b0b45": [
+      "assets/uiatlas/battlemappanel.ab"
+    ],
+    "128cbfce05cfeb8547c22f2c7b9a8621": [
+      "assets/uiatlas/civilizationinfopanel.ab"
+    ],
+    "95f94c8d52a40ea313dac31b9e39e614": [
+      "assets/uiatlas/competitionpanel.ab"
+    ],
+    "96d6b073297076227680d56d703594ca": [
+      "assets/uiatlas/fastchatpanel.ab"
+    ],
+    "c4e70bff8aa63ef9b2b405d157e67c33": [
+      "assets/uiatlas/guidenovicepanel.ab"
+    ],
+    "446406f29bd2c8003b76a7b91298c562": [
+      "assets/uiatlas/lantupanel.ab"
+    ],
+    "4b7090c6053791f816d82329875ee6d6": [
+      "assets/uiatlas/loginpanel.ab"
+    ],
+    "f32a321f5baa529ce19c54d7fc0d07b2": [
+      "assets/uiatlas/newbattlepanel.ab"
+    ],
+    "9c7abb8210ba7680545bba676285a52d": [
+      "assets/uiatlas/newmainpanel.ab"
+    ],
+    "f20dbe888f313530e0ea9dd53e60f8be": [
+      "assets/uiatlas/pet.ab"
+    ],
+    "59df03d77b5d690d5e059c3ddd98f0a6": [
+      "assets/uiatlas/playerlauncherpanel.ab"
+    ],
+    "f8c9f67500c0bc5b40565304360a5b96": [
+      "assets/uiatlas/salepanel.ab"
+    ],
+    "4ef2800f78a062221f5e9841aee5c859": [
+      "assets/uiatlas/talentpanel2.ab"
+    ],
+    "bb0cfdc835fa64579cd5ed1bcfde71b6": [
+      "assets/uiatlas/uav.ab"
+    ]
+  },
+  "sprites": [
+    {
+      "file_id": 2,
+      "path_id": "533536903345587410",
+      "name": "CompetitionPanel_liuyan",
+      "bundle": "assets/uiatlas/competitionpanel.ab",
+      "cab": "95f94c8d52a40ea313dac31b9e39e614",
+      "file": "complete_source_mapping/external_sprites/file2/sprite_533536903345587410.png",
+      "width": 48,
+      "height": 38,
+      "source_bundle_sha256": "ba58ff6cf74e0dca7c27c01e93c4e183cf19e19fa5a164bf3881b583a19284b4",
+      "png_sha256": "09f386d8442e10a79a785b22f2ba6fedf9093b484ce5914e43082b711ed3f035"
+    },
+    {
+      "file_id": 5,
+      "path_id": "-102160081431306245",
+      "name": "CivilizationInfoPanel_mail",
+      "bundle": "assets/uiatlas/civilizationinfopanel.ab",
+      "cab": "128cbfce05cfeb8547c22f2c7b9a8621",
+      "file": "complete_source_mapping/external_sprites/file5/sprite_-102160081431306245.png",
+      "width": 48,
+      "height": 40,
+      "source_bundle_sha256": "9bb6cb6aebdf4a0aaaa7089517487bf7f71c68c40f843f352bcc2250b5fef103",
+      "png_sha256": "f26831682383f241f70452f351e2dbd7b1a33900237bfbae3b1cf770d4c8698a"
+    },
+    {
+      "file_id": 5,
+      "path_id": "-1803322300710730365",
+      "name": "CivilizationInfoPanel_xdwm_jdt",
+      "bundle": "assets/uiatlas/civilizationinfopanel.ab",
+      "cab": "128cbfce05cfeb8547c22f2c7b9a8621",
+      "file": "complete_source_mapping/external_sprites/file5/sprite_-1803322300710730365.png",
+      "width": 290,
+      "height": 22,
+      "source_bundle_sha256": "9bb6cb6aebdf4a0aaaa7089517487bf7f71c68c40f843f352bcc2250b5fef103",
+      "png_sha256": "4935f39360d7f0510cf71a730db3db3e18d721a993f5ab0bc08be167b67eb4e8"
+    },
+    {
+      "file_id": 5,
+      "path_id": "-5279679264932803486",
+      "name": "CivilizationInfoPanel_detail",
+      "bundle": "assets/uiatlas/civilizationinfopanel.ab",
+      "cab": "128cbfce05cfeb8547c22f2c7b9a8621",
+      "file": "complete_source_mapping/external_sprites/file5/sprite_-5279679264932803486.png",
+      "width": 57,
+      "height": 30,
+      "source_bundle_sha256": "9bb6cb6aebdf4a0aaaa7089517487bf7f71c68c40f843f352bcc2250b5fef103",
+      "png_sha256": "6e8b8fed6e0613d5860830b575bfa0b132966e8f8382cd81cd6e038f13e94556"
+    },
+    {
+      "file_id": 5,
+      "path_id": "-6289319532922498793",
+      "name": "CivilizationInfoPanel_di_jdt",
+      "bundle": "assets/uiatlas/civilizationinfopanel.ab",
+      "cab": "128cbfce05cfeb8547c22f2c7b9a8621",
+      "file": "complete_source_mapping/external_sprites/file5/sprite_-6289319532922498793.png",
+      "width": 290,
+      "height": 22,
+      "source_bundle_sha256": "9bb6cb6aebdf4a0aaaa7089517487bf7f71c68c40f843f352bcc2250b5fef103",
+      "png_sha256": "d3734cd099c1c30acf882667231b9fbc335153e756eb82fff307ba2a9ccf9a22"
+    },
+    {
+      "file_id": 5,
+      "path_id": "-8470429086207185791",
+      "name": "CivilizationInfoPanel_xdwm_di",
+      "bundle": "assets/uiatlas/civilizationinfopanel.ab",
+      "cab": "128cbfce05cfeb8547c22f2c7b9a8621",
+      "file": "complete_source_mapping/external_sprites/file5/sprite_-8470429086207185791.png",
+      "width": 309,
+      "height": 74,
+      "source_bundle_sha256": "9bb6cb6aebdf4a0aaaa7089517487bf7f71c68c40f843f352bcc2250b5fef103",
+      "png_sha256": "2fa9c2e0e61e53c601ee319abcb72dfd932e2be0c7d0b0fdba11060144c6223c"
+    },
+    {
+      "file_id": 5,
+      "path_id": "2940621181903245823",
+      "name": "CivilizationInfoPanel_yswm_jdt",
+      "bundle": "assets/uiatlas/civilizationinfopanel.ab",
+      "cab": "128cbfce05cfeb8547c22f2c7b9a8621",
+      "file": "complete_source_mapping/external_sprites/file5/sprite_2940621181903245823.png",
+      "width": 292,
+      "height": 22,
+      "source_bundle_sha256": "9bb6cb6aebdf4a0aaaa7089517487bf7f71c68c40f843f352bcc2250b5fef103",
+      "png_sha256": "e364c8c7fa94224b8f539461634c3579db87f31437c541d990b6d73a68972495"
+    },
+    {
+      "file_id": 5,
+      "path_id": "3142469317323381957",
+      "name": "CivilizationInfoPanel_gywm_di",
+      "bundle": "assets/uiatlas/civilizationinfopanel.ab",
+      "cab": "128cbfce05cfeb8547c22f2c7b9a8621",
+      "file": "complete_source_mapping/external_sprites/file5/sprite_3142469317323381957.png",
+      "width": 309,
+      "height": 74,
+      "source_bundle_sha256": "9bb6cb6aebdf4a0aaaa7089517487bf7f71c68c40f843f352bcc2250b5fef103",
+      "png_sha256": "90dc0ceb6078fe201380ddab78e89f88d1465890398bd08503a1a9e172017e7b"
+    },
+    {
+      "file_id": 5,
+      "path_id": "3682819790190899390",
+      "name": "CivilizationInfoPanel_gywm_jdt",
+      "bundle": "assets/uiatlas/civilizationinfopanel.ab",
+      "cab": "128cbfce05cfeb8547c22f2c7b9a8621",
+      "file": "complete_source_mapping/external_sprites/file5/sprite_3682819790190899390.png",
+      "width": 290,
+      "height": 22,
+      "source_bundle_sha256": "9bb6cb6aebdf4a0aaaa7089517487bf7f71c68c40f843f352bcc2250b5fef103",
+      "png_sha256": "3798364038b10508ce0fb19661965678a38037d2a6d22f2fa513a36397b40cc9"
+    },
+    {
+      "file_id": 5,
+      "path_id": "4571333379556179166",
+      "name": "CivilizationInfoPanel_yswm_di",
+      "bundle": "assets/uiatlas/civilizationinfopanel.ab",
+      "cab": "128cbfce05cfeb8547c22f2c7b9a8621",
+      "file": "complete_source_mapping/external_sprites/file5/sprite_4571333379556179166.png",
+      "width": 309,
+      "height": 74,
+      "source_bundle_sha256": "9bb6cb6aebdf4a0aaaa7089517487bf7f71c68c40f843f352bcc2250b5fef103",
+      "png_sha256": "5ae5cc78db31a901a7435d312c8e02ad642378b97ca77146e84c6d745165244c"
+    },
+    {
+      "file_id": 6,
+      "path_id": "-1233019249750777279",
+      "name": "AlertBoxTwo_3s_bg_1",
+      "bundle": "assets/uiatlas/alertboxtwo.ab",
+      "cab": "84a7cb6700c0ea481eedd58f884f922c",
+      "file": "complete_source_mapping/external_sprites/file6/sprite_-1233019249750777279.png",
+      "width": 72,
+      "height": 70,
+      "source_bundle_sha256": "60f6bdd14d9f8ba8f82d7d1446ea8f86b9848b503c624217d9a69e746779cf15",
+      "png_sha256": "c640d3528b841d9f5eba0c29ed6f1b274253e2567951ac905c0a089ddcfb5ae6"
+    },
+    {
+      "file_id": 6,
+      "path_id": "-3439845530800576023",
+      "name": "AlertBoxTwo_3s_bg_2",
+      "bundle": "assets/uiatlas/alertboxtwo.ab",
+      "cab": "84a7cb6700c0ea481eedd58f884f922c",
+      "file": "complete_source_mapping/external_sprites/file6/sprite_-3439845530800576023.png",
+      "width": 333,
+      "height": 39,
+      "source_bundle_sha256": "60f6bdd14d9f8ba8f82d7d1446ea8f86b9848b503c624217d9a69e746779cf15",
+      "png_sha256": "14298257eedbc10adabc4fe68c36627f176e639a9627f4d4e0e893f61bff8591"
+    },
+    {
+      "file_id": 6,
+      "path_id": "-4107319123001373017",
+      "name": "AlertBoxTwo_hongkuang",
+      "bundle": "assets/uiatlas/alertboxtwo.ab",
+      "cab": "84a7cb6700c0ea481eedd58f884f922c",
+      "file": "complete_source_mapping/external_sprites/file6/sprite_-4107319123001373017.png",
+      "width": 72,
+      "height": 70,
+      "source_bundle_sha256": "60f6bdd14d9f8ba8f82d7d1446ea8f86b9848b503c624217d9a69e746779cf15",
+      "png_sha256": "64bccae5d007df311c94d380bc2d0fc439a041c189ee07c200874b733d9f14eb"
+    },
+    {
+      "file_id": 6,
+      "path_id": "-5478242283076769639",
+      "name": "AlertBoxTwo_tip_an2",
+      "bundle": "assets/uiatlas/alertboxtwo.ab",
+      "cab": "84a7cb6700c0ea481eedd58f884f922c",
+      "file": "complete_source_mapping/external_sprites/file6/sprite_-5478242283076769639.png",
+      "width": 36,
+      "height": 36,
+      "source_bundle_sha256": "60f6bdd14d9f8ba8f82d7d1446ea8f86b9848b503c624217d9a69e746779cf15",
+      "png_sha256": "dc7d0e78aeaaf8ffd1cd450e4699d2663edd9732a7803ad1a8546ac9dc506c2d"
+    },
+    {
+      "file_id": 6,
+      "path_id": "-5858478349963112175",
+      "name": "AlertBoxTwo_tiaomu",
+      "bundle": "assets/uiatlas/alertboxtwo.ab",
+      "cab": "84a7cb6700c0ea481eedd58f884f922c",
+      "file": "complete_source_mapping/external_sprites/file6/sprite_-5858478349963112175.png",
+      "width": 333,
+      "height": 39,
+      "source_bundle_sha256": "60f6bdd14d9f8ba8f82d7d1446ea8f86b9848b503c624217d9a69e746779cf15",
+      "png_sha256": "401c1557dd0c0bc3b7bd149fca9eb7f685262eccd217fbe2da8af8154ff392c7"
+    },
+    {
+      "file_id": 6,
+      "path_id": "-858385591919907232",
+      "name": "AlertBoxTwo_com_buff_fs1",
+      "bundle": "assets/uiatlas/alertboxtwo.ab",
+      "cab": "84a7cb6700c0ea481eedd58f884f922c",
+      "file": "complete_source_mapping/external_sprites/file6/sprite_-858385591919907232.png",
+      "width": 70,
+      "height": 68,
+      "source_bundle_sha256": "60f6bdd14d9f8ba8f82d7d1446ea8f86b9848b503c624217d9a69e746779cf15",
+      "png_sha256": "9468b2efefb9f838400865760c67b87a9298710137edd566aadbf8d416c66303"
+    },
+    {
+      "file_id": 6,
+      "path_id": "1704572610807335333",
+      "name": "AlertBoxTwo_tip_an4",
+      "bundle": "assets/uiatlas/alertboxtwo.ab",
+      "cab": "84a7cb6700c0ea481eedd58f884f922c",
+      "file": "complete_source_mapping/external_sprites/file6/sprite_1704572610807335333.png",
+      "width": 333,
+      "height": 39,
+      "source_bundle_sha256": "60f6bdd14d9f8ba8f82d7d1446ea8f86b9848b503c624217d9a69e746779cf15",
+      "png_sha256": "4d89b10b8c8f352bb5d2d9d7971f75bd680a161a071646f9913f638571263ad7"
+    },
+    {
+      "file_id": 6,
+      "path_id": "2129648976850590090",
+      "name": "AlertBoxTwo_gangkou",
+      "bundle": "assets/uiatlas/alertboxtwo.ab",
+      "cab": "84a7cb6700c0ea481eedd58f884f922c",
+      "file": "complete_source_mapping/external_sprites/file6/sprite_2129648976850590090.png",
+      "width": 70,
+      "height": 68,
+      "source_bundle_sha256": "60f6bdd14d9f8ba8f82d7d1446ea8f86b9848b503c624217d9a69e746779cf15",
+      "png_sha256": "0a8934cf8c48b193d42c1531216a42178c90fac7778c1dcc3c723e847e86c063"
+    },
+    {
+      "file_id": 6,
+      "path_id": "2479786593328613434",
+      "name": "AlertBoxTwo_tip_an3",
+      "bundle": "assets/uiatlas/alertboxtwo.ab",
+      "cab": "84a7cb6700c0ea481eedd58f884f922c",
+      "file": "complete_source_mapping/external_sprites/file6/sprite_2479786593328613434.png",
+      "width": 333,
+      "height": 39,
+      "source_bundle_sha256": "60f6bdd14d9f8ba8f82d7d1446ea8f86b9848b503c624217d9a69e746779cf15",
+      "png_sha256": "ebbfde1d1714f59cbf88a82d4f6e3feb86fa04a95349912012528476c1db4fb8"
+    },
+    {
+      "file_id": 6,
+      "path_id": "2737109789564232852",
+      "name": "AlertBoxTwo_tip_an11",
+      "bundle": "assets/uiatlas/alertboxtwo.ab",
+      "cab": "84a7cb6700c0ea481eedd58f884f922c",
+      "file": "complete_source_mapping/external_sprites/file6/sprite_2737109789564232852.png",
+      "width": 70,
+      "height": 68,
+      "source_bundle_sha256": "60f6bdd14d9f8ba8f82d7d1446ea8f86b9848b503c624217d9a69e746779cf15",
+      "png_sha256": "4a04d362fe8726b7a607fac46446d35e62afcd7832a172b6b60b5c7d7726d045"
+    },
+    {
+      "file_id": 6,
+      "path_id": "3862683750983157072",
+      "name": "AlertBoxTwo_tip_an5",
+      "bundle": "assets/uiatlas/alertboxtwo.ab",
+      "cab": "84a7cb6700c0ea481eedd58f884f922c",
+      "file": "complete_source_mapping/external_sprites/file6/sprite_3862683750983157072.png",
+      "width": 72,
+      "height": 70,
+      "source_bundle_sha256": "60f6bdd14d9f8ba8f82d7d1446ea8f86b9848b503c624217d9a69e746779cf15",
+      "png_sha256": "13ebc0baf52111c472541b57165161e28d56ba13e96eb25fc8c1dbe14a7c5ecf"
+    },
+    {
+      "file_id": 6,
+      "path_id": "6140588150204238319",
+      "name": "AlertBoxTwo_tip_an6",
+      "bundle": "assets/uiatlas/alertboxtwo.ab",
+      "cab": "84a7cb6700c0ea481eedd58f884f922c",
+      "file": "complete_source_mapping/external_sprites/file6/sprite_6140588150204238319.png",
+      "width": 70,
+      "height": 68,
+      "source_bundle_sha256": "60f6bdd14d9f8ba8f82d7d1446ea8f86b9848b503c624217d9a69e746779cf15",
+      "png_sha256": "526b5ff941d7c01ff110d3f3a1fa5f466fe07c934a7724cd8e60978cd6b910eb"
+    },
+    {
+      "file_id": 9,
+      "path_id": "-4073945277658978833",
+      "name": "SalePanel_tubiao3",
+      "bundle": "assets/uiatlas/salepanel.ab",
+      "cab": "f8c9f67500c0bc5b40565304360a5b96",
+      "file": "complete_source_mapping/external_sprites/file9/sprite_-4073945277658978833.png",
+      "width": 60,
+      "height": 64,
+      "source_bundle_sha256": "ce6fcf645ab6ff6ccd2c11fb02b448f984f897070b725f7c3284a898de1a2525",
+      "png_sha256": "a94c0b46599296adadb0e30717484b5a821843da6db3b1f9789b0f75299926d9"
+    },
+    {
+      "file_id": 9,
+      "path_id": "-7438099296098536439",
+      "name": "SalePanel_tubiao4",
+      "bundle": "assets/uiatlas/salepanel.ab",
+      "cab": "f8c9f67500c0bc5b40565304360a5b96",
+      "file": "complete_source_mapping/external_sprites/file9/sprite_-7438099296098536439.png",
+      "width": 60,
+      "height": 64,
+      "source_bundle_sha256": "ce6fcf645ab6ff6ccd2c11fb02b448f984f897070b725f7c3284a898de1a2525",
+      "png_sha256": "bdf21b71ed98e8686636416105a45dcf916f3f029e0fa6c711e064567039afc9"
+    },
+    {
+      "file_id": 9,
+      "path_id": "140794175258001719",
+      "name": "SalePanel_tubiao2",
+      "bundle": "assets/uiatlas/salepanel.ab",
+      "cab": "f8c9f67500c0bc5b40565304360a5b96",
+      "file": "complete_source_mapping/external_sprites/file9/sprite_140794175258001719.png",
+      "width": 60,
+      "height": 64,
+      "source_bundle_sha256": "ce6fcf645ab6ff6ccd2c11fb02b448f984f897070b725f7c3284a898de1a2525",
+      "png_sha256": "be47f4cbdc3bcbea301b721b192faaa5231bff19485b4818fd01a528fbc748e6"
+    },
+    {
+      "file_id": 9,
+      "path_id": "6066920377783113600",
+      "name": "SalePanel_tubiao1",
+      "bundle": "assets/uiatlas/salepanel.ab",
+      "cab": "f8c9f67500c0bc5b40565304360a5b96",
+      "file": "complete_source_mapping/external_sprites/file9/sprite_6066920377783113600.png",
+      "width": 60,
+      "height": 64,
+      "source_bundle_sha256": "ce6fcf645ab6ff6ccd2c11fb02b448f984f897070b725f7c3284a898de1a2525",
+      "png_sha256": "7e78ef0665d0fa2a2521e1b91ac5c3b6eeb40a4c635739d213ef7b7dbf71c544"
+    },
+    {
+      "file_id": 10,
+      "path_id": "-3158901444790261844",
+      "name": "Pet_chongwutu",
+      "bundle": "assets/uiatlas/pet.ab",
+      "cab": "f20dbe888f313530e0ea9dd53e60f8be",
+      "file": "complete_source_mapping/external_sprites/file10/sprite_-3158901444790261844.png",
+      "width": 50,
+      "height": 50,
+      "source_bundle_sha256": "f4a05218aa791f954b8a95dba8dd777dbeffb6ac85deda59cebcdcd58edbd9c9",
+      "png_sha256": "5b2c1be4b346b837226ac66d369581af2273b2e177d141feb3589d3b3fd79dd2"
+    },
+    {
+      "file_id": 8,
+      "path_id": "-4418711270459453393",
+      "name": "NewBattlepanel_blue",
+      "bundle": "assets/uiatlas/newbattlepanel.ab",
+      "cab": "f32a321f5baa529ce19c54d7fc0d07b2",
+      "file": "complete_source_mapping/external_sprites/file8/sprite_-4418711270459453393.png",
+      "width": 54,
+      "height": 149,
+      "source_bundle_sha256": "a269c5f01c2359da0b2396b112ccd10596837911ea4209165323a3067bc6cad4",
+      "png_sha256": "9cb3a48de86508cd461a552824cb5e1eabc7e96451306ea88c730a7ab76767ca"
+    },
+    {
+      "file_id": 8,
+      "path_id": "-5914092131034122793",
+      "name": "NewBattlepanel_O2",
+      "bundle": "assets/uiatlas/newbattlepanel.ab",
+      "cab": "f32a321f5baa529ce19c54d7fc0d07b2",
+      "file": "complete_source_mapping/external_sprites/file8/sprite_-5914092131034122793.png",
+      "width": 33,
+      "height": 32,
+      "source_bundle_sha256": "a269c5f01c2359da0b2396b112ccd10596837911ea4209165323a3067bc6cad4",
+      "png_sha256": "d1faa4d0639391ec2c0a8bf0b12829036852f0588a9837a56ea3e5db91990c8e"
+    },
+    {
+      "file_id": 8,
+      "path_id": "-8336031556098705367",
+      "name": "NewBattlepanel_orange",
+      "bundle": "assets/uiatlas/newbattlepanel.ab",
+      "cab": "f32a321f5baa529ce19c54d7fc0d07b2",
+      "file": "complete_source_mapping/external_sprites/file8/sprite_-8336031556098705367.png",
+      "width": 54,
+      "height": 149,
+      "source_bundle_sha256": "a269c5f01c2359da0b2396b112ccd10596837911ea4209165323a3067bc6cad4",
+      "png_sha256": "2b7f8aa3828f472bdc5121e0991195a030363bb677b6b5ba0b6d44fab4685d24"
+    },
+    {
+      "file_id": 8,
+      "path_id": "-9210666345631195087",
+      "name": "NewBattlepanel_yangqi",
+      "bundle": "assets/uiatlas/newbattlepanel.ab",
+      "cab": "f32a321f5baa529ce19c54d7fc0d07b2",
+      "file": "complete_source_mapping/external_sprites/file8/sprite_-9210666345631195087.png",
+      "width": 127,
+      "height": 197,
+      "source_bundle_sha256": "a269c5f01c2359da0b2396b112ccd10596837911ea4209165323a3067bc6cad4",
+      "png_sha256": "4c19fa6b7435fdd28e1a40fcffc39b6e53b7073c157ceb150bfa9aa0b63c64d8"
+    },
+    {
+      "file_id": 8,
+      "path_id": "4537508352448945618",
+      "name": "NewBattlepanel_meiyou1",
+      "bundle": "assets/uiatlas/newbattlepanel.ab",
+      "cab": "f32a321f5baa529ce19c54d7fc0d07b2",
+      "file": "complete_source_mapping/external_sprites/file8/sprite_4537508352448945618.png",
+      "width": 33,
+      "height": 32,
+      "source_bundle_sha256": "a269c5f01c2359da0b2396b112ccd10596837911ea4209165323a3067bc6cad4",
+      "png_sha256": "06e38ff6baebd2c4031006e23ee1e87df305c48a5522afa0200fb99ac3741ad7"
+    },
+    {
+      "file_id": 12,
+      "path_id": "-2070527793153776930",
+      "name": "BattleMapPanel_di_2_1",
+      "bundle": "assets/uiatlas/battlemappanel.ab",
+      "cab": "4c95d6824a933519070e15ca977b0b45",
+      "file": "complete_source_mapping/external_sprites/file12/sprite_-2070527793153776930.png",
+      "width": 60,
+      "height": 60,
+      "source_bundle_sha256": "c235bc92bb11cb21625acb1b2e5082eb8600236b9d4017d32dbd4288c57d9d1e",
+      "png_sha256": "0fd98a37dae266e2e4b50c82247769412762cad6f9c9c819cd70d243948c8e7b"
+    },
+    {
+      "file_id": 12,
+      "path_id": "-2427375039509553402",
+      "name": "BattleMapPanel_Kongxizhuangzhi",
+      "bundle": "assets/uiatlas/battlemappanel.ab",
+      "cab": "4c95d6824a933519070e15ca977b0b45",
+      "file": "complete_source_mapping/external_sprites/file12/sprite_-2427375039509553402.png",
+      "width": 80,
+      "height": 80,
+      "source_bundle_sha256": "c235bc92bb11cb21625acb1b2e5082eb8600236b9d4017d32dbd4288c57d9d1e",
+      "png_sha256": "1896711802cee7eaa9b5fe9839837b0130b624e9828c7d57e0b37fd71da333aa"
+    },
+    {
+      "file_id": 12,
+      "path_id": "-6967055345104589610",
+      "name": "BattleMapPanel_hldj_lingdiguilan",
+      "bundle": "assets/uiatlas/battlemappanel.ab",
+      "cab": "4c95d6824a933519070e15ca977b0b45",
+      "file": "complete_source_mapping/external_sprites/file12/sprite_-6967055345104589610.png",
+      "width": 70,
+      "height": 70,
+      "source_bundle_sha256": "c235bc92bb11cb21625acb1b2e5082eb8600236b9d4017d32dbd4288c57d9d1e",
+      "png_sha256": "f235a23c100f0c1fc99834a3c93c35ba0899d97c5984a31f55f9eb649a3fde9b"
+    },
+    {
+      "file_id": 12,
+      "path_id": "173461721376187597",
+      "name": "BattleMapPanel_hldj_kxfw",
+      "bundle": "assets/uiatlas/battlemappanel.ab",
+      "cab": "4c95d6824a933519070e15ca977b0b45",
+      "file": "complete_source_mapping/external_sprites/file12/sprite_173461721376187597.png",
+      "width": 100,
+      "height": 100,
+      "source_bundle_sha256": "c235bc92bb11cb21625acb1b2e5082eb8600236b9d4017d32dbd4288c57d9d1e",
+      "png_sha256": "db028db38acb3369ac587b723645ab6fa100483a62282c6625027d2bcd43272f"
+    },
+    {
+      "file_id": 12,
+      "path_id": "511095633268301815",
+      "name": "BattleMapPanel_hldj_lingdiguihong",
+      "bundle": "assets/uiatlas/battlemappanel.ab",
+      "cab": "4c95d6824a933519070e15ca977b0b45",
+      "file": "complete_source_mapping/external_sprites/file12/sprite_511095633268301815.png",
+      "width": 70,
+      "height": 70,
+      "source_bundle_sha256": "c235bc92bb11cb21625acb1b2e5082eb8600236b9d4017d32dbd4288c57d9d1e",
+      "png_sha256": "d5557a76c83f8a9b9ef4fe4b3fbe0b619b6944718ef2dbb2b608a293bf525e18"
+    },
+    {
+      "file_id": 13,
+      "path_id": "-1022393060089800677",
+      "name": "UAV_Icon_voice",
+      "bundle": "assets/uiatlas/uav.ab",
+      "cab": "bb0cfdc835fa64579cd5ed1bcfde71b6",
+      "file": "complete_source_mapping/external_sprites/file13/sprite_-1022393060089800677.png",
+      "width": 60,
+      "height": 72,
+      "source_bundle_sha256": "3916cb848922136cf8dd8b1504416ef9ee596ad9b823f5d9f4368d349b85ced9",
+      "png_sha256": "751dd5aacf6185334f7717c1e6e74f31786a66625818b5fc9d819d59ec0dcaf7"
+    },
+    {
+      "file_id": 13,
+      "path_id": "-3274878894050240266",
+      "name": "UAV_Image_8",
+      "bundle": "assets/uiatlas/uav.ab",
+      "cab": "bb0cfdc835fa64579cd5ed1bcfde71b6",
+      "file": "complete_source_mapping/external_sprites/file13/sprite_-3274878894050240266.png",
+      "width": 10,
+      "height": 10,
+      "source_bundle_sha256": "3916cb848922136cf8dd8b1504416ef9ee596ad9b823f5d9f4368d349b85ced9",
+      "png_sha256": "1f42e55bce87eae7f9e8a2c7f261cb9472243958dec06b6be43f96851f4a994e"
+    },
+    {
+      "file_id": 15,
+      "path_id": "-4997505504011581220",
+      "name": "TalentPanel2_jindured",
+      "bundle": "assets/uiatlas/talentpanel2.ab",
+      "cab": "4ef2800f78a062221f5e9841aee5c859",
+      "file": "complete_source_mapping/external_sprites/file15/sprite_-4997505504011581220.png",
+      "width": 22,
+      "height": 83,
+      "source_bundle_sha256": "19454f2d019f253b64a9ebe1c27ba4696cd548ca15540c0aee41f73539245874",
+      "png_sha256": "06a83cd637ddcbf51006085667aa714cf54b8cd841628cb807be2afc8faa5e65"
+    },
+    {
+      "file_id": 15,
+      "path_id": "-5386243872524742354",
+      "name": "TalentPanel2huangzhezhao",
+      "bundle": "assets/uiatlas/talentpanel2.ab",
+      "cab": "4ef2800f78a062221f5e9841aee5c859",
+      "file": "complete_source_mapping/external_sprites/file15/sprite_-5386243872524742354.png",
+      "width": 94,
+      "height": 94,
+      "source_bundle_sha256": "19454f2d019f253b64a9ebe1c27ba4696cd548ca15540c0aee41f73539245874",
+      "png_sha256": "458b4d8628dbc7cca7a74e9170871b89bc57e161cb24b573272f003c558cbbaa"
+    },
+    {
+      "file_id": 15,
+      "path_id": "-738269707378750700",
+      "name": "TalentPanel2_jindublack",
+      "bundle": "assets/uiatlas/talentpanel2.ab",
+      "cab": "4ef2800f78a062221f5e9841aee5c859",
+      "file": "complete_source_mapping/external_sprites/file15/sprite_-738269707378750700.png",
+      "width": 22,
+      "height": 83,
+      "source_bundle_sha256": "19454f2d019f253b64a9ebe1c27ba4696cd548ca15540c0aee41f73539245874",
+      "png_sha256": "f55b03ef49a8a88c3f6ba2ab25024a4162965b94f349eee27fde5dfd63eaaa2b"
+    },
+    {
+      "file_id": 15,
+      "path_id": "897793862440184284",
+      "name": "TalentPanel2_zhezhao",
+      "bundle": "assets/uiatlas/talentpanel2.ab",
+      "cab": "4ef2800f78a062221f5e9841aee5c859",
+      "file": "complete_source_mapping/external_sprites/file15/sprite_897793862440184284.png",
+      "width": 94,
+      "height": 94,
+      "source_bundle_sha256": "19454f2d019f253b64a9ebe1c27ba4696cd548ca15540c0aee41f73539245874",
+      "png_sha256": "d56862ebf055c02ec5c206af2141897c4c2b62fca0ea86e260c6be830a0bcf62"
+    },
+    {
+      "file_id": 18,
+      "path_id": "-701906490033728351",
+      "name": "tiao_11",
+      "bundle": "assets/uiatlas/achievementpanel.ab",
+      "cab": "6f00d75dc2d1769c1e37c309e03faec1",
+      "file": "complete_source_mapping/external_sprites/file18/sprite_-701906490033728351.png",
+      "width": 728,
+      "height": 42,
+      "source_bundle_sha256": "d46d8676a948126d1501ec55a114d8fe2de0f8605613d4d3336b05c92928d839",
+      "png_sha256": "7e71ae4c8a32f189f2c99bb4e49cabe360ced5a116e168f22753f34a3198fa03"
+    },
+    {
+      "file_id": 18,
+      "path_id": "-8006928214282941598",
+      "name": "NewAchievementPanel_8",
+      "bundle": "assets/uiatlas/achievementpanel.ab",
+      "cab": "6f00d75dc2d1769c1e37c309e03faec1",
+      "file": "complete_source_mapping/external_sprites/file18/sprite_-8006928214282941598.png",
+      "width": 110,
+      "height": 110,
+      "source_bundle_sha256": "d46d8676a948126d1501ec55a114d8fe2de0f8605613d4d3336b05c92928d839",
+      "png_sha256": "ef0ddb4d923f8a7a4d6b22dbcd2c4ffcab10dac363c04ec970bb935b86fa604d"
+    },
+    {
+      "file_id": 19,
+      "path_id": "-6534490175548794981",
+      "name": "login_kefu",
+      "bundle": "assets/uiatlas/loginpanel.ab",
+      "cab": "4b7090c6053791f816d82329875ee6d6",
+      "file": "complete_source_mapping/external_sprites/file19/sprite_-6534490175548794981.png",
+      "width": 108,
+      "height": 108,
+      "source_bundle_sha256": "ce28aa9d06435c9372d24903262edf928d42d0c55fa19549e637cc0cfec76785",
+      "png_sha256": "f53cc5693963a23e36649af8492eb8657b2c74d1d0f612e6ddddce854369cf7c"
+    },
+    {
+      "file_id": 20,
+      "path_id": "-8754602518022049476",
+      "name": "Lantu_jianbian",
+      "bundle": "assets/uiatlas/lantupanel.ab",
+      "cab": "446406f29bd2c8003b76a7b91298c562",
+      "file": "complete_source_mapping/external_sprites/file20/sprite_-8754602518022049476.png",
+      "width": 746,
+      "height": 14,
+      "source_bundle_sha256": "6e6490699f715b5176e8d7e0d66029c242ab7e3b4a76690a66d057fe04d0b8df",
+      "png_sha256": "7bbf67f4ee317b9aefa950b8919cfb043154566ca281ff8c2bfad7bc1ddb16e6"
+    },
+    {
+      "file_id": 22,
+      "path_id": "7139453653763614984",
+      "name": "FastchatPanel_liaotianqipao",
+      "bundle": "assets/uiatlas/fastchatpanel.ab",
+      "cab": "96d6b073297076227680d56d703594ca",
+      "file": "complete_source_mapping/external_sprites/file22/sprite_7139453653763614984.png",
+      "width": 86,
+      "height": 87,
+      "source_bundle_sha256": "2bd8c9dd44ada3ab6d3b62d971163f659f609276288197dc1a540bacddd77de8",
+      "png_sha256": "88087b5455b265d19b5b188e9f65a71fa012ecb42c06cf80211195b32ce9271a"
+    },
+    {
+      "file_id": 26,
+      "path_id": "-9158176969175168701",
+      "name": "PlayerLauncherPanel_fashe2",
+      "bundle": "assets/uiatlas/playerlauncherpanel.ab",
+      "cab": "59df03d77b5d690d5e059c3ddd98f0a6",
+      "file": "complete_source_mapping/external_sprites/file26/sprite_-9158176969175168701.png",
+      "width": 47,
+      "height": 51,
+      "source_bundle_sha256": "54d02c33bfea66753a45e0b7e983aa67b655f9b2e697e5e8df8dd575e5b2efd9",
+      "png_sha256": "659ce1753623c48cce889d245640453ba8a34a7c84fe41999ba15751a2c0b01f"
+    },
+    {
+      "file_id": 28,
+      "path_id": "2253711793278531074",
+      "name": "NewMainPanel_shuzikuang2",
+      "bundle": "assets/uiatlas/newmainpanel.ab",
+      "cab": "9c7abb8210ba7680545bba676285a52d",
+      "file": "complete_source_mapping/external_sprites/file28/sprite_2253711793278531074.png",
+      "width": 22,
+      "height": 24,
+      "source_bundle_sha256": "cdff5002358f72d431da897391a63e0c4efea663d3c0859c8dbc12cf1319f07c",
+      "png_sha256": "27078189c66c1943022dcd73158548274604a067bf84cef1bd619924e0e54d3f"
+    },
+    {
+      "file_id": 29,
+      "path_id": "-5037777389302583451",
+      "name": "Guide_tishi1",
+      "bundle": "assets/uiatlas/guidenovicepanel.ab",
+      "cab": "c4e70bff8aa63ef9b2b405d157e67c33",
+      "file": "complete_source_mapping/external_sprites/file29/sprite_-5037777389302583451.png",
+      "width": 50,
+      "height": 42,
+      "source_bundle_sha256": "cae6109da7c00497f5373d73c4eeeda3b4ffd4178281781e6ad3f098287168e9",
+      "png_sha256": "0c901d277cd49a9652949921895db035b1ffbbc1e1c2fa5953ce528b94cbfca4"
+    },
+    {
+      "file_id": 29,
+      "path_id": "-8294436310882676449",
+      "name": "Guide_tishi3",
+      "bundle": "assets/uiatlas/guidenovicepanel.ab",
+      "cab": "c4e70bff8aa63ef9b2b405d157e67c33",
+      "file": "complete_source_mapping/external_sprites/file29/sprite_-8294436310882676449.png",
+      "width": 320,
+      "height": 100,
+      "source_bundle_sha256": "cae6109da7c00497f5373d73c4eeeda3b4ffd4178281781e6ad3f098287168e9",
+      "png_sha256": "eabe00b1d400ec30ac2b36fa50f0b8a14a0e9e6db2a010e3fb42f911aab8b28f"
+    }
+  ],
+  "unresolved": [],
+  "errors": [],
+  "summary": {
+    "original_external_sprite_refs": 52,
+    "decoded_exact_external_sprites": 52,
+    "unresolved_exact_sprites": 0,
+    "matching_original_asset_bundles": 16
+  }
+}
