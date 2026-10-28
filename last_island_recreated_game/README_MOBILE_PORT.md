@@ -102,3 +102,46 @@ Corrigidos dois erros da v0.13.0 relatados no teste em telefone:
 A compilacao ARM64 e os testes de correspondencia nao substituem
 uma verificacao visual no proprio Android; ajustes de orientacao do
 personagem, shaders e desempenho podem continuar necessarios.
+
+
+## Android v0.14.0 — HUD Unity gerado do proprio battlepanel.ab
+
+A HUD anterior ainda tinha **erros de posicionamento**:
+- O C++ desenhava os icones do machado/M4 em X=791/885,
+  mas os `m_Item1.m_icon` / `m_Item2.m_icon` originais comecam
+  respectivamente em X=634.60 / 729.61 (Canvas 1920x1080).
+- Os valores de vida, fome e sede eram desenhados perto do rodape;
+  no prefab original os `txt_mybloodNum`, `txt_hunger` e
+  `txt_bodyWater` estao no topo direito, em torno de X=1463.
+- O contorno dourado de selecao era manual e as imagens de controles
+  eram iguais para machado e fuzil. A interface do Unity usa
+  `m_heightLignt` e perfis de combate diferentes.
+
+**Correcao implementada:** `tools/export_mobile_original_hud.py`
+usa o mesmo rasterizador de sprites/PPtr/RectTransform da versao PC e
+exporta dois PNGs, `hud_original_melee.png` e
+`hud_original_rifle.png`, com realce original do slot 1/2.
+O proprio script gera o header `mobile_original_hud_layout.hpp` com
+11 hitboxes Unity, 7 slots e geometria de texto do prefab — o C++ nao
+precisa de coordenadas anotadas a mao. Agora as quantidades dos
+recursos coletados ocupam os respectivos slots 3 a 6, com sprites
+originais do XAPK (`tb_cl_mt`, `tb_cl_tiek`, `tb_cl_st`, `ks_lhk`).
+O centro do joystick conserva sua imagem original e acompanha o dedo;
+o uso de `GetTouchPointId` evita ficar preso quando o Android
+reorganiza o indice dos dedos. Toques nos botoes nao sao interpretados
+como deslize de camera.
+
+**Limites de fidelidade ainda em aberto:** a fonte do Unity nao foi
+recuperada, entao o texto usa fonte substituta do Raylib; a textura
+do minimapa e uma imagem original mas a posicao real do jogador e
+sua escala dinamica nao estao implementadas; o compasso, mascaras e
+animacoes de alguns elementos precisam de logica Unity de runtime;
+nem todos os paineis (mochila/receitas/configuracoes) estao implementados.
+O CanvasScaler do aplicativo original e a safe area do aparelho
+ainda exigem uma calibracao independente. Nao chamar esta versao de
+"100% identica" sem essas comprovacoes.
+
+O job `test_mobile_original_hud_export.yml` verifica a origem dos
+dois perfis, 11 botoes, 7 slots e 4 itens extraidos. O job de Android
+compila o C++ com header e overlays gerados, valida o conteudo
+ARM64 e produz um novo APK de teste.
