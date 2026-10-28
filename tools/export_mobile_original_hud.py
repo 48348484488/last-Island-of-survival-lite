@@ -121,17 +121,23 @@ def main():
         }
     geometry["joystick"]=original_joystick()
     knob=hud.go("m_littleYaogan")
-    knob_comps=[hud.source_comps[p["path_id"]] for p in
-        hud.game_objects[knob["path_id"]]["components"]
-        if p["path_id"] in hud.source_comps and
-        hud.source_comps[p["path_id"]]["type"]=="Image"]
-    if len(knob_comps)!=1 or not knob_comps[0].get("resolved_sprite_file"):
-        raise ValueError("Original Unity joystick thumb sprite is not uniquely resolved")
-    knob_path=ASSETS/knob_comps[0]["resolved_sprite_file"]
-    with Image.open(knob_path) as im:
-        im.convert("RGBA").save(dest/"hud_original_joystick_knob.png",optimize=True)
+    # This GameObject may contain a nested sprite instead of an Image directly.
+    # Rasterize just its ORIGINAL subtree using the same source renderer,
+    # preserving border/preserve-aspect/color/sibling order when cropping.
+    knob_layer=HudV7(ASSETS,heading_deg=0,map_uv=[.5,.5])
+    knob_layer.node("m_littleYaogan",depth=5)
     geometry["joystick"]["thumb_rect"]=source_rect(hud,knob["path_id"])
-    geometry["joystick"]["thumb_sprite_source"]=str(knob_comps[0]["resolved_sprite_file"])
+    rc=geometry["joystick"]["thumb_rect"]
+    crop=(round(rc["left"]),round(rc["top"]),round(rc["right"]),round(rc["bottom"]))
+    thumb=knob_layer.layer.crop(crop)
+    if not thumb.getbbox():
+        raise ValueError("Source Unity joystick thumb subtree has no visible graphics; "+
+                         repr({"gameobject":knob["path_id"],
+                               "components":hud.game_objects[knob["path_id"]]["components"],
+                               "children":hud.bygo[knob["path_id"]]["children"]}))
+    thumb.save(dest/"hud_original_joystick_knob.png",optimize=True)
+    geometry["joystick"]["thumb_sprite_source"]="source Unity m_littleYaogan subtree with children"
+
     geometry["resource_icons"]={}
     for name,sprite in RESOURCES.items():
         entries=hud.sprite_names.get(sprite)
