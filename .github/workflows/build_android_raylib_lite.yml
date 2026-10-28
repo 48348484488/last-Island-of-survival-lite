@@ -216,7 +216,7 @@ jobs:
       - name: Copy named downloadable APK
         run: |
           mkdir -p dist
-          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.16.1-ARM64.apk
+          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.16.2-ARM64.apk
           sha256sum dist/*.apk
 
       - name: Upload Android APK for phone testing
