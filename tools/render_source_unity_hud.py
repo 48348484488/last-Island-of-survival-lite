@@ -41,6 +41,32 @@ class SourceHUD:
         assert 64<=int(map_window)<=2048,map_window
         self.map_uv=tuple(map(float,map_uv))
         self.map_window=int(map_window)
+        meta=self.assets/"hud_source_sprite_borders.json"
+        self.sprite_borders=json.loads(meta.read_text(encoding="utf8")) if meta.exists() else {}
+        self.vitals_values=None
+
+    @staticmethod
+    def _sliced_sprite(img,size,border):
+        """UGUI Image.Type.Sliced: preserve original Sprite.m_Border corner pixels."""
+        W,H=map(int,size);sw,sh=img.size
+        left,bottom,right,top=(max(0,round(border.get(k,0))) for k in ("x","y","z","w"))
+        left=min(left,sw//2,W//2);right=min(right,sw-left,W-left)
+        top=min(top,sh//2,H//2);bottom=min(bottom,sh-top,H-top)
+        if not any((left,bottom,right,top)):
+            return img.resize((W,H),Image.Resampling.LANCZOS)
+        result=Image.new("RGBA",(W,H))
+        src_x=(0,left,sw-right,sw);src_y=(0,top,sh-bottom,sh)
+        dst_x=(0,left,W-right,W);dst_y=(0,top,H-bottom,H)
+        for row in range(3):
+            for col in range(3):
+                src_box=(src_x[col],src_y[row],src_x[col+1],src_y[row+1])
+                dst_box=(dst_x[col],dst_y[row],dst_x[col+1],dst_y[row+1])
+                width,height=dst_box[2]-dst_box[0],dst_box[3]-dst_box[1]
+                if width<=0 or height<=0 or src_box[2]<=src_box[0] or src_box[3]<=src_box[1]:continue
+                patch=img.crop(src_box)
+                if patch.size!=(width,height):patch=patch.resize((width,height),Image.Resampling.BILINEAR)
+                result.paste(patch,dst_box[:2])
+        return result
 
     @lru_cache(None)
     def scale(self,tid):
@@ -69,8 +95,8 @@ class SourceHUD:
         lx,ly=(t.get("local_scale") or {}).get("x",1.),(t.get("local_scale") or {}).get("y",1.)
         w=(pw*(hi["x"]-lo["x"])+size["x"]*parent_scale[0])*lx
         h=(ph*(hi["y"]-lo["y"])+size["y"]*parent_scale[1])*ly
-        x=cx+((lo["x"]+hi["x"])/2-pp["x"])*pw+pos["x"]*parent_scale[0]+(.5-v["x"])*w
-        y=cy+((lo["y"]+hi["y"])/2-pp["y"])*ph+pos["y"]*parent_scale[1]+(.5-v["y"])*h
+        x=cx+((lo["x"]+hi["x"])/2-.5)*pw+pos["x"]*parent_scale[0]+(.5-v["x"])*w
+        y=cy+((lo["y"]+hi["y"])/2-.5)*ph+pos["y"]*parent_scale[1]+(.5-v["y"])*h
         return x,y,w,h
 
     def go(self,name):
@@ -87,7 +113,14 @@ class SourceHUD:
             path=self.assets/sprite["file"]
             assert path.is_file(),path
             with Image.open(path) as source:image=source.convert("RGBA")
-        image=image.resize((w,h),Image.Resampling.LANCZOS)
+        if component and component.get("type")==1 and sprite:
+            m=self.sprite_borders.get(sprite["file"])
+            if m and m.get("border"):
+                image=self._sliced_sprite(image,(w,h),m["border"])
+            else:
+                image=image.resize((w,h),Image.Resampling.LANCZOS)
+        else:
+            image=image.resize((w,h),Image.Resampling.LANCZOS)
         # Unity Image.Type=Filled: crop the ORIGINAL Sprite alpha, no synthetic bar.
         if component and component.get("type")==3:
             amount=max(0.,min(1.,float(component.get("fill_amount") or 0.)))
