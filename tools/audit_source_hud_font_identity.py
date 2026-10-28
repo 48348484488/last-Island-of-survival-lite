@@ -63,11 +63,16 @@ with zipfile.ZipFile(pack) as z:
                 "bundle_sha256":hashlib.sha256(dest.read_bytes()).hexdigest()})
             dest.unlink(missing_ok=True)
 pack.unlink(missing_ok=True)
-assert len(results)==len(targets),("Original source Font references unresolved",results,targets)
+unresolved=[{"file_id":fid,"path_id":pid,"cab":cab,
+             "reason":"Original CAB not found in install_time_asset_pack.apk bundles"}
+            for (fid,pid),cab in targets.items()
+            if not any(r["file_id"]==fid and r["path_id"]==pid for r in results)]
 out={"source":"Exact Unity original Font PPtr from battlepanel.ab Text.m_FontData",
      "resolved_original_font_references":results,
+     "unresolved_original_font_references":unresolved,
      "font_binary_exported":False,
-     "limitation":"Identification is exact; glyph rasterization through Unity's font engine is not reproduced by the Pillow preview."}
+     "font_asset_found_in_install_time_asset_pack":not bool(unresolved),
+     "limitation":"Font name/bytes not proven when the target CAB is absent from the install-time AssetBundle pack. Text sizes/alignments still come from original Unity source; glyphs remain system fallback."}
 target=A/"complete_source_mapping/original_font_identity_NO_FONT_FILE.json"
 target.write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding="utf8")
 print("ORIGINAL_UNITY_FONT_IDENTITY",json.dumps(out,ensure_ascii=False),flush=True)
