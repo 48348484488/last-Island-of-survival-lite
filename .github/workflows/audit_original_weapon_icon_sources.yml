@@ -29,5 +29,7 @@ jobs:
         if: always()
         with:
           name: last-island-original-weapon-icon-config-audit
-          path: last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/original_weapon_icon_config_audit.json
+          path: |
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/original_weapon_icon_config_audit.json
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/original_itemcfg_source.oc
           if-no-files-found: warn
