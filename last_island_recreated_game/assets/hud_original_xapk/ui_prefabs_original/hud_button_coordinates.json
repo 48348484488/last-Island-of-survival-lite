@@ -1,0 +1,2880 @@
+[
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-9035425428104695402",
+    "go": "-4950116256066277772",
+    "father": "5464475032956647964",
+    "children": [
+      "-8261559882131608874",
+      "-6068207420463147263",
+      "-2455937685468612171",
+      "860526289563954895",
+      "5833876882576868184",
+      "-4621600501132997440",
+      "-2324898117914988085",
+      "6818701216309138413",
+      "-5486670729197905819",
+      "5891782848350954674",
+      "5262063139561794143",
+      "-8060318552141599157",
+      "-7882315188492921160",
+      "-7563595819790758885",
+      "3254823103080967458"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_mapShowIcon"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-7849497973481244408",
+    "go": "-3196503467879440090",
+    "father": "5262063139561794143",
+    "children": [
+      "-2813230243846191711"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 45.0,
+      "y": 56.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_vehicleSoundInMap"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-6738100174816959116",
+    "go": "-6547494766141462812",
+    "father": "-2354200378028203377",
+    "children": [
+      "4826806715064489900"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": -60.29999923706055,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 119.80000305175781,
+      "y": 63.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_reduceHp10"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-6543713106982525993",
+    "go": "5164290649543802461",
+    "father": "-5877471462529294068",
+    "children": [
+      "-4856916061153795811"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 0.9999998807907104,
+      "y": 0.9999998807907104,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_ReduceHpImage"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-5843577078786724743",
+    "go": "-1558569727802655860",
+    "father": "5262063139561794143",
+    "children": [
+      "1769594022230977384"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 2804.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 45.0,
+      "y": 56.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_turretSoundInMap"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-5622124463741620735",
+    "go": "-7924031933069266365",
+    "father": "3861936337475093876",
+    "children": [
+      "-4907722607555294876",
+      "3916833713594948119"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 6.75,
+      "y": -19.0
+    },
+    "size_delta": {
+      "x": 218.07000732421875,
+      "y": 16.299999237060547
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_detailNameHp"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-5521639120286769134",
+    "go": "-1078690405717489642",
+    "father": "-2745342211929443801",
+    "children": [
+      "-1112206366215179589",
+      "2994347832837119802"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchored_position": {
+      "x": 42.099998474121094,
+      "y": 61.599998474121094
+    },
+    "size_delta": {
+      "x": 175.4499969482422,
+      "y": 169.8000030517578
+    },
+    "pivot": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_JoystackType2"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-5297333960516525381",
+    "go": "-3683094743072047997",
+    "father": "-2324898117914988085",
+    "children": [
+      "75421704970531894"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_second_battle_root"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-5231864115091341757",
+    "go": "-5886905098304260772",
+    "father": "-6144701807827790948",
+    "children": [
+      "9171772328035643497"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_map_line_root"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-3802856354018805556",
+    "go": "-1276849336355498520",
+    "father": "-841587022244444691",
+    "children": [
+      "-4133044516693177913"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "EF_btn_autoRun"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-2277075736816635865",
+    "go": "-4840547799572613302",
+    "father": "-2218377959833572785",
+    "children": [],
+    "anchor_min": {
+      "x": 1.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 0.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 2300.0,
+      "y": 1200.0
+    },
+    "pivot": {
+      "x": 1.0,
+      "y": 0.0
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_TouchPad"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-1991857523148242618",
+    "go": "-1487301854138157159",
+    "father": "3916833713594948119",
+    "children": [],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_hpSliderImg"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-1210520164165042426",
+    "go": "-8827399706248016729",
+    "father": "-841587022244444691",
+    "children": [],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 112.0,
+      "y": 98.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_autoRunChoosed"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-1007504992843097427",
+    "go": "7522225188744722631",
+    "father": "-2354200378028203377",
+    "children": [
+      "-1522591799318014613"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": -60.0,
+      "y": 0.30000001192092896
+    },
+    "size_delta": {
+      "x": 20.0,
+      "y": 20.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "btn_smartHp"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-841587022244444691",
+    "go": "-5816811536278523149",
+    "father": "-2745342211929443801",
+    "children": [
+      "2725215711832383542",
+      "-1210520164165042426",
+      "-3802856354018805556"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchored_position": {
+      "x": 79.69999694824219,
+      "y": 517.0
+    },
+    "size_delta": {
+      "x": 89.0,
+      "y": 89.0
+    },
+    "pivot": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "btn_autoRun"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-745834149453724775",
+    "go": "293274695613911952",
+    "father": "5643484106398100042",
+    "children": [
+      "-7966138185449987955",
+      "-7773607051686420487",
+      "-1643389112882523560"
+    ],
+    "anchor_min": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 10.0,
+      "y": -32.400001525878906
+    },
+    "size_delta": {
+      "x": 330.0,
+      "y": 330.0
+    },
+    "pivot": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_map"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "-546323521499752165",
+    "go": "613759814328982202",
+    "father": "5262063139561794143",
+    "children": [
+      "754608199049847092"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_airdrop_pos_map"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "75421704970531894",
+    "go": "4048375700317388775",
+    "father": "-5297333960516525381",
+    "children": [
+      "-4549353740118283131"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 40.0,
+      "y": 40.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_second_battle_tag"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "733080251267538337",
+    "go": "5849330004758250341",
+    "father": "0",
+    "children": [
+      "-2218377959833572785"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "BattlePanel"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "1594264487190778071",
+    "go": "2291387050728849435",
+    "father": "3437985002973600154",
+    "children": [],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 9.710000038146973
+    },
+    "size_delta": {
+      "x": 260.3999938964844,
+      "y": 19.5
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "txt_posYInMap"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "1862656618574770670",
+    "go": "949934097769246374",
+    "father": "5262063139561794143",
+    "children": [
+      "-6833069726331820284"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 45.0,
+      "y": 56.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_gunSoundInMap"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "2534446003431668825",
+    "go": "1851713330687912568",
+    "father": "5262063139561794143",
+    "children": [
+      "-6353539897940015026"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 45.0,
+      "y": 56.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_footSoundInMap"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "2710258164825568745",
+    "go": "6773166854795457960",
+    "father": "5262063139561794143",
+    "children": [],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 2804.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 40.0,
+      "y": 40.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_turret_sound_pos_map"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "3485349538710770545",
+    "go": "-4798094007220526812",
+    "father": "-2354200378028203377",
+    "children": [
+      "-5350844422843390504"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0000799894332886,
+      "y": 1.0000799894332886,
+      "z": 1.0000799894332886
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_addHp"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "3622443414146568857",
+    "go": "4052448149449211443",
+    "father": "3322735572982968780",
+    "children": [],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 120.0,
+      "y": 120.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 0.8999999761581421,
+      "y": 0.8999999761581421,
+      "z": 0.8999999761581421
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_JumpImage"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "3775959983609198931",
+    "go": "-1705466768489527752",
+    "father": "-2745342211929443801",
+    "children": [
+      "-5559160455731531525",
+      "6140681421191634726"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": -35.0
+    },
+    "size_delta": {
+      "x": 89.0,
+      "y": 89.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_autoRunCircle"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "4410141944395257776",
+    "go": "2222319927517450608",
+    "father": "1006457650128213591",
+    "children": [
+      "3592526167895132083",
+      "-2981790883639876876",
+      "-9178264929250866921",
+      "-2863078643564895002"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_reduceHpFull"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "4852653838684458298",
+    "go": "3924115630543269896",
+    "father": "-8569997724729587867",
+    "children": [
+      "4704372031377717834",
+      "266553141609484735"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 185.0,
+      "y": 93.0
+    },
+    "size_delta": {
+      "x": 74.0,
+      "y": 74.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "btn_quick_mark_attack"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "5188299736908537737",
+    "go": "1592781906210638549",
+    "father": "1006457650128213591",
+    "children": [
+      "-295937293900913526",
+      "1375045982204603643",
+      "-7001857771350510211",
+      "5948314908086466981"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_reduceHpFullWhite"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "5262063139561794143",
+    "go": "-3353433069872020763",
+    "father": "-9035425428104695402",
+    "children": [
+      "2534446003431668825",
+      "-7849497973481244408",
+      "1862656618574770670",
+      "8383235800706586787",
+      "1130702937218444109",
+      "6454887858734711278",
+      "-546323521499752165",
+      "-5843577078786724743",
+      "2710258164825568745",
+      "1221249582952175988"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_mapSound_parent"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "5369650935602747703",
+    "go": "-2515563290045484318",
+    "father": "8662864276021464764",
+    "children": [
+      "-6167891948520430488",
+      "8957069250758623197",
+      "7911657858008375177",
+      "-2614004955467622385",
+      "-6215563532810671420",
+      "2064702562667670557",
+      "-2265389136402403321"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": -2.5999999046325684
+    },
+    "size_delta": {
+      "x": 600.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_bagItems"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "5690251765436256333",
+    "go": "-7337511488805635692",
+    "father": "-2354200378028203377",
+    "children": [],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_reduceHp"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "6454887858734711278",
+    "go": "-1590856148251513750",
+    "father": "5262063139561794143",
+    "children": [
+      "2026703193910344625"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_airdrop_dir_map"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "6476563093787549810",
+    "go": "3176080435212192430",
+    "father": "7345897541564489947",
+    "children": [
+      "-3023603717372806133"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 1.0
+    },
+    "anchor_max": {
+      "x": 0.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": -300.0,
+      "y": 130.47999572753906
+    },
+    "size_delta": {
+      "x": 700.0,
+      "y": 89.4000015258789
+    },
+    "pivot": {
+      "x": 0.0,
+      "y": 1.0
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "scp_bagBuilds"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "8383235800706586787",
+    "go": "-6477380667423480153",
+    "father": "5262063139561794143",
+    "children": [],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 40.0,
+      "y": 40.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_gun_sound_pos_map"
+  },
+  {
+    "source_bundle": "assets/ui/battlepanel.ab",
+    "path_id": "9171772328035643497",
+    "go": "3535225122186517867",
+    "father": "-5231864115091341757",
+    "children": [],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 6.0,
+      "y": 1080.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_map_line"
+  },
+  {
+    "source_bundle": "assets/ui/battlecustompanel.ab",
+    "path_id": "-8971463035838041878",
+    "go": "5583805026369985384",
+    "father": "-6849497051066654981",
+    "children": [
+      "1098788095888099429"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": -60.0,
+      "y": 0.30000001192092896
+    },
+    "size_delta": {
+      "x": 20.0,
+      "y": 20.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "btn_smartHp"
+  },
+  {
+    "source_bundle": "assets/ui/battlecustompanel.ab",
+    "path_id": "-8807781847737092096",
+    "go": "-292467303114208796",
+    "father": "-6849497051066654981",
+    "children": [
+      "-8914103204728614143"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": -60.29999923706055,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 119.80000305175781,
+      "y": 63.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_reduceHp10"
+  },
+  {
+    "source_bundle": "assets/ui/battlecustompanel.ab",
+    "path_id": "-7167638933029461950",
+    "go": "4724239746064535665",
+    "father": "208399941737986912",
+    "children": [],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 120.0,
+      "y": 120.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "JumpImage"
+  },
+  {
+    "source_bundle": "assets/ui/battlecustompanel.ab",
+    "path_id": "-6396212209181748359",
+    "go": "-2760447574363220595",
+    "father": "0",
+    "children": [
+      "-3496972072062129512",
+      "4418961990990131506",
+      "4493034337024475268",
+      "-5582528699489997090"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "BattleCustomPanel"
+  },
+  {
+    "source_bundle": "assets/ui/battlecustompanel.ab",
+    "path_id": "-5217222578316542687",
+    "go": "-5950014210869085686",
+    "father": "2260585892413540986",
+    "children": [
+      "8358519171273624228",
+      "3983363874864260193"
+    ],
+    "anchor_min": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 10.0,
+      "y": -32.0
+    },
+    "size_delta": {
+      "x": 330.0,
+      "y": 330.0
+    },
+    "pivot": {
+      "x": 1.030596375465393,
+      "y": 0.9029757380485535
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_map"
+  },
+  {
+    "source_bundle": "assets/ui/battlecustompanel.ab",
+    "path_id": "-4467425038460279817",
+    "go": "-4243098054962245858",
+    "father": "-6849497051066654981",
+    "children": [
+      "4651628217821473359"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0000799894332886,
+      "y": 1.0000799894332886,
+      "z": 1.0000799894332886
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_addHp"
+  },
+  {
+    "source_bundle": "assets/ui/battlecustompanel.ab",
+    "path_id": "-1325544338383657811",
+    "go": "3114077906697005329",
+    "father": "-6849497051066654981",
+    "children": [],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_reduceHp"
+  },
+  {
+    "source_bundle": "assets/ui/battlecustompanel.ab",
+    "path_id": "1934860411178198075",
+    "go": "693869539549322217",
+    "father": "7981965786214512280",
+    "children": [
+      "-5806887350263956964",
+      "732164573972305582",
+      "2417227338500305875",
+      "1441731303437045853",
+      "5604886362155120193",
+      "-5197054668899905962",
+      "-5808577753712804169"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": -2.5999999046325684
+    },
+    "size_delta": {
+      "x": 600.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "m_bagItems"
+  },
+  {
+    "source_bundle": "assets/ui/battlecustompanel.ab",
+    "path_id": "6365573915094072428",
+    "go": "8138603689681078946",
+    "father": "6952731961344616584",
+    "children": [
+      "-4418009595146580908"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 274.20001220703125,
+      "y": 233.3000030517578
+    },
+    "size_delta": {
+      "x": 258.70001220703125,
+      "y": 261.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_JoystackTypeCar"
+  },
+  {
+    "source_bundle": "assets/ui/battlecustompanel.ab",
+    "path_id": "8395342139962074433",
+    "go": "4623807058662270807",
+    "father": "7231983843585032319",
+    "children": [
+      "7228862198411780950"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "BattlePanel_Talent"
+  },
+  {
+    "source_bundle": "assets/ui/battleselfaimpanel.ab",
+    "path_id": "-5601370575935372293",
+    "go": "1524745344011552870",
+    "father": "0",
+    "children": [
+      "-8324342767157307007",
+      "-3143423600831437077"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "BattleSelfAimPanel"
+  },
+  {
+    "source_bundle": "assets/ui/battlemappanel.ab",
+    "path_id": "-9069108600138326189",
+    "go": "5753826308427587335",
+    "father": "-477783636111715980",
+    "children": [
+      "-5023282450418512429"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_map_line_root"
+  },
+  {
+    "source_bundle": "assets/ui/battlemappanel.ab",
+    "path_id": "-7817170041479255151",
+    "go": "8402219883303660794",
+    "father": "-3542485007461567698",
+    "children": [
+      "-3267838606227259588",
+      "6616728639845622421",
+      "-1596280702399113444"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 71.5,
+      "y": 5.7219999689550605e-06
+    },
+    "size_delta": {
+      "x": 587.2000122070312,
+      "y": 47.83000183105469
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.7071068286895752,
+      "w": 0.7071068286895752
+    },
+    "name": "m_map_slide"
+  },
+  {
+    "source_bundle": "assets/ui/battlemappanel.ab",
+    "path_id": "-5857966013755809759",
+    "go": "-9216004006566935452",
+    "father": "-1109952004388830946",
+    "children": [
+      "-7415060983292308467",
+      "4029627078970286410",
+      "-3286764196392483733"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": -7.0,
+      "y": 114.13003540039062
+    },
+    "size_delta": {
+      "x": 447.9638671875,
+      "y": 53.879241943359375
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "ckb_second_battle_pos"
+  },
+  {
+    "source_bundle": "assets/ui/battlemappanel.ab",
+    "path_id": "-3542485007461567698",
+    "go": "1747054338971761849",
+    "father": "-5063862726466869189",
+    "children": [
+      "-2471207934811404293",
+      "-7817170041479255151",
+      "210291583943870778",
+      "-8425828621620464825"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.0,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 1080.0
+    },
+    "pivot": {
+      "x": 0.0,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_map_slide_root"
+  },
+  {
+    "source_bundle": "assets/ui/battlemappanel.ab",
+    "path_id": "-1510630537297907004",
+    "go": "7391718291171710956",
+    "father": "180692661295171544",
+    "children": [
+      "1329058796338168894"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 102.0
+    },
+    "size_delta": {
+      "x": 44.0,
+      "y": 44.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "btn_single_mark_attack"
+  },
+  {
+    "source_bundle": "assets/ui/battlemappanel.ab",
+    "path_id": "-477783636111715980",
+    "go": "4479137119172950043",
+    "father": "1859523040709321247",
+    "children": [
+      "-3165732270904273206",
+      "-8224724959647593709",
+      "-3406513002775731720",
+      "3672986868214444226",
+      "-9069108600138326189",
+      "5722371536998090392",
+      "-6806216604004983601",
+      "-2581713820116504185",
+      "-5485587098963057144",
+      "4972724588958152497",
+      "6397239094573695361",
+      "-2342498845723668919",
+      "-2063632011264850975",
+      "-6562413199049720234",
+      "-2667935872925113952",
+      "8297117833288919686"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 8640.0,
+      "y": 8640.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_Map"
+  },
+  {
+    "source_bundle": "assets/ui/battlemappanel.ab",
+    "path_id": "411056551742260625",
+    "go": "-7422359661830980146",
+    "father": "-5485587098963057144",
+    "children": [
+      "-6457179300358836766"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 50.0,
+      "y": 50.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_second_battle_pos"
+  },
+  {
+    "source_bundle": "assets/ui/battlemappanel.ab",
+    "path_id": "1824338626126369950",
+    "go": "514318527054867627",
+    "father": "0",
+    "children": [
+      "-6356175904707281919",
+      "7134005130804530884"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "BattleMapPanel"
+  },
+  {
+    "source_bundle": "assets/ui/battlemappanel.ab",
+    "path_id": "1859523040709321247",
+    "go": "-7238104695003703405",
+    "father": "-6356175904707281919",
+    "children": [
+      "-477783636111715980",
+      "-6453837245231588322"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": -225.89999389648438,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 1468.0,
+      "y": 1080.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_map_scroll"
+  },
+  {
+    "source_bundle": "assets/ui/battlemappanel.ab",
+    "path_id": "3119377569374964023",
+    "go": "-8733405648330979637",
+    "father": "-8097765789581319255",
+    "children": [
+      "-3851690552310106869"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": -173.89999389648438,
+      "y": 12.7999267578125
+    },
+    "size_delta": {
+      "x": 267.3999938964844,
+      "y": 50.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0000799894332886,
+      "y": 1.0000799894332886,
+      "z": 1.0000799894332886
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "btn_latter_map_setting"
+  },
+  {
+    "source_bundle": "assets/ui/battlemapsettingpanel.ab",
+    "path_id": "-8609060938172752682",
+    "go": "1667792389372504331",
+    "father": "-7571224623415053556",
+    "children": [
+      "976367349067780238",
+      "3147509925530131879",
+      "123089673936570370",
+      "4546159324705617662",
+      "-1488787632660874655"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 1.0
+    },
+    "anchor_max": {
+      "x": 0.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": -1243.0,
+      "y": -177.60000610351562
+    },
+    "size_delta": {
+      "x": 395.0,
+      "y": 65.0
+    },
+    "pivot": {
+      "x": 0.0,
+      "y": 1.0
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "btn_second_battle"
+  },
+  {
+    "source_bundle": "assets/ui/battlemapsettingpanel.ab",
+    "path_id": "-5315249043051054271",
+    "go": "-1119250069423370086",
+    "father": "-1692743512536799177",
+    "children": [
+      "-4863797978878734079",
+      "-6993210811879180748",
+      "-9041651266459128305",
+      "1784661554655371200",
+      "-1619794142087895462",
+      "-8953046114919518030",
+      "-6562780390557332418",
+      "-5724635104956360476",
+      "-872469471758329607",
+      "-5821331430983186369",
+      "2303211081032220304",
+      "-61901969578403190",
+      "-7232705805415401503",
+      "8496510448236176722",
+      "-60698364036907207",
+      "-6606968009824940356",
+      "6506452845684802976",
+      "1948817273412883977",
+      "816827487990564944",
+      "5137067228697422641",
+      "-6201851486095998170"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 213.0,
+      "y": 14.5
+    },
+    "size_delta": {
+      "x": 697.5738525390625,
+      "y": 608.8707275390625
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 0.9999200701713562,
+      "y": 0.9999200701713562,
+      "z": 0.9999200701713562
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_map_tags"
+  },
+  {
+    "source_bundle": "assets/ui/battlemapsettingpanel.ab",
+    "path_id": "-1812036890514178555",
+    "go": "6913589673825814019",
+    "father": "0",
+    "children": [
+      "7441364081578965166",
+      "-1692743512536799177"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "BattleMapSettingPanel"
+  },
+  {
+    "source_bundle": "assets/ui/battlecarpanel.ab",
+    "path_id": "-5973984727129820836",
+    "go": "7886176256032858313",
+    "father": "-3728486735947647959",
+    "children": [
+      "-2164407424316717259"
+    ],
+    "anchor_min": {
+      "x": 1.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 0.0
+    },
+    "anchored_position": {
+      "x": -26.2998046875,
+      "y": 225.099609375
+    },
+    "size_delta": {
+      "x": 130.0,
+      "y": 130.0
+    },
+    "pivot": {
+      "x": 1.0,
+      "y": 0.0
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "btn_bikeJump"
+  },
+  {
+    "source_bundle": "assets/ui/battlecarpanel.ab",
+    "path_id": "-5754258799897552857",
+    "go": "7732877620103718490",
+    "father": "-5824139970639209016",
+    "children": [
+      "7855083639716774012",
+      "1492887444011205622"
+    ],
+    "anchor_min": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchor_max": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "anchored_position": {
+      "x": 274.20001220703125,
+      "y": 233.3000030517578
+    },
+    "size_delta": {
+      "x": 258.70001220703125,
+      "y": 261.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_JoystackTypeCar"
+  },
+  {
+    "source_bundle": "assets/ui/battlecarpanel.ab",
+    "path_id": "-4993871140344016141",
+    "go": "6439698820168879548",
+    "father": "0",
+    "children": [
+      "-5824139970639209016",
+      "-2672797121130651588"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "BattleCarPanel"
+  },
+  {
+    "source_bundle": "assets/ui/battlecarpanel.ab",
+    "path_id": "368076726127433489",
+    "go": "-2834333034403783250",
+    "father": "8805315532657904168",
+    "children": [
+      "-281393156824675386",
+      "8814396601335510133"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchored_position": {
+      "x": 300.0,
+      "y": 300.0
+    },
+    "size_delta": {
+      "x": 450.0,
+      "y": 450.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_JoystackType3"
+  },
+  {
+    "source_bundle": "assets/ui/battlecarpanel.ab",
+    "path_id": "809943714965114589",
+    "go": "-5417333366762361994",
+    "father": "-7918674732224575789",
+    "children": [
+      "4247225752242109386",
+      "-3780749822980193993"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchored_position": {
+      "x": 323.0,
+      "y": 279.0
+    },
+    "size_delta": {
+      "x": 450.0,
+      "y": 450.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_JoystackType3"
+  },
+  {
+    "source_bundle": "assets/ui/battlecarpanel.ab",
+    "path_id": "8711460698096196811",
+    "go": "-8146784500496136026",
+    "father": "8805315532657904168",
+    "children": [
+      "1656709268971341979",
+      "-670871781968104109"
+    ],
+    "anchor_min": {
+      "x": 1.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 0.0
+    },
+    "anchored_position": {
+      "x": -369.70001220703125,
+      "y": 330.0
+    },
+    "size_delta": {
+      "x": 450.0,
+      "y": 450.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": -0.0,
+      "y": -0.0,
+      "z": -0.0,
+      "w": 1.0
+    },
+    "name": "m_JoystackType4"
+  },
+  {
+    "source_bundle": "assets/ui/battleloadingpanel.ab",
+    "path_id": "4176225900922636067",
+    "go": "8483935213835741900",
+    "father": "0",
+    "children": [
+      "8444395866679139802",
+      "3596085184632274205",
+      "-7383322582993364389",
+      "-5843326070203920973"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "BattleLoadingPanel"
+  },
+  {
+    "source_bundle": "assets/ui/battleinfopaneltwopanel.ab",
+    "path_id": "1902032469975797076",
+    "go": "-3557820382509572109",
+    "father": "0",
+    "children": [
+      "8974752155233073951",
+      "2728488460766460521"
+    ],
+    "anchor_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "anchor_max": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "anchored_position": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "size_delta": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "local_scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "local_rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "name": "BattleInfoPanelTwoPanel"
+  }
+]

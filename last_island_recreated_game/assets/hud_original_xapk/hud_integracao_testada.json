@@ -1,0 +1,73 @@
+{
+  "result": "Game renderer now resolves source-proven Unity HUD Sprite PNGs.",
+  "xapk_sha256": "73f007e97dcd9b0fa270912e3690ddefebb16b20b3826bb9ba1646642c1f50b6",
+  "sprite_count": 1210,
+  "sprite_pixel_matches": 875,
+  "original_prefab_rects": 3522,
+  "original_prefab_gameobjects": 3644,
+  "source_verified_controls": {
+    "BattlePanel2_st_an_2.png": {
+      "original_source": "battlepanel2.ab",
+      "source_sprite_path": "assets/hud_original_xapk/sprites/battlepanel2/BattlePanel2_st_an_2_4449387293946013019.png",
+      "sha256": "6e439ed1b13953e5c42513797e3b3e64076a462884c47e03b08c0b79ec72d262"
+    },
+    "BattlePanel2_quick_icon_attack.png": {
+      "original_source": "battlepanel2.ab",
+      "source_sprite_path": "assets/hud_original_xapk/sprites/battlepanel2/BattlePanel2_quick_icon_attack_2255477384870362243.png",
+      "sha256": "df55981b18868f5b749dfecb540bf11dc3ead90fccf890c022b188c72f3bbd23"
+    },
+    "1BattlePanel_cz_t.png": {
+      "original_source": "battlepanel.ab",
+      "source_sprite_path": "assets/hud_original_xapk/sprites/battlepanel/1BattlePanel_cz_t_-5766048973405338036.png",
+      "sha256": "d348f8beaa992624ee2bd8df7bb115f2858f11207aa875e212ec9d5474ce83d9"
+    },
+    "BattlePanel_cxfmt_zhunxing.png": {
+      "original_source": "battlepanel.ab",
+      "source_sprite_path": "assets/hud_original_xapk/sprites/battlepanel/BattlePanel_cxfmt_zhunxing_6647928780638098573.png",
+      "sha256": "0e75081f9d8f98daf6fe2bb4a6676f40cc9480ab3fdd2e89710ee2274bdc08a7"
+    },
+    "1BattlePanel_cz_dun.png": {
+      "original_source": "battlepanel.ab",
+      "source_sprite_path": "assets/hud_original_xapk/sprites/battlepanel/1BattlePanel_cz_dun_7816152445154004946.png",
+      "sha256": "80362743f192744a310234b0f5573e6a44829ca9ac03664c5ad2bdb458480d2d"
+    },
+    "1BattlePanel_cz_pa.png": {
+      "original_source": "battlepanel.ab",
+      "source_sprite_path": "assets/hud_original_xapk/sprites/battlepanel/1BattlePanel_cz_pa_6380483222475970638.png",
+      "sha256": "c9fa991e386446e31df0bdaa8e7a94df75353296a8fead457e8ced6db17b68cc"
+    },
+    "1BattlePanel_buff_xue.png": {
+      "original_source": "battlepanel.ab",
+      "source_sprite_path": "assets/hud_original_xapk/sprites/battlepanel/1BattlePanel_buff_xue_6505484593731425225.png",
+      "sha256": "cbcd9a2f42fb7830d2a095a578429177a8446d6a65e711d7b70c2aebf285b916"
+    },
+    "1BattlePanel_buff_jie.png": {
+      "original_source": "battlepanel.ab",
+      "source_sprite_path": "assets/hud_original_xapk/sprites/battlepanel/1BattlePanel_buff_jie_-7429908483174830653.png",
+      "sha256": "e404c0821665efd2d518a4d1905853e23e18586597753ee206b94cd1e7a0fbd3"
+    },
+    "1BattlePanel_buff_shui.png": {
+      "original_source": "battlepanel.ab",
+      "source_sprite_path": "assets/hud_original_xapk/sprites/battlepanel/1BattlePanel_buff_shui_-4534881768859244425.png",
+      "sha256": "3ed6445d4efedb5ec4995333f445f82d71bf419795d9283204b7f044dfb97406"
+    },
+    "1BattlePanel_buttle_fang_1.png": {
+      "original_source": "battlepanel.ab",
+      "source_sprite_path": "assets/hud_original_xapk/sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
+      "sha256": "b678b4d6253fb7b888e95c46a1fcea113f4ab65ecb14b10f605b0bc4cdc0dce0"
+    },
+    "BattlePanel2_car_yaogan_1.png": {
+      "original_source": "battlepanel2.ab",
+      "source_sprite_path": "assets/hud_original_xapk/sprites/battlepanel2/BattlePanel2_car_yaogan_1_-6137401648909176546.png",
+      "sha256": "b0e61bbbd74c6da3cb771be66dad64c5281b2a1cc002b081d38a14401087b6b4"
+    },
+    "BattlePanel2_car_yaogan_2.png": {
+      "original_source": "battlepanel2.ab",
+      "source_sprite_path": "assets/hud_original_xapk/sprites/battlepanel2/BattlePanel2_car_yaogan_2_-5376360766746200822.png",
+      "sha256": "7f3ec1cf99e48b41f7e9d2a2c75b9d934cb1c41a9a374cf2f93917753781854d"
+    }
+  },
+  "source_bundle_integrity": "SHA256 match for all 10 original UI/atlas ABs",
+  "limited": "Original Canvas layout exists in ui_prefabs_original but is not yet fully reproduced by OpenGL 2D runtime.",
+  "game_check": "Python AST and authentic XAPK Sprite resolver validated; graphical launch not yet tested."
+}

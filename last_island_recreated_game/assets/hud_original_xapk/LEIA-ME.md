@@ -18,3 +18,19 @@ A correspondência de nomes pode não ser única; alguns sprites com o
 mesmo nome em bundles diferentes têm pixels distintos. Para reproduzir
 o layout idêntico ao jogo, falta mapear as hierarquias dos GameObjects,
 resolução, ancoragens de RectTransform e estados dinâmicos.
+
+## Origem e integração no jogo
+
+O jogo \`viewer3d.py\` agora usa \`hud_original_loader.py\` para localizar sprites
+pelo nome de origem e pelo bundle. Os botões compostos sem origem comprovada
+(\`BattlePanel_attack_button\`, \`BattlePanel_sprint_button\` e
+\`BattlePanel_aim_button\`) foram substituídos por **elementos originais
+separados** (placa circular, ícone de ataque, corredor, mira).
+
+A pasta \`ui_prefabs_original/assets/ui/\` contém os prefabs Unity originais:
+por exemplo \`battlepanel.ab\` (hierarquia da interface). O arquivo
+\`hud_button_coordinates.json\` guarda ancoragens e posições reais dos controles.
+
+**Ainda não é uma reprodução visual 1:1 do jogo:** o motor Python ainda
+possui coordenadas e dimensões aproximadas; faltam reconstruir as regras
+completas de ancoragem, máscaras e a relação de Sprite por componente.
