@@ -34,6 +34,14 @@ def game_hud_state(*, health, food, water, yaw, equipped_slot, wood=0,
         if not math.isfinite(float(value)):
             raise ValueError("Non-finite player vital: " + name)
     inventory = [None] * 7
+    # A blank m_icon in the prefab means the runtime supplies an ItemCfg.icon.
+    # The original XAPK config proves stone_axe -> tubiao1/cj_sf and
+    # M4 -> gun/m4. Only enable these visual slots after the exact original
+    # Sprite is exported and verified against cfg.ItemCfg.oc and gun.ab.
+    verified = ASSETS / "complete_source_mapping/verified_equipped_weapon_icons.json"
+    if verified.is_file():
+        inventory[0] = {"sprite": "cj_sf", "count": 1}
+        inventory[1] = {"sprite": "m4", "count": 1}
     for index, (sprite, count) in enumerate(
         (("tb_cl_mt", wood), ("tb_cl_tiek", metal),
          ("tb_cl_st", stone), ("ks_lhk", sulfur)), start=2
