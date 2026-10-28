@@ -114,16 +114,22 @@ for ob in env.objects:
     elif typ=="Sprite":
         # Source prefab embeds extra Sprite objects omitted by earlier atlas-only export.
         sprite=ob.read()
-        img=sprite.image.convert("RGBA")
-        path=OUT/"embedded_sprites"/("source_sprite_"+pid+".png")
-        path.parent.mkdir(exist_ok=True,parents=True)
-        img.save(path,optimize=True)
-        report["sprite_assets"][pid]={"name":str(sprite.m_Name),
-            "file":str(path.relative_to(ASSETS)),
-            "width":img.width,"height":img.height,
-            "sha256":hashlib.sha256(path.read_bytes()).hexdigest(),
-            "source_bundle":"assets/ui/battlepanel.ab",
-            "embedded":True}
+        entry={"name":str(sprite.m_Name),"source_bundle":"assets/ui/battlepanel.ab",
+               "embedded":True,"path_id":pid}
+        try:
+            img=sprite.image.convert("RGBA")
+            path=OUT/"embedded_sprites"/("source_sprite_"+pid+".png")
+            path.parent.mkdir(exist_ok=True,parents=True)
+            img.save(path,optimize=True)
+            entry.update({"file":str(path.relative_to(ASSETS)),
+               "width":img.width,"height":img.height,
+               "sha256":hashlib.sha256(path.read_bytes()).hexdigest()})
+        except (FileNotFoundError,ValueError,AttributeError) as e:
+            # Unity Sprite references can require a missing external CAB/atlas.
+            # Preserve exact original Sprite PPtr rather than fabricate pixels.
+            entry["unresolved_texture_dependency"]=str(e)[:350]
+            counts["embedded_external_missing"]+=1
+        report["sprite_assets"][pid]=entry
 
 sprite_ids=set(atlas)|set(report["sprite_assets"])
 for pid,c in report["components"].items():
@@ -131,8 +137,13 @@ for pid,c in report["components"].items():
     pointer=c["sprite"]
     if pointer["path_id"]=="0":continue
     if pointer["file_id"]==0 and pointer["path_id"] in report["sprite_assets"]:
-        c["resolved_sprite_file"]=report["sprite_assets"][pointer["path_id"]]["file"]
-        counts["resolved_embedded"]+=1
+        record=report["sprite_assets"][pointer["path_id"]]
+        if record.get("file"):
+            c["resolved_sprite_file"]=record["file"]
+            counts["resolved_embedded"]+=1
+        else:
+            c["original_embedded_sprite_dependency_missing"]=True
+            counts["embedded_ref_external_dependency"]+=1
     elif pointer["path_id"] in atlas:
         c["resolved_sprite_file"]=atlas[pointer["path_id"]]["file"]
         counts["resolved_atlas"]+=1
