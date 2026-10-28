@@ -520,7 +520,10 @@ int main() {
                 player.attackDuration=.125f;
                 magazine--;
                 shotCooldown=.13f;
-                sound.play(sound.m4,.8f);
+                // Play the original wq_m4_1 outdoor loop as one continuous
+                // burst while the trigger remains pressed, not one 2.62s
+                // sample layered for every 0.13-second shot.
+                sound.fireM4();
             }
             if(player.equippedSlot==0||magazine>=0&&shotCooldown>0.f){
                 player.isAttacking=true;
@@ -528,6 +531,9 @@ int main() {
                 player.attackHitRegistered=false;
             }
         }
+
+        if(player.equippedSlot!=1 || !wantAttack || magazine<=0)
+            sound.releaseM4();
 
         if (player.isAttacking) {
             player.attackTimer += dt;
