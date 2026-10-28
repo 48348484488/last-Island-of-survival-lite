@@ -145,3 +145,32 @@ fuzil continuam **sem icones de item**, pois o prefab deixa estes m_Sprite
 como zero e o vinculo original de inventario nao foi recuperado. O mapa usa
 uma posicao ilustrativa; dados de CanvasScaler, shaders e fonte original
 permanecem incompletos. Esta validacao e de desktop/Mesa, nao de APK Android.
+
+
+### V11 - sprites de machado e M4 recuperados pelo ID original
+
+Os slots 1 e 2 da barra rapida nao precisam mais ficar vazios: a referencia
+real do item esta em `assets/cfg/cfg.ItemCfg.oc` do APK base, enquanto o Sprite
+e servido pelos AssetBundles no `install_time_asset_pack.apk`.
+
+| Equipamento | Item ID original | Icon de cfg.ItemCfg | Fonte do Sprite | PathID |
+| --- | ---: | --- | --- | --- |
+| Machado de pedra | 55001 | `tubiao1/cj_sf` | `assets/icon/tubiao1.ab` | `4568438245182409447` |
+| M4 | 52231 | `gun/m4` | `assets/icon/gun.ab` | `919133799852272780` |
+
+A verificacao confirma a string de icon, o caminho do modelo 3D e o
+encadeamento de dados no arquivo `cfg.ItemCfg.oc`. Os dois sprites sao
+decodificados dos arquivos Unity originais, com SHA-256 dos **pixels RGBA**
+registrado em
+`last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/verified_equipped_weapon_icons.json`.
+
+O renderer so ativa estes icones quando existe o manifesto de verificacao:
+`OriginalUnityHud` importa os sprites autenticados e o jogo preenche os slots
+com `cj_sf` e `m4`. Nao usa figuras parecidas nem recortes de screenshots.
+
+**Testes reais:** [machado + M4 no framebuffer OpenGL](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40633463669)
+(os dois perfis passaram), e
+[teste de integracao Pillow/headless](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40633480170)
+(aprovado).
+As capturas sao de desktop/Mesa. Ainda nao representam APK Android, nem
+demonstram coincidencia pixel-a-pixel com o jogo original executado.
