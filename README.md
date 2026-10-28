@@ -23,6 +23,15 @@ Acesse [**Actions → Build Android ARM64**](https://github.com/48348484488/last
 
 Para reconstruir o XAPK original: `python xapk_original/reassemble_xapk.py` (consulte o script para as opções). **Não excluir o XAPK, AssetBundles ou o projeto descompilado**: são fontes necessárias à engenharia reversa.
 
+## Android V16.2 — estado técnico
+
+- **Animação lateral:** seleção do clipe esquerdo/direito pelo vetor local do personagem e correção da orientação UV dos sete meshes do rig Unity.
+- **HUD:** dois perfis da UI extraída do `battlepanel.ab`, compasso dinâmico com 72 posições e os **sete destaques `m_heightLignt` reais** aplicados ao slot selecionado. Clicar nos slots 3–7 não abre mais a mochila; itens sem uso nativo ficam desequipados em vez de disparar a arma anterior.
+- **Áudio M4:** os WAVs preservados `wq_m4_1_gunshot outdoor loop` e `... loop end` são tocados separadamente; o `SoundCfg` da versão 7.3 referencia `gunshot_m4a1_near.ab`, que não foi localizado nos arquivos do XAPK. **Não há comprovação de que o WAV seja a mesma amostra usada no evento do APK.**
+- **Passos, pulo e pouso:** os IDs de eventos da versão original estão documentados em [auditoria de áudio](docs/ORIGINAL_AUDIO_AUDIT.md), mas seus AudioClips não estão no XAPK preservado. Os sons executados pelo protótipo são temporários sintetizados, não originais.
+- **Texturas:** são os seis atlas de albedo extraídos e copiados para renderização opaca; o Unity usa informações adicionais de material e mapas normais. A aparência de iluminação no Raylib ainda **não é equivalente 1:1** à original.
+- **Validação:** CI verifica empacotamento e assinatura do APK Android ARM64, não fidelidade visual/som em dispositivo.
+
 ## Estado e limites
 
 - **Implementado:** APK nativo ARM64, cenário 3D, itens, machado/M4, câmera, 33 clipes importados, toque por dedo e áudio original de M4/machado/coleta.
