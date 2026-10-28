@@ -1,0 +1,7059 @@
+{
+  "source": "assets/ui/battlepanel.ab original Unity UGUI Text.m_FontData",
+  "text_components": 260,
+  "font_reference_distribution": {
+    "{'file_id': 7, 'path_id': '-4720046316774500430'}": 255,
+    "{'file_id': 0, 'path_id': '-5749314977429426059'}": 5
+  },
+  "alignment_distribution": {
+    "3": 53,
+    "4": 180,
+    "5": 23,
+    "0": 2,
+    "2": 1,
+    "6": 1
+  },
+  "size_distribution": {
+    "28": 30,
+    "25": 72,
+    "22": 19,
+    "14": 23,
+    "30": 40,
+    "20": 40,
+    "40": 2,
+    "16": 6,
+    "32": 1,
+    "27": 9,
+    "26": 6,
+    "19": 3,
+    "35": 2,
+    "11": 1,
+    "18": 2,
+    "56": 1,
+    "29": 2,
+    "23": 1
+  },
+  "entries": {
+    "-9066666101201826421": {
+      "go_path_id": "-2912232191106332275",
+      "source_text": "隐藏碰撞",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-8896769479017543815": {
+      "go_path_id": "4536811302240087220",
+      "source_text": "玩家名称",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-8835276190713868486": {
+      "go_path_id": "-1704325384188882574",
+      "source_text": "救援",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 1.0
+      }
+    },
+    "-8733315728074084769": {
+      "go_path_id": "3612884566073308098",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-8646370115511342508": {
+      "go_path_id": "-3851559476853861932",
+      "source_text": "损失战报",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 22,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8117647767066956,
+        "g": 0.7647059559822083,
+        "b": 0.7529412508010864,
+        "a": 1.0
+      }
+    },
+    "-8588636408393139965": {
+      "go_path_id": "69996112678965321",
+      "source_text": "1000m",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 0.7843137383460999
+      }
+    },
+    "-8496331197822934817": {
+      "go_path_id": "4309386672649691469",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-8412418372899084515": {
+      "go_path_id": "2667355636640068417",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 25,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-8322071773400401243": {
+      "go_path_id": "-5873123875482087135",
+      "source_text": "队伍",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-8276369476636718043": {
+      "go_path_id": "2850761940206969544",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 25,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-8254835359149610268": {
+      "go_path_id": "6685777737954357750",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-8137520273619716379": {
+      "go_path_id": "-6564521789789251709",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-8129796941356199927": {
+      "go_path_id": "-1961890685163216180",
+      "source_text": "1000m",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 0.7843137383460999
+      }
+    },
+    "-8095787416876729918": {
+      "go_path_id": "-4308033266597812681",
+      "source_text": "100",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-8084802432432468430": {
+      "go_path_id": "3815753646961811084",
+      "source_text": "文明重启 720:9",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 0,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.7411764860153198,
+        "g": 0.5254902243614197,
+        "b": 0.38823533058166504,
+        "a": 1.0
+      }
+    },
+    "-8017673477151740548": {
+      "go_path_id": "-8414298548744828412",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 1,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-7917567204724728567": {
+      "go_path_id": "7980675951162651238",
+      "source_text": "3",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-7877780617808316451": {
+      "go_path_id": "-1556269371634985357",
+      "source_text": "改名",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.16981130838394165,
+        "g": 0.16981130838394165,
+        "b": 0.16981130838394165,
+        "a": 1.0
+      }
+    },
+    "-7773860161234574882": {
+      "go_path_id": "8517642949288976588",
+      "source_text": "装水",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 1.0
+      }
+    },
+    "-7769604639827631900": {
+      "go_path_id": "-9063259405270873261",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-7760515312503580052": {
+      "go_path_id": "-4800279043779326051",
+      "source_text": "正在进入逃生区域",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-7586728964015465231": {
+      "go_path_id": "1911361220367863339",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-7517057832905977098": {
+      "go_path_id": "3381391780818973016",
+      "source_text": "99:99:99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 40,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 75,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 0.8352941870689392,
+        "b": 0.0,
+        "a": 1.0
+      }
+    },
+    "-7494878139652507174": {
+      "go_path_id": "-2812440259806506281",
+      "source_text": "拆除能量外墙甲",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    },
+    "-7201359920836410616": {
+      "go_path_id": "-4580029162197755139",
+      "source_text": "2",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-7176301316636232793": {
+      "go_path_id": "7071518972026952410",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-7121142236003990983": {
+      "go_path_id": "5623478682258634743",
+      "source_text": "卸下能量外墙甲",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-6988149143760701994": {
+      "go_path_id": "-6192688218752209115",
+      "source_text": "基础",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-6911994529222797072": {
+      "go_path_id": "-7986352154471153808",
+      "source_text": "改名",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.16981130838394165,
+        "g": 0.16981130838394165,
+        "b": 0.16981130838394165,
+        "a": 1.0
+      }
+    },
+    "-6901709996353998821": {
+      "go_path_id": "2829166438189582199",
+      "source_text": "附近",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 16,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-6900997847086144099": {
+      "go_path_id": "-3086129743119785733",
+      "source_text": "玩家名称",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-6763111568110923755": {
+      "go_path_id": "7180969623125775011",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-6615293943575496370": {
+      "go_path_id": "6035373946456316547",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 25,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-6477514720407994321": {
+      "go_path_id": "-7105719750742034017",
+      "source_text": "10.6",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 32,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 4,
+        "m_MaxSize": 41,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-6390651105972328237": {
+      "go_path_id": "-2101762227528896621",
+      "source_text": "222",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.0,
+        "g": 0.7517240047454834,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-6287170343042336435": {
+      "go_path_id": "-3734503044408002524",
+      "source_text": "始终开启说话",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-6245724687518234732": {
+      "go_path_id": "6388316148316117956",
+      "source_text": "-",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 200,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-6076195701971340670": {
+      "go_path_id": "-1481264937018602298",
+      "source_text": "100<color=yellow>100</color>",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-6053473417460303283": {
+      "go_path_id": "6587663737241893305",
+      "source_text": "小队",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-5973942195305657873": {
+      "go_path_id": "-504124264522184319",
+      "source_text": "门窗",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-5901134676752516101": {
+      "go_path_id": "-2348538540080651463",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-5875100400973477403": {
+      "go_path_id": "8771756936921715946",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 1,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-5729350741652859999": {
+      "go_path_id": "1838050087646259524",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-5603242040888767265": {
+      "go_path_id": "7517467157110379209",
+      "source_text": "丧尸首领",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 20,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 0.6700000166893005
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-5500781765615180833": {
+      "go_path_id": "4760513784491842934",
+      "source_text": "%",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 16,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-5342999411843099564": {
+      "go_path_id": "-2236054778600301391",
+      "source_text": "-",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 200,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-5222777539560988668": {
+      "go_path_id": "3501761541893805787",
+      "source_text": "楼梯",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-5133539423886733994": {
+      "go_path_id": "-3738847191992902245",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-5111336941693117923": {
+      "go_path_id": "11647608761390037",
+      "source_text": "0米",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4990252171884277149": {
+      "go_path_id": "-2256916120530378852",
+      "source_text": "附近",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4941472525384911887": {
+      "go_path_id": "4213673324973191507",
+      "source_text": "移动",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    },
+    "-4909711908426944779": {
+      "go_path_id": "3381696368995577771",
+      "source_text": "抄家限制已解除",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 27,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.9529412388801575,
+        "g": 0.7725490927696228,
+        "b": 0.5647059082984924,
+        "a": 1.0
+      }
+    },
+    "-4866818103086274185": {
+      "go_path_id": "2845727465534652393",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4821546579350729034": {
+      "go_path_id": "2850018891899727543",
+      "source_text": "附近",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4737274942241853532": {
+      "go_path_id": "-2220110077271653946",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4659307761529512683": {
+      "go_path_id": "-1436742041845304587",
+      "source_text": "改名",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4607229170056560865": {
+      "go_path_id": "2993779824010797987",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4585005933946282164": {
+      "go_path_id": "4827738805519302028",
+      "source_text": "改名",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4510105656352838189": {
+      "go_path_id": "812553169075326288",
+      "source_text": "00:00:00",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.729411780834198,
+        "g": 0.729411780834198,
+        "b": 0.729411780834198,
+        "a": 1.0
+      }
+    },
+    "-4489419624075859222": {
+      "go_path_id": "6242960964044379701",
+      "source_text": "移动",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4448379641238963635": {
+      "go_path_id": "-5393150728708576954",
+      "source_text": "点击此处开始聊天",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4292391056399286884": {
+      "go_path_id": "-5583312202654069244",
+      "source_text": "地基上限 100/100",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 0.5
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4192902401681790629": {
+      "go_path_id": "-1221529227332886978",
+      "source_text": "现代文明：",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 26,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 10,
+        "m_MaxSize": 26,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8117647767066956,
+        "g": 0.7450980544090271,
+        "b": 0.7450980544090271,
+        "a": 1.0
+      }
+    },
+    "-4192231639034945551": {
+      "go_path_id": "5918429362962896043",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4103817026640203818": {
+      "go_path_id": "8397178486380874166",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 1,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4082212372850894420": {
+      "go_path_id": "-973956516226123173",
+      "source_text": " 始终开启说话",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-4005780838759873327": {
+      "go_path_id": "-3456002496121445389",
+      "source_text": "安装能量外墙甲",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-3959966317252739081": {
+      "go_path_id": "3003692704198072791",
+      "source_text": "集 合",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-3955951615281467017": {
+      "go_path_id": "2742219484283711056",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-3881757896655773982": {
+      "go_path_id": "1577457100406551112",
+      "source_text": "231",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 16,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-3753770111416278463": {
+      "go_path_id": "1878954523820212537",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-3656470164595366986": {
+      "go_path_id": "-5157077049116854275",
+      "source_text": "阿达啊的啊大",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-3532567633701751751": {
+      "go_path_id": "7053183833236151320",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-3504010949058259842": {
+      "go_path_id": "1551017985133767081",
+      "source_text": "热能值：",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-3480877461677187318": {
+      "go_path_id": "3808776472022943871",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-3388792837434551809": {
+      "go_path_id": "7791311874420371356",
+      "source_text": "生存手册",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 22,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8117647767066956,
+        "g": 0.7647059559822083,
+        "b": 0.7529412508010864,
+        "a": 1.0
+      }
+    },
+    "-3219692289304557617": {
+      "go_path_id": "6915973662243395425",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-3182019861276252304": {
+      "go_path_id": "5938325593820410045",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 1,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-3054864089122246080": {
+      "go_path_id": "4922701344527152899",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 1,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-2945425749907910303": {
+      "go_path_id": "-8889329900555491355",
+      "source_text": "路障",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-2814905410541374695": {
+      "go_path_id": "4860843979893865899",
+      "source_text": "客服中心",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 22,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8117647767066956,
+        "g": 0.7647059559822083,
+        "b": 0.7529412508010864,
+        "a": 1.0
+      }
+    },
+    "-2764797283979443873": {
+      "go_path_id": "-6849115255214684326",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-2709674740001870440": {
+      "go_path_id": "8482311924648134664",
+      "source_text": "旋转",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    },
+    "-2587938289298432249": {
+      "go_path_id": "7221899911003754987",
+      "source_text": "1000m",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 0.7843137383460999
+      }
+    },
+    "-2561480519978528694": {
+      "go_path_id": "3082814679792007339",
+      "source_text": "阿达啊的啊大",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-2496831442795858960": {
+      "go_path_id": "-2690800549599808702",
+      "source_text": "1111",
+      "font": {
+        "file_id": 0,
+        "path_id": "-5749314977429426059"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.800000011920929,
+        "g": 0.6000000238418579,
+        "b": 0.800000011920929,
+        "a": 1.0
+      }
+    },
+    "-2469228191077485455": {
+      "go_path_id": "8898588421345195384",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-2436284780296675003": {
+      "go_path_id": "-2601328992548839872",
+      "source_text": "99",
+      "font": {
+        "file_id": 0,
+        "path_id": "-5749314977429426059"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.0,
+        "g": 1.0,
+        "b": 0.0,
+        "a": 1.0
+      }
+    },
+    "-2379917857607294341": {
+      "go_path_id": "-9122596284321308672",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-2346296644758763393": {
+      "go_path_id": "-1370791586550180409",
+      "source_text": "热能可以少量恢复玩家血量",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 0.5
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-2332844748808938375": {
+      "go_path_id": "2291387050728849435",
+      "source_text": "1234",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 19,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-2311544471939177790": {
+      "go_path_id": "6425384844253025895",
+      "source_text": "(100,200)",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 19,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-2234630681465382879": {
+      "go_path_id": "-8383073928142670532",
+      "source_text": "小队",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-2232570094990671610": {
+      "go_path_id": "3568024449658033072",
+      "source_text": "潜行中",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.7529412508010864,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-2186065898855513896": {
+      "go_path_id": "-6890100827234124717",
+      "source_text": "0米",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-2015103047873144423": {
+      "go_path_id": "-7497095518881752989",
+      "source_text": "服主",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1924884847248178590": {
+      "go_path_id": "2577621514430045314",
+      "source_text": "显示碰撞",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1902140925151321855": {
+      "go_path_id": "112751908409633410",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 35,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1897335500285068222": {
+      "go_path_id": "7981272088404957514",
+      "source_text": "New Text",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 27,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1795815835544918935": {
+      "go_path_id": "4244746154610667156",
+      "source_text": "修理",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    },
+    "-1710078387958345480": {
+      "go_path_id": "2040971371158470483",
+      "source_text": "小队",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1707016881042030700": {
+      "go_path_id": "5839111163467956670",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 2,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1688367728923567659": {
+      "go_path_id": "-4962235726540755395",
+      "source_text": "队伍",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1684021688127358726": {
+      "go_path_id": "1050363771087895446",
+      "source_text": "您已进入停泊区，可在岸边租赁机器租赁",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 27,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.9529412388801575,
+        "g": 0.7725490927696228,
+        "b": 0.5647059082984924,
+        "a": 1.0
+      }
+    },
+    "-1610669371521586454": {
+      "go_path_id": "-5264411219846407929",
+      "source_text": "改名",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1531669328754993654": {
+      "go_path_id": "-8133456513828435219",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1484701928702007846": {
+      "go_path_id": "-5277783931402323449",
+      "source_text": "留言",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.7411764860153198,
+        "g": 0.7411764860153198,
+        "b": 0.7411764860153198,
+        "a": 1.0
+      }
+    },
+    "-1434026645061687972": {
+      "go_path_id": "8813848748808166389",
+      "source_text": "100",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1369066175840055673": {
+      "go_path_id": "2507388624269492502",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 1,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1367543374348993801": {
+      "go_path_id": "-3762520923546315730",
+      "source_text": "升级",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1350704331351454102": {
+      "go_path_id": "-6168242403287652038",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1324457368492851419": {
+      "go_path_id": "2631900972139734332",
+      "source_text": "升级",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    },
+    "-1322014409032075091": {
+      "go_path_id": "-4379450297186369180",
+      "source_text": "改名",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.16981130838394165,
+        "g": 0.16981130838394165,
+        "b": 0.16981130838394165,
+        "a": 1.0
+      }
+    },
+    "-1271955006833325029": {
+      "go_path_id": "-8764398202055096013",
+      "source_text": "战队",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1211623761534208828": {
+      "go_path_id": "-5609441013772098518",
+      "source_text": "药 物",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1200516394727320302": {
+      "go_path_id": "-8758627693775126345",
+      "source_text": "0米",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1171409224257084173": {
+      "go_path_id": "2034491254099850315",
+      "source_text": "GM\n",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1148749586004109507": {
+      "go_path_id": "2615698472119591578",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 11,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-1105160849194821198": {
+      "go_path_id": "-6350563432130323383",
+      "source_text": "玩家名称玩家名称",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-844990332943338976": {
+      "go_path_id": "-7125067393396935557",
+      "source_text": "",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 41,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-594719063350656636": {
+      "go_path_id": "1227286860341563378",
+      "source_text": "1111",
+      "font": {
+        "file_id": 0,
+        "path_id": "-5749314977429426059"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.9811320900917053,
+        "g": 0.7131719589233398,
+        "b": 0.08793162554502487,
+        "a": 1.0
+      }
+    },
+    "-557699375866547087": {
+      "go_path_id": "-6195806460715100740",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-529611149882287678": {
+      "go_path_id": "-2200237778607464226",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-500818272567809359": {
+      "go_path_id": "-131633466863582900",
+      "source_text": "点击此处开始聊天",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-445017173740515681": {
+      "go_path_id": "-7165320887790846511",
+      "source_text": "天花板",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-368224301336831495": {
+      "go_path_id": "6429803184328632271",
+      "source_text": "自动采集中...",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-249418814223778693": {
+      "go_path_id": "-2561868115577501362",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "-208202738102882750": {
+      "go_path_id": "-5699514731328728110",
+      "source_text": "基地正在遭到感染者的围攻",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 18,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 0.9137255549430847,
+        "b": 0.7450980544090271,
+        "a": 1.0
+      }
+    },
+    "11184252955451576": {
+      "go_path_id": "6756794395500677187",
+      "source_text": "队伍",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "72051946105730379": {
+      "go_path_id": "2157196197449112467",
+      "source_text": "安装能量外墙甲",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    },
+    "120079466746564403": {
+      "go_path_id": "7115907368775173176",
+      "source_text": "建筑上限 100/100",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 0.5
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "217113430735419502": {
+      "go_path_id": "-5660742651004268418",
+      "source_text": "全部",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "264846243468806513": {
+      "go_path_id": "2947352214980646591",
+      "source_text": "附近",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 16,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "314525273081941852": {
+      "go_path_id": "8840001737441180066",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "465625059524311253": {
+      "go_path_id": "793041642274981797",
+      "source_text": "剩余波数：X/Y",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.729411780834198,
+        "g": 0.729411780834198,
+        "b": 0.729411780834198,
+        "a": 1.0
+      }
+    },
+    "529812234393867932": {
+      "go_path_id": "-7217015162378827084",
+      "source_text": "蓝图",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "554972461488646178": {
+      "go_path_id": "5540707521339124046",
+      "source_text": "原始文明：",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 26,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 10,
+        "m_MaxSize": 26,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8117647767066956,
+        "g": 0.7450980544090271,
+        "b": 0.7450980544090271,
+        "a": 1.0
+      }
+    },
+    "675511373092561223": {
+      "go_path_id": "8153645716151853077",
+      "source_text": "0米",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "735081021549138006": {
+      "go_path_id": "4462387960530062078",
+      "source_text": "1000m",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 0.7843137383460999
+      }
+    },
+    "907809027102352658": {
+      "go_path_id": "-358235461275177863",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "1085521973640761162": {
+      "go_path_id": "-65664378837273317",
+      "source_text": "领地柜维护不足",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.19607843458652496,
+        "g": 0.19607843458652496,
+        "b": 0.19607843458652496,
+        "a": 1.0
+      }
+    },
+    "1113775720107619722": {
+      "go_path_id": "-7303347613214921874",
+      "source_text": "玩家名称玩家名称",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "1147610153435630400": {
+      "go_path_id": "7727777531238176569",
+      "source_text": "改名名名名名",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "1164333451217566326": {
+      "go_path_id": "928997857452244160",
+      "source_text": "%",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 16,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "1169780418947990434": {
+      "go_path_id": "-3163390947756583020",
+      "source_text": " 按下说话",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "1278455743251221802": {
+      "go_path_id": "-5820963272958078540",
+      "source_text": "请在倒计时结束前返回基地进行防守",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 0,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.729411780834198,
+        "g": 0.729411780834198,
+        "b": 0.729411780834198,
+        "a": 1.0
+      }
+    },
+    "1395990064649306220": {
+      "go_path_id": "-6145996222617900340",
+      "source_text": "60秒恢复1点生命",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 0.550000011920929
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "1479922196267476356": {
+      "go_path_id": "4967818081464849412",
+      "source_text": "[点击开启生存手册，可以帮助你更快的了解游戏]",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "1509443166396714800": {
+      "go_path_id": "-4322411454423957480",
+      "source_text": "100%",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 26,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 10,
+        "m_MaxSize": 26,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8117647767066956,
+        "g": 0.7450980544090271,
+        "b": 0.7450980544090271,
+        "a": 1.0
+      }
+    },
+    "1621880953787394583": {
+      "go_path_id": "7843235741143261157",
+      "source_text": "-",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "1751302850331574886": {
+      "go_path_id": "-6302677089361693282",
+      "source_text": "虚位以待",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "1812588705979904141": {
+      "go_path_id": "4521969351917913960",
+      "source_text": "10",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 56,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 56,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 0.04245281219482422,
+        "b": 0.04245281219482422,
+        "a": 1.0
+      }
+    },
+    "1812715089955679642": {
+      "go_path_id": "5927704938355753385",
+      "source_text": "回收",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    },
+    "1963378725728968568": {
+      "go_path_id": "-6233667467398512554",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "1981294031544278638": {
+      "go_path_id": "-3199089099108495570",
+      "source_text": "战队",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "2050039250657010443": {
+      "go_path_id": "1482352501065603757",
+      "source_text": "更换皮肤",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    },
+    "2206326426704185791": {
+      "go_path_id": "6780605195375220736",
+      "source_text": "全部",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "2247937219604045203": {
+      "go_path_id": "-5872066486337076505",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "2265761072155672186": {
+      "go_path_id": "5939275539994029059",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "2321754418158524085": {
+      "go_path_id": "7486589383506263081",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "2862424159975062118": {
+      "go_path_id": "-4464328113801196829",
+      "source_text": "屏蔽队友语音",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "2908638070400687973": {
+      "go_path_id": "-2593028061985825058",
+      "source_text": "虚位以待",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "2991580158952618079": {
+      "go_path_id": "7085200525183524784",
+      "source_text": "描述：",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 0.5
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3037209303617884577": {
+      "go_path_id": "-6281098058527243966",
+      "source_text": "您已进入辐射区，需穿戴防辐射口罩",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 27,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.9529412388801575,
+        "g": 0.7725490927696228,
+        "b": 0.5647059082984924,
+        "a": 1.0
+      }
+    },
+    "3144143069975659254": {
+      "go_path_id": "3618009199968991412",
+      "source_text": "基地活动",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 29,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3144322956673588169": {
+      "go_path_id": "4453839571438820358",
+      "source_text": "墙壁",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3287092935665808888": {
+      "go_path_id": "6547386952923831453",
+      "source_text": "全部",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3326194835479872582": {
+      "go_path_id": "-4863232098480321953",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3326523123658663885": {
+      "go_path_id": "3732544199247158534",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 25,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3343977185012701653": {
+      "go_path_id": "7175689615532074463",
+      "source_text": "阿达啊的啊大",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3421760993837584487": {
+      "go_path_id": "-3852388234040538426",
+      "source_text": "载 具",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3433620736227434568": {
+      "go_path_id": "-4013318067284342147",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3440151703651118179": {
+      "go_path_id": "-1873182793407033338",
+      "source_text": "按下说话",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3458720513567939711": {
+      "go_path_id": "5728943014840707038",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.19607843458652496,
+        "g": 0.19607843458652496,
+        "b": 0.19607843458652496,
+        "a": 1.0
+      }
+    },
+    "3460528187576053852": {
+      "go_path_id": "5149395228947938439",
+      "source_text": "2",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3498572661014567550": {
+      "go_path_id": "-744376453448881559",
+      "source_text": "",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 40,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 53,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3811620213722780838": {
+      "go_path_id": "-1570945533323447515",
+      "source_text": "自由",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3842577486711592635": {
+      "go_path_id": "-4183315422366216381",
+      "source_text": "99:99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3870135575866857757": {
+      "go_path_id": "7572038574594185097",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3910228090589500507": {
+      "go_path_id": "-1977918228526148184",
+      "source_text": "4",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3918443487054377956": {
+      "go_path_id": "1612088968991916773",
+      "source_text": "拆除",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3926264489461748734": {
+      "go_path_id": "1669687382256532436",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3926640069805255529": {
+      "go_path_id": "6846872702984833216",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 25,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3934124531461470825": {
+      "go_path_id": "8764987792409750569",
+      "source_text": "屏蔽队友语音",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3949072366455316945": {
+      "go_path_id": "-8577044498318964234",
+      "source_text": "100",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "3950065243969893492": {
+      "go_path_id": "-77611352776178979",
+      "source_text": "地基",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "4008965986097518637": {
+      "go_path_id": "39913804148956246",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 25,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "4086277042310214978": {
+      "go_path_id": "-6990612435755290500",
+      "source_text": "饮水",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    },
+    "4090127861560562177": {
+      "go_path_id": "3361084239203919150",
+      "source_text": "3",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "4145801314758310149": {
+      "go_path_id": "1608607787719094257",
+      "source_text": "拆除能量外墙甲",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "4197434279050598039": {
+      "go_path_id": "142312837340087445",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 1,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "4256422656060720754": {
+      "go_path_id": "-2534874908288899796",
+      "source_text": "排行榜",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 22,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8117647767066956,
+        "g": 0.7647059559822083,
+        "b": 0.7529412508010864,
+        "a": 1.0
+      }
+    },
+    "4288575653080273012": {
+      "go_path_id": "3571006304837853751",
+      "source_text": "99",
+      "font": {
+        "file_id": 0,
+        "path_id": "-5749314977429426059"
+      },
+      "font_data": {
+        "m_FontSize": 19,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.9056603908538818,
+        "g": 0.9056603908538818,
+        "b": 0.9056603908538818,
+        "a": 1.0
+      }
+    },
+    "4378224772170018683": {
+      "go_path_id": "7524685988939073874",
+      "source_text": "提示：XXXXXXXXXxxxxxxxxxxx11111111111111111111111111111111111111111111111111111111111111111111",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 0.800000011920929
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "4453626497604176827": {
+      "go_path_id": "3347779702572514225",
+      "source_text": "旋转",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "4485377743460531813": {
+      "go_path_id": "3208456749343675612",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 103,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "4519169880083829548": {
+      "go_path_id": "-2336201634749607237",
+      "source_text": "卸下能量外墙甲",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    },
+    "4519870591875781729": {
+      "go_path_id": "-6148808690416943275",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "4557937103359987515": {
+      "go_path_id": "-6435899770711315605",
+      "source_text": "进 攻",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "4583226298752883982": {
+      "go_path_id": "2013023906929441949",
+      "source_text": "详细",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.4392157196998596,
+        "g": 0.4392157196998596,
+        "b": 0.4392157196998596,
+        "a": 1.0
+      }
+    },
+    "4700840445093812828": {
+      "go_path_id": "1972111095421383233",
+      "source_text": "附近有<color=red>危险玩家</color>出没",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 27,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.9529412388801575,
+        "g": 0.7725490927696228,
+        "b": 0.5647059082984924,
+        "a": 1.0
+      }
+    },
+    "4719627139049688333": {
+      "go_path_id": "-3130393216049346602",
+      "source_text": "您已进入防空炮塔区，禁止飞行",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 27,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.9529412388801575,
+        "g": 0.7725490927696228,
+        "b": 0.5647059082984924,
+        "a": 1.0
+      }
+    },
+    "4754680815372280547": {
+      "go_path_id": "-2521196550814730832",
+      "source_text": "(点击设置)",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 258,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 0.7279430627822876,
+        "b": 0.0,
+        "a": 1.0
+      }
+    },
+    "4829350285128334631": {
+      "go_path_id": "5344378143879814126",
+      "source_text": "回收",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    },
+    "4845254715032328744": {
+      "go_path_id": "6179084478151294884",
+      "source_text": "改名",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.16981130838394165,
+        "g": 0.16981130838394165,
+        "b": 0.16981130838394165,
+        "a": 1.0
+      }
+    },
+    "4986058631447505654": {
+      "go_path_id": "-297639328991761636",
+      "source_text": "基地建设",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 29,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "5024676365678952606": {
+      "go_path_id": "1300241289484683539",
+      "source_text": "100%",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "5052359734832839646": {
+      "go_path_id": "-1857701862998980949",
+      "source_text": "设备",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "5405847638461969609": {
+      "go_path_id": "-3155757501924941012",
+      "source_text": "工业文明：",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 26,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 10,
+        "m_MaxSize": 26,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8117647767066956,
+        "g": 0.7450980544090271,
+        "b": 0.7450980544090271,
+        "a": 1.0
+      }
+    },
+    "5502149049269948269": {
+      "go_path_id": "9197597753775586639",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 25,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "5518451168534480119": {
+      "go_path_id": "-8145993004604648230",
+      "source_text": "+XX经验\n等级提升到XX\n+XX生命上限\n",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "5558464238571847252": {
+      "go_path_id": "3858511891099065672",
+      "source_text": "",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "5680954191680678011": {
+      "go_path_id": "5219360683684784382",
+      "source_text": "战局商店",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 22,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8117647767066956,
+        "g": 0.7647059559822083,
+        "b": 0.7529412508010864,
+        "a": 1.0
+      }
+    },
+    "5722576665349887302": {
+      "go_path_id": "-6274802201293571414",
+      "source_text": "更换皮肤",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "5840546367907458227": {
+      "go_path_id": "7046119786888392697",
+      "source_text": "0",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 18,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "5939687059914865262": {
+      "go_path_id": "-7248643175911743499",
+      "source_text": "防 守",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "5980737359440991811": {
+      "go_path_id": "-985002011568602673",
+      "source_text": "New Text",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 26,
+        "m_Alignment": 6,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 0.010698992758989334,
+        "b": 0.0,
+        "a": 1.0
+      }
+    },
+    "6014544754677224848": {
+      "go_path_id": "-5593314680986935990",
+      "source_text": "",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 23,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.12941177189350128,
+        "g": 0.125490203499794,
+        "b": 0.12941177189350128,
+        "a": 1.0
+      }
+    },
+    "6068555796403898078": {
+      "go_path_id": "8669366045323858169",
+      "source_text": "100",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "6080575431781002323": {
+      "go_path_id": "-8241727558476388399",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 1,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "6289894328366368661": {
+      "go_path_id": "2381188456808222426",
+      "source_text": "修理",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "6310395533122895345": {
+      "go_path_id": "6815837275064008144",
+      "source_text": "1111",
+      "font": {
+        "file_id": 0,
+        "path_id": "-5749314977429426059"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.21226418018341064,
+        "g": 0.4062936305999756,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "6318129420930984253": {
+      "go_path_id": "1581416612174120233",
+      "source_text": "附近",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "6335580556434156901": {
+      "go_path_id": "-2588925721145060958",
+      "source_text": "4",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "6391397265840227051": {
+      "go_path_id": "2800267892612827286",
+      "source_text": "回收",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "6397082586358036035": {
+      "go_path_id": "8263758056728568255",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "6460262953630266872": {
+      "go_path_id": "-1800962004909881791",
+      "source_text": "战队",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "6552165885704539233": {
+      "go_path_id": "6827538851860229357",
+      "source_text": "成熟时间：99分",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 94,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "6704853526589123302": {
+      "go_path_id": "7470532311553116786",
+      "source_text": "20",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 16,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 1,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "6724310773684070708": {
+      "go_path_id": "1550443897780141151",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "6984022826165920751": {
+      "go_path_id": "2577700756676510762",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "7011345186770876078": {
+      "go_path_id": "6982253263147697995",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 14,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 10,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "7040287158066709219": {
+      "go_path_id": "3369038924377661281",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 1,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "7045368691229852848": {
+      "go_path_id": "-8270202811004995562",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "7092486444663783770": {
+      "go_path_id": "-6418269993996099901",
+      "source_text": "-",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 0,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "7117568145025775489": {
+      "go_path_id": "-852187074179604671",
+      "source_text": "1",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "7280114483168020900": {
+      "go_path_id": "-4863254922398854569",
+      "source_text": "充能柱已上升，请攻击充能柱以破坏装甲的充能过程",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 27,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.9529412388801575,
+        "g": 0.7725490927696228,
+        "b": 0.5647059082984924,
+        "a": 1.0
+      }
+    },
+    "7508121281155639800": {
+      "go_path_id": "6336639569031567662",
+      "source_text": "阿达啊的啊大",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 5,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "7519032406012530317": {
+      "go_path_id": "576237674447819682",
+      "source_text": "100%",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 26,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 10,
+        "m_MaxSize": 26,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8117647767066956,
+        "g": 0.7450980544090271,
+        "b": 0.7450980544090271,
+        "a": 1.0
+      }
+    },
+    "7635519418337719459": {
+      "go_path_id": "-4999748376509174088",
+      "source_text": "装 备",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "7703517866090752864": {
+      "go_path_id": "-9858606520078435",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "7768214996161668618": {
+      "go_path_id": "-6566186084343881433",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "7783391444894698644": {
+      "go_path_id": "2017094518274139660",
+      "source_text": "100%",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 26,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 10,
+        "m_MaxSize": 26,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8117647767066956,
+        "g": 0.7450980544090271,
+        "b": 0.7450980544090271,
+        "a": 1.0
+      }
+    },
+    "7787595725245338232": {
+      "go_path_id": "4958458042811852912",
+      "source_text": "玩家名称玩家名称",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "7815163849874324570": {
+      "go_path_id": "6662014614147084989",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 1,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "7938088503564094696": {
+      "go_path_id": "2519056295302520251",
+      "source_text": "99",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 1,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "8000599845067586849": {
+      "go_path_id": "-1461069788884351600",
+      "source_text": "刷新计时\nxxxxx秒",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 20,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 0.6700000166893005
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "8048158296656717530": {
+      "go_path_id": "3386182549892733690",
+      "source_text": "逃生机已到位",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 1,
+        "m_LineSpacing": 0.5
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "8136800966860502589": {
+      "go_path_id": "-1473275493191567863",
+      "source_text": "您已进入辐射区，需穿戴防辐射口罩",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 27,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.9529412388801575,
+        "g": 0.7725490927696228,
+        "b": 0.5647059082984924,
+        "a": 1.0
+      }
+    },
+    "8325769129955153877": {
+      "go_path_id": "1885831117161988735",
+      "source_text": "解锁计时\nxxxxx秒",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 20,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 20,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 0.6700000166893005
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "8361439277586139444": {
+      "go_path_id": "-2949627331489650088",
+      "source_text": "返回大厅",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 22,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 22,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8117647767066956,
+        "g": 0.7647059559822083,
+        "b": 0.7529412508010864,
+        "a": 1.0
+      }
+    },
+    "8422883145027579789": {
+      "go_path_id": "2286757010380606516",
+      "source_text": "玩家名称玩家名称",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 0,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "8676531153191416291": {
+      "go_path_id": "7989384379215614583",
+      "source_text": "您已变为<color=red>危险玩家</color>",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 27,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.9529412388801575,
+        "g": 0.7725490927696228,
+        "b": 0.5647059082984924,
+        "a": 1.0
+      }
+    },
+    "8703382281722733914": {
+      "go_path_id": "7643249636286479283",
+      "source_text": "G",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "8714036190818691136": {
+      "go_path_id": "6036577590061404453",
+      "source_text": "999",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 35,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "8780830929963125080": {
+      "go_path_id": "-5239347365862416367",
+      "source_text": "升级",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.8666667342185974,
+        "g": 0.7058823704719543,
+        "b": 0.5215686559677124,
+        "a": 1.0
+      }
+    },
+    "8880818906193097770": {
+      "go_path_id": "8570651401975849918",
+      "source_text": "回收",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    },
+    "9093236533584420073": {
+      "go_path_id": "279857153400570842",
+      "source_text": "改名",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 28,
+        "m_FontStyle": 0,
+        "m_BestFit": 1,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 3,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "9128203887685681183": {
+      "go_path_id": "638103240240340622",
+      "source_text": "改名",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 30,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 3,
+        "m_MaxSize": 40,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.16981130838394165,
+        "g": 0.16981130838394165,
+        "b": 0.16981130838394165,
+        "a": 1.0
+      }
+    },
+    "9152788617218261541": {
+      "go_path_id": "1258506368021585337",
+      "source_text": "拆除",
+      "font": {
+        "file_id": 7,
+        "path_id": "-4720046316774500430"
+      },
+      "font_data": {
+        "m_FontSize": 25,
+        "m_FontStyle": 0,
+        "m_BestFit": 0,
+        "m_MinSize": 2,
+        "m_MaxSize": 28,
+        "m_Alignment": 4,
+        "m_AlignByGeometry": 0,
+        "m_RichText": 1,
+        "m_HorizontalOverflow": 0,
+        "m_VerticalOverflow": 0,
+        "m_LineSpacing": 1.0
+      },
+      "color": {
+        "r": 0.09433960914611816,
+        "g": 0.09433960914611816,
+        "b": 0.09433960914611816,
+        "a": 1.0
+      }
+    }
+  },
+  "limit": "Serialized typography is known; actual glyph rasterization depends on the original Unity builtin/external Font and rendering."
+}
