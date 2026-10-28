@@ -1,0 +1,31 @@
+name: Extract every original HUD component and its precise Unity Sprite links
+on:
+  push:
+    paths: [tools/export_full_hud_unity_graph.py,.github/workflows/export_full_hud_unity_graph.yml]
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  source-map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install "UnityPy>=1.20,<2" Pillow
+      - run: python -u tools/export_full_hud_unity_graph.py
+      - name: Save exhaustive original GameObject and component mapping
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/
+          if ! git diff --staged --quiet; then
+            git commit -m "Map every original HUD GameObject RectTransform UI component and Sprite PPtr"
+            git pull --rebase origin main
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-original-unity-hud-component-map
+          path: last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/
