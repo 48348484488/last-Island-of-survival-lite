@@ -1,51 +1,47 @@
-# Guia de Portabilidade para Mobile (Android APK) — C++ / Raylib
+# Last Island of Survival LITE — Android ARM64 (teste nativo)
 
-O código do jogo foi desenvolvido em **C++ nativo** utilizando a biblioteca **Raylib**, que possui suporte oficial direto para compilação em dispositivos móveis (Android).
+## O que está no jogo
 
----
+Existem dois clientes diferentes no mesmo repositório.
 
-## 🎮 Controles Mobile Integrados
-O arquivo `main.cpp` já vem com suporte nativo a touchscreen e controles virtuais:
-- **Analógico Virtual na Esquerda (Left Joystick):** Movimentação 360° com detecção de toque.
-- **Swipe na Direita (Right Screen):** Rotação suave da câmera (Yaw / Pitch).
-- **Botão [GOLPE] / [ATTACK]:** Desfere ataque com o Machado ou atira com o Rifle.
-- **Botão [PULO]:** Pula com física de gravidade.
-- **Botão [CORRER]:** Sprint com consumo de stamina.
-- **Botão [1P/3P]:** Alterna entre 1ª e 3ª pessoa.
-- **Hotbar Inferior Touch:** Toque no slot 1 (Machado) ou slot 2 (M4A1) para trocar de arma instantaneamente.
+- `viewer3d.py`: cliente 3D para **PC**, com 23 animações originais
+  amostradas do `authentic_animations.npz` e deformação esquelética por
+  `skinned_character.py`. Sua renderização usa OpenGL de desktop; esse código
+  **não é compilável diretamente para APK Android**.
+- `main.cpp`: cliente C++/Raylib, com cenário 3D, modelos/texturas extraídos,
+  machado, M4, recursos, coleta e controles de toque. **Usa animações
+  procedurais**; ainda não recebeu a conversão das 23 animações para Android.
+  Esta é a base do primeiro APK de teste.
 
----
+Não afirme que as duas versões têm paridade visual ou funcional.
 
-## 📱 Como Gerar o APK para Android
+## APK ARM64 e testes
 
-### Método 1: Usando Android Studio + NDK (Recomendado)
-1. Instale o **Android Studio** com o **NDK (Side by side)** e **CMake**.
-2. Baixe o template oficial do Raylib para Android:
-   ```bash
-   git clone https://github.com/raysan5/raylib-game-template-android
-   ```
-3. Copie o arquivo `main.cpp` e a pasta `assets/` para a pasta do projeto:
-   - `main.cpp` $\rightarrow$ `app/src/main/cpp/main.cpp`
-   - `assets/` $\rightarrow$ `app/src/main/assets/`
-4. Abra o projeto no Android Studio e clique em **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
-5. O APK estará pronto em `app/build/outputs/apk/debug/app-debug.apk` para instalar no celular!
+Workflow: `.github/workflows/build_android_raylib_lite.yml`.
 
----
+A Action compila a biblioteca nativa do C++ no Android NDK, utiliza Raymob
+e Raylib como host Android, copia apenas os 24 OBJ/PNG usados no motor
+C++ e gera APK de debug assinado para **arm64-v8a**, nome:
+`Last-Island-LITE-Recriado-Android-ARM64-v0.12.1-preview.apk`.
 
-### Método 2: Linha de Comando (Android NDK standalone)
-Você também pode compilar diretamente pelo terminal se tiver o Android NDK configurado:
-```bash
-cmake -B build-android \
-  -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
-  -DANDROID_ABI="arm64-v8a" \
-  -DANDROID_PLATFORM=android-24
+**Como baixar**: abra a execução mais recente do workflow no GitHub Actions,
+abra **Artifacts**, escolha `Last-Island-LITE-Recriado-Android-ARM64-APK`
+e extraia o APK do ZIP. Ou use o arquivo anexo do chat quando disponível.
 
-cmake --build build-android
-```
+**O que foi verificado**: compilação/assinatura/estrutura do APK,
+se a Action estiver verde. Ainda não equivale a teste real no seu aparelho,
+nem garante desempenho adequado.
 
----
+## O que falta
 
-## 💻 Como Compilar no PC (Windows)
-Basta clicar duas vezes em:
-- **`compilar_cpp.bat`**: Compila o jogo usando o compilador G++/Clang incluído.
-- **`iniciar_jogo_cpp.bat`**: Inicia o executável `game.exe`.
+- Converter as 23 animações originais do esqueleto Python para um
+  `ModelAnimation` ou skinning runtime GLES compatível com Android.
+- Reaproveitar o HUD Unity V12 completo no Raylib Android.
+  A HUD e os cliques originais V12 foram verificados no cliente Python do PC,
+  **não** foram automaticamente transferidos ao C++.
+- Validar resolução, FPS, colisões e controles em aparelho Android real
+  ou em Android virtual ARM64 com EGL funcional.
+
+O código e os assets recuperados do jogo original são usados para fins de
+análise e testes neste projeto; distribuição pública requer avaliação dos
+direitos sobre os materiais.
