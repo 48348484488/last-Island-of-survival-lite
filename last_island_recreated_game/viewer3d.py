@@ -20,7 +20,9 @@ from OpenGL.GLU import *
 from PIL import Image
 from skinned_character import SkinnedCharacter
 from hud_original_loader import resolve_original_hud_image
-from original_hud_runtime import OriginalUnityHud, game_hud_state
+from original_hud_runtime import OriginalUnityHud, game_hud_state, viewport_bounds
+from original_hud_touch import OriginalHudTouch
+from original_hud_bindings import original_touch_rects
 
 def _next_pot(n):
     p = 1
@@ -1090,6 +1092,14 @@ def main():
     smoke_frames = max(0, int(os.environ.get('LIOS_SMOKE_FRAMES', '0')))
     smoke_profile = os.environ.get('LIOS_SMOKE_PROFILE', 'melee').lower()
     smoke_capture = os.environ.get('LIOS_SMOKE_SCREENSHOT', '')
+    # Pygame FINGERDOWN/FINGERMOTION/FINGERUP -> original Unity UGUI bounds.
+    # This is for source-derived desktop touch integration; NOT an Android APK.
+    touch_enabled = os.environ.get('LIOS_TOUCH_MODE', '0') == '1'
+    smoke_touch = smoke_frames > 0 and os.environ.get('LIOS_SMOKE_TOUCH', '0') == '1'
+    if smoke_touch and not touch_enabled:
+        raise ValueError('LIOS_SMOKE_TOUCH requires LIOS_TOUCH_MODE=1')
+    if smoke_touch and smoke_frames < 4:
+        raise ValueError('Touch GL smoke test requires >= 4 frames')
     strict_hud = os.environ.get('LIOS_STRICT_HUD', '0') == '1'
     if smoke_frames and smoke_profile not in ('melee', 'rifle'):
         raise ValueError('Invalid LIOS_SMOKE_PROFILE')
@@ -1167,6 +1177,11 @@ def main():
         raise ValueError('LIOS_HUD_MODE must be source or legacy')
     original_hud = None
     hud = None
+    touch = OriginalHudTouch() if touch_enabled else None
+    touch_auto_run = False
+    touch_actions_seen = set()
+    touch_gameplay_attacks = 0
+    touch_gameplay_jumps = 0
     if hud_mode == 'source':
         try:
             original_hud = OriginalUnityHud()
@@ -1175,6 +1190,8 @@ def main():
             print('Source HUD unavailable, legacy fallback:', exc)
     if original_hud is None:
         hud = FastHUD(A)
+    if touch is not None:
+        print('TOUCH: original Unity source hitboxes + source joystick enabled')
 
     px, py, pz = 0.0, 0.0, 0.0
     yaw, pitch = 0.0, 0.0
@@ -1213,8 +1230,61 @@ def main():
     smoke_count = 0
     while running:
         dt = min(clock.tick(60) / 1000.0, 0.05)
+        if touch is not None:
+            touch.set_profile('on-foot-rifle' if equipped_slot == 1 else 'on-foot-melee')
+        if smoke_touch and smoke_count == 0:
+            # Inject real pygame touch events through exactly the same path
+            # as SDL device touches. All target positions are source-RectTransform
+            # centers, with no manually invented screen hitboxes.
+            p = 'on-foot-rifle' if equipped_slot == 1 else 'on-foot-melee'
+            targets = original_touch_rects(profile=p)
+            def _source_to_finger(action, fid, event_type):
+                b = targets[action]
+                x = (b['left'] + b['right']) / (2 * 1920)
+                y = (b['top'] + b['bottom']) / (2 * 1080)
+                pygame.event.post(pygame.event.Event(
+                    event_type, finger_id=fid, x=x, y=y,
+                    dx=0.0, dy=0.0, touch_id=0))
+            _source_to_finger('jump', 1001, FINGERDOWN)
+            _source_to_finger('attack', 1002, FINGERDOWN)
+        elif smoke_touch and smoke_count == 2:
+            for finger_id in (1001,1002):
+                pygame.event.post(pygame.event.Event(
+                    FINGERUP, finger_id=finger_id, x=0.0, y=0.0,
+                    dx=0.0, dy=0.0, touch_id=0))
 
         for ev in pygame.event.get():
+            if touch is not None and ev.type in (FINGERDOWN,FINGERMOTION,FINGERUP):
+                if ev.type == FINGERDOWN:
+                    edges = touch.start(ev.finger_id, ev.x * W, ev.y * H, W, H)
+                elif ev.type == FINGERMOTION:
+                    edges = touch.move(ev.finger_id, ev.x * W, ev.y * H, W, H)
+                else:
+                    edges = touch.end(ev.finger_id)
+                for action, phase in edges:
+                    if phase != 'down':
+                        continue
+                    touch_actions_seen.add(action)
+                    if action == 'attack':
+                        pygame.event.post(pygame.event.Event(
+                            MOUSEBUTTONDOWN, button=1, pos=(0,0),
+                            lios_original_touch=True))
+                    elif action == 'aim':
+                        pygame.event.post(pygame.event.Event(
+                            MOUSEBUTTONDOWN, button=3, pos=(0,0),
+                            lios_original_touch=True))
+                    elif action == 'reload':
+                        pygame.event.post(pygame.event.Event(
+                            KEYDOWN, key=K_r, mod=0, unicode='',
+                            lios_original_touch=True))
+                    elif action == 'auto_run':
+                        touch_auto_run = not touch_auto_run
+                    elif action in ('inventory','craft','settings','quick_chat'):
+                        # These UGUI screens are not yet reconstructed. Do not
+                        # show a fake panel or claim they already work.
+                        msg = 'Original UI %s: painel ainda nao implementado' % action
+                        msg_t = 2.5
+                continue
             if ev.type == QUIT:
                 running = False
             elif ev.type == KEYDOWN:
@@ -1235,8 +1305,11 @@ def main():
                     msg = 'Recarregado (30/30)'; msg_t = 1.5
                 elif ev.key == K_F4:
                     running = False
-            elif ev.type == MOUSEBUTTONDOWN and locked:
+            elif ev.type == MOUSEBUTTONDOWN and locked and not (
+                touch_enabled and getattr(ev, 'touch', False)):
                 if ev.button == 1 and not is_attacking:
+                    if getattr(ev, 'lios_original_touch', False):
+                        touch_gameplay_attacks += 1
                     if equipped_slot == 1:
                         # Gunfire logic (M4A1)
                         if ammo_cur > 0:
@@ -1356,6 +1429,12 @@ def main():
             if keys[K_s]: input_fwd -= 1.0
             if keys[K_d]: input_right += 1.0
             if keys[K_a]: input_right -= 1.0
+            if touch is not None:
+                axis_x, axis_y = touch.axis
+                input_right += axis_x
+                input_fwd -= axis_y
+                if touch_auto_run and math.hypot(axis_x, axis_y) < 0.1:
+                    input_fwd += 1.0
 
             # World movement vector:
             mx = input_fwd * fx + input_right * s_rx
@@ -1363,7 +1442,7 @@ def main():
 
             ml = math.hypot(mx, mz)
             is_moving  = ml > 0.01
-            is_running = is_moving and keys[K_LSHIFT] and stamina > 5
+            is_running = is_moving and (keys[K_LSHIFT] or touch_auto_run) and stamina > 5
 
             if is_running:  stamina = max(0.0, stamina - 22.0 * dt)
             else:           stamina = min(100.0, stamina + 14.0 * dt)
@@ -1371,13 +1450,19 @@ def main():
             water = max(0.0, water - dt * 0.25)
 
             if is_moving:
-                cur_spd = speed * (1.8 if is_running else 1.0)
+                touch_stance = (0.35 if touch is not None and touch.held('prone')
+                                else 0.65 if touch is not None and touch.held('crouch')
+                                else 1.0)
+                cur_spd = speed * (1.8 if is_running else 1.0) * touch_stance
                 mx /= ml; mz /= ml
                 px += mx * cur_spd * dt
                 pz += mz * cur_spd * dt
                 walk_phase += dt * (1.8 if is_running else 1.0)
 
-            if is_grounded and keys[K_SPACE]:
+            if is_grounded and (keys[K_SPACE] or
+                                (touch is not None and touch.held('jump'))):
+                if touch is not None and touch.held('jump'):
+                    touch_gameplay_jumps += 1
                 vert_vel = 8.5; is_grounded = False; jump_t = 0.0
             if not is_grounded:
                 jump_t   += dt
@@ -1408,11 +1493,14 @@ def main():
         # ---- Per-frame btn_pressed from keyboard ----
         if locked:
             _kn = pygame.key.get_pressed()
-            if _kn[K_SPACE]:   btn_pressed.add('jump')
+            if _kn[K_SPACE] or (touch is not None and touch.held('jump')):
+                btn_pressed.add('jump')
             else:              btn_pressed.discard('jump')
-            if _kn[K_c]:       btn_pressed.add('crouch')
+            if _kn[K_c] or (touch is not None and touch.held('crouch')):
+                btn_pressed.add('crouch')
             else:              btn_pressed.discard('crouch')
-            if _kn[K_z]:       btn_pressed.add('prone')
+            if _kn[K_z] or (touch is not None and touch.held('prone')):
+                btn_pressed.add('prone')
             else:              btn_pressed.discard('prone')
             if is_running:     btn_pressed.add('sprint')
             else:              btn_pressed.discard('sprint')
@@ -1520,6 +1608,19 @@ def main():
         if smoke_frames:
             smoke_count += 1
             if smoke_count >= smoke_frames:
+                if smoke_touch:
+                    if not {'attack','jump'} <= touch_actions_seen:
+                        raise RuntimeError('Original source touch hitbox events missing')
+                    if touch_gameplay_attacks != 1 or touch_gameplay_jumps != 1:
+                        raise RuntimeError('Original touch did not affect attack and jump gameplay')
+                    if py <= 0.0:
+                        raise RuntimeError('Source jump button did not raise player off ground')
+                    print('LIOS_ORIGINAL_TOUCH_REAL_GAMEPLAY_PASS',
+                          'source_actions=' + repr(sorted(touch_actions_seen)),
+                          'attacks=' + str(touch_gameplay_attacks),
+                          'jumps=' + str(touch_gameplay_jumps),
+                          'player_jump_height=' + repr(round(py,3)),
+                          'ammo=' + str(ammo_cur))
                 if strict_hud and original_hud is None:
                     raise RuntimeError('Game fell back to legacy HUD during strict GL smoke test')
                 if smoke_capture:
