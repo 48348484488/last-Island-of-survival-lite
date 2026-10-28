@@ -245,6 +245,12 @@ int main() {
     if (modelIron.meshCount > 0 && texIron.id > 0)
         SetMaterialTexture(&modelIron.materials[0], MATERIAL_MAP_DIFFUSE, texIron);
 
+    // Transparent original Unity battlepanel sprites, not the handmade HUD.
+    Texture2D originalHudTexture=LoadTexture("assets/hud_original_overlay_rgba.png");
+    bool hasOriginalHud=originalHudTexture.id>0;
+    Texture2D itemAxeIcon=LoadTexture("assets/icon_cj_sf.png");
+    Texture2D itemRifleIcon=LoadTexture("assets/icon_m4.png");
+
     Model modelStone   = LoadModel("assets/ore_yanshikuang_01.obj");
     Texture2D texStone = LoadTexture("assets/ore_yanshikuang_01_d.png");
     if (modelStone.meshCount > 0 && texStone.id > 0)
@@ -331,15 +337,36 @@ int main() {
 
         Vector2 touchMoveDir = { 0.0f, 0.0f };
 
+        // When displaying the Unity HUD, align touch targets with its real
+        // 1920x1080 RectTransforms instead of handmade desktop buttons.
+        float canvasScale=std::min(float(GetScreenWidth())/1920.f,float(GetScreenHeight())/1080.f);
+        float canvasLeft=(GetScreenWidth()-1920.f*canvasScale)/2;
+        float canvasTop=(GetScreenHeight()-1080.f*canvasScale)/2;
+        auto unityRect=[&](float l,float t,float r,float b)->Rectangle{
+            return {canvasLeft+l*canvasScale,canvasTop+t*canvasScale,
+                    (r-l)*canvasScale,(b-t)*canvasScale};
+        };
+        if(hasOriginalHud){
+            btnAttack.bounds=unityRect(1501.60001f,674.70001f,1683.60001f,856.70001f);
+            btnJump.bounds=unityRect(1769.48796f,724.97160f,1899.49836f,854.98200f);
+            btnSprint.bounds=unityRect(276.3f,334.6f,365.3f,423.6f);
+            // Hotbar placement follows the on-foot battlepanel bottom rail.
+            btnSlot0.bounds=unityRect(781,930,866,1018);
+            btnSlot1.bounds=unityRect(875,930,960,1018);
+            leftStick.center={canvasLeft+326.3f*canvasScale,canvasTop+794.7f*canvasScale};
+            leftStick.radius=165.f*canvasScale;
+        }
+
         // Process all active touches
         for (int i = 0; i < touchCount; i++) {
             Vector2 touchPos = GetTouchPosition(i);
 
             // Left Joystick interaction (left side of screen)
-            if (touchPos.x < (float)screenWidth * 0.45f && touchPos.y > (float)screenHeight * 0.4f) {
+            if ((hasOriginalHud && CheckCollisionPointRec(touchPos,unityRect(41.425f,454.8f,611.425f,965.2f))) ||
+                (!hasOriginalHud && touchPos.x < (float)screenWidth * 0.45f && touchPos.y > (float)screenHeight * 0.4f)) {
                 if (!leftStick.active) {
                     leftStick.active = true;
-                    leftStick.center = touchPos;
+                    if (!hasOriginalHud)leftStick.center = touchPos;
                     leftStick.knob = touchPos;
                     leftStick.touchId = i;
                 } else if (leftStick.touchId == i) {
@@ -375,10 +402,13 @@ int main() {
             leftStick.touchId = -1;
         }
 
-        // Apply touch button clicks
-        if (btnCam.isPressed) player.thirdPerson = !player.thirdPerson;
-        if (btnSlot0.isPressed) player.equippedSlot = 0;
-        if (btnSlot1.isPressed) player.equippedSlot = 1;
+        // Touch edge triggers: holding a button must not switch cameras
+        // back and forth every frame.
+        static bool oldCamera=false,oldSlot0=false,oldSlot1=false;
+        if (btnCam.isPressed&&!oldCamera)player.thirdPerson=!player.thirdPerson;
+        if (btnSlot0.isPressed&&!oldSlot0)player.equippedSlot=0;
+        if (btnSlot1.isPressed&&!oldSlot1)player.equippedSlot=1;
+        oldCamera=btnCam.isPressed;oldSlot0=btnSlot0.isPressed;oldSlot1=btnSlot1.isPressed;
 
         // ---------------------------------------------------------------------------------
         // Desktop Mouse Look Processing
@@ -790,6 +820,42 @@ int main() {
         // ---------------------------------------------------------------------------------
         // 2D HUD / SURVIVAL INTERFACE (Optimized for Mobile & Desktop)
         // ---------------------------------------------------------------------------------
+        if (hasOriginalHud) {
+            DrawTexturePro(originalHudTexture,
+                {0,0,float(originalHudTexture.width),float(originalHudTexture.height)},
+                {canvasLeft,canvasTop,1920.f*canvasScale,1080.f*canvasScale},
+                {0,0},0,WHITE);
+            // Overlay the missing dynamic values. Base sprites/positions are
+            // original Unity, while text uses Raylib's replacement font.
+            int fontpx=std::max(11,int(20*canvasScale));
+            auto label=[&](const char* value,float x,float y,Color tint){
+                DrawText(value,int(canvasLeft+x*canvasScale),
+                         int(canvasTop+y*canvasScale),fontpx,tint);
+            };
+            label(TextFormat("%d",int(player.health)),888,1035,WHITE);
+            label(TextFormat("%d",int(player.hunger)),1052,1035,WHITE);
+            label(TextFormat("%d",int(player.thirst)),1170,1035,WHITE);
+            label(TextFormat("%d",player.woodCount),1110,965,WHITE);
+            label(TextFormat("%d",player.ironCount),1198,965,WHITE);
+            label(TextFormat("%d",player.stoneCount),1280,965,WHITE);
+            label(TextFormat("%d",player.sulfurCount),1360,965,WHITE);
+            // Item icons were proven against cfg.ItemCfg.oc and Unity Sprite
+            // PathIDs (tubiao1/cj_sf and gun/m4).
+            auto itemIcon=[&](Texture2D icon,float x,float y){
+                if(icon.id)DrawTexturePro(icon,
+                    {0,0,float(icon.width),float(icon.height)},
+                    {canvasLeft+x*canvasScale,canvasTop+y*canvasScale,
+                      66*canvasScale,66*canvasScale},{0,0},0,WHITE);
+            };
+            itemIcon(itemAxeIcon,791,936);itemIcon(itemRifleIcon,885,936);
+            // Keep the original joystick graphic, animate thumb position.
+            if(leftStick.active){
+                DrawCircleV(leftStick.knob,18*canvasScale,Fade(WHITE,.55f));
+            }
+            if(player.equippedSlot==0){
+                DrawRectangleLinesEx(btnSlot0.bounds,3*canvasScale,GOLD);
+            } else DrawRectangleLinesEx(btnSlot1.bounds,3*canvasScale,GOLD);
+        } else {
         // Crosshair in center
         int cx = screenWidth / 2;
         int cy = screenHeight / 2;
@@ -885,6 +951,7 @@ int main() {
         DrawBtn(btnJump);
         DrawBtn(btnSprint);
         DrawBtn(btnCam);
+        } // Original Unity HUD versus simplified desktop fallback
 
         EndDrawing();
     }
@@ -893,6 +960,9 @@ int main() {
     // Cleanup Resources
     // -------------------------------------------------------------------------------------
     unityRig.unload();
+    if(originalHudTexture.id)UnloadTexture(originalHudTexture);
+    if(itemAxeIcon.id)UnloadTexture(itemAxeIcon);
+    if(itemRifleIcon.id)UnloadTexture(itemRifleIcon);
     UnloadModel(modelTorso);   UnloadTexture(texTorso);
     UnloadModel(modelPants);   UnloadTexture(texPants);
     UnloadModel(modelHead);    UnloadTexture(texHead);
