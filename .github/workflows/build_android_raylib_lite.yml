@@ -94,7 +94,7 @@ jobs:
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_melee.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_rifle.png
           cd /tmp/lios-raymob
-          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.16.1-dynamic-original-compass/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
+          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.16.2-dynamic-original-hotbar/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
@@ -113,6 +113,10 @@ jobs:
           assert 'GetMouseButtonPressed' not in game or True
           assert '#if !defined(__ANDROID__)' in game
           assert 'hudInput.justPressed(HA::Jump)' in game
+          assert 'selectedHotbarSlot=i+2;player.equippedSlot=-1;aim=false;' in game
+          assert 'selectedResource=i;activePanel=1' not in game
+          assert 'SlotHighlight6' in game and 'originalHotbarSelection' in game
+          print('LIOS_SOURCE_HOTBAR_SEVEN_DYNAMIC_SLOT_STATES_PASS')
           print('LIOS_TOUCH_ALL_SEVEN_UNITY_SLOTS_AND_JUMP_EDGE_PASS')
           PY
 
@@ -143,6 +147,7 @@ jobs:
               'assets/assets/hud_original_melee.png',
               'assets/assets/hud_original_rifle.png',
               'assets/assets/hud_original_compass_strip.png',
+              'assets/assets/hud_original_hotbar_selection.png',
               'assets/assets/hud_original_joystick_knob.png',
               'assets/assets/icon_resource_wood.png',
               'assets/assets/icon_resource_metal.png',
@@ -180,6 +185,12 @@ jobs:
             wc,hc=atlas.width//4,atlas.height//18
             assert ImageChops.difference(atlas.crop((0,0,wc,hc)),atlas.crop((wc,0,2*wc,hc))).getbbox() is not None
             print('LIOS_UNITY_DYNAMIC_COMPASS_72_SOURCE_FRAMES_PASS',wc,hc,atlas.size)
+            hotbar=Image.open(io.BytesIO(z.read('assets/assets/hud_original_hotbar_selection.png'))).convert('RGBA')
+            assert hotbar.width % 7 == 0 and hotbar.height > 0
+            hw=hotbar.width//7
+            for i in range(7):
+              assert hotbar.crop((hw*i,0,hw*(i+1),hotbar.height)).getbbox() is not None, i
+            print('LIOS_UNITY_SEVEN_SOURCE_HIGHLIGHT_TEXTURES_PASS',hotbar.size)
             for suffix in ('man_clothes_chushijuese_01_ba.png',
                            'man_clothes_yf_0_ba.png',
                            'man_trousers_chushijuese_01_ba.png',
