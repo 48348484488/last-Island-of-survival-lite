@@ -1,0 +1,86 @@
+{
+  "stage": "3: draw/holster and weapon switch",
+  "source_controller": "role.ab",
+  "source_anim": "animationbundle.ab",
+  "source_code": "NawuqiState.cs / ShouwuqiState.cs",
+  "state_clips": {
+    "UpperBody Layer.Shouwuqi.chongfengqiang_hengwo_zhan_right_shouwuqi01": [
+      "5714370143701496654"
+    ],
+    "UpperBody Layer.Shouwuqi.dao_zhan_shouwuqi01": [
+      "-292624572431209125"
+    ],
+    "UpperBody Layer.Nawuqi.chongfengqiang_hengwo_zhan_right_nawuqi01": [
+      "463748819163163571"
+    ],
+    "UpperBody Layer.Nawuqi.dao_zhan_nawuqi01": [
+      "-2420338730600833779"
+    ]
+  },
+  "clips": {
+    "axe_holster": {
+      "name": "dao_zhan_shouwuqi01",
+      "path_id": "-292624572431209125",
+      "frames": 14,
+      "fps": 30.0,
+      "arm_motion_deg": {
+        "Bip001 R UpperArm": 29.35,
+        "Bip001 R Forearm": 35.99,
+        "Bip001 R Hand": 21.66,
+        "Bip001 L UpperArm": 11.77,
+        "Bip001 L Forearm": 17.21
+      },
+      "scale_curve_peak": 2.0
+    },
+    "axe_draw": {
+      "name": "dao_zhan_nawuqi01",
+      "path_id": "-2420338730600833779",
+      "frames": 14,
+      "fps": 30.0,
+      "arm_motion_deg": {
+        "Bip001 R UpperArm": 29.35,
+        "Bip001 R Forearm": 35.99,
+        "Bip001 R Hand": 21.66,
+        "Bip001 L UpperArm": 11.77,
+        "Bip001 L Forearm": 17.47
+      },
+      "scale_curve_peak": 2.0
+    },
+    "rifle_holster": {
+      "name": "chongfengqiang_hengwo_zhan_right_shouwuqi01",
+      "path_id": "5714370143701496654",
+      "frames": 14,
+      "fps": 30.0,
+      "arm_motion_deg": {
+        "Bip001 R UpperArm": 68.66,
+        "Bip001 R Forearm": 78.38,
+        "Bip001 R Hand": 51.75,
+        "Bip001 L UpperArm": 84.94,
+        "Bip001 L Forearm": 30.84
+      },
+      "scale_curve_peak": 2.0
+    },
+    "rifle_draw": {
+      "name": "chongfengqiang_hengwo_zhan_right_nawuqi01",
+      "path_id": "463748819163163571",
+      "frames": 14,
+      "fps": 30.0,
+      "arm_motion_deg": {
+        "Bip001 R UpperArm": 62.67,
+        "Bip001 R Forearm": 90.79,
+        "Bip001 R Hand": 51.75,
+        "Bip001 L UpperArm": 84.94,
+        "Bip001 L Forearm": 56.71
+      },
+      "scale_curve_peak": 2.0
+    }
+  },
+  "game_npz_total": 33,
+  "glb_name": "sacar_guardar_original_machado_3d.glb",
+  "glb_sha256": "b87345a4a41198acfe08af4d68d246b3ab84a69702fdb123fa0976528dc1494f",
+  "runtime_status": "Only source curves added to game NPZ. Runtime button/transition logic NOT yet changed; awaiting visual review.",
+  "original_event_times": {
+    "holster_weapon_slot_seconds": 0.4,
+    "draw_weapon_slot_seconds": 0.2
+  }
+}
