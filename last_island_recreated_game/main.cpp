@@ -480,7 +480,13 @@ int main() {
         float currentSpeed = player.speed * (player.isRunning ? 1.75f : 1.0f) *
             (prone?.35f:(crouch?.65f:1.f));
 
-        if (Vector3Length(moveDir) > 0.05f) {
+        // Keep the analog speed and the gait phase tied to actual distance.
+        // Previously any tiny joystick deflection instantly moved at FULL
+        // velocity while the run clip advanced at a fixed time rate.
+        const float moveAmount=Vector3Length(moveDir);
+        const bool moving=moveAmount>0.09f;
+        const float driveScale=std::min(1.0f,moveAmount);
+        if (moving) {
             if(player.isGrounded){
                 stepTimer+=dt;
                 if(stepTimer>=(player.isRunning?.28f:.46f)){
@@ -489,7 +495,7 @@ int main() {
                 }
             }
             moveDir = Vector3Normalize(moveDir);
-            player.position = Vector3Add(player.position, Vector3Scale(moveDir, currentSpeed * dt));
+            player.position = Vector3Add(player.position, Vector3Scale(moveDir, currentSpeed * driveScale * dt));
             player.walkCycle += dt * (player.isRunning ? 12.0f : 8.0f);
 
             if (player.isRunning) {
@@ -646,9 +652,12 @@ int main() {
         // Original skeletal state machine, using the same clip selection,
         // frame interpolation, and 0.15s crossfade as PC viewer3d.py.
         if (hasUnityRig) {
-            bool moving=Vector3Length(moveDir)>0.05f;
             animationIdleTime+=dt;
-            if(moving)animationWalkTime+=dt*(player.isRunning?1.4f:1.f);
+            // Source locomotion is an in-place 64-bone clip. Advance it by
+            // the same speed ratio as the physically traveled distance, so
+            // sprint, slow analog input and crouch do not visibly over/under
+            // drive the feet compared with the avatar world displacement.
+            if(moving)animationWalkTime+=dt*(currentSpeed/player.speed)*driveScale;
             if(!player.isGrounded)animationJumpTime+=dt;
             else animationJumpTime=0;
             float localFwd=Vector3DotProduct(moveDir,forward);
