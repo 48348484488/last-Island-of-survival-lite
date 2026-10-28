@@ -1,0 +1,34 @@
+name: Export and audit original 23 Unity skeletal clips for Android
+on:
+  push:
+    paths:
+      - tools/export_mobile_skeletal_animation.py
+      - .github/workflows/test_mobile_skeletal_port.yml
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  export-source-skeleton:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            tools/export_mobile_skeletal_animation.py
+            last_island_recreated_game/authentic_animations.npz
+            last_island_recreated_game/master_character.npz
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install numpy
+      - name: Convert all original animation transforms and source skinning weights
+        run: |
+          python -u tools/export_mobile_skeletal_animation.py
+          test -s last_island_recreated_game/assets/mobile/lios_skeleton_v1.bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Last-Island-Native-23-Original-Animations
+          path: last_island_recreated_game/assets/mobile/lios_skeleton_v1.bin
+          if-no-files-found: error
+          retention-days: 15
