@@ -8,14 +8,15 @@
     1080
   ],
   "profile": "on-foot-melee",
-  "map_uv_source": "provided at runtime",
+  "map_uv_source": "illustrative center",
   "map_uv": [
-    0.55,
-    0.45
+    0.5,
+    0.5
   ],
   "map_window": 896,
-  "sprites_from_original_xapk": 49,
-  "sample_items_are_illustrative": true,
+  "camera_heading_degrees": 90.0,
+  "sprites_from_original_xapk": 36,
+  "sample_items_are_illustrative": false,
   "recttransform_local_scale_enabled": true,
   "recttransform_anchors_calculated_from_parent_rect_center": true,
   "source_9slice_border_metadata": 265,
@@ -80,76 +81,12 @@
       "h": 80
     },
     {
-      "go": "Image",
-      "sprite": "sprites/common/mask_leftrightfade_2373188531510254976.png",
+      "go": "m_compassImage",
+      "sprite": "compass_original_source.png",
       "x": 635,
       "y": 0,
       "w": 650,
       "h": 50
-    },
-    {
-      "go": "bg",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_jiaobu_di_-2530937214471986818.png",
-      "x": 942,
-      "y": 45,
-      "w": 36,
-      "h": 45
-    },
-    {
-      "go": "Image",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_jiaobu_s_-6532618611273286960.png",
-      "x": 944,
-      "y": 56,
-      "w": 32,
-      "h": 32
-    },
-    {
-      "go": "bg",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_di_-43881809000921824.png",
-      "x": 942,
-      "y": 45,
-      "w": 36,
-      "h": 45
-    },
-    {
-      "go": "Image",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_dis_-1780034560199882212.png",
-      "x": 944,
-      "y": 56,
-      "w": 32,
-      "h": 32
-    },
-    {
-      "go": "bg",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_zhandou_di_-2026295054211001088.png",
-      "x": 942,
-      "y": 45,
-      "w": 36,
-      "h": 45
-    },
-    {
-      "go": "image",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_qiang1_4060327712234828238.png",
-      "x": 944,
-      "y": 56,
-      "w": 32,
-      "h": 32
-    },
-    {
-      "go": "bg",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_di_-43881809000921824.png",
-      "x": 942,
-      "y": 45,
-      "w": 36,
-      "h": 45
-    },
-    {
-      "go": "Image",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_dis_-1780034560199882212.png",
-      "x": 944,
-      "y": 56,
-      "w": 32,
-      "h": 32
     },
     {
       "go": "Image (2)",
@@ -360,28 +297,12 @@
       "h": 81
     },
     {
-      "go": "m_Item1.source_item",
-      "sprite": "sprites/tubiao/tb_cl_mt_1047593260391222174.png",
-      "x": 638,
-      "y": 942,
-      "w": 74,
-      "h": 74
-    },
-    {
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
       "x": 727,
       "y": 936,
       "w": 86,
       "h": 86
-    },
-    {
-      "go": "m_Item2.source_item",
-      "sprite": "sprites/tubiao/tb_cl_st_-6161476993414394690.png",
-      "x": 733,
-      "y": 942,
-      "w": 74,
-      "h": 74
     },
     {
       "go": "Background",
@@ -392,28 +313,12 @@
       "h": 86
     },
     {
-      "go": "m_Item3.source_item",
-      "sprite": "sprites/tubiao/tb_yurou_1_-5595481497417969910.png",
-      "x": 828,
-      "y": 942,
-      "w": 74,
-      "h": 74
-    },
-    {
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
       "x": 917,
       "y": 936,
       "w": 86,
       "h": 86
-    },
-    {
-      "go": "m_Item4.source_item",
-      "sprite": "sprites/tubiao/tb_cl_tiek_-5409680548475430017.png",
-      "x": 923,
-      "y": 942,
-      "w": 74,
-      "h": 74
     },
     {
       "go": "Background",
@@ -424,14 +329,6 @@
       "h": 86
     },
     {
-      "go": "m_Item5.source_item",
-      "sprite": "sprites/tubiao/tb_sg_-8090483557887250535.png",
-      "x": 1018,
-      "y": 942,
-      "w": 74,
-      "h": 74
-    },
-    {
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
       "x": 1107,
@@ -440,28 +337,12 @@
       "h": 86
     },
     {
-      "go": "m_Item6.source_item",
-      "sprite": "sprites/tubiao/wupin_shuihu_1_-1475266076374094172.png",
-      "x": 1113,
-      "y": 942,
-      "w": 74,
-      "h": 74
-    },
-    {
       "go": "Background",
       "sprite": "sprites/battlepanel/1BattlePanel_buttle_fang_1_2502764458735635252.png",
       "x": 1202,
       "y": 936,
       "w": 86,
       "h": 86
-    },
-    {
-      "go": "m_Item7.source_item",
-      "sprite": "sprites/tubiao/tb_cl_st_-6161476993414394690.png",
-      "x": 1208,
-      "y": 942,
-      "w": 74,
-      "h": 74
     },
     {
       "go": "btn_pack",
@@ -616,7 +497,7 @@
       "h": 108
     }
   ],
-  "draw_count": 74,
+  "draw_count": 59,
   "hotbar_slot_centers": [
     [
       674.9772,
@@ -648,9 +529,9 @@
     ]
   ],
   "notes": [
+    "Compass RawImage from exact source m_Texture PathID",
     "Map position and crop are demonstrative, actual player XY and zoom are unknown.",
-    "Vital ratios supplied by explicit runtime state, using original Sprite colors.",
-    "Item images are example original Sprite assets, not a real inventory state."
+    "Vital ratios supplied by explicit runtime state, using original Sprite colors."
   ],
   "reproducible_script": "tools/render_source_unity_hud.py",
   "known_limits": [

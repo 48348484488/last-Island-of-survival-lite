@@ -14,7 +14,8 @@
     0.5
   ],
   "map_window": 896,
-  "sprites_from_original_xapk": 43,
+  "camera_heading_degrees": 0.0,
+  "sprites_from_original_xapk": 36,
   "sample_items_are_illustrative": false,
   "recttransform_local_scale_enabled": true,
   "recttransform_anchors_calculated_from_parent_rect_center": true,
@@ -80,76 +81,12 @@
       "h": 80
     },
     {
-      "go": "Image",
-      "sprite": "sprites/common/mask_leftrightfade_2373188531510254976.png",
+      "go": "m_compassImage",
+      "sprite": "compass_original_source.png",
       "x": 635,
       "y": 0,
       "w": 650,
       "h": 50
-    },
-    {
-      "go": "bg",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_jiaobu_di_-2530937214471986818.png",
-      "x": 942,
-      "y": 45,
-      "w": 36,
-      "h": 45
-    },
-    {
-      "go": "Image",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_jiaobu_s_-6532618611273286960.png",
-      "x": 944,
-      "y": 56,
-      "w": 32,
-      "h": 32
-    },
-    {
-      "go": "bg",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_di_-43881809000921824.png",
-      "x": 942,
-      "y": 45,
-      "w": 36,
-      "h": 45
-    },
-    {
-      "go": "Image",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_dis_-1780034560199882212.png",
-      "x": 944,
-      "y": 56,
-      "w": 32,
-      "h": 32
-    },
-    {
-      "go": "bg",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_zhandou_di_-2026295054211001088.png",
-      "x": 942,
-      "y": 45,
-      "w": 36,
-      "h": 45
-    },
-    {
-      "go": "image",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_qiang1_4060327712234828238.png",
-      "x": 944,
-      "y": 56,
-      "w": 32,
-      "h": 32
-    },
-    {
-      "go": "bg",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_di_-43881809000921824.png",
-      "x": 942,
-      "y": 45,
-      "w": 36,
-      "h": 45
-    },
-    {
-      "go": "Image",
-      "sprite": "sprites/battlepanel/1BattlePanel_sy_zaiju_dis_-1780034560199882212.png",
-      "x": 944,
-      "y": 56,
-      "w": 32,
-      "h": 32
     },
     {
       "go": "Image (2)",
@@ -536,7 +473,7 @@
       "h": 108
     }
   ],
-  "draw_count": 64,
+  "draw_count": 56,
   "hotbar_slot_centers": [
     [
       674.9772,
@@ -568,6 +505,7 @@
     ]
   ],
   "notes": [
+    "Compass RawImage from exact source m_Texture PathID",
     "Map position and crop are demonstrative, actual player XY and zoom are unknown.",
     "Actual health/food/water values are dynamic, not serialized in this prefab."
   ],
