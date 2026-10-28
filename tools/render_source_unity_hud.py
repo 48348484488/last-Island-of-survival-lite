@@ -11,14 +11,14 @@ state cannot be recovered solely from an unloaded prefab.
 """
 from pathlib import Path
 from functools import lru_cache
-from PIL import Image, ImageDraw, ImageFont, ImageChops
+from PIL import Image, ImageDraw, ImageFont, ImageChops, ImageOps
 from collections import defaultdict, Counter
 import argparse, json, math
 
 BUNDLE="assets/ui/battlepanel.ab"
 
 class SourceHUD:
-    def __init__(self,assets,canvas=(1920,1080)):
+    def __init__(self,assets,canvas=(1920,1080),map_uv=(0.5,0.5),map_window=896):
         self.assets=Path(assets)
         self.canvas=canvas
         a=json.loads((self.assets/"manifest_original.json").read_text(encoding="utf8"))
@@ -34,6 +34,22 @@ class SourceHUD:
         for v in a["sprites"]:self.sprite_names[v["name"]].append(v)
         self.layer=Image.new("RGBA",canvas)
         self.calls=[];self.notes=[]
+        self._source_hits=Counter()
+        self._skipped=Counter()
+        self.profile="on-foot-melee"
+        assert len(map_uv)==2 and all(0.0<=float(v)<=1.0 for v in map_uv),map_uv
+        assert 64<=int(map_window)<=2048,map_window
+        self.map_uv=tuple(map(float,map_uv))
+        self.map_window=int(map_window)
+
+    @lru_cache(None)
+    def scale(self,tid):
+        t=self.t.get(tid)
+        if not t:return (1.,1.)
+        p=self.t.get(t["father"])
+        psx,psy=self.scale(p["path_id"]) if p else (1.,1.)
+        ls=t.get("local_scale") or {}
+        return (psx*ls.get("x",1.),psy*ls.get("y",1.))
 
     @lru_cache(None)
     def rect(self,tid):
@@ -43,15 +59,18 @@ class SourceHUD:
         if parent:
             cx,cy,pw,ph=self.rect(parent["path_id"])
             pp=parent["pivot"]
+            parent_scale=self.scale(parent["path_id"])
         else:
             cx,cy,pw,ph=W/2,H/2,W,H
             pp={"x":.5,"y":.5}
+            parent_scale=(1.,1.)
         lo=t["anchor_min"];hi=t["anchor_max"]
         v=t["pivot"];pos=t["anchored_position"];size=t["size_delta"]
-        w=pw*(hi["x"]-lo["x"])+size["x"]
-        h=ph*(hi["y"]-lo["y"])+size["y"]
-        x=cx+((lo["x"]+hi["x"])/2-pp["x"])*pw+pos["x"]+(.5-v["x"])*w
-        y=cy+((lo["y"]+hi["y"])/2-pp["y"])*ph+pos["y"]+(.5-v["y"])*h
+        lx,ly=(t.get("local_scale") or {}).get("x",1.),(t.get("local_scale") or {}).get("y",1.)
+        w=(pw*(hi["x"]-lo["x"])+size["x"]*parent_scale[0])*lx
+        h=(ph*(hi["y"]-lo["y"])+size["y"]*parent_scale[1])*ly
+        x=cx+((lo["x"]+hi["x"])/2-pp["x"])*pw+pos["x"]*parent_scale[0]+(.5-v["x"])*w
+        y=cy+((lo["y"]+hi["y"])/2-pp["y"])*ph+pos["y"]*parent_scale[1]+(.5-v["y"])*h
         return x,y,w,h
 
     def go(self,name):
@@ -59,7 +78,7 @@ class SourceHUD:
         if len(matches)!=1:raise ValueError(f"Unexpected original prefab GameObject multiplicity: {name}: {len(matches)}")
         return matches[0]
 
-    def stamp(self,sprite,rect,label,component=None,image=None):
+    def stamp(self,sprite,rect,label,component=None,image=None,circle_mask=False):
         W,H=self.canvas
         x,y,w,h=rect
         w=int(round(w));h=int(round(h))
@@ -69,6 +88,14 @@ class SourceHUD:
             assert path.is_file(),path
             with Image.open(path) as source:image=source.convert("RGBA")
         image=image.resize((w,h),Image.Resampling.LANCZOS)
+        # Unity Image.Type=Filled: crop the ORIGINAL Sprite alpha, no synthetic bar.
+        if component and component.get("type")==3:
+            amount=max(0.,min(1.,float(component.get("fill_amount") or 0.)))
+            if amount<=0.:return
+            if amount<1.:
+                mask=Image.new("L",(w,h),0)
+                ImageDraw.Draw(mask).rectangle((0,0,max(0,int(w*amount)-1),h),fill=255)
+                image.putalpha(ImageChops.multiply(image.getchannel("A"),mask))
         color=component.get("color") if component else None
         if isinstance(color,dict) and all(k in color for k in ("r","g","b","a")):
             rgb=tuple(int(255*max(0,min(1,color[k]))) for k in ("r","g","b"))
@@ -78,6 +105,10 @@ class SourceHUD:
             if color["a"]<1:
                 alpha=max(0,min(1,color["a"]))
                 image.putalpha(image.getchannel("A").point(lambda v:int(v*alpha)))
+        if circle_mask:
+            mask=Image.new("L",(w,h),0)
+            ImageDraw.Draw(mask).ellipse((1,1,w-2,h-2),fill=255)
+            image.putalpha(ImageChops.multiply(image.getchannel("A"),mask))
         left=int(round(x-w/2));top=int(round(H-y-h/2))
         if left>=W or top>=H or left+w<=0 or top+h<=0:return
         transparent=Image.new("RGBA",(W,H))
@@ -85,11 +116,14 @@ class SourceHUD:
         self.layer=Image.alpha_composite(self.layer,transparent)
         self.calls.append({"go":label,"sprite":sprite["file"] if sprite else "source Map_map",
                            "x":left,"y":top,"w":w,"h":h})
+        if sprite:self._source_hits[sprite["path_id"]]+=1
 
     def node(self,go,depth=3,exclude=()):
         if isinstance(go,str):go=self.go(go)
         if go["name"] in exclude:return
-        if self.active.get(go["path_id"],{}).get("is_active") is False:return
+        if self.active.get(go["path_id"],{}).get("is_active") is False:
+            self._skipped["inactive_in_prefab"]+=1
+            return
         rectref=self.bygo.get(go["path_id"])
         if not rectref:return
         box=self.rect(rectref["path_id"])
@@ -113,25 +147,36 @@ class SourceHUD:
               if x in self.t and self.t[x]["go"] in self.g]
         frame=kids[0]
         ft=self.bygo[frame["path_id"]]
+        # Unity's Image background is inside a circular mask; drawing the PNG
+        # as a normal rectangle used to produce an incorrect black square.
         for tid in ft["children"]:
-            rect=self.t.get(tid);go=self.g.get(rect["go"]) if rect else None
-            if go and go["name"]=="Image":self.node(go,0)
+            rr=self.t.get(tid);go=self.g.get(rr["go"]) if rr else None
+            if not go or go["name"]!="Image":continue
+            for pid in go["components"]:
+                comp=self.images.get(pid)
+                spr=self.sprites.get(comp.get("sprite")) if comp else None
+                if spr:self.stamp(spr,self.rect(rr["path_id"]),go["name"],comp,circle_mask=True)
         maprect=next((self.t[tid] for tid in ft["children"] if tid in self.t and
                      self.g.get(self.t[tid]["go"],{}).get("name")=="ditu"),None)
         src=self.assets/"map_original_7_3.png"
         if src.is_file() and maprect is not None:
             with Image.open(src) as f:
                 original=f.convert("RGBA")
-                box=(576,576,1472,1472)
-                tile=original.crop(box)
-                tile=tile.resize((260,260),Image.Resampling.LANCZOS)
-                mask=Image.new("L",tile.size)
-                ImageDraw.Draw(mask).ellipse((1,1,258,258),fill=255)
-                tile.putalpha(mask)
-                self.stamp(None,self.rect(maprect["path_id"]),"ditu(Map_map original)",image=tile)
+                # Position/zoom are runtime inputs, not a pasted screenshot.
+                mw,mh=original.size
+                cx,cy=int(self.map_uv[0]*mw),int(self.map_uv[1]*mh)
+                r=min(self.map_window,mw,mh)
+                x0=max(0,min(mw-r,cx-r//2));y0=max(0,min(mh-r,cy-r//2))
+                tile=original.crop((x0,y0,x0+r,y0+r))
+                rectbox=self.rect(maprect["path_id"])
+                tw,th=max(1,abs(round(rectbox[2]))),max(1,abs(round(rectbox[3])))
+                tile=tile.resize((tw,th),Image.Resampling.LANCZOS)
+                self.stamp(None,rectbox,"ditu(Map_map original)",image=tile,circle_mask=True)
             self.notes.append("Map position and crop are demonstrative, actual player XY and zoom are unknown.")
         for go in kids[1:]:
-            self.node(go,depth=2,exclude={"m_nightDi","m_huanghunDi","m_qingchenDi","m_nightIcon"})
+            self.node(go,depth=2,exclude={"m_nightDi","m_huanghunDi","m_qingchenDi","m_nightIcon",
+                "m_turretSoundInMap","m_vehicleSoundInMap","m_gunSoundInMap",
+                "m_footSoundInMap","m_airdrop_pos_map"})
 
     def vitals(self):
         for name in ("m_xue","m_jie","m_bodyWater"):
@@ -139,9 +184,14 @@ class SourceHUD:
                                       "m_reduceHp10","m_reduceHp","m_myarmorSlilder"})
         self.notes.append("Actual health/food/water values are dynamic, not serialized in this prefab.")
 
-    def hotbar(self,samples=False):
+    def hotbar(self,samples=False,items=None):
         test_items=("tb_cl_mt","tb_cl_st","tb_yurou_1","tb_cl_tiek",
                     "tb_sg","wupin_shuihu_1","tb_cl_st")
+        if items is not None:
+            assert isinstance(items,list) and len(items)==7,                 "HUD state.items must contain seven original Sprite names or null"
+            active_items=items
+        else:
+            active_items=test_items if samples else [None]*7
         centers=[]
         for i in range(7):
             go=self.go("m_Item"+str(i+1))
@@ -154,14 +204,21 @@ class SourceHUD:
                 child=self.g.get(r["go"])
                 if child and child["name"]=="Background":self.node(child,0)
                 if child and child["name"]=="m_heightLignt" and i==0:self.node(child,0)
-            if samples and self.sprite_names.get(test_items[i]):
-                s=self.sprite_names[test_items[i]][0]
-                self.stamp(s,(x,y,74,74),f"m_Item{i+1}.sample")
-        if samples:self.notes.append("Item images are example original Sprite assets, not a real inventory state.")
+            requested=active_items[i]
+            if requested:
+                if requested not in self.sprite_names:
+                    raise KeyError(f"Item sprite is not in original XAPK source: {requested}")
+                sp=sorted(self.sprite_names[requested],key=lambda row:row["file"])[0]
+                self.stamp(sp,(x,y,74,74),f"m_Item{i+1}.source_item")
+        if samples and items is None:
+            self.notes.append("Item images are example original Sprite assets, not a real inventory state.")
         assert len(centers)==7
         return centers
 
-    def render(self,samples=False):
+    def render(self,samples=False,profile="on-foot-melee",items=None):
+        if profile not in ("on-foot-melee","on-foot-rifle"):
+            raise ValueError("Unknown Unity gameplay mode: "+str(profile))
+        self.profile=profile
         # Deterministic ON-FOOT subset: do not draw mutually exclusive vehicle,
         # build, diving, store and parachute UI states simultaneously.
         for name in ("btn_info","btn_baseUpgrade","btn_Baserank","btn_help","m_kedu"):
@@ -170,12 +227,15 @@ class SourceHUD:
         self.vitals()
         for name in ("btn_setting","btn_quckChat","btn_diuShiDongXi","btn_quick_mark"):
             self.node(name,3)
-        centers=self.hotbar(samples=samples)
+        centers=self.hotbar(samples=samples,items=items)
         exclude={"m_autoRunChoosed","EF_btn_autoRun","btn_crouching2","btn_paing2",
-                 "btn_jump2","m_jindutiao","m_rechargeEffect"}
-        for name in ("btn_pack","btn_zhizao","m_JoystackType2","btn_autoRun",
-                     "btn_fire","btn_up2","btn_crouch2","btn_pa2",
-                     "btn_kaijing","btn_changeBullet"):
+                 "btn_jump2","m_jindutiao","m_rechargeEffect",
+                 "m_PatiziImage","m_openGliderIcon","m_flyEffect",
+                 "m_addOilIcon","m_StencilMask","m_pack_slider","m_newbee_effect"}
+        base=("btn_pack","btn_zhizao","m_JoystackType2","btn_autoRun",
+              "btn_fire","btn_up2","btn_crouch2","btn_pa2")
+        weapon=("btn_kaijing","btn_changeBullet") if profile=="on-foot-rifle" else ()
+        for name in base+weapon:
             self.node(name,4,exclude=exclude)
         return centers
 
@@ -183,10 +243,17 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument("--assets",default="last_island_recreated_game/assets/hud_original_xapk")
     p.add_argument("--output",default="last_island_recreated_game/assets/hud_original_xapk/hud_gerado_do_prefab.png")
-    p.add_argument("--demo-items",action="store_true")
+    p.add_argument("--demo-items",action="store_true",
+                   help="Display example original item sprites, not a real inventory")
+    p.add_argument("--profile",choices=("on-foot-melee","on-foot-rifle"),default="on-foot-melee")
+    p.add_argument("--state",help="JSON state: optional items[7], map_uv[2], map_window, profile")
     args=p.parse_args()
-    hud=SourceHUD(args.assets)
-    centers=hud.render(samples=args.demo_items)
+    state=json.loads(Path(args.state).read_text(encoding="utf8")) if args.state else {}
+    assert isinstance(state,dict),"HUD state must be a JSON object"
+    hud=SourceHUD(args.assets,map_uv=state.get("map_uv",[.5,.5]),
+                  map_window=state.get("map_window",896))
+    profile=state.get("profile",args.profile)
+    centers=hud.render(samples=args.demo_items,profile=profile,items=state.get("items"))
     dst=Path(args.output);dst.parent.mkdir(parents=True,exist_ok=True)
     # Independent RGBA layer: can later be used as texture over a 3D scene.
     rgba=dst.with_name("hud_original_overlay_rgba.png")
@@ -198,11 +265,18 @@ def main():
        "original_source_bundle":"assets/ui/battlepanel.ab",
        "original_sprite_atlas":"assets/uiatlas/battlepanel*.ab",
        "original_map_bundle":"assets/texture/map_map.ab",
-       "reference_canvas":[1920,1080],
+       "reference_canvas":[1920,1080],"profile":profile,
+       "map_uv_source":"provided at runtime" if args.state and "map_uv" in state else "illustrative center",
+       "map_uv":hud.map_uv,"map_window":hud.map_window,
+       "sprites_from_original_xapk":len(hud._source_hits),
+       "sample_items_are_illustrative":args.demo_items,
+       "recttransform_local_scale_enabled":True,
+       "unity_image_filled_alpha_enabled":True,
+       "unity_minimap_stencil_approximation":"circular alpha mask, not actual Unity shader",
        "draw_calls":hud.calls,"draw_count":len(hud.calls),
        "hotbar_slot_centers":centers,"notes":hud.notes,
        "reproducible_script":"tools/render_source_unity_hud.py",
-       "known_limits":["UGUI nine-slice not reproduced exactly",
+       "known_limits":["UGUI nine-slice, native shader and runtime masking not exactly reproduced",
          "runtime CanvasScaler and custom positions unresolved",
          "preview map viewport position/zoom is demonstrative",
          "some state toggles and runtime-generated data not recovered"]}
