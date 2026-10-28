@@ -37,7 +37,12 @@ assert large.size==(96,44)
 for src,dest in [((0,0),(0,0)),((11,0),(95,0)),((0,11),(0,43))]:
  assert small.getpixel(src)==large.getpixel(dest),(src,dest)
 assert len(a.sprite_borders)>100,"Original Unity Sprite border metadata missing"
-assert all(v["sprite"]=="source Map_map" or (root/v["sprite"]).is_file() for v in b.calls)
+assert all(v["sprite"] in ("source Map_map","compass_original_source.png") or (root/v["sprite"]).is_file() for v in b.calls)
+assert any(v["sprite"]=="compass_original_source.png" for v in b.calls)
+assert (root/"compass_original_source.png").is_file()
+turn=mod.SourceHUD(root,heading_deg=90)
+turn.render()
+assert ImageChops.difference(a.layer,turn.layer).getbbox(), "Compass did not respond to camera yaw"
 print("ORIGINAL_HUD_V3_REGRESSIONS_PASS",json.dumps({
  "seven_slot_anchor_y":slots[0][1],
  "automatic_run_center":[x,y],
