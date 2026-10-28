@@ -1,0 +1,34 @@
+name: Resolve original HUD Sprite textures stored in external Unity atlases
+on:
+  push:
+    paths:
+      - tools/recover_local_hud_sprites.py
+      - .github/workflows/recover_local_hud_sprites.yml
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install "UnityPy>=1.20,<2" Pillow
+      - name: Resolve exact SpriteAtlas CABs and decode original prefab-embedded Sprite objects
+        run: python -u tools/recover_local_hud_sprites.py
+      - name: Commit original decoded Sprite texture dependencies
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/
+          if ! git diff --staged --quiet; then
+            git commit -m "Recover embedded original HUD Sprite textures from exact Unity external CAB dependencies"
+            git pull --rebase origin main
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: authentic-HUD-local-Unity-sprites-and-dependencies
+          path: last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/
