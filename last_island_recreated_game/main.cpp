@@ -9,11 +9,13 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "rlgl.h"
+#include "native_original_animation.hpp"
 
 #include <vector>
 #include <string>
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 
 // -----------------------------------------------------------------------------------------
 // Global Definitions & Data Structures
@@ -194,6 +196,22 @@ int main() {
     Texture2D texShoes = LoadTexture("assets/man_shoes_chushijuese_01_ba.png");
     if (modelShoes.meshCount > 0 && texShoes.id > 0)
         SetMaterialTexture(&modelShoes.materials[0], MATERIAL_MAP_DIFFUSE, texShoes);
+
+    // Original 64-bone, 33-clip Unity rig imported from PC data, not fake
+    // procedural movement. A missing/corrupt asset falls back to legacy meshes.
+    LIOS::OriginalAnimation unityRig;
+    bool hasUnityRig = unityRig.load("assets/lios_skeleton_v1.bin");
+    if (hasUnityRig) {
+        hasUnityRig = unityRig.upload();
+        if (hasUnityRig) {
+            unityRig.setTextures(texPants, texTorso, texHead, texShoes, texHead, texHair);
+            TraceLog(LOG_INFO, "LIOS_NATIVE_UNITY_RIG_READY bones=%d clips=%d meshes=%d",
+                     (int)unityRig.boneNames.size(),(int)unityRig.clips.size(),(int)unityRig.parts.size());
+        }
+    }
+    float animationIdleTime=0, animationWalkTime=0, animationJumpTime=0;
+    float animationCrossFade=1.f;
+    std::string animationCurrent="zhan_stand01", animationPrevious="zhan_stand01";
 
     // Weapons
     Model modelAxe   = LoadModel("assets/wq_shifu.obj");
@@ -530,6 +548,47 @@ int main() {
             }
         }
 
+        // Original skeletal state machine, using the same clip selection,
+        // frame interpolation, and 0.15s crossfade as PC viewer3d.py.
+        if (hasUnityRig) {
+            bool moving=Vector3Length(moveDir)>0.05f;
+            animationIdleTime+=dt;
+            if(moving)animationWalkTime+=dt*(player.isRunning?1.4f:1.f);
+            if(!player.isGrounded)animationJumpTime+=dt;
+            else animationJumpTime=0;
+            float localFwd=Vector3DotProduct(moveDir,forward);
+            float localRight=-Vector3DotProduct(moveDir,right);
+            std::string target;
+            if(player.isAttacking)
+                target=player.equippedSlot==1?"wq_m4_1_zhan_miaozhun_attack01":"fu_zhan_attack_01";
+            else if(!player.isGrounded)
+                target=animationJumpTime<.25f?"kongshou_zhan_jump_up02":
+                       animationJumpTime<.55f?"kongshou_zhan_jump_idle02":"kongshou_zhan_jump_down02";
+            else if(moving) {
+                if(std::fabs(localFwd)>=std::fabs(localRight))
+                    target=localFwd>=0?(player.equippedSlot==1?"wq_m4_1_zhan_miaozhun_run_front01":"zhan_run_front01"):
+                           "zhan_run_back01";
+                else target=localRight>=0?"zhan_run_right01":"zhan_run_left01";
+            } else target=player.equippedSlot==1?"wq_m4_1_zhan_miaozhun_stand01":"zhan_stand01";
+            if(target!=animationCurrent){
+                animationPrevious=animationCurrent;animationCurrent=target;
+                animationCrossFade=0;
+            }
+            animationCrossFade=std::min(1.f,animationCrossFade+dt/.15f);
+            auto clipTime=[&](const std::string& name)->float{
+                if(name=="fu_zhan_attack_01"||name=="wq_m4_1_zhan_miaozhun_attack01")
+                    return player.attackTimer*(player.equippedSlot==1?3.5f:1.3f);
+                if(name.find("_run_")!=std::string::npos)return animationWalkTime;
+                return animationIdleTime;
+            };
+            int from=unityRig.clipIndex(animationPrevious.c_str());
+            int to=unityRig.clipIndex(animationCurrent.c_str());
+            if(to>=0){
+                if(from<0)from=to;
+                unityRig.pose(from,clipTime(animationPrevious),to,clipTime(animationCurrent),animationCrossFade);
+            }
+        }
+
         // Update Particles
         for (size_t i = 0; i < particles.size(); ) {
             particles[i].life -= dt;
@@ -620,8 +679,16 @@ int main() {
                 DrawCube(p.position, p.size, p.size, p.size, p.color);
             }
 
-            // Draw Full Authentic Skinned Character in 3rd Person
-            if (player.thirdPerson) {
+            // Original 64-bone per-vertex deformation from PC, now native C++.
+            if (player.thirdPerson && hasUnityRig) {
+                rlPushMatrix();
+                rlTranslatef(player.position.x,player.position.y,player.position.z);
+                rlRotatef(player.yaw*RAD2DEG,0,1,0);
+                unityRig.draw();
+                rlPopMatrix();
+            }
+            // Explicit fallback for a missing or corrupt native asset.
+            if (player.thirdPerson && !hasUnityRig) {
                 float charYawDeg = (player.yaw * RAD2DEG) + 180.0f;
 
                 // Procedural Step Bobbing & Breathing
@@ -685,6 +752,39 @@ int main() {
                 rlPopMatrix();
             }
 
+            if(player.thirdPerson && hasUnityRig){
+                // Weapon follows the real Unity wuqi_guadian bone (not a fixed
+                // world-space fake hand or the older procedural swing).
+                int socket=-1;
+                for(size_t k=0;k<unityRig.boneNames.size();k++)
+                    if(unityRig.boneNames[k]=="wuqi_guadian"){socket=int(k);break;}
+                if(socket>=0){
+                    LIOS::Mat LH={1,0,0,0,0,1,0,0,0,0,-1,0,0,0,0,1};
+                    LIOS::Mat m=LIOS::multiply(LH,unityRig.world[socket]);
+                    float columnMajor[16];
+                    for(int row=0;row<4;row++)for(int col=0;col<4;col++)
+                        columnMajor[col*4+row]=m[row*4+col];
+                    rlPushMatrix();
+                    rlTranslatef(player.position.x,player.position.y,player.position.z);
+                    rlRotatef(player.yaw*RAD2DEG,0,1,0);
+                    rlMultMatrixf(columnMajor);
+                    if(player.equippedSlot==0 && modelAxe.meshCount>0){
+                        // Source wq_shifu socket conversion M_gl. Includes local
+                        // translation and rotation (see skinned_character.py).
+                        float originalAxeSocket[16]={
+                            0,-1,0,0,
+                            .3420201f,0,-.9396927f,0,
+                            .9396927f,0,.3420201f,0,
+                            .01589137f,.000635996f,-.1284298f,1
+                        };
+                        rlMultMatrixf(originalAxeSocket);
+                        DrawModel(modelAxe,{0,0,0},1,WHITE);
+                    }else if(player.equippedSlot==1 && modelRifle.meshCount>0){
+                        DrawModel(modelRifle,{0,0,0},1,WHITE);
+                    }
+                    rlPopMatrix();
+                }
+            }
         EndMode3D();
 
         // ---------------------------------------------------------------------------------
@@ -792,6 +892,7 @@ int main() {
     // -------------------------------------------------------------------------------------
     // Cleanup Resources
     // -------------------------------------------------------------------------------------
+    unityRig.unload();
     UnloadModel(modelTorso);   UnloadTexture(texTorso);
     UnloadModel(modelPants);   UnloadTexture(texPants);
     UnloadModel(modelHead);    UnloadTexture(texHead);
