@@ -183,9 +183,15 @@ class SourceHUD:
             image.putalpha(ImageChops.multiply(image.getchannel("A"),mask))
         left=int(round(x-w/2));top=int(round(H-y-h/2))
         if left>=W or top>=H or left+w<=0 or top+h<=0:return
-        transparent=Image.new("RGBA",(W,H))
-        transparent.paste(image,(left,top))
-        self.layer=Image.alpha_composite(self.layer,transparent)
+        # Clip and alpha-composite only the affected rectangle. The earlier
+        # implementation allocated TWO full 1920x1080 canvases for EVERY
+        # original sprite (roughly 60 per HUD refresh), preventing the
+        # source-correct HUD from being usable in the live 3D render loop.
+        x0=max(0,left);y0=max(0,top)
+        x1=min(W,left+w);y1=min(H,top+h)
+        if x0>=x1 or y0>=y1:return
+        patch=image.crop((x0-left,y0-top,x1-left,y1-top))
+        self.layer.alpha_composite(patch,dest=(x0,y0))
         self.calls.append({"go":label,"sprite":sprite["file"] if sprite else "source Map_map",
                            "x":left,"y":top,"w":w,"h":h})
         if sprite:self._source_hits[sprite["path_id"]]+=1
