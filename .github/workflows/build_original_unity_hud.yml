@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install Pillow
+      - run: pip install Pillow "UnityPy>=1.20,<2"
       - name: Get original XAPK Canvas component data and original terrain map
         uses: actions/download-artifact@v4
         with:
@@ -29,11 +29,19 @@ jobs:
           cp hud_canvas_source_audit/source_map_-945003921129902140.png last_island_recreated_game/assets/hud_original_xapk/map_original_7_3.png
       - name: Validate original Unity Sprite bindings and separate gameplay modes
         run: python -u tools/test_source_hud_v2.py
+      - name: Read actual Unity Sprite.m_Border values, no guessed 9-slice texture
+        run: python -u tools/extract_hud_sprite_borders.py
+      - name: Regression-test original RectTransform, 9-slice, 7 slots and real vital values
+        run: python -u tools/test_source_hud_v3.py
       - name: Render the original empty inventory HUD and reusable RGBA overlay
         run: python -u tools/render_source_unity_hud.py --profile on-foot-melee
       - name: Render review of genuine source item sprites (sample inventory)
         run: |
           python -u tools/render_source_unity_hud.py --demo-items --profile on-foot-melee             --output last_island_recreated_game/assets/hud_original_xapk/review/hud_exemplo_itens_originais.png
+      - name: Render a demonstrative health-food-water state using real Unity Sprite colors
+        run: |
+          printf '%s\n' '{"profile":"on-foot-melee","map_uv":[0.55,0.45],"vitals":{"health":0.84,"food":0.56,"water":0.72}}' > /tmp/original_hud_preview_state.json
+          python -u tools/render_source_unity_hud.py --demo-items             --state /tmp/original_hud_preview_state.json             --output last_island_recreated_game/assets/hud_original_xapk/review/hud_v3_estado_de_teste.png
       - name: Render separate firearm HUD with aim and reload controls
         run: |
           python -u tools/render_source_unity_hud.py --demo-items --profile on-foot-rifle             --output last_island_recreated_game/assets/hud_original_xapk/review_rifle/hud_fuzil_original.png
@@ -44,6 +52,7 @@ jobs:
           git add last_island_recreated_game/assets/hud_original_xapk/
           if ! git diff --staged --quiet; then
             git commit -m "Improve source-based HUD rendering with map masking, original item slots and state visibility"
+            git pull --rebase origin main
             git push
           fi
       - uses: actions/upload-artifact@v4
@@ -56,5 +65,7 @@ jobs:
             last_island_recreated_game/assets/hud_original_xapk/hud_original_overlay_rgba.png
             last_island_recreated_game/assets/hud_original_xapk/hud_gerado_do_prefab_auditoria.json
             last_island_recreated_game/assets/hud_original_xapk/review/hud_exemplo_itens_originais.png
+            last_island_recreated_game/assets/hud_original_xapk/review/hud_v3_estado_de_teste.png
+            last_island_recreated_game/assets/hud_original_xapk/hud_source_sprite_borders.json
             last_island_recreated_game/assets/hud_original_xapk/review_rifle/hud_fuzil_original.png
           if-no-files-found: warn
