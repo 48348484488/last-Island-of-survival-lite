@@ -1,0 +1,26 @@
+name: Extract original Unity HUD prefab and anchors
+on:
+  push:
+    branches: [main]
+    paths:
+      - tools/extract_original_hud_prefabs.py
+      - .github/workflows/extract_original_hud_prefabs.yml
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  restore-ui-prefab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install "UnityPy>=1.20,<2"
+      - name: Recover original UI prefab separately from sprite atlas of same name
+        run: python -u tools/extract_original_hud_prefabs.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-hud-recttransform-prefab-source
+          path: hud_original_prefab_fonte/
+          if-no-files-found: warn
