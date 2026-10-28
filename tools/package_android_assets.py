@@ -21,7 +21,13 @@ def main():
     names=sorted(set(re.findall(r'"assets/([^"\\]+\.(?:obj|png|wav|ogg))"',program)))
     # Generated skeletal binary and original Unity GUI sprites are copied from
     # recovered asset locations in the workflow, not the flat OBJ directory.
-    generated={"hud_original_overlay_rgba.png","icon_cj_sf.png","icon_m4.png"}
+    generated={
+        "hud_original_overlay_rgba.png","icon_cj_sf.png","icon_m4.png",
+        "hud_original_melee.png","hud_original_rifle.png",
+        "hud_original_joystick_knob.png",
+        "icon_resource_wood.png","icon_resource_metal.png",
+        "icon_resource_stone.png","icon_resource_sulfur.png",
+    }
     names=[n for n in names if n not in generated]
     if len(names)<20:
         raise ValueError("Native game references fewer assets than expected")
