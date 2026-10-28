@@ -8,3 +8,7 @@ Thumbs.db
 
 push_*.py
 *.token
+
+# Artefatos compilados do cliente Windows: fontes e XAPK original ficam no repositorio
+last_island_recreated_game/*.exe
+last_island_recreated_game/*.dll
