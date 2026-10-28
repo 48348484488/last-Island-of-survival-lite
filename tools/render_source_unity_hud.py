@@ -14,7 +14,7 @@ from functools import lru_cache
 from PIL import Image, ImageDraw, ImageFont, ImageChops, ImageOps
 from unity_ugui_raster import apply_fill, preserve_aspect
 from collections import defaultdict, Counter
-import argparse, json, math
+import argparse, json, math, hashlib
 
 BUNDLE="assets/ui/battlepanel.ab"
 
@@ -67,6 +67,42 @@ class SourceHUD:
                 self.sprites[pid]=v
                 self.sprite_names[v["name"]].append(v)
                 self.embedded_original_sprites+=1
+        # Dynamic weapon icon sprites come from cfg.ItemCfg.icon. The bare
+        # battlepanel prefab has m_icon.m_Sprite = 0, so these cannot be
+        # discovered by scanning its Image references alone.
+        self.equipped_item_icons_verified=0
+        verified_index=self.assets/"complete_source_mapping/verified_equipped_weapon_icons.json"
+        if verified_index.is_file():
+            identity=json.loads(verified_index.read_text(encoding="utf8"))
+            links={v["item"]:v for v in identity["cfg_links"]}
+            assert links["stone_axe"]["icon"]=="tubiao1/cj_sf"
+            assert links["m4_rifle"]["icon"]=="gun/m4"
+            for row in identity["sprites"]:
+                path=self.assets/row["file"]
+                if not path.is_file():
+                    raise FileNotFoundError("Source ItemCfg icon absent: "+str(path))
+                with Image.open(path) as f:
+                    original=f.convert("RGBA")
+                    digest=hashlib.sha256(original.tobytes()).hexdigest()
+                if digest!=row["pixel_sha256"]:
+                    raise ValueError("Source original icon pixel hash changed: "+row["item"])
+                if row["item"]=="stone_axe":
+                    # Already indexed by the original tubiao1.ab manifest.
+                    if not any(x["file"]==row["file"]
+                        for x in self.sprite_names["cj_sf"]):
+                        raise ValueError("Axe icon was not recovered from source")
+                    continue
+                if row["item"]!="m4_rifle" or row["name"]!="m4":
+                    raise ValueError("Unexpected source weapon icon")
+                sprite={"name":row["name"],"bundle":"gun.ab",
+                        "file":row["file"],"path_id":row["path_id"],
+                        "width":original.width,"height":original.height,
+                        "pixel_sha256":digest}
+                if sprite["path_id"] in self.sprites:
+                    raise ValueError("Duplicate original weapon Sprite PathID")
+                self.sprites[sprite["path_id"]]=sprite
+                self.sprite_names[sprite["name"]].append(sprite)
+                self.equipped_item_icons_verified+=1
         self.layer=Image.new("RGBA",canvas)
         self.calls=[];self.notes=[]
         self._source_hits=Counter()
