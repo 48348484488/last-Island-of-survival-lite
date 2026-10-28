@@ -15,7 +15,7 @@ import importlib.util
 import json
 import math
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageChops
 
 ROOT=Path(__file__).resolve().parents[1]
 GAME=ROOT/"last_island_recreated_game"
@@ -30,7 +30,11 @@ v7=importlib.util.module_from_spec(spec);spec.loader.exec_module(v7)
 HudV7=v7.HudV7
 
 class NativeMobileHud(HudV7):
-    """Keep source joystick knob separate so it can move with the finger."""
+    """Keep original thumb and compass texture separate for native runtime."""
+    def render_compass(self):
+        # Original compass moves with yaw. Draw it in C++ using the generated
+        # exact-source 72-frame atlas, never bake a compass pointing north.
+        return None
     def node(self,go,depth=3,exclude=()):
         name=go if isinstance(go,str) else go["name"]
         if name=="m_littleYaogan":
@@ -133,6 +137,62 @@ def main():
             "draw_calls":audit["drawn_operations"],
             "source_hierarchy_order":audit["source_hierarchy_order"],
         }
+    # Compute original RawImage compass displacement using the same exact
+    # PathID m_compassImage, screen crop, and mask_leftrightfade logic as the
+    # PC version's render_source_unity_hud.py.
+    metadata=json.loads((ASSETS/"compass_original_source.json").read_text())
+    assert int(metadata["rawimage_component"]["m_Texture"]["m_PathID"])==7430988158235635878
+    compass_go=hud.go("m_compassImage")
+    assert compass_go["path_id"]==metadata["gameobject_path_id"]
+    rect=hud.bygo[compass_go["path_id"]]
+    parent=hud.t[rect["father"]]
+    compass_bounds=source_rect(hud,parent["go"])
+    _,_,cw_raw,ch_raw=hud.rect(parent["path_id"])
+    cw,ch=max(1,round(cw_raw)),max(1,round(ch_raw))
+    _,_,fw_raw,fh_raw=hud.rect(rect["path_id"])
+    fw,fh=max(cw,round(abs(fw_raw))),max(ch,round(abs(fh_raw)))
+    with Image.open(ASSETS/"compass_original_source.png") as f:
+        source_compass=f.convert("RGBA").resize((fw,fh),Image.Resampling.LANCZOS)
+    fade_options=hud.sprite_names.get("mask_leftrightfade",[])
+    assert fade_options,"Original compass fade sprite missing"
+    fade=next((v for v in fade_options if v["bundle"]=="common.ab"),fade_options[0])
+    with Image.open(ASSETS/fade["file"]) as im:
+        alpha_mask=im.convert("RGBA").getchannel("A").resize((cw,ch),Image.Resampling.BILINEAR)
+    # Keep Unity sibling decorations (Image (2)), composited *after* the
+    # moving strip in every frame so the graphics do not disappear.
+    decoration_renderer=HudV7(ASSETS,heading_deg=0,map_uv=[.5,.5])
+    root=decoration_renderer.go("m_kedu")
+    for childtid in decoration_renderer.bygo[root["path_id"]]["children"]:
+        rt=decoration_renderer.t.get(childtid)
+        child=decoration_renderer.g.get(rt["go"]) if rt else None
+        if child and child["name"]=="Image (2)":
+            decoration_renderer.node(child,depth=0)
+    area=(
+        round(compass_bounds["left"]),
+        round(compass_bounds["top"]),
+        round(compass_bounds["left"])+cw,
+        round(compass_bounds["top"])+ch,
+    )
+    decoration=decoration_renderer.layer.crop(area)
+    atlas=Image.new("RGBA",(4*cw,18*ch),(0,0,0,0))
+    for frame in range(72):
+        heading=frame*5
+        shifted=ImageChops.offset(source_compass,-round(heading/360*fw),0)
+        crop_left=(fw-cw)//2
+        crop_top=max(0,(fh-ch)//2)
+        tile=shifted.crop((crop_left,crop_top,crop_left+cw,crop_top+ch))
+        tile.putalpha(ImageChops.multiply(tile.getchannel("A"),alpha_mask))
+        tile.alpha_composite(decoration)
+        atlas.alpha_composite(tile,((frame%4)*cw,(frame//4)*ch))
+    assert atlas.getbbox() is not None
+    atlas.save(dest/"hud_original_compass_strip.png",optimize=True)
+    geometry["compass"]={"bounds":compass_bounds,"tile_width":cw,"tile_height":ch,
+                         "frames":72,"degrees_per_frame":5,
+                         "source_texture_path_id":7430988158235635878,
+                         "source_fade_sprite_path_id":fade["path_id"]}
+    print("LIOS_HUD_ORIGINAL_RUNTIME_COMPASS_ATLAS",atlas.size,
+          "tile",(cw,ch),"frames",72,flush=True)
+
     geometry["joystick"]=original_joystick()
     knob=hud.go("m_littleYaogan")
     # This GameObject may contain a nested sprite instead of an Image directly.
@@ -185,6 +245,11 @@ def main():
         col=info["color"]
         lines.append("static constexpr Text "+key+"={"+literal_rect(info["bounds"])+
                      ",%d,%d,%d,%d,%d,%d};"%(info["font_size"],info["align"],*col))
+    compass=geometry["compass"]
+    lines.append("static constexpr Rect Compass="+literal_rect(compass["bounds"])+";")
+    lines.append("static constexpr int CompassTileW=%d;"%compass["tile_width"])
+    lines.append("static constexpr int CompassTileH=%d;"%compass["tile_height"])
+    lines.append("static constexpr int CompassFrames=72;")
     j=geometry["joystick"];cx,cy=j["center"]
     lines.append("static constexpr Rect JoystickTrigger="+literal_rect(j["trigger"])+";")
     lines.append("static constexpr Rect JoystickThumb="+literal_rect(j["thumb_rect"])+";")
