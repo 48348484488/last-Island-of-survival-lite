@@ -12,6 +12,7 @@ state cannot be recovered solely from an unloaded prefab.
 from pathlib import Path
 from functools import lru_cache
 from PIL import Image, ImageDraw, ImageFont, ImageChops, ImageOps
+from unity_ugui_raster import apply_fill, preserve_aspect
 from collections import defaultdict, Counter
 import argparse, json, math
 
@@ -154,16 +155,19 @@ class SourceHUD:
                 image=self._sliced_sprite(image,(w,h),m["border"])
             else:
                 image=image.resize((w,h),Image.Resampling.LANCZOS)
+        elif component and component.get("preserve_aspect") and sprite:
+            image=preserve_aspect(image,(w,h))
         else:
             image=image.resize((w,h),Image.Resampling.LANCZOS)
-        # Unity Image.Type=Filled: crop the ORIGINAL Sprite alpha, no synthetic bar.
+        # Unity uses a different mesh for each m_FillMethod. The previous
+        # renderer incorrectly clipped ALL fills horizontally left-to-right.
         if component and component.get("type")==3:
-            amount=max(0.,min(1.,float(component.get("fill_amount") or 0.)))
-            if amount<=0.:return
-            if amount<1.:
-                mask=Image.new("L",(w,h),0)
-                ImageDraw.Draw(mask).rectangle((0,0,max(0,int(w*amount)-1),h),fill=255)
-                image.putalpha(ImageChops.multiply(image.getchannel("A"),mask))
+            amount=float(component.get("fill_amount") or 0)
+            if amount<=0:return
+            image=apply_fill(image,amount,
+                  method=component.get("fill_method") or 0,
+                  origin=component.get("fill_origin") or 0,
+                  clockwise=bool(component.get("fill_clockwise",True)))
         color=component.get("color") if component else None
         if isinstance(color,dict) and all(k in color for k in ("r","g","b","a")):
             rgb=tuple(int(255*max(0,min(1,color[k]))) for k in ("r","g","b"))
