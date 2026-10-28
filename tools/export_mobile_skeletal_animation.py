@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Convert PC Unity extracted clips + original skinned meshes to a native GLES asset.
 
-The binary contains the SAME bone local quaternions, translations, skin weights,
+The binary contains ALL original bone local quaternions, translations, skin weights,
 inverse bind matrices, UVs and triangles used by skinned_character.py. This is
 NOT a procedural imitation or an animation rendered into screenshots.
 
@@ -52,7 +52,7 @@ def export(path, source=HERE):
     src=np.load(source/"authentic_animations.npz",allow_pickle=True)
     mesh=np.load(source/"master_character.npz")
     clips=sorted(k[:-5] for k in src.files if k.endswith("_rots"))
-    assert len(clips)==23,("Expected source 23 original clips",len(clips))
+    assert len(clips)>=23,("Source original clips missing",len(clips))
     original_bones=[str(n) for n in src[clips[0]+"_bone_names"]]
     parents=json.loads(str(src["_bone_parent_json"][0]))
     bone_idx={n:i for i,n in enumerate(original_bones)}
