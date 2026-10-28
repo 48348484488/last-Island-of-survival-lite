@@ -6,6 +6,7 @@ on:
       - last_island_recreated_game/main.cpp
       - last_island_recreated_game/native_original_animation.hpp
       - tools/export_mobile_skeletal_animation.py
+      - tools/test_android_character_parity.py
       - .github/workflows/build_android_raylib_lite.yml
       - tools/package_android_assets.py
 permissions:
@@ -29,6 +30,8 @@ jobs:
             last_island_recreated_game/assets
             tools/package_android_assets.py
             tools/export_mobile_skeletal_animation.py
+            tools/test_android_character_parity.py
+            last_island_recreated_game/viewer3d.py
           sparse-checkout-cone-mode: false
           filter: blob:none
 
@@ -56,6 +59,9 @@ jobs:
       - name: Install converter dependency for 33 extracted animations
         run: python -m pip install numpy
 
+      - name: Regression-test camera, original skin atlas and mesh normals
+        run: python -u tools/test_android_character_parity.py
+
       - name: Inject game's real native C++ engine and verified model assets
         run: |
           set -euo pipefail
@@ -68,7 +74,7 @@ jobs:
           cp last_island_recreated_game/assets/hud_original_xapk/sprites/tubiao1/cj_sf_4568438245182409447.png /tmp/lios-raymob/app/src/main/assets/assets/icon_cj_sf.png
           cp last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/weapon_verified/gun_m4_919133799852272780.png /tmp/lios-raymob/app/src/main/assets/assets/icon_m4.png
           cd /tmp/lios-raymob
-          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.13.0-native-original/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
+          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.13.1-camera-textures/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
@@ -101,6 +107,7 @@ jobs:
               'assets/assets/hud_original_overlay_rgba.png',
               'assets/assets/icon_cj_sf.png',
               'assets/assets/icon_m4.png',
+              'assets/assets/man_clothes_yf_0_ba.png',
             }
             missing=needed-names
             assert not missing,missing
@@ -119,7 +126,7 @@ jobs:
       - name: Copy named downloadable APK
         run: |
           mkdir -p dist
-          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/Last-Island-LITE-Recriado-Android-ARM64-v0.12.1-preview.apk
+          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/Last-Island-LITE-Recriado-Android-ARM64-v0.13.1-camera-textures.apk
           sha256sum dist/*.apk
 
       - name: Upload Android APK for phone testing
