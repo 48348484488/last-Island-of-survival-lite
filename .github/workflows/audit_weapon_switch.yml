@@ -1,0 +1,24 @@
+name: Audit exact original draw and holster states
+on:
+  push:
+    paths:
+      - tools/audit_original_weapon_switch.py
+      - .github/workflows/audit_weapon_switch.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install "UnityPy>=1.20,<2" numpy
+      - run: python tools/audit_original_weapon_switch.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: real-original-equip-state-mapping
+          path: equip_original_audit/
