@@ -32,6 +32,24 @@ class SourceHUD:
         self.named=defaultdict(list);self.sprite_names=defaultdict(list)
         for v in self.g.values():self.named[v["name"]].append(v)
         for v in a["sprites"]:self.sprite_names[v["name"]].append(v)
+        # Resolve remaining game assets by exact Unity Sprite PPtr fileID and PathID.
+        # Entries are direct exports from matching CAB bundles inside the original XAPK.
+        # Never substitute another asset merely because the name looks similar.
+        external=self.assets/"complete_source_mapping/external_hud_sprites_index.json"
+        self.external_original_sprites=0
+        if external.is_file():
+            evidence=json.loads(external.read_text(encoding="utf8"))
+            for v in evidence.get("sprites",[]):
+                if not (self.assets/v["file"]).is_file():
+                    raise FileNotFoundError("Source Unity HUD dependency missing: "+v["file"])
+                if v["path_id"] in self.sprites:
+                    # A PathID collision means source binding also needs m_FileID.
+                    existing=self.sprites[v["path_id"]]
+                    if existing["file"]!=v["file"]:
+                        raise ValueError("Duplicate Unity Sprite PathID across CABs: "+v["path_id"])
+                self.sprites[v["path_id"]]=v
+                self.sprite_names[v["name"]].append(v)
+                self.external_original_sprites+=1
         self.layer=Image.new("RGBA",canvas)
         self.calls=[];self.notes=[]
         self._source_hits=Counter()
@@ -393,6 +411,7 @@ def main():
        "map_uv":hud.map_uv,"map_window":hud.map_window,
        "camera_heading_degrees":hud.heading_deg,
        "sprites_from_original_xapk":len(hud._source_hits),
+       "additional_original_CAB_sprites_loaded":hud.external_original_sprites,
        "sample_items_are_illustrative":args.demo_items,
        "recttransform_local_scale_enabled":True,
        "recttransform_anchors_calculated_from_parent_rect_center":True,
