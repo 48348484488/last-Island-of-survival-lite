@@ -1,0 +1,35 @@
+name: Extract actual UGUI font metadata from original Last Island prefab
+on:
+  push:
+    paths:
+      - tools/extract_original_ugui_text.py
+      - .github/workflows/extract_original_ugui_text.yml
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  text-font:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install "UnityPy>=1.20,<2"
+      - name: Recover actual original Unity Text.m_FontData fields
+        run: python -u tools/extract_original_ugui_text.py
+      - name: Commit recovered original Text style and alignment
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/
+          if ! git diff --staged --quiet; then
+            git commit -m "Recover exact serialized Unity UGUI Text font data, size and alignment"
+            git pull --rebase origin main
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-unity-HUD-text-fontdata
+          path: last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/original_unity_text_font_data.json
+          if-no-files-found: warn
