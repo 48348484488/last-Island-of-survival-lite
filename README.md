@@ -174,3 +174,37 @@ com `cj_sf` e `m4`. Nao usa figuras parecidas nem recortes de screenshots.
 (aprovado).
 As capturas sao de desktop/Mesa. Ainda nao representam APK Android, nem
 demonstram coincidencia pixel-a-pixel com o jogo original executado.
+
+
+### V12 - botoes de toque e joystick ligados ao gameplay
+
+O jogo recriado agora tem a opcao `LIOS_TOUCH_MODE=1` para receber os eventos
+`pygame.FINGERDOWN/FINGERMOTION/FINGERUP` no mesmo Canvas 1920x1080 do HUD
+original. `original_hud_touch.py` utiliza **somente** os `RectTransform`s
+originais dos controles do `battlepanel.ab`:
+
+- `btn_fire`: ataque corpo-a-corpo / tiro (municao diminui)
+- `btn_up2`: salto com fisica existente (altura do jogador muda)
+- `btn_kaijing`: mirar com M4, alternando ADS
+- `btn_changeBullet`: recarregar M4, restaurando o carregador
+- `m_yaoganTrigger` + `m_littleYaogan` + `m_YaoganBG`: direcao
+  analogica original do joystick -> deslocamento 3D real
+- `btn_autoRun`: alternar corrida; `btn_crouch2` / `btn_pa2`: reducao
+  de velocidade (animacao de postura ainda nao recuperada)
+
+O controlador conserva a identidade de cada dedo, permite joystick +
+ataque + salto simultaneos e adapta a regiao do Canvas a viewport com
+letterboxing. `btn_pack`, `btn_zhizao`, configuracoes e chat registram
+o toque, mas **nao abrem interfaces** porque esses paineis ainda nao estao
+implementados. O knob grafico do joystick ainda nao acompanha o dedo e
+o `CanvasScaler`/safe-area do Android ainda precisa de calibracao.
+
+**Provas**:
+- [Hitboxes e joystick Unity auditados](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40635124401)
+- [Testes puros de toque e multiplos dedos](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40635246790)
+- [Quatro testes do jogo em OpenGL real: machado/M4, toque ligado/desligado](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40635353081)
+- [Verificacao OpenGL adicional de mira e recarga](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40635435674)
+
+`LIOS_TOUCH_MODE=1 python last_island_recreated_game/viewer3d.py` habilita
+o recebimento dos eventos de toque no cliente desktop Python/Pygame. Nao
+e um APK Android e os testes OpenGL rodam em Mesa/Xvfb, nao em um aparelho.
