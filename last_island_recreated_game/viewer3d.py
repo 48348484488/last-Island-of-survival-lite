@@ -20,6 +20,7 @@ from OpenGL.GLU import *
 from PIL import Image
 from skinned_character import SkinnedCharacter
 from hud_original_loader import resolve_original_hud_image
+from original_hud_runtime import OriginalUnityHud, game_hud_state
 
 def _next_pot(n):
     p = 1
@@ -1152,7 +1153,21 @@ def main():
     ]
 
     anim = AuthenticAnimController()
-    hud = FastHUD(A)
+    # The source-derived Unity HUD is the default. Keep the old handcrafted
+    # implementation as a diagnostic fallback (LIOS_HUD_MODE=legacy).
+    hud_mode = os.environ.get('LIOS_HUD_MODE', 'source').strip().lower()
+    if hud_mode not in ('source', 'legacy'):
+        raise ValueError('LIOS_HUD_MODE must be source or legacy')
+    original_hud = None
+    hud = None
+    if hud_mode == 'source':
+        try:
+            original_hud = OriginalUnityHud()
+            print('HUD: original Unity battlepanel.ab hierarchy and XAPK sprites')
+        except (FileNotFoundError, ValueError) as exc:
+            print('Source HUD unavailable, legacy fallback:', exc)
+    if original_hud is None:
+        hud = FastHUD(A)
 
     px, py, pz = 0.0, 0.0, 0.0
     yaw, pitch = 0.0, 0.0
@@ -1463,12 +1478,29 @@ def main():
             draw_weapon_fp(axe_dl, axe_tex, gun_dl, gun_tex, equipped_slot,
                            bob_x, bob_y, attack_t, is_attacking, is_aiming, W, H)
 
-        # HUD
-        hud.draw(W, H, int(clock.get_fps()), health, stamina, wood, metal, stone, sulfur,
-                 px, pz, yaw, third_p, msg, msg_t, dt, food, water,
-                 joy_input=(joy_dx_main, joy_dy_main), btn_pressed=btn_pressed,
-                 equipped_slot=equipped_slot, is_aiming=is_aiming,
-                 ammo_cur=ammo_cur, ammo_max=ammo_max)
+        # HUD: exact source sprites, GameObject sibling order, RectTransform
+        # geometry and real player status. The legacy HUD is NOT composited on
+        # top, so its handmade controls cannot obscure original controls.
+        if original_hud is not None:
+            try:
+                state = game_hud_state(
+                    health=health, food=food, water=water, yaw=yaw,
+                    equipped_slot=equipped_slot, wood=wood,
+                    metal=metal, stone=stone, sulfur=sulfur)
+                original_hud.draw(W, H, state)
+            except Exception as exc:
+                import traceback
+                print('Source HUD renderer failed; switching to legacy:', exc)
+                traceback.print_exc()
+                original_hud.close()
+                original_hud = None
+                hud = FastHUD(A)
+        if original_hud is None:
+            hud.draw(W, H, int(clock.get_fps()), health, stamina, wood, metal, stone, sulfur,
+                     px, pz, yaw, third_p, msg, msg_t, dt, food, water,
+                     joy_input=(joy_dx_main, joy_dy_main), btn_pressed=btn_pressed,
+                     equipped_slot=equipped_slot, is_aiming=is_aiming,
+                     ammo_cur=ammo_cur, ammo_max=ammo_max)
 
         pygame.display.flip()
 
