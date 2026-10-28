@@ -19,6 +19,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from PIL import Image
 from skinned_character import SkinnedCharacter
+from hud_original_loader import resolve_original_hud_image
 
 def _next_pot(n):
     p = 1
@@ -320,7 +321,9 @@ FONT_XS    = pygame.font.SysFont('segoeui', 9)
 
 class FastHUD:
     def __init__(self, asset_dir):
-        u = lambda f: os.path.join(asset_dir, 'ui_hud', f)
+        # Sprites are resolved against the pixel-verified XAPK extraction.
+        # Do not silently replace original Unity sprites with derived/composite PNGs.
+        u = lambda f: resolve_original_hud_image(asset_dir, f)
 
         # 1. Authentic Crosshair & Compass (from battlepanel.ab)
         self.tex_cross      = load_texture(u('BattlePanel_cxfmt_zhunxing.png'))
@@ -348,12 +351,16 @@ class FastHUD:
         self.tex_build_btn  = load_texture(u('com_xiulitubiao.png'))
 
         # 5. Authentic Action Buttons (from battlepanel.ab, common.ab & battlecustompanel.ab)
-        self.tex_btn_attack = load_texture(u('BattlePanel_attack_button.png'))
-        self.tex_btn_vault  = load_texture(u('BattlePanel_sprint_button.png'))
+        # Actual Unity Sprite assets from battlepanel2.ab, not the legacy painted composites.
+        self.tex_btn_attack = load_texture(u('BattlePanel2_st_an_2.png'))
+        self.tex_btn_attack_icon = load_texture(u('BattlePanel2_quick_icon_attack.png'))
+        self.tex_btn_vault  = load_texture(u('BattlePanel2_st_an_2.png'))
+        self.tex_btn_vault_icon = load_texture(u('1BattlePanel_cz_t.png'))
         self.tex_btn_jump   = load_texture(u('1BattlePanel_cz_t.png'))
         self.tex_btn_crouch = load_texture(u('1BattlePanel_cz_dun.png'))
         self.tex_btn_prone  = load_texture(u('1BattlePanel_cz_pa.png'))
-        self.tex_btn_aim    = load_texture(u('BattlePanel_aim_button.png'))
+        self.tex_btn_aim    = load_texture(u('BattlePanel2_st_an_2.png'))
+        self.tex_btn_aim_icon = load_texture(u('BattlePanel_cxfmt_zhunxing.png'))
 
         # 6. Authentic Virtual Joystick (from battlepanel2.ab)
         self.tex_joy_base   = load_texture(u('BattlePanel2_car_yaogan_1.png'))
@@ -399,6 +406,21 @@ class FastHUD:
         self.last_msg = None
         self.last_target = None
         self.static_init = False
+
+    @staticmethod
+    def _draw_original_button_icon(tid, x, y, size, pad):
+        """Overlay a genuine source Unity Sprite over a separate genuine Sprite plate."""
+        if not tid:
+            return
+        glEnable(GL_TEXTURE_2D)
+        glBindTexture(GL_TEXTURE_2D, tid)
+        glColor4f(1.0, 1.0, 1.0, 0.95)
+        glBegin(GL_QUADS)
+        glTexCoord2f(0, 0); glVertex2f(x + pad, y + pad)
+        glTexCoord2f(1, 0); glVertex2f(x + size - pad, y + pad)
+        glTexCoord2f(1, 1); glVertex2f(x + size - pad, y + size - pad)
+        glTexCoord2f(0, 1); glVertex2f(x + pad, y + size - pad)
+        glEnd()
 
     def _render_text_to_tex(self, tid, surf, pot_w, pot_h):
         glBindTexture(GL_TEXTURE_2D, tid)
@@ -842,6 +864,8 @@ class FastHUD:
             glTexCoord2f(1, 1); glVertex2f(bx_att + big_sz, by_att + big_sz)
             glTexCoord2f(0, 1); glVertex2f(bx_att, by_att + big_sz)
             glEnd()
+            self._draw_original_button_icon(self.tex_btn_attack_icon, bx_att, by_att,
+                                            big_sz, int(16 * SCALE))
 
         btn_sz = int(48 * SCALE)
 
@@ -859,6 +883,8 @@ class FastHUD:
             glTexCoord2f(1, 1); glVertex2f(vx + btn_sz, vy + btn_sz)
             glTexCoord2f(0, 1); glVertex2f(vx, vy + btn_sz)
             glEnd()
+            self._draw_original_button_icon(self.tex_btn_vault_icon, vx, vy,
+                                            btn_sz, int(8 * SCALE))
 
         # Jump (1BattlePanel_cz_t.png)
         if self.tex_btn_jump:
@@ -919,6 +945,8 @@ class FastHUD:
             glTexCoord2f(1, 1); glVertex2f(ax_pos + btn_sz, ay_pos + btn_sz)
             glTexCoord2f(0, 1); glVertex2f(ax_pos, ay_pos + btn_sz)
             glEnd()
+            self._draw_original_button_icon(self.tex_btn_aim_icon, ax_pos, ay_pos,
+                                            btn_sz, int(12 * SCALE))
 
         # Ammo Counter display for Rifle
         if equipped_slot == 1:
