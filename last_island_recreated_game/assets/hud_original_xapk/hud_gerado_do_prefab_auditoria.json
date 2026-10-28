@@ -21,7 +21,7 @@
   "source_9slice_border_metadata": 265,
   "vital_ratios_from_runtime_state": false,
   "unity_image_filled_alpha_enabled": true,
-  "unity_minimap_stencil_approximation": "circular alpha mask, not actual Unity shader",
+  "unity_minimap_stencil_approximation": "source original mask_sidesfade alpha; native Unity shader still incomplete",
   "draw_calls": [
     {
       "go": "btn_info",
