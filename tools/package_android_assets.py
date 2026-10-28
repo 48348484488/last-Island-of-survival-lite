@@ -32,7 +32,7 @@ def main():
         "hud_original_overlay_rgba.png","icon_cj_sf.png","icon_m4.png",
         "hud_original_melee.png","hud_original_rifle.png",
         "hud_original_joystick_knob.png",
-        "hud_original_compass_strip.png",
+        "hud_original_compass_strip.png","hud_original_hotbar_selection.png",
         "icon_resource_wood.png","icon_resource_metal.png",
         "icon_resource_stone.png","icon_resource_sulfur.png",
         "native_man_clothes_chushijuese_01_ba.png",
