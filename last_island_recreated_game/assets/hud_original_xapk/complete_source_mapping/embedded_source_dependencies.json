@@ -1,0 +1,74 @@
+{
+  "sources": {
+    "ecaca46eb4185b2dc1acefc63e00431f": {
+      "asset_pack_path": "assets/icon/buff.ab",
+      "sha256": "e3d639797abacdd100fe32f5cd83d22363764be10d1c4c81f72efa564b662d81"
+    },
+    "6ce28d6401adcdeae18ba9dbebc1af2a": {
+      "asset_pack_path": "assets/icon/buildpartpf3.ab",
+      "sha256": "49663bc78e52e1c64d637fcd9cabb4f78702c998a0c49a9f705e25db81e85fe0"
+    },
+    "4f58d757ca8598ee22adf44323a05183": {
+      "asset_pack_path": "assets/icon/gun.ab",
+      "sha256": "ede2f0fe4dc0bc0238e9d412a0a2dc2df80ca09c6cf983e29b586b3cd27242cb"
+    },
+    "e092f98d49976de788bff7170c75f517": {
+      "asset_pack_path": "assets/icon/headk.ab",
+      "sha256": "764b7458a08d9b10b14eda9a9e02e49493ec75668c2a1ac984204dadcac4c220"
+    },
+    "cf426974e55dc26e640d8fb5439d1d7f": {
+      "asset_pack_path": "assets/icon/killboard.ab",
+      "sha256": "4eb6439cab988593fe7eea940960ddfc1a5cf6b6a8f774d83664ec9b2323c7c5"
+    },
+    "8a615c033f9921061e9146bad2d02c23": {
+      "asset_pack_path": "assets/icon/tfnew.ab",
+      "sha256": "c023838f7823badd683f37ba7f16eba6abd458a3ebf2bb78f1ec4e94e9878810"
+    }
+  },
+  "sprites": [
+    {
+      "path_id": "-6139478003112571252",
+      "name": "b_bqg",
+      "file": "complete_source_mapping/embedded_sprites/source_sprite_-6139478003112571252.png",
+      "dependency_cab": "cf426974e55dc26e640d8fb5439d1d7f",
+      "asset_pack_path": "assets/icon/killboard.ab"
+    },
+    {
+      "path_id": "-4472424531687815552",
+      "name": "fire",
+      "file": "complete_source_mapping/embedded_sprites/source_sprite_-4472424531687815552.png",
+      "dependency_cab": "4f58d757ca8598ee22adf44323a05183",
+      "asset_pack_path": "assets/icon/gun.ab"
+    },
+    {
+      "path_id": "-3587490363988664791",
+      "name": "tb_jn_fangun_01",
+      "file": "complete_source_mapping/embedded_sprites/source_sprite_-3587490363988664791.png",
+      "dependency_cab": "8a615c033f9921061e9146bad2d02c23",
+      "asset_pack_path": "assets/icon/tfnew.ab"
+    },
+    {
+      "path_id": "-2485373133421570517",
+      "name": "buff_jingyan",
+      "file": "complete_source_mapping/embedded_sprites/source_sprite_-2485373133421570517.png",
+      "dependency_cab": "ecaca46eb4185b2dc1acefc63e00431f",
+      "asset_pack_path": "assets/icon/buff.ab"
+    },
+    {
+      "path_id": "-1880757172148655009",
+      "name": "head_k_cs",
+      "file": "complete_source_mapping/embedded_sprites/source_sprite_-1880757172148655009.png",
+      "dependency_cab": "e092f98d49976de788bff7170c75f517",
+      "asset_pack_path": "assets/icon/headk.ab"
+    },
+    {
+      "path_id": "388797002895490551",
+      "name": "yigui_30002",
+      "file": "complete_source_mapping/embedded_sprites/source_sprite_388797002895490551.png",
+      "dependency_cab": "6ce28d6401adcdeae18ba9dbebc1af2a",
+      "asset_pack_path": "assets/icon/buildpartpf3.ab"
+    }
+  ],
+  "unresolved": [],
+  "count": 6
+}
