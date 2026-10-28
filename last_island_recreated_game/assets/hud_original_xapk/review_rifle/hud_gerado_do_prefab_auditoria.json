@@ -15,8 +15,9 @@
   ],
   "map_window": 896,
   "camera_heading_degrees": 0.0,
-  "sprites_from_original_xapk": 44,
-  "additional_original_CAB_sprites_loaded": 0,
+  "sprites_from_original_xapk": 46,
+  "additional_original_CAB_sprites_loaded": 52,
+  "additional_prefab_embedded_sprites_loaded": 7,
   "sample_items_are_illustrative": true,
   "recttransform_local_scale_enabled": true,
   "recttransform_anchors_calculated_from_parent_rect_center": true,
@@ -80,6 +81,14 @@
       "y": -1,
       "w": 105,
       "h": 80
+    },
+    {
+      "go": "Image (1)",
+      "sprite": "complete_source_mapping/external_sprites/file19/sprite_-6534490175548794981.png",
+      "x": 616,
+      "y": 4,
+      "w": 49,
+      "h": 49
     },
     {
       "go": "m_compassImage",
@@ -482,6 +491,14 @@
       "h": 180
     },
     {
+      "go": "m_fireRealIcon",
+      "sprite": "complete_source_mapping/embedded_sprites/source_sprite_-4472424531687815552.png",
+      "x": 1544,
+      "y": 719,
+      "w": 97,
+      "h": 94
+    },
+    {
       "go": "btn_up2",
       "sprite": "sprites/battlepanel2/BattlePanel2_st_an___-7168935225424053362.png",
       "x": 1769,
@@ -562,7 +579,7 @@
       "h": 120
     }
   ],
-  "draw_count": 67,
+  "draw_count": 69,
   "hotbar_slot_centers": [
     [
       674.9772,
