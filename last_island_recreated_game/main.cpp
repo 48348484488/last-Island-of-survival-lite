@@ -481,7 +481,7 @@ int main() {
 
         // Jump and Gravity Physics
         const float gravity = 24.0f;
-        bool wantJump = IsKeyPressed(KEY_SPACE) || btnJump.isPressed;
+        bool wantJump = IsKeyPressed(KEY_SPACE) || hudInput.justPressed(HA::Jump);
         if (player.isGrounded) {
             if (wantJump && player.stamina >= 10.0f) {
                 player.verticalVelocity = 8.5f;
