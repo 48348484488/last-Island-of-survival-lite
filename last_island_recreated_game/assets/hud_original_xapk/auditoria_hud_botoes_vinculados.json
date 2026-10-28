@@ -1,0 +1,486 @@
+{
+  "source": "Original Last Island of Survival LITE 7.3 XAPK",
+  "ui_source": "install_time_asset_pack.apk/assets/ui/battlepanel.ab",
+  "sprites_source": "install_time_asset_pack.apk/assets/uiatlas/",
+  "method": "Unity GameObject -> MonoBehaviour (Image) -> m_Sprite PathID cross-referenced with actual Sprite objects",
+  "verified_buttons": {
+    "ATAQUE": {
+      "gameobject": "btn_fire",
+      "gameobject_path_id": "-6194486982920502287",
+      "rect_transform_path_id": "9220081083806215330",
+      "parent_rect_transform_path_id": "-5430156730493185691",
+      "anchor_min": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchor_max": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchored_position": {
+        "x": -277.3999938964844,
+        "y": 264.29998779296875
+      },
+      "size_delta": {
+        "x": 182.0,
+        "y": 182.0
+      },
+      "verified_sprite_components": [
+        {
+          "gameobject": "btn_fire",
+          "depth": 0,
+          "component_path_id": "-3598101119588580593",
+          "unity_sprite_path_id": "6816472486429899996",
+          "sprite_name": "BattlePanel2_car_yaogan_5",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_car_yaogan_5_6816472486429899996.png"
+        },
+        {
+          "gameobject": "m_fireImage",
+          "depth": 1,
+          "component_path_id": "7658658280833530550",
+          "unity_sprite_path_id": "1765268713649345837",
+          "sprite_name": "BattlePanel2_car_yaogan_3",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_car_yaogan_3_1765268713649345837.png"
+        }
+      ],
+      "expected_sprite_names": [
+        "BattlePanel2_car_yaogan_5",
+        "BattlePanel2_car_yaogan_3"
+      ]
+    },
+    "PULO": {
+      "gameobject": "btn_up2",
+      "gameobject_path_id": "6868289150097382791",
+      "rect_transform_path_id": "3322735572982968780",
+      "parent_rect_transform_path_id": "3990048509235913986",
+      "anchor_min": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchor_max": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchored_position": {
+        "x": -85.5,
+        "y": 290.0
+      },
+      "size_delta": {
+        "x": 130.0,
+        "y": 130.0
+      },
+      "verified_sprite_components": [
+        {
+          "gameobject": "btn_up2",
+          "depth": 0,
+          "component_path_id": "7773525954630362473",
+          "unity_sprite_path_id": "-7168935225424053362",
+          "sprite_name": "BattlePanel2_st_an_!",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_st_an___-7168935225424053362.png"
+        },
+        {
+          "gameobject": "m_JumpImage",
+          "depth": 1,
+          "component_path_id": "8131093303953847057",
+          "unity_sprite_path_id": "-5766048973405338036",
+          "sprite_name": "1BattlePanel_cz_t",
+          "atlas_bundle": "battlepanel.ab",
+          "sprite_source_file": "sprites/battlepanel/1BattlePanel_cz_t_-5766048973405338036.png"
+        },
+        {
+          "gameobject": "m_PatiziImage",
+          "depth": 1,
+          "component_path_id": "-277624839602697584",
+          "unity_sprite_path_id": "-6469348664197767004",
+          "sprite_name": "BattlePanel2_cz_tz",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_cz_tz_-6469348664197767004.png"
+        },
+        {
+          "gameobject": "m_openGliderIcon",
+          "depth": 1,
+          "component_path_id": "-4033271210970856379",
+          "unity_sprite_path_id": "-510595567409538199",
+          "sprite_name": "BattlePanel2_penshe",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_penshe_-510595567409538199.png"
+        }
+      ],
+      "expected_sprite_names": [
+        "BattlePanel2_st_an_!",
+        "1BattlePanel_cz_t"
+      ]
+    },
+    "AGACHAR": {
+      "gameobject": "btn_crouch2",
+      "gameobject_path_id": "-3937205834846164131",
+      "rect_transform_path_id": "-8873634052674420077",
+      "parent_rect_transform_path_id": "3990048509235913986",
+      "anchor_min": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchor_max": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchored_position": {
+        "x": -193.0,
+        "y": 134.0
+      },
+      "size_delta": {
+        "x": 130.0,
+        "y": 130.0
+      },
+      "verified_sprite_components": [
+        {
+          "gameobject": "btn_crouch2",
+          "depth": 0,
+          "component_path_id": "6797456885413961950",
+          "unity_sprite_path_id": "-7168935225424053362",
+          "sprite_name": "BattlePanel2_st_an_!",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_st_an___-7168935225424053362.png"
+        },
+        {
+          "gameobject": "btn_crouching2",
+          "depth": 1,
+          "component_path_id": "-265275495163180562",
+          "unity_sprite_path_id": "4449387293946013019",
+          "sprite_name": "BattlePanel2_st_an_2",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_st_an_2_4449387293946013019.png"
+        },
+        {
+          "gameobject": "Image (1)",
+          "depth": 1,
+          "component_path_id": "-936687700975307459",
+          "unity_sprite_path_id": "7816152445154004946",
+          "sprite_name": "1BattlePanel_cz_dun",
+          "atlas_bundle": "battlepanel.ab",
+          "sprite_source_file": "sprites/battlepanel/1BattlePanel_cz_dun_7816152445154004946.png"
+        }
+      ],
+      "expected_sprite_names": [
+        "BattlePanel2_st_an_!",
+        "BattlePanel2_st_an_2",
+        "1BattlePanel_cz_dun"
+      ]
+    },
+    "DEITAR": {
+      "gameobject": "btn_pa2",
+      "gameobject_path_id": "-1572329945056109206",
+      "rect_transform_path_id": "2790777337030198867",
+      "parent_rect_transform_path_id": "3990048509235913986",
+      "anchor_min": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchor_max": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchored_position": {
+        "x": -406.0,
+        "y": 134.0
+      },
+      "size_delta": {
+        "x": 130.0,
+        "y": 130.0
+      },
+      "verified_sprite_components": [
+        {
+          "gameobject": "btn_pa2",
+          "depth": 0,
+          "component_path_id": "1485486997780102014",
+          "unity_sprite_path_id": "-7168935225424053362",
+          "sprite_name": "BattlePanel2_st_an_!",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_st_an___-7168935225424053362.png"
+        },
+        {
+          "gameobject": "btn_paing2",
+          "depth": 1,
+          "component_path_id": "-8110473294804072968",
+          "unity_sprite_path_id": "4449387293946013019",
+          "sprite_name": "BattlePanel2_st_an_2",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_st_an_2_4449387293946013019.png"
+        },
+        {
+          "gameobject": "Image",
+          "depth": 1,
+          "component_path_id": "-846769986651813486",
+          "unity_sprite_path_id": "6380483222475970638",
+          "sprite_name": "1BattlePanel_cz_pa",
+          "atlas_bundle": "battlepanel.ab",
+          "sprite_source_file": "sprites/battlepanel/1BattlePanel_cz_pa_6380483222475970638.png"
+        }
+      ],
+      "expected_sprite_names": [
+        "BattlePanel2_st_an_!",
+        "BattlePanel2_st_an_2",
+        "1BattlePanel_cz_pa"
+      ]
+    },
+    "CORRIDA AUTOMATICA": {
+      "gameobject": "btn_autoRun",
+      "gameobject_path_id": "-5816811536278523149",
+      "rect_transform_path_id": "-841587022244444691",
+      "parent_rect_transform_path_id": "-2745342211929443801",
+      "anchor_min": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchor_max": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchored_position": {
+        "x": 79.69999694824219,
+        "y": 517.0
+      },
+      "size_delta": {
+        "x": 89.0,
+        "y": 89.0
+      },
+      "verified_sprite_components": [
+        {
+          "gameobject": "btn_autoRun",
+          "depth": 0,
+          "component_path_id": "-8510889980267519098",
+          "unity_sprite_path_id": "-5434031170515894608",
+          "sprite_name": "BattlePanel2_car_yaogan_4",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png"
+        },
+        {
+          "gameobject": "Image",
+          "depth": 1,
+          "component_path_id": "-2020152636449684735",
+          "unity_sprite_path_id": "-4638175421644290377",
+          "sprite_name": "BattlePanel2_car_zidongbengpao2",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_car_zidongbengpao2_-4638175421644290377.png"
+        },
+        {
+          "gameobject": "m_autoRunChoosed",
+          "depth": 1,
+          "component_path_id": "-2623634067153854999",
+          "unity_sprite_path_id": "7065528221711098268",
+          "sprite_name": "BattlePanel2_zd_bp_2",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_zd_bp_2_7065528221711098268.png"
+        }
+      ],
+      "expected_sprite_names": [
+        "BattlePanel2_car_yaogan_4",
+        "BattlePanel2_car_zidongbengpao2"
+      ]
+    },
+    "MIRAR": {
+      "gameobject": "btn_kaijing",
+      "gameobject_path_id": "9173389338680461108",
+      "rect_transform_path_id": "-8420877277922049776",
+      "parent_rect_transform_path_id": "-8009728435533377118",
+      "anchor_min": {
+        "x": 1.0,
+        "y": 0.0
+      },
+      "anchor_max": {
+        "x": 1.0,
+        "y": 0.0
+      },
+      "anchored_position": {
+        "x": -35.0,
+        "y": 386.5
+      },
+      "size_delta": {
+        "x": 130.0,
+        "y": 130.0
+      },
+      "verified_sprite_components": [
+        {
+          "gameobject": "Image (1)",
+          "depth": 1,
+          "component_path_id": "-239566503140539483",
+          "unity_sprite_path_id": "-5434031170515894608",
+          "sprite_name": "BattlePanel2_car_yaogan_4",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png"
+        },
+        {
+          "gameobject": "Image",
+          "depth": 2,
+          "component_path_id": "-2893177001713168655",
+          "unity_sprite_path_id": "6967019743901829064",
+          "sprite_name": "1BattlePanel_sj_2",
+          "atlas_bundle": "battlepanel.ab",
+          "sprite_source_file": "sprites/battlepanel/1BattlePanel_sj_2_6967019743901829064.png"
+        }
+      ],
+      "expected_sprite_names": [
+        "BattlePanel2_car_yaogan_4",
+        "1BattlePanel_sj_2"
+      ]
+    },
+    "RECARREGAR": {
+      "gameobject": "btn_changeBullet",
+      "gameobject_path_id": "-353128629041599370",
+      "rect_transform_path_id": "-8498899374740367725",
+      "parent_rect_transform_path_id": "-8009728435533377118",
+      "anchor_min": {
+        "x": 1.0,
+        "y": 0.0
+      },
+      "anchor_max": {
+        "x": 1.0,
+        "y": 0.0
+      },
+      "anchored_position": {
+        "x": -35.50000762939453,
+        "y": 530.0
+      },
+      "size_delta": {
+        "x": 120.0,
+        "y": 120.0
+      },
+      "verified_sprite_components": [
+        {
+          "gameobject": "Image (1)",
+          "depth": 1,
+          "component_path_id": "-8333695754157183601",
+          "unity_sprite_path_id": "-5434031170515894608",
+          "sprite_name": "BattlePanel2_car_yaogan_4",
+          "atlas_bundle": "battlepanel2.ab",
+          "sprite_source_file": "sprites/battlepanel2/BattlePanel2_car_yaogan_4_-5434031170515894608.png"
+        },
+        {
+          "gameobject": "m_changeBulletIcon",
+          "depth": 2,
+          "component_path_id": "-8896513846173402486",
+          "unity_sprite_path_id": "-4799276521966031049",
+          "sprite_name": "1BattlePanel_cz_hd",
+          "atlas_bundle": "battlepanel.ab",
+          "sprite_source_file": "sprites/battlepanel/1BattlePanel_cz_hd_-4799276521966031049.png"
+        },
+        {
+          "gameobject": "m_addOilIcon",
+          "depth": 2,
+          "component_path_id": "3931138473866522857",
+          "unity_sprite_path_id": "4614674307435979961",
+          "sprite_name": "1BattlePanel_cz_hy",
+          "atlas_bundle": "battlepanel.ab",
+          "sprite_source_file": "sprites/battlepanel/1BattlePanel_cz_hy_4614674307435979961.png"
+        }
+      ],
+      "expected_sprite_names": [
+        "BattlePanel2_car_yaogan_4",
+        "1BattlePanel_cz_hd"
+      ]
+    },
+    "MOCHILA": {
+      "gameobject": "btn_pack",
+      "gameobject_path_id": "3694177321274107552",
+      "rect_transform_path_id": "-8980065164424629229",
+      "parent_rect_transform_path_id": "7345897541564489947",
+      "anchor_min": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchor_max": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchored_position": {
+        "x": -470.5,
+        "y": 2.5
+      },
+      "size_delta": {
+        "x": 95.0,
+        "y": 95.0
+      },
+      "verified_sprite_components": [
+        {
+          "gameobject": "btn_pack",
+          "depth": 0,
+          "component_path_id": "1188140009944684106",
+          "unity_sprite_path_id": "-9056563195613175944",
+          "sprite_name": "1BattlePanel_buttle_fang_3",
+          "atlas_bundle": "battlepanel.ab",
+          "sprite_source_file": "sprites/battlepanel/1BattlePanel_buttle_fang_3_-9056563195613175944.png"
+        },
+        {
+          "gameobject": "Image",
+          "depth": 1,
+          "component_path_id": "795830641283459272",
+          "unity_sprite_path_id": "-8339622856558486473",
+          "sprite_name": "1BattlePanell_bb",
+          "atlas_bundle": "battlepanel.ab",
+          "sprite_source_file": "sprites/battlepanel/1BattlePanell_bb_-8339622856558486473.png"
+        },
+        {
+          "gameobject": "Background",
+          "depth": 2,
+          "component_path_id": "1683511532298786184",
+          "unity_sprite_path_id": "-2873014378393890984",
+          "sprite_name": "BattlePanel_dikuang",
+          "atlas_bundle": "battlepanel.ab",
+          "sprite_source_file": "sprites/battlepanel/BattlePanel_dikuang_-2873014378393890984.png"
+        },
+        {
+          "gameobject": "Fill",
+          "depth": 3,
+          "component_path_id": "7603842406193202585",
+          "unity_sprite_path_id": "-1061180438741798285",
+          "sprite_name": "BattlePanel_jindutiao",
+          "atlas_bundle": "battlepanel.ab",
+          "sprite_source_file": "sprites/battlepanel/BattlePanel_jindutiao_-1061180438741798285.png"
+        },
+        {
+          "gameobject": "Image",
+          "depth": 3,
+          "component_path_id": "-513435869991604291",
+          "unity_sprite_path_id": "-1406792474388956489",
+          "sprite_name": "BattlePanel_chilun",
+          "atlas_bundle": "battlepanel.ab",
+          "sprite_source_file": "sprites/battlepanel/BattlePanel_chilun_-1406792474388956489.png"
+        },
+        {
+          "gameobject": "Image (1)",
+          "depth": 3,
+          "component_path_id": "6014452623987219587",
+          "unity_sprite_path_id": "-4678001988617627006",
+          "sprite_name": "BattlePanel_chilun2",
+          "atlas_bundle": "battlepanel.ab",
+          "sprite_source_file": "sprites/battlepanel/BattlePanel_chilun2_-4678001988617627006.png"
+        }
+      ],
+      "expected_sprite_names": [
+        "1BattlePanel_buttle_fang_3",
+        "1BattlePanell_bb"
+      ]
+    }
+  },
+  "hotbar_count": 7,
+  "hotbar_item_offsets_x": [
+    -300,
+    -200,
+    -100,
+    0,
+    100,
+    200,
+    300
+  ],
+  "regressions_checked": [
+    "7 slots",
+    "real aim icon",
+    "real attack base",
+    "jump background distinct from sprint",
+    "no fake colored selection border"
+  ],
+  "limitation": "Not a native Unity screenshot. Layout anchoring/CanvasScaler/custom runtime hotkey adjustments still require visual runtime validation."
+}
