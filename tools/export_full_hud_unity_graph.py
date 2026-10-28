@@ -38,6 +38,19 @@ for k,v in getattr(env,"files",{}).items():
         except Exception as ex:pass
 print("ORIGINAL_UI_BUNDLE_EXTERNALS",json.dumps(external_records,ensure_ascii=False)[:10000],flush=True)
 print("ORIGINAL_UI_DEBUG_FILES",json.dumps(debug_files,ensure_ascii=False)[:1500],flush=True)
+probe=next(iter(env.objects))
+print("ORIGINAL_UI_OBJECT_INTROSPECT",str([a for a in dir(probe) if ("asset" in a.lower() or "file" in a.lower())]),flush=True)
+for attr in ("assets_file","assetsfile","file"):
+    val=getattr(probe,attr,None)
+    if val is not None:
+        attrs=[a for a in dir(val) if "extern" in a.lower() or "file" in a.lower()]
+        print("ORIGINAL_UI_NESTED_SOURCE_FILE",attr,type(val).__name__,attrs,flush=True)
+        for ax in attrs:
+            if "extern" in ax.lower():
+                try:
+                    vv=getattr(val,ax)
+                    print("ORIGINAL_UI_NESTED_EXTERNALS",ax,str(vv)[:11000],flush=True)
+                except Exception as ex:pass
 original_manifest=json.loads((ASSETS/"manifest_original.json").read_text(encoding="utf8"))
 atlas={str(x["path_id"]):x for x in original_manifest["sprites"]}
 objs={str(o.path_id):o for o in env.objects}
