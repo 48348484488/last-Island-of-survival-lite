@@ -3,7 +3,7 @@
 
 The complete 1.5 GB source XAPK, decompiled C# scripts, desktop NumPy NPZ,
 and >1000 original Unity HUD sprite files are deliberately not packaged in
-this incremental native Android prototype.
+this incremental native Android port. The original 33-clip skeletal binary and HUD are added separately.
 """
 import json
 import re
@@ -19,6 +19,10 @@ def main():
     dest=Path(sys.argv[3])
     program=source.read_text(encoding="utf8")
     names=sorted(set(re.findall(r'"assets/([^"\\]+\.(?:obj|png|wav|ogg))"',program)))
+    # Generated skeletal binary and original Unity GUI sprites are copied from
+    # recovered asset locations in the workflow, not the flat OBJ directory.
+    generated={"hud_original_overlay_rgba.png","icon_cj_sf.png","icon_m4.png"}
+    names=[n for n in names if n not in generated]
     if len(names)<20:
         raise ValueError("Native game references fewer assets than expected")
     dest.mkdir(parents=True,exist_ok=True)
@@ -39,7 +43,7 @@ def main():
             "original_asset_count":len(packaged),
             "original_asset_bytes":sum(x["bytes"] for x in packaged),
             "files":packaged,
-            "note":"C++ native prototype uses procedural animation; Python 23-clip skeletal system NOT ported"}
+            "note":"33 original skeletal clips and Unity HUD are added separately by the native ARM64 workflow"}
     print("LIOS_ANDROID_ASSETS_VALIDATED",json.dumps(result,ensure_ascii=False),flush=True)
 
 if __name__=="__main__":main()
