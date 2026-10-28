@@ -27,6 +27,12 @@ def main():
         "hud_original_joystick_knob.png",
         "icon_resource_wood.png","icon_resource_metal.png",
         "icon_resource_stone.png","icon_resource_sulfur.png",
+        "native_man_clothes_chushijuese_01_ba.png",
+        "native_man_clothes_yf_0_ba.png",
+        "native_man_trousers_chushijuese_01_ba.png",
+        "native_man_shoes_chushijuese_01_ba.png",
+        "native_man_head_chushijuese_01_ba.png",
+        "native_man_hair_chushijuese_01_ba.png",
     }
     names=[n for n in names if n not in generated]
     if len(names)<20:
