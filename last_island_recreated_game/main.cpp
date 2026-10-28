@@ -262,6 +262,8 @@ int main() {
     Texture2D originalHudMelee=LoadTexture("assets/hud_original_melee.png");
     Texture2D originalHudRifle=LoadTexture("assets/hud_original_rifle.png");
     Texture2D originalThumb=LoadTexture("assets/hud_original_joystick_knob.png");
+    // Exact-source Unity m_heightLignt for all seven hotbar slots.
+    Texture2D originalHotbarSelection=LoadTexture("assets/hud_original_hotbar_selection.png");
     // 72 original-source compass frames, 5 degrees per frame.
     Texture2D originalCompass=LoadTexture("assets/hud_original_compass_strip.png");
     Texture2D sourceResources[4]={
@@ -270,7 +272,7 @@ int main() {
         LoadTexture("assets/icon_resource_stone.png"),
         LoadTexture("assets/icon_resource_sulfur.png"),
     };
-    bool hasOriginalHud=originalHudMelee.id>0&&originalHudRifle.id>0;
+    bool hasOriginalHud=originalHudMelee.id>0&&originalHudRifle.id>0&&originalHotbarSelection.id>0;
     if(hasOriginalHud)TraceLog(LOG_INFO,"LIOS_ORIGINAL_UNITY_HUD_PROFILES source=melee+rifle; slots=7; touch=11");
 
     Model modelStone   = LoadModel("assets/ore_yanshikuang_01.obj");
@@ -328,7 +330,7 @@ int main() {
     sound.init();
     bool autoRun=false,aim=false,crouch=false,prone=false;
     int activePanel=0; // 0=game, 1=bag, 2=craft, 3=settings, 4=chat
-    int selectedResource=-1,magazine=30,reserveAmmo=90;
+    int selectedHotbarSlot=0,magazine=30,reserveAmmo=90;
     float shotCooldown=0.f,stepTimer=0.f;
     bool wasOnGround=true;
     while (!WindowShouldClose()) {
@@ -348,8 +350,14 @@ int main() {
         }
 
         // Switch Weapon with Keys 1 and 2
-        if (IsKeyPressed(KEY_ONE)) player.equippedSlot = 0;
-        if (IsKeyPressed(KEY_TWO)) player.equippedSlot = 1;
+        if (IsKeyPressed(KEY_ONE)){player.equippedSlot=0;selectedHotbarSlot=0;aim=false;}
+        if (IsKeyPressed(KEY_TWO)){player.equippedSlot=1;selectedHotbarSlot=1;}
+        // Resource/empty quick slots have no native item-use port yet.
+        if (IsKeyPressed(KEY_THREE)){player.equippedSlot=-1;selectedHotbarSlot=2;aim=false;}
+        if (IsKeyPressed(KEY_FOUR)){player.equippedSlot=-1;selectedHotbarSlot=3;aim=false;}
+        if (IsKeyPressed(KEY_FIVE)){player.equippedSlot=-1;selectedHotbarSlot=4;aim=false;}
+        if (IsKeyPressed(KEY_SIX)){player.equippedSlot=-1;selectedHotbarSlot=5;aim=false;}
+        if (IsKeyPressed(KEY_SEVEN)){player.equippedSlot=-1;selectedHotbarSlot=6;aim=false;}
 
         // ---------------------------------------------------------------------------------
         // Touch Input Processing (Multi-touch support for Mobile)
@@ -390,10 +398,14 @@ int main() {
                 (std::fabs(hudInput.stick.x)+std::fabs(hudInput.stick.y)>0.002f);
         }
         // Touch events (edge-triggered unless the action is explicitly held).
-        if(hudInput.justPressed(HA::Slot0)){player.equippedSlot=0;aim=false;}
-        if(hudInput.justPressed(HA::Slot1))player.equippedSlot=1;
+        if(hudInput.justPressed(HA::Slot0)){player.equippedSlot=0;selectedHotbarSlot=0;aim=false;}
+        if(hudInput.justPressed(HA::Slot1)){player.equippedSlot=1;selectedHotbarSlot=1;}
         for(int i=0;i<5;i++)if(hudInput.justPressed(
-            static_cast<HA>(int(HA::Slot2)+i))){selectedResource=i;activePanel=1;}
+            static_cast<HA>(int(HA::Slot2)+i))){
+            // Unity hotbar selects the item; it does NOT open the inventory.
+            // Native resource item use is not ported; never fire the old gun.
+            selectedHotbarSlot=i+2;player.equippedSlot=-1;aim=false;
+        }
         if(hudInput.justPressed(HA::AutoRun))autoRun=!autoRun;
         if(hudInput.justPressed(HA::Crouch)){crouch=!crouch;prone=false;}
         if(hudInput.justPressed(HA::Prone)){prone=!prone;crouch=false;}
@@ -514,11 +526,12 @@ int main() {
 #endif
         if(activePanel!=0)wantAttack=false;
         shotCooldown=std::max(0.f,shotCooldown-dt);
-        if(wantAttack && !player.isAttacking && shotCooldown<=0.f){
+        if(wantAttack && !player.isAttacking && shotCooldown<=0.f &&
+            (player.equippedSlot==0||player.equippedSlot==1)){
             if(player.equippedSlot==0){
                 player.attackDuration=.6f;
                 sound.play(sound.axe,.8f);
-            }else if(magazine>0){
+            }else if(player.equippedSlot==1&&magazine>0){
                 player.attackDuration=.125f;
                 magazine--;
                 shotCooldown=.13f;
@@ -527,7 +540,7 @@ int main() {
                 // sample layered for every 0.13-second shot.
                 sound.fireM4();
             }
-            if(player.equippedSlot==0||magazine>=0&&shotCooldown>0.f){
+            if(player.equippedSlot==0||(player.equippedSlot==1&&shotCooldown>0.f)){
                 player.isAttacking=true;
                 player.attackTimer=0.0f;
                 player.attackHitRegistered=false;
@@ -761,11 +774,7 @@ int main() {
                 // vertices by their Blender/OpenGL winding. Raylib defaults
                 // to backface culling and could discard the full avatar.
                 rlDisableBackfaceCulling();
-                // PC uses uncullled Unity skinned triangles. Unity winding
-                // can differ from raylib's OBJ default and hide the body.
-                rlDisableBackfaceCulling();
                 unityRig.draw();
-                rlEnableBackfaceCulling();
                 rlEnableBackfaceCulling();
                 rlPopMatrix();
             }
@@ -881,6 +890,23 @@ int main() {
             DrawTexturePro(base,{0,0,float(base.width),float(base.height)},
                 {canvasLeft,canvasTop,1920.f*canvasScale,1080.f*canvasScale},
                 {0,0},0,WHITE);
+            // Dynamic original Unity selected-state sprite (m_heightLignt).
+            // No duplicate highlight when equipment changes or resources are tapped.
+            const LIOS_HUD::Rect selectionRects[7]={
+                LIOS_HUD::SlotHighlight0,LIOS_HUD::SlotHighlight1,
+                LIOS_HUD::SlotHighlight2,LIOS_HUD::SlotHighlight3,
+                LIOS_HUD::SlotHighlight4,LIOS_HUD::SlotHighlight5,
+                LIOS_HUD::SlotHighlight6
+            };
+            if(originalHotbarSelection.id&&selectedHotbarSlot>=0&&selectedHotbarSlot<7){
+                const Rectangle sample={
+                    float(selectedHotbarSlot*LIOS_HUD::HotbarHighlightTileW),
+                    0,float(LIOS_HUD::HotbarHighlightTileW),
+                    float(LIOS_HUD::HotbarHighlightTileH)
+                };
+                DrawTexturePro(originalHotbarSelection,sample,
+                    sourceRect(selectionRects[selectedHotbarSlot]),{0,0},0,WHITE);
+            }
             // Source BattlePanel_kedu_zw (PathID 7430988158235635878).
             // Previously compass on both HUD profiles was a static 0-degree
             // preview. Use original masked texture + decorated strip frames.
@@ -1092,6 +1118,7 @@ int main() {
     if(originalHudMelee.id)UnloadTexture(originalHudMelee);
     if(originalHudRifle.id)UnloadTexture(originalHudRifle);
     if(originalThumb.id)UnloadTexture(originalThumb);
+    if(originalHotbarSelection.id)UnloadTexture(originalHotbarSelection);
     if(originalCompass.id)UnloadTexture(originalCompass);
     for(auto &icon:sourceResources)if(icon.id)UnloadTexture(icon);
     UnloadModel(modelTorso);   UnloadTexture(texTorso);
