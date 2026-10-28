@@ -119,7 +119,7 @@ jobs:
             needed={
               'lib/arm64-v8a/libraymob.so',
               'assets/assets/man_clothes_chushijuese_01.obj',
-              'assets/assets/man_clothes_chushijuese_01_ba.png',
+              'assets/assets/native_man_clothes_chushijuese_01_ba.png',
               'assets/assets/wq_shifu.obj',
               'assets/assets/wq_m4_1.obj',
               'assets/assets/tree_baihuashu_03.obj',
@@ -131,7 +131,7 @@ jobs:
               'assets/assets/icon_resource_metal.png',
               'assets/assets/icon_resource_stone.png',
               'assets/assets/icon_resource_sulfur.png',
-              'assets/assets/man_clothes_yf_0_ba.png',
+              'assets/assets/native_man_clothes_yf_0_ba.png',
               'assets/assets/native_man_clothes_chushijuese_01_ba.png',
               'assets/assets/native_man_clothes_yf_0_ba.png',
               'assets/assets/native_man_trousers_chushijuese_01_ba.png',
@@ -161,7 +161,7 @@ jobs:
                            'man_trousers_chushijuese_01_ba.png',
                            'man_shoes_chushijuese_01_ba.png',
                            'man_head_chushijuese_01_ba.png'):
-              src=Image.open(io.BytesIO(z.read('assets/assets/'+suffix))).convert('RGBA')
+              src=Image.open(Path('last_island_recreated_game/assets')/suffix).convert('RGBA')
               dst=Image.open(io.BytesIO(z.read('assets/assets/native_'+suffix))).convert('RGBA')
               assert src.getchannel('A').getextrema()[0]<255
               assert dst.getchannel('A').getextrema()==(255,255),suffix
