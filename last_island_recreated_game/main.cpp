@@ -262,6 +262,8 @@ int main() {
     Texture2D originalHudMelee=LoadTexture("assets/hud_original_melee.png");
     Texture2D originalHudRifle=LoadTexture("assets/hud_original_rifle.png");
     Texture2D originalThumb=LoadTexture("assets/hud_original_joystick_knob.png");
+    // 72 original-source compass frames, 5 degrees per frame.
+    Texture2D originalCompass=LoadTexture("assets/hud_original_compass_strip.png");
     Texture2D sourceResources[4]={
         LoadTexture("assets/icon_resource_wood.png"),
         LoadTexture("assets/icon_resource_metal.png"),
@@ -879,6 +881,22 @@ int main() {
             DrawTexturePro(base,{0,0,float(base.width),float(base.height)},
                 {canvasLeft,canvasTop,1920.f*canvasScale,1080.f*canvasScale},
                 {0,0},0,WHITE);
+            // Source BattlePanel_kedu_zw (PathID 7430988158235635878).
+            // Previously compass on both HUD profiles was a static 0-degree
+            // preview. Use original masked texture + decorated strip frames.
+            if(originalCompass.id){
+                float heading=fmodf(player.yaw*RAD2DEG,360.f);
+                if(heading<0)heading+=360.f;
+                int frame=int(floorf((heading+2.5f)/5.f))%LIOS_HUD::CompassFrames;
+                Rectangle sample={
+                    float((frame%4)*LIOS_HUD::CompassTileW),
+                    float((frame/4)*LIOS_HUD::CompassTileH),
+                    float(LIOS_HUD::CompassTileW),
+                    float(LIOS_HUD::CompassTileH)
+                };
+                DrawTexturePro(originalCompass,sample,sourceRect(LIOS_HUD::Compass),
+                               {0,0},0,WHITE);
+            }
             auto sourceText=[&](const char* value,LIOS_HUD::Text origin){
                 const Rectangle rect=sourceRect(origin.bounds);
                 const int size=std::max(8,int(origin.fontSize*canvasScale));
@@ -1074,6 +1092,7 @@ int main() {
     if(originalHudMelee.id)UnloadTexture(originalHudMelee);
     if(originalHudRifle.id)UnloadTexture(originalHudRifle);
     if(originalThumb.id)UnloadTexture(originalThumb);
+    if(originalCompass.id)UnloadTexture(originalCompass);
     for(auto &icon:sourceResources)if(icon.id)UnloadTexture(icon);
     UnloadModel(modelTorso);   UnloadTexture(texTorso);
     UnloadModel(modelPants);   UnloadTexture(texPants);
