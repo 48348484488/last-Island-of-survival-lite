@@ -122,7 +122,7 @@ class OriginalUnityHud:
         )
         reduced = source.resize(RENDER_SIZE, Image.Resampling.LANCZOS)
         rgba = Image.new("RGBA", self._tex_dims)
-        rgba.paste(reduced, (0, 0))
+        rgba.paste(reduced, (0, self._tex_dims[1] - RENDER_SIZE[1]))
         pixels = rgba.tobytes("raw", "RGBA", 0, -1)
         if self.texture is None:
             self.texture = glGenTextures(1)
