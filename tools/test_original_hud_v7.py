@@ -44,7 +44,7 @@ assert all(r["source_icon_rect"] in a.t for r in result["original_item_icon_rect
 assert len(result["source_hierarchy_order"])==22
 assert ImageChops.difference(blank.layer,a.layer).getbbox()
 assert result["source_image_components_drawn_unique"]>=50
-assert len(result["source_drawing_calls"])>=55
+assert len(a.calls)>=55
 
 # Runtime values change the image without changing any source rect, texture or font.
 b=v7.HudV7(heading_deg=65,map_uv=(.65,.30))
