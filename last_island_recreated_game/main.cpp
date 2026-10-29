@@ -14,6 +14,7 @@
 #include "mobile_hud_input.hpp"
 #include "mobile_audio.hpp"
 #include "native_build_craft.hpp"
+#include "mobile_build_visual.hpp"
 
 #include <vector>
 #include <string>
@@ -982,6 +983,22 @@ int main() {
                 }
             }
 
+            // Player-built, grid-snapped offline structures. Geometry is a
+            // temporary placeholder while source map/build prefab extraction
+            // is audited. Gameplay/costs/collision are implemented natively.
+            for(const auto& part:building.placed)
+                LIOS_BUILD::drawPiece(part);
+            if(buildMode&&activePanel==0){
+                const Vector3 dir={sinf(player.yaw),0.f,cosf(player.yaw)};
+                const int gx=LIOS_BUILD::grid(player.position.x+dir.x*4.3f);
+                const int gz=LIOS_BUILD::grid(player.position.z+dir.z*4.3f);
+                const auto type=static_cast<LIOS_BUILD::PieceType>(building.selected);
+                const LIOS_BUILD::Piece ghost={type,gx,gz,building.orientation};
+                const bool ok=building.valid(type,gx,gz,building.orientation,
+                                      player.position.x,player.position.z);
+                LIOS_BUILD::drawPiece(ghost,true,ok);
+            }
+
             // Draw Hit Particles
             for (const auto& p : particles) {
                 DrawCube(p.position, p.size, p.size, p.size, p.color);
@@ -1207,8 +1224,35 @@ int main() {
                     DrawText(TextFormat("Pedra: %d   Enxofre: %d",player.stoneCount,player.sulfurCount),
                         int(panel.x+35*canvasScale),int(panel.y+170*canvasScale),bs,RAYWHITE);
                 }else if(activePanel==2){
-                    DrawText("Receitas originais ainda nao reconstruidas",
-                        int(panel.x+35*canvasScale),int(panel.y+140*canvasScale),bs,RAYWHITE);
+                    // Actual craft actions are handled on touch-down above.
+                    // Costs are prototype values, not proven original CFG.
+                    const char* names[]={
+                        "PLANTA DE CONSTRUCAO",
+                        "MARTELO",
+                        "PICARETA DE PEDRA"
+                    };
+                    const bool owned[]={
+                        building.blueprint,building.hammer,building.pickaxe
+                    };
+                    for(int i=0;i<3;i++){
+                        Rectangle option=panelBox(675.f,300.f+i*82.f,550.f,65.f);
+                        DrawRectangleRec(option,Fade(owned[i]?DARKGREEN:DARKGRAY,.87f));
+                        DrawRectangleLinesEx(option,2.f*canvasScale,RAYWHITE);
+                        DrawText(names[i],int(option.x+12*canvasScale),
+                                 int(option.y+8*canvasScale),bs,WHITE);
+                        const auto cost=LIOS_BUILD::CRAFT_COSTS[i];
+                        DrawText(TextFormat("Madeira %d  Pedra %d  Metal %d%s",
+                            cost.wood,cost.stone,cost.metal,owned[i]?"  [PRONTO]":""),
+                            int(option.x+12*canvasScale),int(option.y+35*canvasScale),
+                            std::max(9,int(18*canvasScale)),LIGHTGRAY);
+                    }
+                    Rectangle open=panelBox(675.f,552.f,550.f,73.f);
+                    DrawRectangleRec(open,Fade(DARKGREEN,.88f));
+                    DrawText("ENTRAR NO MODO CONSTRUCAO",
+                        int(open.x+12*canvasScale),int(open.y+22*canvasScale),bs,WHITE);
+                    DrawText(buildStatus.c_str(),int(panel.x+24*canvasScale),
+                             int(panel.y+450*canvasScale),
+                             std::max(9,int(18*canvasScale)),YELLOW);
                 }else if(activePanel==3){
                     DrawText("Som: ativado (audio original M4, machado, coleta)",
                         int(panel.x+35*canvasScale),int(panel.y+140*canvasScale),bs,RAYWHITE);
@@ -1329,6 +1373,37 @@ int main() {
         DrawBtn(btnCam);
         } // Original Unity HUD versus simplified desktop fallback
 
+        if(buildMode&&activePanel==0){
+            const char* names[]={"FUNDACAO","PAREDE","PORTAL","TETO",
+                                 "BAU","FOGUEIRA"};
+            const int i=building.selected;
+            const LIOS_BUILD::Cost c=LIOS_BUILD::BUILD_COSTS[i];
+            auto uiButton=[&](Rectangle bounds,const char* label,Color fill){
+                DrawRectangleRec(bounds,Fade(fill,.87f));
+                DrawRectangleLinesEx(bounds,2.f*canvasScale,RAYWHITE);
+                DrawText(label,int(bounds.x+10.f*canvasScale),
+                         int(bounds.y+18.f*canvasScale),
+                         std::max(12,int(26.f*canvasScale)),WHITE);
+            };
+            uiButton(panelBox(120.f,135.f,200.f,72.f),"TROCAR",DARKGRAY);
+            uiButton(panelBox(325.f,135.f,185.f,72.f),"GIRAR",DARKGRAY);
+            uiButton(panelBox(120.f,218.f,390.f,80.f),"CONSTRUIR",DARKGREEN);
+            uiButton(panelBox(120.f,308.f,390.f,65.f),"SAIR",MAROON);
+            DrawText(TextFormat("%s  %d/%d",names[i],int(building.placed.size()),
+                     LIOS_BUILD::System::MaxPlaced),
+                     int(canvasLeft+120.f*canvasScale),
+                     int(canvasTop+395.f*canvasScale),
+                     std::max(12,int(27.f*canvasScale)),WHITE);
+            DrawText(TextFormat("CUSTO: M%d  P%d  Fe%d",
+                     c.wood,c.stone,c.metal),
+                     int(canvasLeft+120.f*canvasScale),
+                     int(canvasTop+432.f*canvasScale),
+                     std::max(10,int(23.f*canvasScale)),YELLOW);
+            DrawText(buildStatus.c_str(),
+                     int(canvasLeft+120.f*canvasScale),
+                     int(canvasTop+472.f*canvasScale),
+                     std::max(10,int(20.f*canvasScale)),YELLOW);
+        }
         EndDrawing();
     }
 
