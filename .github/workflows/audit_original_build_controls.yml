@@ -1,0 +1,20 @@
+name: Audit original Unity build HUD button rectangles
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/audit_original_build_controls.py
+      - .github/workflows/audit_original_build_controls.yml
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            tools/audit_original_build_controls.py
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_original_all_positions.json
+          sparse-checkout-cone-mode: false
+      - run: python -u tools/audit_original_build_controls.py
