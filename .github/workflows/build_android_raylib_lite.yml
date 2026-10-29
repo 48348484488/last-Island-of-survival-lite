@@ -157,6 +157,18 @@ jobs:
             assert "partinfo_material" in r["source_bundle"]
             assert r["source_texture_id"] and r["sha256"]
             shutil.copy2(source,target/r["file"])
+            # Unity _d texture alpha is a material mask in window/door;
+            # raylib uses it as regular transparency. Keep original 1:1
+            # RGBA and make opaque RGB-identical copies only for rendering.
+            if r["role"] in ("doorway","window"):
+              from PIL import Image
+              original=Image.open(source).convert("RGBA")
+              if original.getchannel("A").getextrema()[1]>=100:
+                raise AssertionError("Alpha was not a Unity mask")
+              render=original.copy()
+              render.putalpha(255)
+              render.save(target/("build_native_opaque_"+r["role"]+".png"))
+              assert render.convert("RGB").tobytes()==original.convert("RGB").tobytes()
             print("LIOS_UNITY_ORIGINAL_BUILD_SURFACE_PACKAGED",
                   r["role"],r["source_texture_name"],r["source_texture_id"],flush=True)
           PY
@@ -239,6 +251,8 @@ jobs:
           for kind in foundation wall roof window doorway stair; do
             test -s "/tmp/lios-raymob/app/src/main/assets/assets/build_original_${kind}.png"
           done
+          test -s /tmp/lios-raymob/app/src/main/assets/assets/build_native_opaque_window.png
+          test -s /tmp/lios-raymob/app/src/main/assets/assets/build_native_opaque_doorway.png
           grep -q 'Build_btn_build' /tmp/lios-raymob/app/src/main/cpp/mobile_original_hud_layout.hpp
           grep -q 'Build_btn_fundation' /tmp/lios-raymob/app/src/main/cpp/mobile_original_hud_layout.hpp
           cd /tmp/lios-raymob
@@ -315,6 +329,8 @@ jobs:
               'assets/assets/build_original_window.png',
               'assets/assets/build_original_doorway.png',
               'assets/assets/build_original_stair.png',
+              'assets/assets/build_native_opaque_window.png',
+              'assets/assets/build_native_opaque_doorway.png',
               'assets/assets/icon_source_construction_hammer.png',
               'assets/assets/icon_source_stone_pickaxe.png',
               'assets/assets/hud_original_compass_strip.png',
