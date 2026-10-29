@@ -25,42 +25,83 @@ TAB_NAMES = {
     14: "vehicles", 15: "transport", 16: "electrical"
 }
 
+def _read_drawing_record(reader, variant):
+    """The 7.3 XAPK has a different prefix from the older C#.
+    Version is established against actual source bytes, not guessed fields:
+    id,name,bigType,smallType,10 bool bytes,6 ints,materialCount,pairs,
+    targetItemId,onceMaxCreate,order,baseNumber,productNum.
+    The unmapped flags/ints are preserved as raw evidence, not interpreted.
+    """
+    start = reader.off
+    row = {"id": reader.integer(), "name": reader.string()}
+    if variant == "lite73":
+        row["bigType"] = reader.integer()
+        row["smallType"] = reader.integer()
+        row["raw_flags"] = [reader.boolean() for _ in range(10)]
+        row["raw_numbers"] = [reader.integer() for _ in range(6)]
+        row["isNormal"] = row["raw_flags"][0]
+        row["isShowLocked"] = row["raw_flags"][1]
+        row["isDefault"] = row["raw_flags"][2]
+        row["levelLimit"] = row["raw_numbers"][0]
+        row["needWorkbench"] = None  # Prefix differs; no unproven guess.
+        row["needWorkbenchLevel"] = None
+        row["needTime"] = row["raw_numbers"][-1]
+    else:
+        for key in ("noUseId", "typeShow", "bigType", "smallType"):
+            row[key] = reader.integer()
+        for key in ("isNormal", "isShowLocked", "isDefault"):
+            row[key] = reader.boolean()
+        for key in ("levelLimit", "needWorkbench",
+                    "needWorkbenchLevel", "needTime"):
+            row[key] = reader.integer()
+    count = reader.integer()
+    if count < 0 or count > 64:
+        raise ValueError("Invalid DrawingCfg material count at "+str(start))
+    row["materials"] = []
+    for _ in range(count):
+        row["materials"].append({
+            "itemId": reader.integer(), "num": reader.integer()})
+    for key in ("targetItemId", "onceMaxCreate", "order",
+                "baseNumber", "productNum"):
+        row[key] = reader.integer()
+    row["byte_span"] = [start, reader.off]
+    row["record_variant"] = variant
+    if (row["id"] <= 0 or
+        row["smallType"] < 0 or row["smallType"] > 64 or
+        row["bigType"] < 0 or row["bigType"] > 64 or
+        row["needTime"] < 0 or row["needTime"] > 60*60*24*365 or
+        row["levelLimit"] < 0 or row["levelLimit"] > 100000 or
+        not (0 <= row["onceMaxCreate"] <= 1000000) or
+        row["targetItemId"] <= 0 or
+        any(m["itemId"] <= 0 or not (0 <= m["num"] <= 10000000)
+            for m in row["materials"])):
+        raise ValueError("Invalid DrawingCfg record at "+str(start)+
+                         " id="+str(row["id"]))
+    return row
+
 def parse_drawing(payload):
     reader = Octets(payload)
     rows = []
     seen = set()
     while reader.off < len(reader.data):
+        # Prefer exact confirmed legacy when valid, otherwise the source
+        # 7.3 record prefix. No scanning for a lucky-looking next header.
         start = reader.off
-        row = {"id": reader.integer(), "name": reader.string()}
-        for key in ("noUseId", "typeShow", "bigType", "smallType"):
-            row[key] = reader.integer()
-        for key in ("isNormal", "isShowLocked", "isDefault"):
-            row[key] = reader.boolean()
-        for key in ("levelLimit", "needWorkbench", "needWorkbenchLevel",
-                    "needTime"):
-            row[key] = reader.integer()
-        count = reader.integer()
-        if count < 0 or count > 64:
-            raise ValueError("Invalid DrawingCfg material count at "+str(start))
-        row["materials"] = []
-        for _ in range(count):
-            row["materials"].append({
-                "itemId": reader.integer(), "num": reader.integer()})
-        for key in ("targetItemId", "onceMaxCreate", "order",
-                    "baseNumber", "productNum"):
-            row[key] = reader.integer()
-        row["byte_span"] = [start, reader.off]
-        if (row["id"] <= 0 or row["id"] in seen or
-            row["smallType"] not in TAB_NAMES or
-            row["bigType"] not in TAB_NAMES or
-            row["needTime"] < 0 or row["needTime"] > 60*60*24*365 or
-            row["levelLimit"] < 0 or row["levelLimit"] > 100000 or
-            not (0 <= row["onceMaxCreate"] <= 100000) or
-            row["targetItemId"] <= 0 or
-            any(m["itemId"] <= 0 or not (0 <= m["num"] <= 10000000)
-                for m in row["materials"])):
-            raise ValueError("Invalid DrawingCfg record at "+str(start)+
-                             " id="+str(row["id"]))
+        failures = []
+        row = None
+        for variant in ("legacy_csharp", "lite73"):
+            reader.off = start
+            try:
+                candidate = _read_drawing_record(reader, variant)
+                if candidate["id"] in seen:
+                    raise ValueError("Duplicate original cfg recipe id")
+                row = candidate
+                break
+            except (UnicodeError, ValueError) as exc:
+                failures.append(str(exc))
+        if row is None:
+            raise ValueError("No verified DrawingCfg 7.3 record at "+str(start)+
+                             " errors="+str(failures))
         seen.add(row["id"])
         rows.append(row)
         if len(rows) > MAX_ROWS:
