@@ -60,18 +60,31 @@ int main(){
     // Original production queue concept: quantity, timers, refunds, queue cap.
     System craft;
     Resources ingredients{1000,1000,1000,0};
+    assert(craft.maxCraftableQuantity(StonePickaxe,ingredients)==8);
+    assert(craft.maxCraftableQuantity(static_cast<RecipeType>(-1),ingredients)==0);
     assert(craft.requestCraft(StonePickaxe,ingredients,3));
+    assert(craft.maxCraftableQuantity(StonePickaxe,ingredients)==5);
     assert(craft.queue.size()==3);
     assert(ingredients.wood==1000-3*CRAFT_COSTS[StonePickaxe].wood);
     assert(craft.cancelCraft(1,ingredients));
     assert(craft.queue.size()==2);
+    assert(craft.maxCraftableQuantity(StonePickaxe,ingredients)==6);
     assert(ingredients.wood==1000-2*CRAFT_COSTS[StonePickaxe].wood);
     for(int i=0;i<14;i++)craft.tickCraft(1.f);
     assert(craft.queue.empty()&&craft.pickaxe&&craft.craftedCount[StonePickaxe]==2);
     assert(!craft.requestCraft(Blueprint,ingredients,9));
     assert(craft.requestCraft(Blueprint,ingredients,8));
     assert(!craft.requestCraft(Hammer,ingredients));
+    assert(craft.maxCraftableQuantity(Hammer,ingredients)==0);
     assert(craft.cancelCraft(0,ingredients));
+    Resources limited{10,10,10,0};
+    assert(craft.maxCraftableQuantity(Hammer,limited)==0);
+    Resources picked{75,140,0,0};
+    System independent;
+    assert(independent.maxCraftableQuantity(StonePickaxe,picked)==3);
+    assert(!independent.requestCraft(StonePickaxe,picked,4));
+    assert(independent.requestCraft(StonePickaxe,picked,3));
+    assert(picked.wood==0&&picked.stone==5);
     std::cout<<"LIOS_BUILD_CRAFT_NATIVE_LOGIC_PASS placed="<<b.placed.size()
              <<" recipes=3 queued_quantity=true item_sprite_source=true build_categories=8 wall_collision=pass\\n";
 }
