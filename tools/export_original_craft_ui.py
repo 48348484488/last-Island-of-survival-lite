@@ -125,6 +125,63 @@ with tempfile.TemporaryDirectory() as temp:
     except Exception as exc:
      missing[ident]=str(exc)[:170]
    print("LIOS_SOURCE_CRAFT_ATLAS",path,"matched",count,flush=True)
+  # Unity main category On/Off sprites use fileID=8 in the ORIGINAL
+  # bagandbuildpanel serialized file, not the two earlier guessed atlases.
+  # Resolve FileID -> exact CAB GUID, then locate its genuine AssetBundle
+  # within the same unmodified installation pack. No image-name guessing.
+  unresolved={pid for pid in used if not any(a["pathid"]==pid for a in assets)}
+  original_file=next(iter(ui.objects)).assets_file
+  cab_by_fileid={}
+  for fileid,external in enumerate(original_file.externals,1):
+   match=re.search(r"CAB-([0-9a-f]{32})",str(external),re.I)
+   if match:cab_by_fileid[fileid]=match.group(1).lower()
+  missing_by_cab={}
+  for pid in unresolved:
+   cab=cab_by_fileid.get(used[pid])
+   if cab:missing_by_cab.setdefault(cab,set()).add(pid)
+  candidates={}
+  if missing_by_cab:
+   for info in z.infolist():
+    if not info.filename.endswith(".ab"):continue
+    with z.open(info) as inp:
+     prefix=inp.read(2048)
+    for match in re.finditer(rb"CAB-([0-9a-f]{32})",prefix,re.I):
+     cab=match.group(1).decode().lower()
+     if cab in missing_by_cab:candidates.setdefault(cab,[]).append(info.filename)
+  print("LIOS_CRAFT_EXTERNAL_ATLAS_CABS",json.dumps({
+    cab:{"needed":len(ids),"bundles":candidates.get(cab,[])}
+    for cab,ids in missing_by_cab.items()}),flush=True)
+  for cab,ids in missing_by_cab.items():
+   for path in candidates.get(cab,[]):
+    source=t/"craft_external_exact.ab"
+    with z.open(path) as src,source.open("wb") as dst:
+     shutil.copyfileobj(src,dst,8*1024*1024)
+    try:
+     env=UnityPy.load(str(source))
+     objs={str(obj.path_id):obj for obj in env.objects
+           if obj.type.name=="Sprite"}
+     for ident in sorted(ids):
+      obj=objs.get(ident)
+      if not obj or any(x["pathid"]==ident for x in assets):continue
+      try:
+       sprite=obj.read()
+       img=sprite.image.convert("RGBA")
+       clean=re.sub(r"[^a-zA-Z0-9_-]","_",str(sprite.m_Name))[:48]
+       output=f"craft_{ident}_{clean}.png"
+       img.save(OUT/output,optimize=True)
+       assets.append({"pathid":ident,"name":str(sprite.m_Name),
+          "file":output,"source":path,"source_cab":cab,
+          "size":list(img.size),"sha256":hashlib.sha256(img.tobytes()).hexdigest(),
+          "file_id":used[ident]})
+       missing.pop(ident,None)
+      except Exception as exc:
+       missing[ident]=str(exc)[:170]
+    except Exception as exc:
+     print("LIOS_CRAFT_EXTERNAL_ATLAS_READ_FAIL",path,str(exc)[:250],flush=True)
+    finally:
+     source.unlink(missing_ok=True)
+  print("LIOS_CRAFT_EXTERNAL_SPRITES_RECOVERED",
+        len([a for a in assets if "source_cab" in a]),flush=True)
   for pathid in used:
    if not any(a["pathid"]==pathid for a in assets):
     missing.setdefault(pathid,"not in selected source atlas dependencies")
