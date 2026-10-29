@@ -1,0 +1,84 @@
+name: EdgeAI V15 original ARM64 stateful score parity
+on:
+  push:
+    branches: [edgeai-blind-2048-experiment]
+    paths:
+      - edgeai_probe/v15_original_score_probe.c
+      - edgeai_probe/v15_score_cases.tsv
+      - .github/workflows/edgeai-v15-original-arm64-score.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  original-arm64-score-parity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download pinned original stripped ARM64 ELF
+        uses: actions/download-artifact@v4
+        with:
+          name: edgeai-external-2048-arm64-binary-only
+          path: original
+          run-id: 38969071956
+          github-token: ${{ github.token }}
+      - name: Install QEMU and AArch64 compiler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends qemu-user gcc-aarch64-linux-gnu libc6-dev-arm64-cross
+      - name: Verify original ELF and build interposition shim
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          echo 'a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b  original/2048-arm64-stripped.elf' | sha256sum -c -
+          aarch64-linux-gnu-gcc -shared -fPIC -O2 -Wall -Wextra -Werror -fno-stack-protector -o output/v15_score_probe.so edgeai_probe/v15_original_score_probe.c
+      - name: Execute original ARM64 and verify hash-bound generated C++ stdout
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          root=Path.cwd()
+          binary=root/'original/2048-arm64-stripped.elf'
+          probe=root/'output/v15_score_probe.so'
+          rows=(root/'edgeai_probe/v15_score_cases.tsv').read_text().splitlines()
+          assert rows[0]=='# ELF sha256: a3ca49d16ca6428291574ebd3f7c54153ef0913f8aa1eee4279408c3bf9d499b'
+          assert rows[1]=='# Generated C++ sha256: b43bba39aeafbb9375be3f852e16e801b15ed59c32d069b25874386eb66337c5'
+          assert hashlib.sha256(binary.read_bytes()).hexdigest()==rows[0].split()[-1]
+          assert len(rows)==22
+          records=[]
+          for i,row in enumerate(rows[2:]):
+              seq,expected_size,expected_sha=row.split('\t')
+              values=[int(x) for x in seq.split(':')]
+              assert 1<=len(values)<=256 and all(0<=x<=0xffffffff for x in values)
+              cmd=['qemu-aarch64','-L','/usr/aarch64-linux-gnu',
+                '-E',f'LD_PRELOAD={probe}','-E','EDGEAI_ENTRY=0x4012d0',
+                '-E',f'EDGEAI_SEQUENCE={seq}',str(binary)]
+              result=subprocess.run(cmd,capture_output=True,timeout=30)
+              if result.returncode:
+                  raise RuntimeError(f'ARM64 original failed case {i}: {result.returncode} {result.stderr[:300]!r}')
+              digest=hashlib.sha256(result.stdout).hexdigest()
+              if len(result.stdout)!=int(expected_size) or digest!=expected_sha:
+                  raise AssertionError(f'ARM64 versus generated C++ mismatch case {i}: {len(result.stdout)} {digest}')
+              (root/'output'/f'original_case_{i:02d}.bin').write_bytes(result.stdout)
+              records.append({'case':i,'calls':len(values),'bytes':len(result.stdout),'sha256':digest})
+              print('ORIGINAL_ARM64_PARITY',i,len(values),len(result.stdout),digest)
+          report={'status':'PASS','cases':len(records),'calls':sum(x['calls'] for x in records),
+             'stdout_bytes':sum(x['bytes'] for x in records),
+             'elf_sha256':rows[0].split()[-1],'generated_cpp_sha256':rows[1].split()[-1],
+             'comparison':'actual original ELF under QEMU versus generated C++ pinned stdout hashes',
+             'game_source_used_in_original_execution':False,'records':records}
+          (root/'output/v15_original_arm64_parity.json').write_text(json.dumps(report,indent=2)+'\n')
+          print('FINAL_PASS',report['cases'],report['calls'],report['stdout_bytes'])
+          PY
+      - name: Upload raw ARM64 stdout and parity report
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeai-v15-original-arm64-score-parity
+          path: |
+            output/original_case_*.bin
+            output/v15_original_arm64_parity.json
+          if-no-files-found: error
+          retention-days: 14
