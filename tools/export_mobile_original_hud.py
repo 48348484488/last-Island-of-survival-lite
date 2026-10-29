@@ -211,8 +211,9 @@ def main():
     # RectTransforms of exact original controls and derived position strip.
     geometry["build_controls"]={}
     for name in ("btn_build","btn_freeBuildModel","btn_opRotate",
-                 "m_buildPartTypes","m_buildChilds","btn_changeButton",
-                 "scp_bagBuilds"):
+                 "btn_opMove","btn_opRepair","btn_opUp","btn_opDestory",
+                 "m_buildBaseBtns","m_buildPartTypes","m_buildChilds",
+                 "btn_changeButton","scp_bagBuilds"):
         go=hud.go(name)
         geometry["build_controls"][name]={
             "bounds":source_rect(hud,go["path_id"]),
