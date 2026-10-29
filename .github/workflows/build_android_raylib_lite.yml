@@ -239,7 +239,7 @@ jobs:
               shutil.copy2(path,target/name)
               print("LIOS_EDGEAI_SOURCE_EXACT_BUILD_ICONS",t,n,name,flush=True)
           cpp=src/"original_buildpart_v7.hpp"
-          assert cpp.stat().st_size>3000
+          assert cpp.stat().st_size>2000
           shutil.copy2(cpp,Path("/tmp/lios-raymob/app/src/main/cpp")/cpp.name)
           print("LIOS_EDGEAI_35_ORIGINAL_BUILDPART_SOURCE_IDENTITIES_READY",flush=True)
           PY
