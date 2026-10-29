@@ -17,6 +17,7 @@
 #include "original_buildpart_v7.hpp"
 #include "mobile_build_visual.hpp"
 #include "mobile_craft_ui.hpp"
+#include "mobile_real_craft_catalog.hpp"
 
 #include <vector>
 #include <string>
@@ -285,6 +286,8 @@ int main() {
     };
     LIOS_CRAFT_UI::Art originalCraftArt;
     originalCraftArt.load();
+    LIOS_REAL_CRAFT::Art realCraftArt;
+    realCraftArt.load();
     Texture2D originalThumb=LoadTexture("assets/hud_original_joystick_knob.png");
     // Exact-source Unity m_heightLignt for all seven hotbar slots.
     Texture2D originalHotbarSelection=LoadTexture("assets/hud_original_hotbar_selection.png");
@@ -343,6 +346,8 @@ int main() {
     bool buildSubmenuOpen=false,buildBagOpen=false;
     int craftSelectedRecipe=0,craftQuantity=1;
     int craftBigTab=1,craftSmallTab=1,craftSelectedOrder=0;
+    LIOS_REAL_CRAFT::State realCraft;
+    bool showOfflineCraftPrototype=false;
     std::string craftStatus="Selecione uma receita e fabrique.";
 
     // -------------------------------------------------------------------------------------
@@ -384,6 +389,7 @@ int main() {
         float dt = GetFrameTime();
         if (dt > 0.05f) dt = 0.05f; // Clamp delta time
         building.tickCraft(dt);
+        realCraft.tick(dt);
         if(building.blueprint&&craftStatus=="Fabricando..."){
             craftStatus="Item pronto. Equipe pelo ultimo slot da barra.";
         }
@@ -547,6 +553,29 @@ int main() {
         };
         for(const Vector2 &click:uiClicks){
             if(activePanel==2){
+                // Source-derived 519 recipes and original Sprite atlases are
+                // the default screen. Keep the legacy THREE-ITEM sandbox
+                // accessible separately, not presented as the real catalog.
+                if(LIOS_REAL_CRAFT::hit(click,1685,1011,225,60,
+                    canvasScale,canvasLeft,canvasTop)){
+                    showOfflineCraftPrototype=!showOfflineCraftPrototype;
+                    continue;
+                }
+                if(!showOfflineCraftPrototype){
+                    if(LIOS_REAL_CRAFT::hit(click,1654,0,316,86,
+                        canvasScale,canvasLeft,canvasTop)){
+                        activePanel=0;continue;
+                    }
+                    LIOS_BUILD::Resources nativeResources{
+                        player.woodCount,player.stoneCount,
+                        player.ironCount,player.sulfurCount};
+                    LIOS_REAL_CRAFT::touch(realCraft,click,canvasScale,
+                        canvasLeft,canvasTop,nativeResources);
+                    player.woodCount=nativeResources.wood;
+                    player.stoneCount=nativeResources.stone;
+                    player.ironCount=nativeResources.metal;
+                    continue;
+                }
                 const auto touch=[&](float x,float y,float w,float h){
                     return LIOS_CRAFT_UI::hit(click,x,y,w,h,canvasScale,canvasLeft,canvasTop);
                 };
@@ -1624,9 +1653,24 @@ int main() {
         if(activePanel==2){
             const LIOS_BUILD::Resources available={
                 player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
-            LIOS_CRAFT_UI::render(originalCraftArt,building,available,
-                craftSelectedRecipe,craftQuantity,craftBigTab,craftSmallTab,
-                craftSelectedOrder,craftStatus,canvasScale,canvasLeft,canvasTop);
+            if(showOfflineCraftPrototype){
+                LIOS_CRAFT_UI::render(originalCraftArt,building,available,
+                    craftSelectedRecipe,craftQuantity,craftBigTab,craftSmallTab,
+                    craftSelectedOrder,craftStatus,canvasScale,canvasLeft,canvasTop);
+            }else{
+                LIOS_REAL_CRAFT::render(realCraftArt,realCraft,available,
+                    canvasScale,canvasLeft,canvasTop);
+            }
+            // Only native developer fallback: allows already-implemented
+            // builder test items to remain obtainable on Android.
+            DrawRectangleRec(panelBox(1685,1011,225,60),
+                Color{30,40,44,235});
+            DrawRectangleLinesEx(panelBox(1685,1011,225,60),
+                1.5f*canvasScale,GRAY);
+            DrawText(showOfflineCraftPrototype?"CATALOGO ORIGINAL":"TESTE OFFLINE",
+                int(canvasLeft+1697*canvasScale),
+                int(canvasTop+1031*canvasScale),
+                std::max(11,int(18*canvasScale)),LIGHTGRAY);
         }
         if(buildMode&&activePanel==0&&originalBuildCategories.id){
             // Exact ORIGINAL Unity UGUI sprites, generated from Image.m_Sprite
