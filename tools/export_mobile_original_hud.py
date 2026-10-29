@@ -237,6 +237,20 @@ def main():
     for i,tile in enumerate(tiles):
         atlas.alpha_composite(tile,(i*w,0))
     atlas.save(dest/"hud_original_build_categories.png",optimize=True)
+    selected_go=hud._descendant(hud.go("btn_fundation")["path_id"],"Checkmark")
+    selected_layer=NativeMobileHud(ASSETS,heading_deg=0,map_uv=[.5,.5])
+    selected_layer.node(selected_layer.g[selected_go],depth=0)
+    rb=source_rect(hud,selected_go)
+    crop=tuple(round(rb[key]) for key in ("left","top","right","bottom"))
+    check=selected_layer.layer.crop(crop)
+    if check.getbbox() is None:
+        raise ValueError("Unity Toggle.Checkmark original source is missing")
+    check.save(dest/"hud_original_build_selected.png",optimize=True)
+    geometry["build_category_selected"]={
+        "source_toggle_child":"btn_fundation/Checkmark",
+        "source_gameobject_path_id":selected_go,
+        "source_pixel_bounds":rb,
+        "asset":"hud_original_build_selected.png"}
     geometry["build_category_atlas"]={"count":len(names),"tile_width":w,"tile_height":h,
                                        "source_group":"m_buildPartTypes",
                                        "order":names}
