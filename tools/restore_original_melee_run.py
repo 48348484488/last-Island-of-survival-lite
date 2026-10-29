@@ -8,7 +8,9 @@ import ast,hashlib,importlib.util,json,struct,sys,zlib
 from pathlib import Path
 import numpy as np
 import UnityPy
-from export_original_stone_axe_3d import ROOT,source_matrix
+# Import the axe mesh only for GLB packaging. Keep original curve decoder usable
+# in the lightweight Android build without trimesh/preview dependencies.
+ROOT=Path(__file__).resolve().parents[1]
 
 GAME=ROOT/"last_island_recreated_game"
 PACK=GAME/"importar_corrida_original"
@@ -155,6 +157,7 @@ def check_game_code():
   return True
 
 def package_glb():
+  from export_original_stone_axe_3d import source_matrix
   spec=importlib.util.spec_from_file_location("glb_export",ROOT/"tools/export_axe_hold_animation.py")
   exp=importlib.util.module_from_spec(spec);spec.loader.exec_module(exp)
   exp.CLIPS=["zhan_stand01",CLIP]
