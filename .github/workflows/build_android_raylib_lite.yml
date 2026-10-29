@@ -140,6 +140,11 @@ jobs:
               shutil.copyfile(original,target/name)
               print("LIOS_ORIGINAL_CRAFT_PPTR_PACKAGED",identifier,name,flush=True)
           source_main=byid.get("8081054173552591411")
+          selected_indicator=byid.get("-2981005624660488701")
+          if selected_indicator:
+              shutil.copyfile(src/selected_indicator["file"],
+                              target/"craft_original_primary_tab_indicator.png")
+              print("LIOS_ORIGINAL_PRIMARY_CRAFT_TAB_ACTIVE_INDICATOR_FOUND",flush=True)
           if source_main:
               shutil.copyfile(src/source_main["file"],
                               target/"craft_original_primary_tab.png")
