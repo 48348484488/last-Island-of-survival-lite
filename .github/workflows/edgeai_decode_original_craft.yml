@@ -1,0 +1,42 @@
+name: EdgeAI recover genuine Unity crafting DrawingCfg and ItemCfg
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/edgeai_unity_craft_decode.py
+      - tools/edgeai_unity_buildpart_decode.py
+      - tests/test_edgeai_unity_craft_decode.py
+      - .github/workflows/edgeai_decode_original_craft.yml
+permissions:
+  contents: read
+jobs:
+  decode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            xapk_original
+            tools/edgeai_unity_craft_decode.py
+            tools/edgeai_unity_buildpart_decode.py
+            tests/test_edgeai_unity_craft_decode.py
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Source serializer regression fixtures
+        run: python -m unittest discover -s tests -p test_edgeai_unity_craft_decode.py -v
+      - name: Recover ORIGINAL DrawingCfg and ItemCfg (no guessed recipes)
+        run: |
+          python -u tools/edgeai_unity_craft_decode.py \
+            --xapk-parts xapk_original --output original_craft_config/verified_craft_config.json
+      - name: Archive recoverable evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: EdgeAI-Original-Unity-Craft-Config
+          path: original_craft_config/
+          if-no-files-found: warn
+          retention-days: 30
