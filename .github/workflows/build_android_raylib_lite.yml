@@ -133,6 +133,34 @@ jobs:
               print("LIOS_ORIGINAL_CRAFT_PPTR_PACKAGED",identifier,name,flush=True)
           PY
 
+      - name: Package original Unity level-one building albedo textures
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lios-original-walls
+          gh run download 40815593060 --repo "$GITHUB_REPOSITORY" \
+            --name Source-Unity-Original-Construction-Surface-Textures \
+            --dir /tmp/lios-original-walls
+          python - <<'PY'
+          import json,shutil
+          from pathlib import Path
+          folder=Path("/tmp/lios-original-walls")
+          rows=json.loads((folder/"build_surface_manifest.json").read_text())
+          expected={'foundation','wall','roof','doorway','window','stair'}
+          assert {r['role'] for r in rows if r.get('file')}==expected
+          target=Path("/tmp/lios-raymob/app/src/main/assets/assets")
+          target.mkdir(parents=True,exist_ok=True)
+          for r in rows:
+            source=folder/r["file"]
+            assert source.is_file() and source.stat().st_size>2000
+            assert "partinfo_material" in r["source_bundle"]
+            assert r["source_texture_id"] and r["sha256"]
+            shutil.copy2(source,target/r["file"])
+            print("LIOS_UNITY_ORIGINAL_BUILD_SURFACE_PACKAGED",
+                  r["role"],r["source_texture_name"],r["source_texture_id"],flush=True)
+          PY
+
       - name: Regression-test camera, original skin atlas and mesh normals
         run: python -u tools/test_android_character_parity.py
 
@@ -165,10 +193,13 @@ jobs:
           test -s /tmp/lios-raymob/app/src/main/assets/assets/craft_original_item_slot.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/icon_source_construction_hammer.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/icon_source_stone_pickaxe.png
+          for kind in foundation wall roof window doorway stair; do
+            test -s "/tmp/lios-raymob/app/src/main/assets/assets/build_original_${kind}.png"
+          done
           grep -q 'Build_btn_build' /tmp/lios-raymob/app/src/main/cpp/mobile_original_hud_layout.hpp
           grep -q 'Build_btn_fundation' /tmp/lios-raymob/app/src/main/cpp/mobile_original_hud_layout.hpp
           cd /tmp/lios-raymob
-          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.20.0-original-crafting-ui-queue/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
+          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.21.0-original-construction-materials/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
@@ -227,6 +258,12 @@ jobs:
               'assets/assets/craft_original_create_button.png',
               'assets/assets/craft_original_back_button.png',
               'assets/assets/craft_original_item_slot.png',
+              'assets/assets/build_original_foundation.png',
+              'assets/assets/build_original_wall.png',
+              'assets/assets/build_original_roof.png',
+              'assets/assets/build_original_window.png',
+              'assets/assets/build_original_doorway.png',
+              'assets/assets/build_original_stair.png',
               'assets/assets/icon_source_construction_hammer.png',
               'assets/assets/icon_source_stone_pickaxe.png',
               'assets/assets/hud_original_compass_strip.png',
@@ -306,7 +343,7 @@ jobs:
       - name: Copy named downloadable APK
         run: |
           mkdir -p dist
-          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.20.0-ARM64.apk
+          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.21.0-ARM64.apk
           sha256sum dist/*.apk
 
       - name: Upload Android APK for phone testing
@@ -336,15 +373,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          APK="dist/LastIslandLite-v0.20.0-ARM64.apk"
-          TAG="v0.20.0"
+          APK="dist/LastIslandLite-v0.21.0-ARM64.apk"
+          TAG="v0.21.0"
           test -s "$APK"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
           else
             gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" \
               --target "$GITHUB_SHA" \
-              --title "Last Island LITE recriado - Android v0.20.0" \
+              --title "Last Island LITE recriado - Android v0.21.0" \
               --notes "APK ARM64 experimental: tela de fabricacao com sprites originais dos atlas bagandbuildpanel.ab e common.ab, botoes de construcoes, quantidade e fila de fabricacao offline; iconografia de ferramentas dos originais tubiao. Custos e logica completos do Unity ainda nao extraidos."
           fi
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'
