@@ -116,8 +116,14 @@ jobs:
           cp /tmp/lios-original-hud/*.png /tmp/lios-raymob/app/src/main/assets/assets/
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_melee.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_rifle.png
+          test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_build.png
+          test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_build_categories.png
+          test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_build_selected.png
+          test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_build_rotate.png
+          grep -q 'Build_btn_build' /tmp/lios-raymob/app/src/main/cpp/mobile_original_hud_layout.hpp
+          grep -q 'Build_btn_fundation' /tmp/lios-raymob/app/src/main/cpp/mobile_original_hud_layout.hpp
           cd /tmp/lios-raymob
-          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.18.0-native-building-crafting/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
+          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.19.0-original-unity-build-hud/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
@@ -169,6 +175,10 @@ jobs:
               'assets/assets/lios_skeleton_v1.bin',
               'assets/assets/hud_original_melee.png',
               'assets/assets/hud_original_rifle.png',
+              'assets/assets/hud_original_build.png',
+              'assets/assets/hud_original_build_categories.png',
+              'assets/assets/hud_original_build_selected.png',
+              'assets/assets/hud_original_build_rotate.png',
               'assets/assets/hud_original_compass_strip.png',
               'assets/assets/hud_original_hotbar_selection.png',
               'assets/assets/hud_original_joystick_knob.png',
@@ -246,7 +256,7 @@ jobs:
       - name: Copy named downloadable APK
         run: |
           mkdir -p dist
-          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.18.0-ARM64.apk
+          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.19.0-ARM64.apk
           sha256sum dist/*.apk
 
       - name: Upload Android APK for phone testing
@@ -277,14 +287,14 @@ jobs:
         run: |
           set -euo pipefail
           APK="dist/LastIslandLite-v0.18.0-ARM64.apk"
-          TAG="v0.18.0"
+          TAG="v0.19.0"
           test -s "$APK"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
           else
             gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" \
               --target "$GITHUB_SHA" \
-              --title "Last Island LITE recriado - Android v0.18.0" \
-              --notes "APK experimental ARM64 com 59 clips Unity, construcao de fundacao/parede/portal/teto/bau/fogueira e crafting offline. Geometria do mapa real e modelos de construcoes ainda em extracao; construcoes 3D mostradas sao provisórias."
+              --title "Last Island LITE recriado - Android v0.19.0" \
+              --notes "APK ARM64 experimental com botoes originais de construcao do battlepanel.ab (sprites, RectTransforms, categorias, modo de construcao e rotacao). A UI e derivada dos arquivos Unity; runtime/animacao e receitas ainda nao podem ser declarados identicos ao cliente original."
           fi
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'
