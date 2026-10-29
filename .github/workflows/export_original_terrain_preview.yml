@@ -1,0 +1,33 @@
+name: Export original Unity terrain mesh preview
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/export_original_terrain_preview.py
+      - .github/workflows/export_original_terrain_preview.yml
+permissions:
+  contents: read
+jobs:
+  export-original-terrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            tools/export_original_terrain_preview.py
+            xapk_original
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --quiet UnityPy
+      - run: python -u tools/export_original_terrain_preview.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: LIOS-SOURCE-ORIGINAL-4-TERRAIN-OBJ-PNG
+          path: original_terrain_preview/
+          if-no-files-found: warn
+          retention-days: 30
