@@ -441,21 +441,24 @@ int main() {
             leftStick.active=hudInput.owner.size()>0&&
                 (std::fabs(hudInput.stick.x)+std::fabs(hudInput.stick.y)>0.002f);
         }
+        // A BagAndBuildPanel captures all touches. Without modal ownership,
+        // tapping a recipe also fires hidden HUD/weapon buttons underneath.
+        const bool overlayWasOpen=activePanel!=0;
         // Touch events (edge-triggered unless the action is explicitly held).
-        if(!buildMode&&hudInput.justPressed(HA::Slot0)){player.equippedSlot=0;selectedHotbarSlot=0;aim=false;}
-        if(!buildMode&&hudInput.justPressed(HA::Slot1)){player.equippedSlot=1;selectedHotbarSlot=1;}
-        for(int i=0;i<5;i++)if(!buildMode&&hudInput.justPressed(
+        if(!overlayWasOpen&&!buildMode&&hudInput.justPressed(HA::Slot0)){player.equippedSlot=0;selectedHotbarSlot=0;aim=false;}
+        if(!overlayWasOpen&&!buildMode&&hudInput.justPressed(HA::Slot1)){player.equippedSlot=1;selectedHotbarSlot=1;}
+        for(int i=0;i<5;i++)if(!overlayWasOpen&&!buildMode&&hudInput.justPressed(
             static_cast<HA>(int(HA::Slot2)+i))){
             // Unity hotbar selects the item; it does NOT open the inventory.
             // Native resource item use is not ported; never fire the old gun.
             selectedHotbarSlot=i+2;player.equippedSlot=-1;aim=false;
         }
-        if(hudInput.justPressed(HA::AutoRun))autoRun=!autoRun;
-        if(hudInput.justPressed(HA::Crouch)||IsKeyPressed(KEY_C)){
+        if(!overlayWasOpen&&hudInput.justPressed(HA::AutoRun))autoRun=!autoRun;
+        if(!overlayWasOpen&&(hudInput.justPressed(HA::Crouch)||IsKeyPressed(KEY_C))){
             const bool wasProne=prone;
             crouch=wasProne||!crouch;prone=false;
         }
-        if(hudInput.justPressed(HA::Prone)||IsKeyPressed(KEY_Z)){
+        if(!overlayWasOpen&&(hudInput.justPressed(HA::Prone)||IsKeyPressed(KEY_Z))){
             prone=!prone;crouch=false;
         }
         const int stance=prone?2:crouch?1:0;
@@ -479,26 +482,26 @@ int main() {
             lastStance=stance;
             if(stance>0){player.isAttacking=false;aim=false;}
         }
-        if(hudInput.justPressed(HA::Aim)&&player.equippedSlot==1)aim=!aim;
-        if(hudInput.justPressed(HA::Reload)&&player.equippedSlot==1&&magazine<30&&reserveAmmo>0){
+        if(!overlayWasOpen&&hudInput.justPressed(HA::Aim)&&player.equippedSlot==1)aim=!aim;
+        if(!overlayWasOpen&&hudInput.justPressed(HA::Reload)&&player.equippedSlot==1&&magazine<30&&reserveAmmo>0){
             int n=std::min(30-magazine,reserveAmmo);
             magazine+=n;reserveAmmo-=n;
         }
-        if(hudInput.justPressed(HA::Inventory)){
+        if(!overlayWasOpen&&hudInput.justPressed(HA::Inventory)){
             activePanel=(activePanel==1?0:1);
             if(buildMode){buildMode=false;building.selected=-1;}
         }
-        if(hudInput.justPressed(HA::Craft)){
+        if(!overlayWasOpen&&hudInput.justPressed(HA::Craft)){
             activePanel=(activePanel==2?0:2);
             if(buildMode){buildMode=false;building.selected=-1;}
         }
-        if(hudInput.justPressed(HA::Settings))activePanel=(activePanel==3?0:3);
-        if(hudInput.justPressed(HA::QuickChat))activePanel=(activePanel==4?0:4);
+        if(!overlayWasOpen&&hudInput.justPressed(HA::Settings))activePanel=(activePanel==3?0:3);
+        if(!overlayWasOpen&&hudInput.justPressed(HA::QuickChat))activePanel=(activePanel==4?0:4);
         // Original BuildState is entered from equipped/quick-use builder
         // equipment, NOT from an invented "ENTER BUILD MODE" craft button.
         // Offline native mapping: building item occupies the last hotbar slot.
         if((IsKeyPressed(KEY_B)||
-            (building.blueprint&&hudInput.justPressed(HA::Slot6)))&&building.blueprint){
+            (!overlayWasOpen&&building.blueprint&&hudInput.justPressed(HA::Slot6)))&&building.blueprint){
             buildMode=!buildMode;
             if(buildMode){
                 buildCategory=2;building.selected=LIOS_BUILD::Foundation;
@@ -639,13 +642,15 @@ int main() {
             // A gameplay command outside a panel does not implicitly close it
             // or fire the weapon. Menus have explicit source touch owners.
         }
-        player.yaw-=hudInput.lookDelta.x*0.005f;
-        player.pitch-=hudInput.lookDelta.y*0.005f;
+        if(activePanel==0){
+            player.yaw-=hudInput.lookDelta.x*0.005f;
+            player.pitch-=hudInput.lookDelta.y*0.005f;
+        }
 
         // ---------------------------------------------------------------------------------
         // Desktop Mouse Look Processing
         // ---------------------------------------------------------------------------------
-        if (cursorLocked && !hasTouchActive) {
+        if (activePanel==0&&cursorLocked && !hasTouchActive) {
             Vector2 mouseDelta = GetMouseDelta();
             const float mouseSensitivity = 0.003f;
             player.yaw -= mouseDelta.x * mouseSensitivity;
@@ -692,8 +697,8 @@ int main() {
             moveDir = Vector3Add(moveDir, stickMove);
         }
 
-        // Original Unity suppresses lateral motion during PaUp/CrouchDown.
-        if(stanceTransitionActive)moveDir={0.f,0.f,0.f};
+        // Modal production captures movement/look and all underlying attacks.
+        if(activePanel!=0||stanceTransitionActive)moveDir={0.f,0.f,0.f};
         // Crouched locomotion can accelerate; prone cannot sprint.
         player.isRunning = !prone&&(IsKeyDown(KEY_LEFT_SHIFT) || autoRun) &&
             (player.stamina > 5.0f);
