@@ -76,7 +76,7 @@ with tempfile.TemporaryDirectory() as td:
        try: assets.append({"type":typ,"name":str(obj.read().m_Name),"id":str(obj.path_id)})
        except Exception:pass
      a={"file":filename,"objects":gos,"rects":rects,"components":comps,"assets":assets}
-     path=Path(filename).stem+"_craft_original_layout.json"
+     path=Path(Path(filename).stem+"_craft_original_layout.json")
      path.write_text(json.dumps(a,ensure_ascii=False,indent=2))
      highlights=[(i,v) for i,v in gos.items() if re.search(
        r"^((m_)?produce|btn_|scp_|(m_)?bag|item|txt_|m_create|m_drawing|m_material|create|type|m_part)",v["name"] or "",re.I)]
