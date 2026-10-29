@@ -9,6 +9,7 @@ on:
       - last_island_recreated_game/mobile_audio.hpp
       - last_island_recreated_game/native_build_craft.hpp
       - last_island_recreated_game/mobile_build_visual.hpp
+      - last_island_recreated_game/mobile_craft_ui.hpp
       - tests/test_native_build_craft.cpp
       - tools/prepare_mobile_character_textures.py
       - tools/export_mobile_skeletal_animation.py
@@ -26,6 +27,9 @@ jobs:
   android-arm64:
     runs-on: ubuntu-latest
     timeout-minutes: 55
+    permissions:
+      contents: read
+      actions: read
     env:
       ANDROID_ABI: arm64-v8a
     steps:
@@ -39,6 +43,7 @@ jobs:
             last_island_recreated_game/mobile_audio.hpp
             last_island_recreated_game/native_build_craft.hpp
             last_island_recreated_game/mobile_build_visual.hpp
+            last_island_recreated_game/mobile_craft_ui.hpp
             tests/test_native_build_craft.cpp
             last_island_recreated_game/original_hud_bindings.py
             last_island_recreated_game/original_hud_touch.py
@@ -93,6 +98,41 @@ jobs:
           g++ -std=c++17 -Wall -Wextra -Werror tests/test_native_build_craft.cpp -o /tmp/lios_build_test
           /tmp/lios_build_test
 
+      - name: Download 73 original Unity crafting sprites from audited XAPK extraction
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lios-craft-original
+          gh run download 40809871434 --repo "$GITHUB_REPOSITORY" \
+            --name Original-Unity-Craft-UI-Sprites --dir /tmp/lios-craft-original
+          test -s /tmp/lios-craft-original/craft_source_manifest.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          src=Path("/tmp/lios-craft-original")
+          data=json.loads((src/"craft_source_manifest.json").read_text())
+          assert data["recovered"]>=70
+          byid={str(v["pathid"]):v for v in data["images"]}
+          expected={
+              "craft_original_create_button.png":"-6604354997382583515",
+              "craft_original_back_button.png":"-8671269052031048657",
+              "craft_original_item_slot.png":"-175920981139765499",
+              "craft_original_item_slot_small.png":"2730909933824249881",
+              "craft_original_strip.png":"6108258474309846237",
+              "craft_original_selected.png":"3490842252566290328",
+              "craft_original_plus.png":"-8009850754480514078",
+              "craft_original_minus.png":"1743642145107030626",
+              "craft_original_close.png":"-1129542740885068637"}
+          target=Path("/tmp/lios-raymob/app/src/main/assets/assets")
+          target.mkdir(parents=True,exist_ok=True)
+          import shutil
+          for name,identifier in expected.items():
+              original=src/byid[identifier]["file"]
+              shutil.copyfile(original,target/name)
+              print("LIOS_ORIGINAL_CRAFT_PPTR_PACKAGED",identifier,name,flush=True)
+          PY
+
       - name: Regression-test camera, original skin atlas and mesh normals
         run: python -u tools/test_android_character_parity.py
 
@@ -105,6 +145,7 @@ jobs:
           cp last_island_recreated_game/mobile_audio.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_audio.hpp
           cp last_island_recreated_game/native_build_craft.hpp /tmp/lios-raymob/app/src/main/cpp/native_build_craft.hpp
           cp last_island_recreated_game/mobile_build_visual.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_build_visual.hpp
+          cp last_island_recreated_game/mobile_craft_ui.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_craft_ui.hpp
           rm /tmp/lios-raymob/app/src/main/cpp/main.c
           python tools/package_android_assets.py             last_island_recreated_game/main.cpp             last_island_recreated_game/assets             /tmp/lios-raymob/app/src/main/assets/assets
           python -u tools/export_original_stances.py --report /tmp/lios_original_stances_report.json
@@ -120,10 +161,14 @@ jobs:
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_build_categories.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_build_selected.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_build_rotate.png
+          test -s /tmp/lios-raymob/app/src/main/assets/assets/craft_original_create_button.png
+          test -s /tmp/lios-raymob/app/src/main/assets/assets/craft_original_item_slot.png
+          test -s /tmp/lios-raymob/app/src/main/assets/assets/icon_source_construction_hammer.png
+          test -s /tmp/lios-raymob/app/src/main/assets/assets/icon_source_stone_pickaxe.png
           grep -q 'Build_btn_build' /tmp/lios-raymob/app/src/main/cpp/mobile_original_hud_layout.hpp
           grep -q 'Build_btn_fundation' /tmp/lios-raymob/app/src/main/cpp/mobile_original_hud_layout.hpp
           cd /tmp/lios-raymob
-          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.19.0-original-unity-build-hud/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
+          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.20.0-original-crafting-ui-queue/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
@@ -179,6 +224,11 @@ jobs:
               'assets/assets/hud_original_build_categories.png',
               'assets/assets/hud_original_build_selected.png',
               'assets/assets/hud_original_build_rotate.png',
+              'assets/assets/craft_original_create_button.png',
+              'assets/assets/craft_original_back_button.png',
+              'assets/assets/craft_original_item_slot.png',
+              'assets/assets/icon_source_construction_hammer.png',
+              'assets/assets/icon_source_stone_pickaxe.png',
               'assets/assets/hud_original_compass_strip.png',
               'assets/assets/hud_original_hotbar_selection.png',
               'assets/assets/hud_original_joystick_knob.png',
@@ -256,7 +306,7 @@ jobs:
       - name: Copy named downloadable APK
         run: |
           mkdir -p dist
-          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.19.0-ARM64.apk
+          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.20.0-ARM64.apk
           sha256sum dist/*.apk
 
       - name: Upload Android APK for phone testing
@@ -287,14 +337,14 @@ jobs:
         run: |
           set -euo pipefail
           APK="dist/LastIslandLite-v0.19.0-ARM64.apk"
-          TAG="v0.19.0"
+          TAG="v0.20.0"
           test -s "$APK"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
           else
             gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" \
               --target "$GITHUB_SHA" \
-              --title "Last Island LITE recriado - Android v0.19.0" \
-              --notes "APK ARM64 experimental com botoes originais de construcao do battlepanel.ab (sprites, RectTransforms, categorias, modo de construcao e rotacao). A UI e derivada dos arquivos Unity; runtime/animacao e receitas ainda nao podem ser declarados identicos ao cliente original."
+              --title "Last Island LITE recriado - Android v0.20.0" \
+              --notes "APK ARM64 experimental: tela de fabricacao com sprites originais dos atlas bagandbuildpanel.ab e common.ab, botoes de construcoes, quantidade e fila de fabricacao offline; iconografia de ferramentas dos originais tubiao. Custos e logica completos do Unity ainda nao extraidos."
           fi
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'
