@@ -34,6 +34,18 @@ int main(){
     assert(!b.valid(Foundation,6000,0,0,0.f,0.f)); // Must be in 6000 world.
     assert(grid(-4.51f)==-2&&grid(4.51f)==2);
     assert(turn(-1)==3&&turn(4)==0);
+    // The Unity original selects a category first and a second-level child
+    // BuildPart.toggle second; category press NEVER places a wall directly.
+    assert(partForOriginalCategory(2,0)==Foundation);
+    assert(partForOriginalCategory(3,0)==Wall);
+    assert(partForOriginalCategory(3,1)==Doorway);
+    assert(partForOriginalCategory(4,0)==Roof);
+    assert(partForOriginalCategory(5,0)==Stair);
+    assert(partForOriginalCategory(6,0)==Window);
+    assert(partForOriginalCategory(7,0)==Obstacle);
+    assert(partForOriginalCategory(3,2)==-1);
+    assert(partForOriginalCategory(0,0)==-1);
+    assert(partForOriginalCategory(2,-1)==-1);
     // All original source building category tabs now have a native action.
     Resources extra{400,400,100,0};
     assert(b.place(Stair,1,0,0,0.f,0.f,extra));
