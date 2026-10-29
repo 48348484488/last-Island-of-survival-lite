@@ -82,7 +82,7 @@ def main():
     assert 'if (IsKeyDown(KEY_A)) moveDir = Vector3Subtract(moveDir, screenRight);' in CPP
     assert 'Vector3Scale(screenRight, inputSide)' in CPP
     assert 'float localRight=Vector3DotProduct(moveDir,screenRight);' in CPP
-    assert 'target=localRight>=0?"zhan_run_right01":"zhan_run_left01";' in CPP
+    assert 'target=localRight>=0?"zhan_run_left01":"zhan_run_right01";' in CPP
     for yaw in (0.0, 0.4, math.pi/2, math.pi, -math.pi/2):
         fwd=np.array([math.sin(yaw),0.0,math.cos(yaw)])
         screen_right=np.array([-math.cos(yaw),0.0,math.sin(yaw)])
@@ -106,15 +106,23 @@ def main():
     assert axis_snap(.75,-.72)==(.75,.72)
     assert 'const float driveScale=std::min(1.0f,moveAmount);' in CPP
     assert 'currentSpeed * driveScale * dt' in CPP
-    assert 'animationWalkTime+=dt*(currentSpeed/player.speed)*driveScale;' in CPP
-    # Distance and gait phase share the same speed ratio.
-    for speed_ratio in (0.30,0.65,1.0,1.75):
-        world_move=5.5*speed_ratio*.016
-        phase=.016*(5.5*speed_ratio/5.5)
-        assert abs(world_move/phase-5.5)<1e-8
+    assert 'animationWalkTime+=dt*(currentSpeed/strideSpeed)*driveScale;' in CPP
+    # A physically planted foot must travel opposite the player's motion.
+    # Source Unity: zhan_run_left => world -X (camera screen-right);
+    # zhan_run_right => world +X (camera screen-left).
+    assert 'player.speed = 4.35f;' in CPP
+    assert 'const float nativeFrontSpeed=toward>=0.0f?player.speed:2.15f;' in CPP
+    assert 'const float nativeSideSpeed=lateral>=0.0f?2.25f:3.00f;' in CPP
+    assert 'const float strideSpeed=' in CPP
+    for nominal_speed in (2.15,2.25,3.00,4.35):
+        for speed_ratio in (0.30,0.65,1.0,1.75):
+            world_move=nominal_speed*speed_ratio*.016
+            phase=.016*(nominal_speed*speed_ratio/nominal_speed)
+            assert abs(world_move/phase-nominal_speed)<1e-8
     print("LIOS_LOCOMOTION_SCREEN_RIGHT_AND_GAIT_PASS",
           "yaw_samples=5","forward_zero_lateral=true",
-          "left_negative_right_positive=true","analog_speed_matches_gait=true")
+          "left_negative_right_positive=true","source_clips_mirrored_for_view=true",
+          "original_foot_plant_calibration=true","analog_speed_matches_gait=true")
     assert 'mesh.texcoords[2*v+1]=1.0f-p.uvs[2*v+1];' in NATIVE
     assert (ASSET/'wq_m4_1_gunshot outdoor loop.wav').is_file()
     assert (ASSET/'wq_m4_1_gunshot outdoor loop end.wav').is_file()
