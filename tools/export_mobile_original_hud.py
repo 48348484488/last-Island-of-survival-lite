@@ -33,6 +33,17 @@ class NativeMobileHud(HudV7):
     """Keep original thumb and compass texture separate for native runtime."""
     hide_build_categories=False
     hide_hotbar=False
+    def hotbar(self,samples=False,items=None):
+        if not self.hide_hotbar:
+            return super().hotbar(samples=samples,items=items)
+        # The native game still knows the source anchor geometry, but the
+        # original Build state hides ordinary equipped item slots.
+        positions=[]
+        for i in range(1,8):
+            obj=self.go("m_Item"+str(i))
+            x,y,_,_=self.rect(self.bygo[obj["path_id"]]["path_id"])
+            positions.append([round(x,4),round(y,4)])
+        return positions
     def render_compass(self):
         # Original compass moves with yaw. Draw it in C++ using the generated
         # exact-source 72-frame atlas, never bake a compass pointing north.
