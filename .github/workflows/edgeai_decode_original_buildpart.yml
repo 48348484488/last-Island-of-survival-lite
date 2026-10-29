@@ -1,0 +1,59 @@
+name: EdgeAI decode genuine BuildPart.oc and original construction icon identity
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/edgeai_unity_buildpart_decode.py
+      - tests/test_edgeai_unity_buildpart_decode.py
+      - .github/workflows/edgeai_decode_original_buildpart.yml
+permissions:
+  contents: read
+jobs:
+  source-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            xapk_original
+            tools/edgeai_unity_buildpart_decode.py
+            tests/test_edgeai_unity_buildpart_decode.py
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+      - name: EdgeAI original serialization regression tests
+        run: python3 -m unittest discover -s tests -p 'test_edgeai_unity_buildpart_decode.py' -v
+      - name: Retrieve independently recovered original Unity buildpart sprites
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: |
+          mkdir -p /tmp/edgeai-lio-icons
+          gh run download 40815880408 --repo "$GITHUB_REPOSITORY" \
+            --name Original-LITE-Player-Building-Part-Icons --dir /tmp/edgeai-lio-icons
+          test -s /tmp/edgeai-lio-icons/part_icons_manifest.json
+      - name: Decode BuildPart.oc in original XAPK and join original sprite names
+        run: |
+          python3 -u tools/edgeai_unity_buildpart_decode.py \
+            --xapk-parts xapk_original \
+            --icons /tmp/edgeai-lio-icons/part_icons_manifest.json \
+            --output edgeai_real_buildpart_decoded.json
+          python3 - <<'PY'
+          import json
+          r=json.load(open("edgeai_real_buildpart_decoded.json"))
+          assert r["record_count"]>=20
+          assert r["groups"]["foundation"]["count"]>0
+          assert r["groups"]["wall"]["count"]>0
+          assert r["groups"]["floor"]["count"]>0
+          for key,group in r["groups"].items():
+            for row in group["items"]:
+              assert row["basic"] and row["lv"]==1 and row["type"]==group["type_id"]
+          print("EDGEAI_REAL_UNITY_BUILDPART_CONFIG_VERIFIED",
+                r["record_count"],r["basic_level1_count"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: EdgeAI-Original-Unity-BuildPart-Level1-Exact-Config
+          path: edgeai_real_buildpart_decoded.json
+          if-no-files-found: warn
+          retention-days: 30
