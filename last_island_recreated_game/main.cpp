@@ -557,7 +557,11 @@ int main() {
                 // Unity BagProducePage: main tabs -> sub-tabs -> recipe cells.
                 bool navigationTouched=false;
                 for(int i=0;i<5;i++){
-                    if(touch(76.f,230.f+76.f*i,148,60)){
+                    if(touch(LIOS_CRAFT_SOURCE::MainTabOnSprite.x,
+                             LIOS_CRAFT_SOURCE::MainTabOnSprite.y+
+                                 LIOS_CRAFT_SOURCE::MainTabStepY*i,
+                             LIOS_CRAFT_SOURCE::MainTabOnSprite.w,
+                             LIOS_CRAFT_SOURCE::MainTabOnSprite.h)){
                         craftBigTab=LIOS_CRAFT_UI::BigTabs[i].id;
                         craftSmallTab=LIOS_CRAFT_UI::firstSubTab(craftBigTab);
                         craftSelectedRecipe=LIOS_CRAFT_UI::visibleRecipe(
@@ -567,9 +571,9 @@ int main() {
                 }
                 if(navigationTouched)continue;
                 for(int i=0;i<LIOS_CRAFT_UI::subTabCount(craftBigTab);i++){
-                    if(touch(LIOS_CRAFT_SOURCE::SubTabOriginX+
+                    if(touch(LIOS_CRAFT_SOURCE::SubTabOnSprite.x+
                              LIOS_CRAFT_SOURCE::SubTabStepX*i,
-                             LIOS_CRAFT_SOURCE::SubTabOriginY,136,43)){
+                             LIOS_CRAFT_SOURCE::SubTabOnSprite.y,120,35)){
                         craftSmallTab=LIOS_CRAFT_UI::subTab(craftBigTab,i).id;
                         craftSelectedRecipe=LIOS_CRAFT_UI::visibleRecipe(
                             craftBigTab,craftSmallTab,0);
