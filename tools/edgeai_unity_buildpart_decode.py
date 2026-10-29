@@ -180,7 +180,7 @@ def report_from_bytes(payload, sprites=None):
         ],
     }
 
-def read_source(parts_dir):
+def read_source(parts_dir, source_path=SOURCE_PATH):
     parts=sorted(parts_dir.glob("Last_Island_LITE_7.3.xapk.part*"))
     if len(parts)!=17:raise ValueError("Expected 17 original XAPK parts")
     with tempfile.TemporaryDirectory() as td:
@@ -193,7 +193,7 @@ def read_source(parts_dir):
             with outer.open(APK_NAME) as src,base.open("wb") as dest:
                 shutil.copyfileobj(src,dest,8*1024*1024)
         with zipfile.ZipFile(base) as apk:
-            return apk.read(SOURCE_PATH)
+            return apk.read(source_path)
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
