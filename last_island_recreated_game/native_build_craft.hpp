@@ -8,9 +8,10 @@
 #include <cmath>
 #include <algorithm>
 #include <cstdint>
+#include <deque>
 
 namespace LIOS_BUILD {
-enum PieceType {Foundation=0, Wall=1, Doorway=2, Roof=3, Storage=4, Campfire=5, PieceCount=6};
+enum PieceType {Foundation=0, Wall=1, Doorway=2, Roof=3, Storage=4, Campfire=5, Stair=6, Window=7, Obstacle=8, PieceCount=9};
 enum RecipeType {Blueprint=0, Hammer=1, StonePickaxe=2, RecipeCount=3};
 struct Resources {
     int wood,stone,metal,sulfur;
@@ -30,7 +31,10 @@ static constexpr Cost BUILD_COSTS[PieceCount]={
     {40,15,0}, // Door frame
     {45,5,0},  // Roof
     {55,0,20}, // Storage
-    {20,40,0}  // Campfire
+    {20,40,0}, // Campfire
+    {80,20,0}, // Stairs
+    {50,15,0}, // Window frame
+    {35,30,0}  // Barricade/obstacle
 };
 static constexpr Cost CRAFT_COSTS[RecipeCount]={
     {20,20,0}, // Blueprint
@@ -53,7 +57,50 @@ public:
     std::vector<Piece> placed;
     bool blueprint=false,hammer=false,pickaxe=false;
     bool building=false;
+    bool freePlacement=false;
     int selected=0,orientation=0;
+    struct CraftOrder {RecipeType type;float elapsed,duration;};
+    std::deque<CraftOrder> queue;
+    std::vector<Piece> savedPlan;
+    static constexpr unsigned MaxCraftOrders=8;
+    // Provisional offline timers (source DrawingCfg.needTime not yet mapped).
+    static float recipeDuration(RecipeType r){
+        return r==Blueprint?2.f:r==Hammer?4.f:5.f;
+    }
+    bool owns(RecipeType type)const{
+        if(type<Blueprint||type>=RecipeCount)return false;
+        return type==Blueprint?blueprint:type==Hammer?hammer:pickaxe;
+    }
+    bool requestCraft(RecipeType type,Resources &r){
+        if(type<Blueprint||type>=RecipeCount||queue.size()>=MaxCraftOrders||
+           owns(type))return false;
+        for(const auto &q:queue)if(q.type==type)return false;
+        if(!spend(r,CRAFT_COSTS[type]))return false;
+        queue.push_back({type,0.f,recipeDuration(type)});
+        return true;
+    }
+    bool cancelCraft(unsigned index,Resources &r){
+        if(index>=queue.size())return false;
+        const Cost cost=CRAFT_COSTS[queue[index].type];
+        r.wood+=cost.wood;r.stone+=cost.stone;r.metal+=cost.metal;
+        queue.erase(queue.begin()+index);
+        return true;
+    }
+    void tickCraft(float dt){
+        if(queue.empty()||dt<=0.f)return;
+        queue.front().elapsed+=std::min(dt,1.f);
+        if(queue.front().elapsed>=queue.front().duration){
+            const RecipeType type=queue.front().type;
+            if(type==Blueprint)blueprint=true;
+            if(type==Hammer)hammer=true;
+            if(type==StonePickaxe)pickaxe=true;
+            queue.pop_front();
+        }
+    }
+    bool saveCurrentBlueprint(){
+        if(!blueprint||placed.empty())return false;
+        savedPlan=placed;return true;
+    }
     static constexpr int MaxPlaced=300;
     bool craft(RecipeType type,Resources &r){
         if(type<Blueprint||type>=RecipeCount)return false;
@@ -84,17 +131,17 @@ public:
             if(dx*dx+dz*dz<1.f)return false;
             return true;
         }
-        if(type==Campfire){
-            if(occupies(Campfire,gx,gz,rot))return false;
+        if(type==Campfire||type==Obstacle){
+            if(occupies(type,gx,gz,rot))return false;
             if(dx*dx+dz*dz<2.f)return false;
             return !foundationAt(gx,gz);
         }
-        if(!foundationAt(gx,gz))return false;
-        if(type==Wall||type==Doorway){
+        if(!freePlacement&&!foundationAt(gx,gz))return false;
+        if(type==Wall||type==Doorway||type==Window){
             // Same edge cannot be both a wall and a door opening.
             for(const auto &p:placed)
                 if(p.gx==gx&&p.gz==gz&&turn(p.turn)==turn(rot)&&
-                    (p.type==Wall||p.type==Doorway))return false;
+                    (p.type==Wall||p.type==Doorway||p.type==Window))return false;
         }else if(occupies(type,gx,gz,rot))return false;
         return true;
     }
@@ -106,7 +153,11 @@ public:
     }
     bool blocks(float x,float z)const{
         for(const auto &p:placed){
-            if(p.type!=Wall)continue; // Doorway has a walkable opening.
+            if(p.type!=Wall&&p.type!=Window&&p.type!=Obstacle)continue;
+            if(p.type==Obstacle){
+                if(std::abs(x-world(p.gx))<.75f&&std::abs(z-world(p.gz))<.75f)return true;
+                continue;
+            }
             float dx=x-world(p.gx),dz=z-world(p.gz);
             int rot=turn(p.turn);
             bool alongZ=(rot%2)==0;
