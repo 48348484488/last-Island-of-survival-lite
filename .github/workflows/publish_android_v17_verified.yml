@@ -1,0 +1,38 @@
+name: Publish verified Android V17 APK directly
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/publish_android_v17_verified.yml
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish-from-verified-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Retrieve V17.0 APK from successful ARM64 build (job 123194494909)
+        run: |
+          mkdir -p dist
+          gh run download 40796768694 --repo "$GITHUB_REPOSITORY" \
+            --name Last-Island-LITE-Recriado-Android-ARM64-APK \
+            --dir dist
+          test -s dist/LastIslandLite-v0.17.0-ARM64.apk
+          sha256sum dist/LastIslandLite-v0.17.0-ARM64.apk
+      - name: Publish public direct APK with no ZIP
+        run: |
+          set -euo pipefail
+          APK=dist/LastIslandLite-v0.17.0-ARM64.apk
+          TAG=v0.17.0
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "Last Island LITE recriado V17.0 - 59 animacoes" \
+              --notes "APK ARM64 experimental. 26 animacoes originais de agachar, deitar, rastejar e transicoes foram extraidas do Unity original. A equivalencia visual e de som ainda depende de teste no dispositivo; os pacotes originais de passos e pulo nao vieram no XAPK preservado."
+          fi
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'
