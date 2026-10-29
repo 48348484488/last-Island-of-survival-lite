@@ -24,7 +24,7 @@ with tempfile.TemporaryDirectory() as td:
     print("LIOS_ORIGINAL_UI_BUNDLE_COUNT",len(ui),flush=True)
     print("LIOS_ORIGINAL_UI_BUNDLE_NAMES",json.dumps(ui[:600],ensure_ascii=False),flush=True)
     print("LIOS_ORIGINAL_RECIPE_CONFIGS",json.dumps(cfg[:100],ensure_ascii=False),flush=True)
-    if os.getenv("INSPECT_UI"):
+    if os.getenv("INSPECT_UI")=="1":
      import UnityPy
      for x,n in ui:
       if not x.lower().endswith(".ab") or n>18_000_000:continue
