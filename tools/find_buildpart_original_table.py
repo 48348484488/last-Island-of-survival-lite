@@ -27,6 +27,13 @@ with tempfile.TemporaryDirectory() as td:
       r"(^|/)(?:cfg|config|table|configdata|streamingassets|assetpacks)(/|$)|"
       r"buildpart|\.oc$|\.bytes$|\.csv$|\.json$|\.db$|\.sqlite$|\.dat$",
       x.filename,re.I)]
+    if name=="com.herogame.gplay.survival.lite.apk":
+     data=inner.read("assets/cfg/cfg.BuildPart.oc")
+     if len(data)<10000 or len(data)>2_000_000:
+      raise ValueError("Unexpected source BuildPart bytes")
+     Path("cfg.BuildPart.oc").write_bytes(data)
+     print("EDGEAI_BUILDPART_BINARY_EXTRACTED",len(data),
+           data[:48].hex(),flush=True)
     report={"archive":name,"entry_count":len(entries),
             "top_folders":folder.most_common(30),
             "candidate_count":len(candidates),
