@@ -24,6 +24,8 @@ jobs:
         if: always()
         with:
           name: EdgeAI-BuildPart-OC-Source-Locator
-          path: original_buildpart_cfg_locator.json
+          path: |
+            original_buildpart_cfg_locator.json
+            cfg.BuildPart.oc
           retention-days: 30
           if-no-files-found: warn
