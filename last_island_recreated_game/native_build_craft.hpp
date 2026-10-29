@@ -12,11 +12,17 @@
 namespace LIOS_BUILD {
 enum PieceType {Foundation=0, Wall=1, Doorway=2, Roof=3, Storage=4, Campfire=5, PieceCount=6};
 enum RecipeType {Blueprint=0, Hammer=1, StonePickaxe=2, RecipeCount=3};
-struct Resources {int wood=0,stone=0,metal=0,sulfur=0;};
+struct Resources {
+    int wood,stone,metal,sulfur;
+    Resources(int w=0,int s=0,int m=0,int u=0):
+        wood(w),stone(s),metal(m),sulfur(u){}
+};
 struct Cost {int wood,stone,metal;};
 struct Piece {
-    PieceType type=Foundation;
-    int gx=0,gz=0,turn=0;
+    PieceType type;
+    int gx,gz,turn;
+    Piece(PieceType t=Foundation,int x=0,int z=0,int r=0):
+        type(t),gx(x),gz(z),turn(r){}
 };
 static constexpr Cost BUILD_COSTS[PieceCount]={
     {60,20,0}, // Foundation
