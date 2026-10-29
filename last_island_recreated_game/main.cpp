@@ -15,6 +15,7 @@
 #include "mobile_audio.hpp"
 #include "native_build_craft.hpp"
 #include "mobile_build_visual.hpp"
+#include "mobile_craft_ui.hpp"
 
 #include <vector>
 #include <string>
@@ -271,6 +272,8 @@ int main() {
     Texture2D originalBuildCategories=LoadTexture("assets/hud_original_build_categories.png");
     Texture2D originalBuildSelected=LoadTexture("assets/hud_original_build_selected.png");
     Texture2D originalBuildRotate=LoadTexture("assets/hud_original_build_rotate.png");
+    LIOS_CRAFT_UI::Art originalCraftArt;
+    originalCraftArt.load();
     Texture2D originalThumb=LoadTexture("assets/hud_original_joystick_knob.png");
     // Exact-source Unity m_heightLignt for all seven hotbar slots.
     Texture2D originalHotbarSelection=LoadTexture("assets/hud_original_hotbar_selection.png");
@@ -318,6 +321,8 @@ int main() {
     std::set<int> previousUiTouches;
     bool buildMode=false;
     int buildCategory=2; // Source category index: btn_fundation.
+    int craftSelectedRecipe=0,craftQuantity=1;
+    std::string craftStatus="Selecione uma receita e fabrique.";
 
     // -------------------------------------------------------------------------------------
     // Mobile On-Screen Virtual Controls Setup
@@ -357,6 +362,10 @@ int main() {
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
         if (dt > 0.05f) dt = 0.05f; // Clamp delta time
+        building.tickCraft(dt);
+        if(building.blueprint&&craftStatus=="Fabricando..."){
+            craftStatus="Item pronto. Equipe pelo ultimo slot da barra.";
+        }
 
         // Desktop toggle cursor lock
         if (IsKeyPressed(KEY_ESCAPE)) {
@@ -475,14 +484,27 @@ int main() {
             int n=std::min(30-magazine,reserveAmmo);
             magazine+=n;reserveAmmo-=n;
         }
-        if(hudInput.justPressed(HA::Inventory))activePanel=(activePanel==1?0:1);
-        if(hudInput.justPressed(HA::Craft))activePanel=(activePanel==2?0:2);
+        if(hudInput.justPressed(HA::Inventory)){
+            activePanel=(activePanel==1?0:1);
+            if(buildMode){buildMode=false;building.selected=-1;}
+        }
+        if(hudInput.justPressed(HA::Craft)){
+            activePanel=(activePanel==2?0:2);
+            if(buildMode){buildMode=false;building.selected=-1;}
+        }
         if(hudInput.justPressed(HA::Settings))activePanel=(activePanel==3?0:3);
         if(hudInput.justPressed(HA::QuickChat))activePanel=(activePanel==4?0:4);
-        // Original HUD craft icon opens this native temporary crafting panel.
-        // Costs are provisional until the source item/recipe cfg is decoded.
-        if(IsKeyPressed(KEY_B)&&building.blueprint){
+        // Original BuildState is entered from equipped/quick-use builder
+        // equipment, NOT from an invented "ENTER BUILD MODE" craft button.
+        // Offline native mapping: building item occupies the last hotbar slot.
+        if((IsKeyPressed(KEY_B)||
+            (building.blueprint&&hudInput.justPressed(HA::Slot6)))&&building.blueprint){
             buildMode=!buildMode;
+            if(buildMode){
+                buildCategory=2;building.selected=LIOS_BUILD::Foundation;
+                selectedHotbarSlot=6;player.equippedSlot=-1;aim=false;
+                buildStatus="CONSTRUCAO: escolha uma categoria e posicione.";
+            }else{building.selected=-1;buildStatus="Construcao encerrada.";}
             activePanel=0;
         }
         auto panelBox=[&](float x,float y,float w,float h)->Rectangle{
@@ -494,25 +516,41 @@ int main() {
         };
         for(const Vector2 &click:uiClicks){
             if(activePanel==2){
-                LIOS_BUILD::Resources available={
-                    player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
-                for(int i=0;i<3;i++)if(hitUi(click,panelBox(675.f,300.f+i*82.f,550.f,65.f))){
-                    if(building.craft(static_cast<LIOS_BUILD::RecipeType>(i),available)){
-                        player.woodCount=available.wood;
-                        player.stoneCount=available.stone;
-                        player.ironCount=available.metal;
-                        buildStatus=i==0?"Planta fabricada!":i==1?"Martelo fabricado!":
-                            "Picareta fabricada!";
-                    }else buildStatus="Recursos insuficientes ou ja fabricado.";
+                const auto touch=[&](float x,float y,float w,float h){
+                    return LIOS_CRAFT_UI::hit(click,x,y,w,h,canvasScale,canvasLeft,canvasTop);
+                };
+                if(touch(1654,0,266,86)){
+                    activePanel=0;continue;
                 }
-                if(hitUi(click,panelBox(675.f,552.f,550.f,73.f))){
-                    if(building.blueprint){
-                        buildMode=true;
-                        buildCategory=2;building.selected=LIOS_BUILD::Foundation;
-                        player.equippedSlot=-1;aim=false;
-                        activePanel=0;
-                        buildStatus="MODO CONSTRUCAO: gire e posicione as pecas.";
-                    }else buildStatus="Fabrique primeiro a planta de construcao.";
+                bool recipeTouched=false;
+                for(int i=0;i<3;i++){
+                    if(touch(252.f+203.f*i,280.f,160.f,225.f)){
+                        craftSelectedRecipe=i;craftQuantity=1;
+                        recipeTouched=true;break;
+                    }
+                }
+                if(recipeTouched)continue;
+                if(touch(1360,663,72,72)){
+                    craftQuantity=std::max(1,craftQuantity-1);
+                }else if(touch(1547,663,72,72)){
+                    craftQuantity=std::min(8,craftQuantity+1);
+                }else if(touch(1600,930,66,66)){
+                    LIOS_BUILD::Resources res={
+                        player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
+                    if(building.cancelCraft(0,res)){
+                        player.woodCount=res.wood;player.stoneCount=res.stone;
+                        player.ironCount=res.metal;
+                        craftStatus="Fabricacao cancelada; recursos devolvidos.";
+                    }
+                }else if(touch(1340,760,334,84)){
+                    LIOS_BUILD::Resources res={
+                        player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
+                    const auto type=static_cast<LIOS_BUILD::RecipeType>(craftSelectedRecipe);
+                    if(building.requestCraft(type,res,craftQuantity)){
+                        player.woodCount=res.wood;player.stoneCount=res.stone;
+                        player.ironCount=res.metal;
+                        craftStatus="Fabricando...";
+                    }else craftStatus="Materiais insuficientes ou fila cheia.";
                 }
             }else if(buildMode&&activePanel==0){
                 // Exact Unity Build HUD RectTransforms (original
@@ -530,30 +568,31 @@ int main() {
                     tabTouched=true;
                     buildCategory=category;
                     if(category==0){
-                        buildMode=false;building.selected=-1;
-                        buildStatus="Construcao encerrada.";
+                        building.selected=-1;buildStatus="Nenhuma peca selecionada.";
                     }else if(category==1){
-                        building.selected=-1;
-                        buildStatus="Categoria: projetos de construcao.";
+                        building.selected=-1;buildStatus="Projetos: clique Construir para salvar.";
                     }
                     else if(category==2){building.selected=LIOS_BUILD::Foundation;buildStatus="Fundacao selecionada."; }
                     else if(category==3){building.selected=LIOS_BUILD::Wall;buildStatus="Parede selecionada."; }
                     else if(category==4){building.selected=LIOS_BUILD::Roof;buildStatus="Piso/teto selecionado."; }
-                    else {
-                        // Original source has stair/window/obstacle category
-                        // art, but none has a source-verified mesh/recipe yet.
-                        // Do not silently place an unrelated object.
-                        building.selected=-1;
-                        buildStatus="Categoria original: recurso ainda indisponivel.";
-                    }
+                    else if(category==5){building.selected=LIOS_BUILD::Stair;buildStatus="Escada selecionada.";}
+                    else if(category==6){building.selected=LIOS_BUILD::Window;buildStatus="Janela selecionada.";}
+                    else if(category==7){building.selected=LIOS_BUILD::Obstacle;buildStatus="Barricada selecionada.";}
                     break;
                 }
                 if(tabTouched)continue;
                 if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_opRotate))){
                     building.orientation=(building.orientation+1)%4;
                 }else if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_freeBuildModel))){
-                    buildStatus="Modo livre original ainda indisponivel.";
+                    building.freePlacement=!building.freePlacement;
+                    buildStatus=building.freePlacement?
+                        "MODO LIVRE ativado.":"Encaixe normal ativado.";
                 }else if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_build))){
+                    if(buildCategory==1){
+                        buildStatus=building.saveCurrentBlueprint()?
+                            "Projeto salvo nesta sessao.":"Construa uma base antes de salvar.";
+                        continue;
+                    }
                     LIOS_BUILD::Resources available={
                         player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
                     const Vector3 dir={sinf(player.yaw),0.f,cosf(player.yaw)};
@@ -574,9 +613,10 @@ int main() {
         if(buildMode&&activePanel==0){
             // Keyboard fallback does not alter camera mode in build state.
             if(IsKeyPressed(KEY_V)){
-                buildCategory=2+(buildCategory-1)%3;
+                buildCategory=2+(buildCategory-1)%6;
                 const int partByCategory[]={-1,-1,LIOS_BUILD::Foundation,
-                    LIOS_BUILD::Wall,LIOS_BUILD::Roof};
+                    LIOS_BUILD::Wall,LIOS_BUILD::Roof,LIOS_BUILD::Stair,
+                    LIOS_BUILD::Window,LIOS_BUILD::Obstacle};
                 building.selected=partByCategory[buildCategory];
             }
             if(IsKeyPressed(KEY_R))
