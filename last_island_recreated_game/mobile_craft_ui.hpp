@@ -19,12 +19,12 @@ inline constexpr Tab BigTabs[]={{1,"BASICO"},{12,"ITENS"},{4,"ESTRUTURAS"},
 inline constexpr Tab BasicTabs[]={{1,"GERAL"}};
 inline constexpr Tab ItemTabs[]={{2,"FERRAMENTAS"},{5,"COZINHA"},
                                  {6,"MEDICINA"},{3,"MATERIAIS"}};
-inline constexpr Tab StructureTabs[]={{4,"ESTRUTURAS"}};
+inline constexpr Tab StructureTabs[]={{4,"ESTRUTURAS"},{16,"ELETRICA"}};
 inline constexpr Tab CombatTabs[]={{7,"EQUIPAMENTO"},{8,"ARMAS"},
                                    {9,"MUNICAO"},{10,"ARMADILHAS"}};
 inline constexpr Tab VehicleTabs[]={{15,"VEICULOS"}};
 inline int subTabCount(int big){
-    switch(big){case 1:case 4:case 14:return 1;
+    switch(big){case 1:case 14:return 1;case 4:return 2;
                 case 12:case 13:return 4;default:return 0;}
 }
 inline Tab subTab(int big,int at){
@@ -144,18 +144,18 @@ inline void render(const Art &art, const LIOS_BUILD::System &sys,
               1110,390,25,sc,ox,oy,GRAY);
     } else {
     // Original source-selected item, cost and queue widgets.
-    sprite(art.slot,b(1130,260,195,195));
+    sprite(art.slot,b(1130,348,185,185));
     Texture2D selected=selection==0?art.buildIcon:
                        selection==1?art.hammer:art.pickaxe;
-    sprite(selected,b(1175,302,100,100));
-    title(recipeLabel(selection),1330,285,30,sc,ox,oy,WHITE);
+    sprite(selected,b(1175,387,96,96));
+    title(recipeLabel(selection),1330,355,27,sc,ox,oy,WHITE);
     const auto cost=LIOS_BUILD::CRAFT_COSTS[selection];
     struct Mat {Texture2D icon;int available,needed;};
     Mat mat[3]={{art.wood,r.wood,cost.wood},{art.stone,r.stone,cost.stone},
                  {art.metal,r.metal,cost.metal}};
     for(int i=0;i<3;i++){
         if(mat[i].needed<=0)continue;
-        float y=395+i*76;
+        float y=440+i*70;
         sprite(mat[i].icon,b(1320,y,61,61));
         title(TextFormat("%d / %d",mat[i].available,mat[i].needed*quantity),
             1403,y+15,27,sc,ox,oy,
