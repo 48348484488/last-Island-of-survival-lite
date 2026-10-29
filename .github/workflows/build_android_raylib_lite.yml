@@ -230,3 +230,34 @@ jobs:
           path: dist/*.apk
           if-no-files-found: warn
           retention-days: 30
+
+  publish-direct-apk:
+    name: Publish direct APK link
+    needs: android-arm64
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Last-Island-LITE-Recriado-Android-ARM64-APK
+          path: dist
+      - name: Publish public installable APK to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APK="dist/LastIslandLite-v0.16.4-ARM64.apk"
+          TAG="v0.16.4"
+          test -s "$APK"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "Last Island LITE recriado - Android v0.16.4" \
+              --notes "APK experimental para Android ARM64. Recriação não oficial; ainda exige validação visual das animações no dispositivo."
+          fi
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'
