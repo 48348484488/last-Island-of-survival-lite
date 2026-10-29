@@ -31,6 +31,8 @@ def main():
     generated={
         "hud_original_overlay_rgba.png","icon_cj_sf.png","icon_m4.png",
         "hud_original_melee.png","hud_original_rifle.png",
+        "hud_original_build.png","hud_original_build_categories.png",
+        "hud_original_build_selected.png","hud_original_build_rotate.png",
         "hud_original_joystick_knob.png",
         "hud_original_compass_strip.png","hud_original_hotbar_selection.png",
         "icon_resource_wood.png","icon_resource_metal.png",
