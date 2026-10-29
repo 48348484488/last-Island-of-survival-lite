@@ -62,7 +62,7 @@ def main():
     found={}
     for name in STANCE_CLIPS:
         original=clips[name].read_typetree()
-        trans,rots,nf,fps,angles,scale=decode_curves(original,base_names,parents)
+        trans,rots,nf,fps,angles,scale=decode_curves(original,base_names,parents,allow_extra_bones=True)
         assert (trans.shape,rots.shape)==((64,nf,3),(64,nf,4))
         assert np.isfinite(trans).all() and np.isfinite(rots).all()
         assert nf>=2 and 1<=fps<=120
