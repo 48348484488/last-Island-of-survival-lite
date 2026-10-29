@@ -1287,6 +1287,15 @@ int main() {
                 }
                 sourceText(TextFormat("%d",counts[i]),sourceCountRects[i]);
             }
+            // After producing the actual builder item, use the final
+            // quickslot to enter BuildState. Source construction-hammer
+            // icon cj_jzc extracted from original tubiao1 bundle.
+            if(building.blueprint&&!buildMode&&originalCraftArt.hammer.id){
+                const Rectangle b=sourceRect(LIOS_HUD::Slot6);
+                DrawTexturePro(originalCraftArt.hammer,
+                    {0,0,float(originalCraftArt.hammer.width),
+                     float(originalCraftArt.hammer.height)},b,{0,0},0,WHITE);
+            }
             // Live states on source buttons. The visual base is the real
             // original UI; functional panels remain native provisional UI.
             if(autoRun)DrawRectangleLinesEx(sourceRect(LIOS_HUD::Sprint),2*canvasScale,GREEN);
@@ -1297,7 +1306,7 @@ int main() {
                 sourceText(TextFormat("%d / %d",magazine,reserveAmmo),
                     LIOS_HUD::SlotCount1);
             }
-            if(activePanel!=0){
+            if(activePanel!=0&&activePanel!=2){
                 Rectangle panel={canvasLeft+620*canvasScale,
                                  canvasTop+180*canvasScale,680*canvasScale,510*canvasScale};
                 DrawRectangleRec(panel,Fade(BLACK,.87f));
@@ -1462,6 +1471,13 @@ int main() {
         DrawBtn(btnCam);
         } // Original Unity HUD versus simplified desktop fallback
 
+        if(activePanel==2){
+            const LIOS_BUILD::Resources available={
+                player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
+            LIOS_CRAFT_UI::render(originalCraftArt,building,available,
+                craftSelectedRecipe,craftQuantity,craftStatus,
+                canvasScale,canvasLeft,canvasTop);
+        }
         if(buildMode&&activePanel==0&&originalBuildCategories.id){
             // Exact ORIGINAL Unity UGUI sprites, generated from Image.m_Sprite
             // with FileID+PathID provenance. Original HorizontalLayoutGroup
@@ -1494,6 +1510,19 @@ int main() {
                      float(originalBuildRotate.height)},
                     sourceRect(LIOS_HUD::Build_btn_opRotate),
                     {0,0},0,WHITE);
+            // The original btn_opRotate Image is a dark 9-slice background;
+            // its actual caption is a Unity UGUI Text component. In this
+            // renderer a readable font fallback preserves button usability.
+            const Rectangle rotate=sourceRect(LIOS_HUD::Build_btn_opRotate);
+            DrawText("GIRAR",int(rotate.x+rotate.width*.28f),
+                int(rotate.y+rotate.height*.28f),
+                std::max(12,int(31.f*canvasScale)),WHITE);
+            if(building.freePlacement&&originalBuildSelected.id){
+                const Rectangle t=sourceRect(LIOS_HUD::Build_btn_freeBuildModel);
+                DrawTexturePro(originalBuildSelected,
+                    {0,0,float(originalBuildSelected.width),
+                     float(originalBuildSelected.height)},t,{0,0},0,WHITE);
+            }
             // Dynamic status is not a fabricated clickable button.
             DrawText(TextFormat("%s  /  %d",
                 buildStatus.c_str(),int(building.placed.size())),
