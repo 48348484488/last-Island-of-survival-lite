@@ -17,9 +17,10 @@ static constexpr Bounds QuantityPlus = {1302.2f,954.3f,70.0f,70.0f};
 static constexpr Bounds QuantityMax = {1376.8f,954.3f,110.0f,70.0f};
 // Source positions of category containers; Unity populates their actual
 // button sizes with a layout group, so only origins are exact.
-static constexpr float MainTabOriginX = 136.0f;
-static constexpr float MainTabOriginY = 206.5f;
+static constexpr Bounds MainTabOnSprite = {-33.5f,163.5f,258.8f,86.0f};
+static constexpr Bounds SubTabOnSprite = {255.3f,151.1f,120.0f,35.0f};
+static constexpr float MainTabStepY = 86.0f; // Native estimate; Unity dynamically lays out tabs
+static constexpr float SubTabStepX = 145.0f; // Source subtype parent positions
 static constexpr float SubTabOriginX = 315.3f;
 static constexpr float SubTabOriginY = 168.6f;
-static constexpr float SubTabStepX = 145.0f;
 } // namespace LIOS_CRAFT_SOURCE
