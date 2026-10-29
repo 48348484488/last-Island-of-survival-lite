@@ -58,7 +58,7 @@ public:
     bool occupies(PieceType type,int gx,int gz,int rot)const{
         for(const auto &p:placed){
             if(p.gx!=gx||p.gz!=gz)continue;
-            if(p.type==type&&(type!=Wall&&type!=Doorway||turn(p.turn)==turn(rot)))return true;
+            if(p.type==type&&(((type!=Wall&&type!=Doorway)||turn(p.turn)==turn(rot))))return true;
         }
         return false;
     }
