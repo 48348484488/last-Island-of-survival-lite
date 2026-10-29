@@ -146,7 +146,9 @@ int main() {
     player.position = (Vector3){ 0.0f, 0.0f, 0.0f };
     player.yaw = 0.0f;
     player.pitch = 0.1f;
-    player.speed = 5.5f;
+    // Audited from original source LIOSSKN1 foot plant motion (30 fps).
+    // zhan_run_front01 planted toes travel ~4.35 units/s, not 5.5.
+    player.speed = 4.35f;
     player.verticalVelocity = 0.0f;
     player.isGrounded = true;
     player.isRunning = false;
@@ -477,7 +479,21 @@ int main() {
 
         // Sprint logic
         player.isRunning = (IsKeyDown(KEY_LEFT_SHIFT) || autoRun) && (player.stamina > 5.0f);
-        float currentSpeed = player.speed * (player.isRunning ? 1.75f : 1.0f) *
+        // Measure the original 30fps clips at the ground-contact frames:
+        // front ~4.35, back ~2.15, source-left ~2.25, source-right ~3.0.
+        // These are foot-plant treadmill velocities, not frame translations
+        // (the Bip001 root was intentionally locked to prevent double motion).
+        // The raw Unity clips are oriented toward +Z; our camera screen-right
+        // points -X. This makes source 'left' travel toward SCREEN RIGHT.
+        const float toward=Vector3DotProduct(moveDir,forward);
+        const float lateral=Vector3DotProduct(moveDir,screenRight);
+        const float absToward=std::fabs(toward),absLateral=std::fabs(lateral);
+        const float nativeFrontSpeed=toward>=0.0f?player.speed:2.15f;
+        const float nativeSideSpeed=lateral>=0.0f?2.25f:3.00f;
+        const float strideSpeed=(absToward*nativeFrontSpeed+
+                                absLateral*nativeSideSpeed)/
+                                std::max(0.0001f,absToward+absLateral);
+        const float currentSpeed=strideSpeed*(player.isRunning?1.75f:1.0f)*
             (prone?.35f:(crouch?.65f:1.f));
 
         // Keep the analog speed and the gait phase tied to actual distance.
@@ -657,7 +673,7 @@ int main() {
             // the same speed ratio as the physically traveled distance, so
             // sprint, slow analog input and crouch do not visibly over/under
             // drive the feet compared with the avatar world displacement.
-            if(moving)animationWalkTime+=dt*(currentSpeed/player.speed)*driveScale;
+            if(moving)animationWalkTime+=dt*(currentSpeed/strideSpeed)*driveScale;
             if(!player.isGrounded)animationJumpTime+=dt;
             else animationJumpTime=0;
             float localFwd=Vector3DotProduct(moveDir,forward);
@@ -674,7 +690,7 @@ int main() {
                 if(std::fabs(localFwd)>=std::fabs(localRight))
                     target=localFwd>=0?(player.equippedSlot==1?"wq_m4_1_zhan_miaozhun_run_front01":"zhan_run_front01"):
                            "zhan_run_back01";
-                else target=localRight>=0?"zhan_run_right01":"zhan_run_left01";
+                else target=localRight>=0?"zhan_run_left01":"zhan_run_right01";
             } else target=player.equippedSlot==1?"wq_m4_1_zhan_miaozhun_stand01":"zhan_stand01";
             if(target!=animationCurrent){
                 animationPrevious=animationCurrent;animationCurrent=target;
