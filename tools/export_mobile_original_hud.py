@@ -254,6 +254,18 @@ def main():
     geometry["build_category_atlas"]={"count":len(names),"tile_width":w,"tile_height":h,
                                        "source_group":"m_buildPartTypes",
                                        "order":names}
+    # Operator rotate is a separate original button, in its source
+    # m_buildBaseBtns branch. It is not part of the static on-foot build
+    # profile, so render the exact original subtree at its own source bounds.
+    rot=NativeMobileHud(ASSETS,heading_deg=0,map_uv=[.5,.5])
+    rot.node(hud.go("btn_opRotate"),depth=3)
+    br=geometry["build_controls"]["btn_opRotate"]["bounds"]
+    original_rotate=rot.layer.crop(tuple(round(br[k]) for k in
+                                          ("left","top","right","bottom")))
+    if original_rotate.getbbox() is None:
+        raise ValueError("Original Unity btn_opRotate icon missing")
+    original_rotate.save(dest/"hud_original_build_rotate.png",optimize=True)
+
     print("LIOS_UNITY_ORIGINAL_BUILD_HUD",outfile.stat().st_size,
           "source_tabs",names,"atlas",atlas.size,flush=True)
 
