@@ -33,10 +33,10 @@ inline int partForOriginalCategory(int buttonIndex,int subitemIndex){
     if(subitemIndex<0)return -1;
     switch(buttonIndex){
     case 2:return subitemIndex==0?Foundation:-1;
-    case 3:return subitemIndex==0?Wall:subitemIndex==1?Doorway:-1;
+    case 3:return subitemIndex==0?Wall:-1; // subitem 1 is half-wall
     case 4:return subitemIndex==0?Roof:-1;
     case 5:return subitemIndex==0?Stair:-1;
-    case 6:return subitemIndex==0?Window:-1;
+    case 6:return subitemIndex==0?Window:subitemIndex==3?Doorway:-1;
     case 7:return subitemIndex==0?Obstacle:-1;
     default:return -1;
     }
