@@ -155,7 +155,15 @@ def parse_items(payload):
 
 def report_from_bytes(draw_bytes, item_bytes=None):
     drawings = parse_drawing(draw_bytes)
-    items = parse_items(item_bytes) if item_bytes is not None else []
+    items = []
+    item_error = None
+    if item_bytes is not None:
+        try:
+            items = parse_items(item_bytes)
+        except (ValueError,UnicodeError) as exc:
+            # This is *separate* from the verified DrawingCfg decode: a
+            # version-drifted ItemCfg must not discard all authentic recipes.
+            item_error = str(exc)
     byitem = {x["id"]: x for x in items}
     for row in drawings:
         item = byitem.get(row["targetItemId"])
@@ -184,6 +192,8 @@ def report_from_bytes(draw_bytes, item_bytes=None):
         "item_source": ITEM_SOURCE if item_bytes is not None else None,
         "item_sha256": hashlib.sha256(item_bytes).hexdigest() if item_bytes is not None else None,
         "item_count": len(items),
+        "item_verified": bool(items) and item_error is None,
+        "item_decode_error": item_error,
         "item_linked": sum(x["target"] is not None for x in drawings),
         "groups": {key: rows for key, rows in sorted(groups.items(), key=lambda p:int(p[0]))},
         "all_records": drawings,
@@ -217,6 +227,8 @@ def main():
     result = report_from_bytes(draw, items)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, ensure_ascii=False)+"\n")
+    print("EDGEAI_SOURCE_ITEM_STATUS",result["item_verified"],
+          result["item_decode_error"],flush=True)
     print("EDGEAI_SOURCE_CRAFT_CONFIG_PASS",
           "recipes", result["record_count"], "items", result["item_count"],
           "linked", result["item_linked"],
