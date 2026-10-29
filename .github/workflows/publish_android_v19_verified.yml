@@ -1,0 +1,38 @@
+name: Publish signed and verified Android V19 original-build-HUD APK
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/publish_android_v19_verified.yml
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download successful V19 APK from verified Android run
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          gh run download 40807575073 --repo "$GITHUB_REPOSITORY" \
+            --name Last-Island-LITE-Recriado-Android-ARM64-APK --dir dist
+          test -s dist/LastIslandLite-v0.19.0-ARM64.apk
+          sha256sum dist/LastIslandLite-v0.19.0-ARM64.apk
+      - name: Publish direct APK asset to GitHub Releases
+        run: |
+          set -euo pipefail
+          apk=dist/LastIslandLite-v0.19.0-ARM64.apk
+          tag=v0.19.0
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$tag" "$apk" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$tag" "$apk" --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "Last Island LITE recriado V19.0 - HUD de construcao original" \
+              --notes "APK Android ARM64 com sprites reais do battlepanel.ab para botoes de construcao e categorias; remocao de botoes ficticios da V18. Limitacoes: comportamento completo do Unity, modelagem de pecas, crafting original e free-build ainda nao totalmente portados."
+          fi
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'
