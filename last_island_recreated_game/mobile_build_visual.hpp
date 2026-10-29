@@ -20,7 +20,8 @@ inline void drawPiece(const Piece &piece,bool preview=false,bool possible=true){
       case Foundation:
           drawPart({x,.2f,z},{3.f,.4f,3.f},stone,preview);break;
       case Wall:
-      case Doorway:{
+      case Doorway:
+      case Window:{
           const int rot=turn(piece.turn);
           const bool alongZ=(rot%2)==0;
           const float normal=rot==0?-1.5f:rot==1?1.5f:rot==2?1.5f:-1.5f;
@@ -28,8 +29,18 @@ inline void drawPiece(const Piece &piece,bool preview=false,bool possible=true){
           if(piece.type==Wall){
               drawPart({wx,1.5f,wz},alongZ?Vector3{3.f,2.6f,.22f}:
                         Vector3{.22f,2.6f,3.f},wood,preview);
+          }else if(piece.type==Window){
+              // A window has two posts, header and a waist-high sill.
+              for(int sign:{-1,1})
+                  drawPart({wx+(alongZ?sign*1.35f:0.f),1.5f,
+                            wz+(alongZ?0.f:sign*1.35f)},
+                           {.28f,2.6f,.28f},wood,preview);
+              drawPart({wx,2.67f,wz},alongZ?Vector3{2.9f,.28f,.28f}:
+                        Vector3{.28f,.28f,2.9f},wood,preview);
+              drawPart({wx,.78f,wz},alongZ?Vector3{2.9f,1.05f,.28f}:
+                        Vector3{.28f,1.05f,2.9f},wood,preview);
           }else{
-              // Two posts and lintel; opening remains traversable.
+              // Doorway remains passable through its center.
               for(int sign:{-1,1})
                   drawPart({wx+(alongZ?sign*1.18f:0.f),1.42f,
                             wz+(alongZ?0.f:sign*1.18f)},
@@ -39,6 +50,24 @@ inline void drawPiece(const Piece &piece,bool preview=false,bool possible=true){
           }
           break;
       }
+      case Stair:{
+          for(int step=0;step<5;step++){
+              float along=(step-2)*.55f;
+              float height=.24f+.42f*step;
+              bool rotate=turn(piece.turn)%2==1;
+              drawPart({x+(rotate?along:0.f),height/2.f,
+                        z+(rotate?0.f:along)},
+                       rotate?Vector3{.57f,height,2.7f}:
+                              Vector3{2.7f,height,.57f},wood,preview);
+          }
+          break;
+      }
+      case Obstacle:
+          for(int i=0;i<3;i++){
+              float along=(i-1)*.33f;
+              drawPart({x+along,.65f,z},{.24f,1.3f,.24f},wood,preview);
+          }
+          break;
       case Roof:
           drawPart({x,2.9f,z},{3.15f,.25f,3.15f},wood,preview);break;
       case Storage:
