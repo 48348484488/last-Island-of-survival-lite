@@ -317,6 +317,12 @@ int main() {
     std::vector<HitParticle> particles;
     std::vector<FloatingNotification> notifications;
     LIOS_BUILD::System building;
+    LIOS_BUILD::OriginalBuildTextures buildSourceMaterials;
+    buildSourceMaterials.load();
+    if(!buildSourceMaterials.complete())
+        TraceLog(LOG_ERROR,"LIOS_SOURCE_BUILD_MATERIALS_MISSING: do not treat fallback as original");
+    else
+        TraceLog(LOG_INFO,"LIOS_SOURCE_BUILD_MATERIALS_LOADED original_texture2d=6");
     std::string buildStatus="Colete recursos para fabricar.";
     std::set<int> previousUiTouches;
     bool buildMode=false;
@@ -1079,7 +1085,7 @@ int main() {
             // temporary placeholder while source map/build prefab extraction
             // is audited. Gameplay/costs/collision are implemented natively.
             for(const auto& part:building.placed)
-                LIOS_BUILD::drawPiece(part);
+                LIOS_BUILD::drawPiece(part,buildSourceMaterials);
             if(buildMode&&activePanel==0&&building.selected>=0&&
                building.selected<LIOS_BUILD::PieceCount){
                 const Vector3 dir={sinf(player.yaw),0.f,cosf(player.yaw)};
@@ -1089,7 +1095,7 @@ int main() {
                 const LIOS_BUILD::Piece ghost={type,gx,gz,building.orientation};
                 const bool ok=building.valid(type,gx,gz,building.orientation,
                                       player.position.x,player.position.z);
-                LIOS_BUILD::drawPiece(ghost,true,ok);
+                LIOS_BUILD::drawPiece(ghost,buildSourceMaterials,true,ok);
             }
 
             // Draw Hit Particles
