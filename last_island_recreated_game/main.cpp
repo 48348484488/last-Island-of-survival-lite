@@ -270,6 +270,7 @@ int main() {
     Texture2D originalHudBuild=LoadTexture("assets/hud_original_build.png");
     Texture2D originalBuildCategories=LoadTexture("assets/hud_original_build_categories.png");
     Texture2D originalBuildSelected=LoadTexture("assets/hud_original_build_selected.png");
+    Texture2D originalBuildRotate=LoadTexture("assets/hud_original_build_rotate.png");
     Texture2D originalThumb=LoadTexture("assets/hud_original_joystick_knob.png");
     // Exact-source Unity m_heightLignt for all seven hotbar slots.
     Texture2D originalHotbarSelection=LoadTexture("assets/hud_original_hotbar_selection.png");
@@ -316,6 +317,7 @@ int main() {
     std::string buildStatus="Colete recursos para fabricar.";
     std::set<int> previousUiTouches;
     bool buildMode=false;
+    int buildCategory=2; // Source category index: btn_fundation.
 
     // -------------------------------------------------------------------------------------
     // Mobile On-Screen Virtual Controls Setup
@@ -364,7 +366,7 @@ int main() {
         }
 
         // Toggle camera with TAB or V
-        if (IsKeyPressed(KEY_TAB) || IsKeyPressed(KEY_V)) {
+        if (IsKeyPressed(KEY_TAB) || (!buildMode&&IsKeyPressed(KEY_V))) {
             player.thirdPerson = !player.thirdPerson;
         }
 
@@ -431,9 +433,9 @@ int main() {
                 (std::fabs(hudInput.stick.x)+std::fabs(hudInput.stick.y)>0.002f);
         }
         // Touch events (edge-triggered unless the action is explicitly held).
-        if(hudInput.justPressed(HA::Slot0)){player.equippedSlot=0;selectedHotbarSlot=0;aim=false;}
-        if(hudInput.justPressed(HA::Slot1)){player.equippedSlot=1;selectedHotbarSlot=1;}
-        for(int i=0;i<5;i++)if(hudInput.justPressed(
+        if(!buildMode&&hudInput.justPressed(HA::Slot0)){player.equippedSlot=0;selectedHotbarSlot=0;aim=false;}
+        if(!buildMode&&hudInput.justPressed(HA::Slot1)){player.equippedSlot=1;selectedHotbarSlot=1;}
+        for(int i=0;i<5;i++)if(!buildMode&&hudInput.justPressed(
             static_cast<HA>(int(HA::Slot2)+i))){
             // Unity hotbar selects the item; it does NOT open the inventory.
             // Native resource item use is not ported; never fire the old gun.
@@ -506,6 +508,8 @@ int main() {
                 if(hitUi(click,panelBox(675.f,552.f,550.f,73.f))){
                     if(building.blueprint){
                         buildMode=true;
+                        buildCategory=2;building.selected=LIOS_BUILD::Foundation;
+                        player.equippedSlot=-1;aim=false;
                         activePanel=0;
                         buildStatus="MODO CONSTRUCAO: gire e posicione as pecas.";
                     }else buildStatus="Fabrique primeiro a planta de construcao.";
@@ -524,8 +528,14 @@ int main() {
                 for(int category=0;category<8;category++){
                     if(!hitUi(click,sourceRect(categories[category])))continue;
                     tabTouched=true;
-                    if(category==0){building.selected=0;buildStatus="Sem peca selecionada."; }
-                    else if(category==1){buildStatus="Categoria: projetos de construcao."; }
+                    buildCategory=category;
+                    if(category==0){
+                        buildMode=false;building.selected=-1;
+                        buildStatus="Construcao encerrada.";
+                    }else if(category==1){
+                        building.selected=-1;
+                        buildStatus="Categoria: projetos de construcao.";
+                    }
                     else if(category==2){building.selected=LIOS_BUILD::Foundation;buildStatus="Fundacao selecionada."; }
                     else if(category==3){building.selected=LIOS_BUILD::Wall;buildStatus="Parede selecionada."; }
                     else if(category==4){building.selected=LIOS_BUILD::Roof;buildStatus="Piso/teto selecionado."; }
@@ -562,8 +572,13 @@ int main() {
             }
         }
         if(buildMode&&activePanel==0){
-            if(IsKeyPressed(KEY_V))
-                building.selected=(building.selected+1)%LIOS_BUILD::PieceCount;
+            // Keyboard fallback does not alter camera mode in build state.
+            if(IsKeyPressed(KEY_V)){
+                buildCategory=2+(buildCategory-1)%3;
+                const int partByCategory[]={-1,-1,LIOS_BUILD::Foundation,
+                    LIOS_BUILD::Wall,LIOS_BUILD::Roof};
+                building.selected=partByCategory[buildCategory];
+            }
             if(IsKeyPressed(KEY_R))
                 building.orientation=(building.orientation+1)%4;
             if(IsKeyPressed(KEY_ENTER)&&building.selected>=0&&
@@ -1407,36 +1422,44 @@ int main() {
         DrawBtn(btnCam);
         } // Original Unity HUD versus simplified desktop fallback
 
-        if(buildMode&&activePanel==0){
-            const char* names[]={"FUNDACAO","PAREDE","PORTAL","TETO",
-                                 "BAU","FOGUEIRA"};
-            const int i=building.selected;
-            const LIOS_BUILD::Cost c=LIOS_BUILD::BUILD_COSTS[i];
-            auto uiButton=[&](Rectangle bounds,const char* label,Color fill){
-                DrawRectangleRec(bounds,Fade(fill,.87f));
-                DrawRectangleLinesEx(bounds,2.f*canvasScale,RAYWHITE);
-                DrawText(label,int(bounds.x+10.f*canvasScale),
-                         int(bounds.y+18.f*canvasScale),
-                         std::max(12,int(26.f*canvasScale)),WHITE);
+        if(buildMode&&activePanel==0&&originalBuildCategories.id){
+            // Exact ORIGINAL Unity UGUI sprites, generated from Image.m_Sprite
+            // with FileID+PathID provenance. Original HorizontalLayoutGroup
+            // distributes category tabs across m_buildPartTypes RectTransform.
+            const LIOS_HUD::Rect tabs[]={
+                LIOS_HUD::Build_btn_null,LIOS_HUD::Build_btn_lantu,
+                LIOS_HUD::Build_btn_fundation,LIOS_HUD::Build_btn_wall,
+                LIOS_HUD::Build_btn_floor,LIOS_HUD::Build_btn_stair,
+                LIOS_HUD::Build_btn_window,LIOS_HUD::Build_btn_obstacle
             };
-            uiButton(panelBox(120.f,135.f,200.f,72.f),"TROCAR",DARKGRAY);
-            uiButton(panelBox(325.f,135.f,185.f,72.f),"GIRAR",DARKGRAY);
-            uiButton(panelBox(120.f,218.f,390.f,80.f),"CONSTRUIR",DARKGREEN);
-            uiButton(panelBox(120.f,308.f,390.f,65.f),"SAIR",MAROON);
-            DrawText(TextFormat("%s  %d/%d",names[i],int(building.placed.size()),
-                     LIOS_BUILD::System::MaxPlaced),
-                     int(canvasLeft+120.f*canvasScale),
-                     int(canvasTop+395.f*canvasScale),
-                     std::max(12,int(27.f*canvasScale)),WHITE);
-            DrawText(TextFormat("CUSTO: M%d  P%d  Fe%d",
-                     c.wood,c.stone,c.metal),
-                     int(canvasLeft+120.f*canvasScale),
-                     int(canvasTop+432.f*canvasScale),
-                     std::max(10,int(23.f*canvasScale)),YELLOW);
-            DrawText(buildStatus.c_str(),
-                     int(canvasLeft+120.f*canvasScale),
-                     int(canvasTop+472.f*canvasScale),
-                     std::max(10,int(20.f*canvasScale)),YELLOW);
+            for(int i=0;i<LIOS_HUD::BuildCategoryCount;i++){
+                DrawTexturePro(originalBuildCategories,
+                    {float(i*LIOS_HUD::BuildCategoryTileW),0.f,
+                     float(LIOS_HUD::BuildCategoryTileW),
+                     float(LIOS_HUD::BuildCategoryTileH)},
+                    sourceRect(tabs[i]),{0,0},0,WHITE);
+            }
+            if(originalBuildSelected.id&&buildCategory>=0&&buildCategory<8){
+                Rectangle target=sourceRect(tabs[buildCategory]);
+                // Source Checkmark nested inside the source 95px Toggle.
+                target.x+=target.width*.10f;target.y+=target.height*.10f;
+                target.width*=.80f;target.height*=.80f;
+                DrawTexturePro(originalBuildSelected,
+                    {0,0,float(originalBuildSelected.width),
+                     float(originalBuildSelected.height)},target,{0,0},0,WHITE);
+            }
+            if(originalBuildRotate.id)
+                DrawTexturePro(originalBuildRotate,
+                    {0,0,float(originalBuildRotate.width),
+                     float(originalBuildRotate.height)},
+                    sourceRect(LIOS_HUD::Build_btn_opRotate),
+                    {0,0},0,WHITE);
+            // Dynamic status is not a fabricated clickable button.
+            DrawText(TextFormat("%s  /  %d",
+                buildStatus.c_str(),int(building.placed.size())),
+                int(canvasLeft+360.f*canvasScale),
+                int(canvasTop+700.f*canvasScale),
+                std::max(12,int(21.f*canvasScale)),YELLOW);
         }
         EndDrawing();
     }
