@@ -44,7 +44,7 @@ def read_state():
   assert ID in refs,f"Expected {ID} in original Unity Animator state, got {refs}"
   return refs
 
-def decode_curves(clip,names,parents):
+def decode_curves(clip,names,parents,allow_extra_bones=False):
   m=clip["m_MuscleClip"]["m_Clip"]["data"];streamed=m["m_StreamedClip"]
   vals=streamed["data"];nc=int(streamed["curveCount"])
   d=m["m_DenseClip"];nf=int(d["m_FrameCount"]);fps=float(d["m_SampleRate"])
@@ -97,7 +97,12 @@ def decode_curves(clip,names,parents):
     n=4 if typ==4 and a==2 else 3 if typ==4 and a in (1,3,4) else 1
     block=curves[:,cur:cur+n];cur+=n
     if typ!=4 or a not in (1,2,3):continue
-    assert b["path"] in hash_index,f"Unknown original Unity bone hash {b['path']}"
+    # Other original stance clips also animate auxiliary attachments outside
+    # the base 64-bone character palette. They cannot affect native skinning.
+    # Keep strict behavior for existing axe extraction; opt-in per stance.
+    if b["path"] not in hash_index:
+      if allow_extra_bones:continue
+      raise AssertionError(f"Unknown original Unity bone hash {b['path']}")
     ix=hash_index[b["path"]];matched.add(names[ix])
     if a==1:trans[ix]=block
     elif a==2:quat[ix]=block
