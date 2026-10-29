@@ -25,6 +25,72 @@ with tempfile.TemporaryDirectory() as temp:
    shutil.copyfileobj(f,dest,8*1024*1024)
  with zipfile.ZipFile(t/"pack.apk") as z:
   ui=UnityPy.load(z.read("assets/ui/bagandbuildpanel.ab"))
+  # Export the REAL Unity prefab hierarchy, RectTransform metrics and
+  # sprite PPtrs. The previous export recovered pixels but left every
+  # native menu coordinate as a manually guessed number.
+  original_go={}
+  original_rects={}
+  original_components={}
+  for obj in ui.objects:
+   kind=obj.type.name
+   if kind not in ("GameObject","RectTransform","MonoBehaviour"):
+    continue
+   try:
+    data=obj.read_typetree()
+   except Exception:
+    continue
+   key=str(obj.path_id)
+   if kind=="GameObject":
+    original_go[key]={
+     "name":data.get("m_Name",""),
+     "active":data.get("m_IsActive",0),
+     "components":[str(x.get("component",{}).get("m_PathID",0))
+                   for x in data.get("m_Component",[])]}
+   elif kind=="RectTransform":
+    original_rects[key]={
+     "gameObject":str(data.get("m_GameObject",{}).get("m_PathID",0)),
+     "parent":str(data.get("m_Father",{}).get("m_PathID",0)),
+     "children":[str(x.get("m_PathID",0))
+                 for x in data.get("m_Children",[])],
+     "anchorMin":data.get("m_AnchorMin"),
+     "anchorMax":data.get("m_AnchorMax"),
+     "anchoredPosition":data.get("m_AnchoredPosition"),
+     "sizeDelta":data.get("m_SizeDelta"),
+     "pivot":data.get("m_Pivot"),
+     "localScale":data.get("m_LocalScale"),
+     "localRotation":data.get("m_LocalRotation")}
+   elif kind=="MonoBehaviour":
+    fields=("m_Sprite","m_Text","m_Color","m_Enabled","m_RaycastTarget",
+            "m_PreserveAspect","m_Type","m_FillAmount","m_OnClick")
+    present={k:data[k] for k in fields if k in data}
+    if present:
+     original_components[key]={
+       "gameObject":str(data.get("m_GameObject",{}).get("m_PathID",0)),
+       "fields":present}
+  by_name={}
+  for goid,go in original_go.items():
+   if go["name"]:
+    by_name.setdefault(go["name"],[]).append(goid)
+  required=("m_produce_page","m_produce_list","btn_create",
+            "btn_reduce","btn_max","btn_back","scp_items")
+  missing_nodes=[n for n in required if n not in by_name]
+  if missing_nodes:
+   raise RuntimeError("Original craft prefab nodes unresolved: "+repr(missing_nodes))
+  evidence={
+   "source":"LITE 7.3 assets/ui/bagandbuildpanel.ab",
+   "confidence":"serialized_unity_prefab_not_runtime_pixels",
+   "counts":{"gameObjects":len(original_go),"rectTransforms":len(original_rects),
+             "components":len(original_components)},
+   "byName":by_name,"gameObjects":original_go,
+   "rectTransforms":original_rects,"uiComponents":original_components,
+   "unresolved_runtime":["CanvasScaler viewport adaptation",
+                         "active-state transitions","localization font",
+                         "DrawingCfg recipe data","scroll layout and dynamic cells"]}
+  (OUT/"original_craft_prefab_graph.json").write_text(
+    json.dumps(evidence,ensure_ascii=False,indent=2,default=str))
+  print("LIOS_ORIGINAL_CRAFT_SOURCE_LAYOUT_PASS",
+        "nodes",len(original_go),"rects",len(original_rects),
+        "components",len(original_components),"required",len(required),flush=True)
   used={}
   for obj in ui.objects:
    if obj.type.name!="MonoBehaviour":continue
