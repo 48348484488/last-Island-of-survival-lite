@@ -26,6 +26,20 @@ def item(ident=7001):
             struct.pack("<f",1.25)+i(1)+s("x")+i(0))
 
 class TestCraftDecoder(unittest.TestCase):
+    def test_real_original_lite73_first_record(self):
+        # First 128 bytes copied from own original XAPK under controlled
+        # source audit; tail completes the byte length at the record boundary.
+        prefix = bytes.fromhex("acde000018000000e9858de696b9efbc9ae794b5e7ab9ee78b82e6aca25355560e0000000f00000000010000010000010001050000000100000003000000010000000900000078000000040000005ac30000c800000082c3000001000000c8da00001e0000007fc300001e0000000a500100e703000096010000010000000100") + bytes([0,0])
+        row=parse_drawing(prefix)[0]
+        self.assertEqual(row["id"],57004)
+        self.assertEqual((row["bigType"],row["smallType"]),(14,15))
+        self.assertEqual(row["record_variant"],"lite73")
+        self.assertEqual(row["needTime"],120)
+        self.assertEqual(row["materials"],[
+            {"itemId":50010,"num":200},{"itemId":50050,"num":1},
+            {"itemId":56008,"num":30},{"itemId":50047,"num":30}])
+        self.assertEqual(row["targetItemId"],86026)
+        self.assertEqual(row["byte_span"],[0,130])
     def test_source_drawing_roundtrip(self):
         rows=parse_drawing(drawing()+drawing(1002))
         self.assertEqual(len(rows),2)
