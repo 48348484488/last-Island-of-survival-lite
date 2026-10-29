@@ -368,6 +368,22 @@ def main():
         geometry["resource_icons"][name]={
             "source_sprite_name":sprite,"path_id":entry["path_id"],
             "source_file":entry["file"]}
+    # Item icon PNGs from original XAPK tubiao1 / tubiao Sprite assets.
+    # The romanized source asset identifiers correspond to jiànzhù-chuí
+    # (construction hammer) and shí-gǎo (stone pickaxe). Keep source
+    # FileID+PathID and do not draw a synthesized tool silhouette.
+    source_tools={"construction_hammer":"cj_jzc","stone_pickaxe":"cj_sg",
+                  "construction_category":"tb_ch_jianzao_01"}
+    geometry["original_tool_icons"]={}
+    for output_name,source_name in source_tools.items():
+        candidates=hud.sprite_names.get(source_name,[])
+        if not candidates:
+            raise ValueError("Original source tool sprite unavailable: "+source_name)
+        asset=sorted(candidates,key=lambda q:(q.get("bundle",""),q["file"]))[0]
+        with Image.open(ASSETS/asset["file"]) as im:
+            im.convert("RGBA").save(dest/("icon_source_"+output_name+".png"),optimize=True)
+        geometry["original_tool_icons"][output_name]={
+            "original_name":source_name,"pathid":asset["path_id"],"file":asset["file"]}
     (dest/"hud_mobile_source_geometry.json").write_text(
         json.dumps(geometry,indent=2,ensure_ascii=False),encoding="utf8")
     lines=["#pragma once",
