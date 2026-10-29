@@ -64,6 +64,13 @@ def _read_drawing_record(reader, variant):
     for key in ("targetItemId", "onceMaxCreate", "order",
                 "baseNumber", "productNum"):
         row[key] = reader.integer()
+    if variant == "lite73":
+        # Exact 17-byte suffix established by two consecutive original
+        # headers at 147/293 and a full decoded first record ending at 130.
+        # The bytes form one boolean and four little-endian integers.
+        row["unmapped_suffix"] = {
+            "flag": reader.boolean(),
+            "integers": [reader.integer() for _ in range(4)]}
     row["byte_span"] = [start, reader.off]
     row["record_variant"] = variant
     if (row["id"] <= 0 or
