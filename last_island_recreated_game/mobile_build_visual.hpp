@@ -14,8 +14,12 @@ struct OriginalBuildTextures{
         foundation=LoadTexture("assets/build_original_foundation.png");
         wall=LoadTexture("assets/build_original_wall.png");
         roof=LoadTexture("assets/build_original_roof.png");
-        window=LoadTexture("assets/build_original_window.png");
-        doorway=LoadTexture("assets/build_original_doorway.png");
+        // Original _d window/door frame channel alpha stores a Unity shader
+        // mask (range 0-58), not standard transparent glass. Preserve
+        // source RGBA files in APK; use RGB-preserving opaque native copies
+        // for Raylib's non-Unity shader so the frame stays visible.
+        window=LoadTexture("assets/build_native_opaque_window.png");
+        doorway=LoadTexture("assets/build_native_opaque_doorway.png");
         stair=LoadTexture("assets/build_original_stair.png");
     }
     bool complete()const{return foundation.id&&wall.id&&roof.id&&window.id&&doorway.id&&stair.id;}
