@@ -550,13 +550,14 @@ int main() {
                 const auto touch=[&](float x,float y,float w,float h){
                     return LIOS_CRAFT_UI::hit(click,x,y,w,h,canvasScale,canvasLeft,canvasTop);
                 };
-                if(touch(1654,0,266,86)){
+                if(LIOS_CRAFT_UI::hit(click,LIOS_CRAFT_SOURCE::Back,
+                    canvasScale,canvasLeft,canvasTop)){
                     activePanel=0;continue;
                 }
                 // Unity BagProducePage: main tabs -> sub-tabs -> recipe cells.
                 bool navigationTouched=false;
                 for(int i=0;i<5;i++){
-                    if(touch(220.f+294.f*i,179,276,51)){
+                    if(touch(76.f,230.f+76.f*i,148,60)){
                         craftBigTab=LIOS_CRAFT_UI::BigTabs[i].id;
                         craftSmallTab=LIOS_CRAFT_UI::firstSubTab(craftBigTab);
                         craftSelectedRecipe=LIOS_CRAFT_UI::visibleRecipe(
@@ -566,7 +567,9 @@ int main() {
                 }
                 if(navigationTouched)continue;
                 for(int i=0;i<LIOS_CRAFT_UI::subTabCount(craftBigTab);i++){
-                    if(touch(232.f+198.f*i,244,189,43)){
+                    if(touch(LIOS_CRAFT_SOURCE::SubTabOriginX+
+                             LIOS_CRAFT_SOURCE::SubTabStepX*i,
+                             LIOS_CRAFT_SOURCE::SubTabOriginY,136,43)){
                         craftSmallTab=LIOS_CRAFT_UI::subTab(craftBigTab,i).id;
                         craftSelectedRecipe=LIOS_CRAFT_UI::visibleRecipe(
                             craftBigTab,craftSmallTab,0);
@@ -578,7 +581,9 @@ int main() {
                 for(int slot=0;slot<3;slot++){
                     int recipe=LIOS_CRAFT_UI::visibleRecipe(
                         craftBigTab,craftSmallTab,slot);
-                    if(recipe>=0&&touch(252.f+203.f*slot,365.f,160.f,225.f)){
+                    if(recipe>=0&&touch(
+                        LIOS_CRAFT_SOURCE::RecipeTemplateCell.x+180.f*slot,
+                        LIOS_CRAFT_SOURCE::RecipeTemplateCell.y+12.f,149.5f,220.f)){
                         craftSelectedRecipe=recipe;craftQuantity=1;
                         recipeTouched=true;break;
                     }
@@ -589,13 +594,16 @@ int main() {
                 const int maxAvailable=craftSelectedRecipe>=0?
                     building.maxCraftableQuantity(
                         static_cast<LIOS_BUILD::RecipeType>(craftSelectedRecipe),available):0;
-                if(touch(1360,663,72,72)&&craftSelectedRecipe>=0){
+                const auto sourceTouch=[&](LIOS_CRAFT_SOURCE::Bounds r){
+                    return LIOS_CRAFT_UI::hit(click,r,canvasScale,canvasLeft,canvasTop);
+                };
+                if(sourceTouch(LIOS_CRAFT_SOURCE::QuantityMinus)&&craftSelectedRecipe>=0){
                     craftQuantity=std::max(1,craftQuantity-1);
-                }else if(touch(1547,663,72,72)&&craftSelectedRecipe>=0){
+                }else if(sourceTouch(LIOS_CRAFT_SOURCE::QuantityPlus)&&craftSelectedRecipe>=0){
                     craftQuantity=std::min(std::max(1,maxAvailable),craftQuantity+1);
-                }else if(touch(1642,663,105,72)&&craftSelectedRecipe>=0){
+                }else if(sourceTouch(LIOS_CRAFT_SOURCE::QuantityMax)&&craftSelectedRecipe>=0){
                     craftQuantity=std::max(1,maxAvailable);
-                }else if(touch(1640,914,63,63)&&!building.queue.empty()){
+                }else if(touch(1780,627,60,60)&&!building.queue.empty()){
                     if(building.cancelCraft(
                         unsigned(std::max(0,std::min(craftSelectedOrder,
                             int(building.queue.size())-1))),available)){
@@ -605,13 +613,13 @@ int main() {
                             int(building.queue.size())-1));
                         craftStatus="Fabricacao cancelada; recursos devolvidos.";
                     }
-                }else if(touch(1100,919,520,18.f*float(building.queue.size()))
+                }else if(touch(1510,674,340,25.f*float(building.queue.size()))
                           &&!building.queue.empty()){
-                    int idx=int((click.y-(canvasTop+919.f*canvasScale))/
-                                (18.f*canvasScale));
+                    int idx=int((click.y-(canvasTop+674.f*canvasScale))/
+                                (25.f*canvasScale));
                     craftSelectedOrder=std::max(0,std::min(idx,
                         int(building.queue.size())-1));
-                }else if(touch(1340,770,334,84)&&craftSelectedRecipe>=0){
+                }else if(touch(1510,951,200,75)&&craftSelectedRecipe>=0){
                     const auto type=static_cast<LIOS_BUILD::RecipeType>(craftSelectedRecipe);
                     if(building.requestCraft(type,available,craftQuantity)){
                         player.woodCount=available.wood;player.stoneCount=available.stone;
