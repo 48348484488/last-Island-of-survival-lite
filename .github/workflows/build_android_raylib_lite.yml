@@ -11,6 +11,7 @@ on:
       - tools/export_mobile_skeletal_animation.py
       - tools/export_mobile_original_hud.py
       - tools/test_android_character_parity.py
+      - tools/test_original_footplants.py
       - .github/workflows/build_android_raylib_lite.yml
       - tools/package_android_assets.py
 permissions:
@@ -46,6 +47,7 @@ jobs:
             tools/unity_ugui_raster.py
             tools/prepare_mobile_character_textures.py
             tools/test_android_character_parity.py
+            tools/test_original_footplants.py
             last_island_recreated_game/viewer3d.py
           sparse-checkout-cone-mode: false
           filter: blob:none
@@ -87,6 +89,7 @@ jobs:
           rm /tmp/lios-raymob/app/src/main/cpp/main.c
           python tools/package_android_assets.py             last_island_recreated_game/main.cpp             last_island_recreated_game/assets             /tmp/lios-raymob/app/src/main/assets/assets
           python tools/export_mobile_skeletal_animation.py --output /tmp/lios-raymob/app/src/main/assets/assets/lios_skeleton_v1.bin
+          python -u tools/test_original_footplants.py /tmp/lios-raymob/app/src/main/assets/assets/lios_skeleton_v1.bin
           python tools/prepare_mobile_character_textures.py last_island_recreated_game/assets /tmp/lios-raymob/app/src/main/assets/assets/
           python -u tools/export_mobile_original_hud.py --destination /tmp/lios-original-hud
           cp /tmp/lios-original-hud/mobile_original_hud_layout.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_original_hud_layout.hpp
@@ -94,7 +97,7 @@ jobs:
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_melee.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_rifle.png
           cd /tmp/lios-raymob
-          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.16.3-camera-aligned-locomotion/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
+          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.16.4-original-foot-plant-locomotion/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
@@ -216,7 +219,7 @@ jobs:
       - name: Copy named downloadable APK
         run: |
           mkdir -p dist
-          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.16.3-ARM64.apk
+          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.16.4-ARM64.apk
           sha256sum dist/*.apk
 
       - name: Upload Android APK for phone testing
