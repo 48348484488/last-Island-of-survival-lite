@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify direction and gait cadence from the unmodified 33 original Unity clips.
+"""Verify direction and gait cadence from the native original Unity clips (33 standing + recovered stances).
 
 Reads the native LIOSSKN1 skeleton exported from original XAPK animations.
 Computes toe-bone positions through FK (64 bones) and estimates foot-contact
@@ -35,7 +35,7 @@ class Reader:
 def parse(path):
     r=Reader(path)
     ver,n_bones,n_meshes,n_clips=[r.u32() for _ in range(4)]
-    assert (ver,n_bones,n_meshes,n_clips)==(1,64,7,33)
+    assert ver==1 and n_bones==64 and n_meshes==7 and n_clips>=33
     names=[];parents=[]
     for _ in range(n_bones):
         names.append(r.name());parents.append(r.i32())
