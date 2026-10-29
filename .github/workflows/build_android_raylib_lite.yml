@@ -210,6 +210,40 @@ jobs:
             print('LIOS_ORIGINAL_UNITY_PART_SPRITE',kind,name,icon['id'],flush=True)
           PY
 
+      - name: Integrate EdgeAI source-exact 35 original Unity BuildPart sprites and metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/edgeai-original-build
+          gh run download 40841337262 --repo "$GITHUB_REPOSITORY" \
+            --name EdgeAI-Original-Unity-BuildPart-Level1-Exact-Config \
+            --dir /tmp/edgeai-original-build
+          python - <<'PY'
+          import json,shutil
+          from pathlib import Path
+          base=Path("/tmp/edgeai-original-build")
+          report=json.loads((base/"edgeai_real_buildpart_decoded.json").read_text())
+          assert report["record_count"]==638,report["record_count"]
+          expected={2:4,3:9,4:3,6:8,7:3,8:8}
+          for group in report["groups"].values():
+              if group["type_id"] in expected:
+                  assert group["count"]==expected[group["type_id"]],group
+          src=base/"edgeai_native_build_widgets"
+          target=Path("/tmp/lios-raymob/app/src/main/assets/assets")
+          target.mkdir(parents=True,exist_ok=True)
+          for t,n in expected.items():
+              name=f"hud_original_build_items_type_{t}.png"
+              path=src/name
+              assert path.stat().st_size>2000,name
+              shutil.copy2(path,target/name)
+              print("LIOS_EDGEAI_SOURCE_EXACT_BUILD_ICONS",t,n,name,flush=True)
+          cpp=src/"original_buildpart_v7.hpp"
+          assert cpp.stat().st_size>3000
+          shutil.copy2(cpp,Path("/tmp/lios-raymob/app/src/main/cpp")/cpp.name)
+          print("LIOS_EDGEAI_35_ORIGINAL_BUILDPART_SOURCE_IDENTITIES_READY",flush=True)
+          PY
+
       - name: Regression-test camera, original skin atlas and mesh normals
         run: python -u tools/test_android_character_parity.py
 
@@ -239,6 +273,10 @@ jobs:
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_build_selected.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_build_rotate.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_build_children.png
+          test -s /tmp/lios-raymob/app/src/main/cpp/original_buildpart_v7.hpp
+          for t in 2 3 4 6 7 8; do
+            test -s "/tmp/lios-raymob/app/src/main/assets/assets/hud_original_build_items_type_${t}.png"
+          done
           for kind in foundation wall doorway roof stair window obstacle; do
             test -s "/tmp/lios-raymob/app/src/main/assets/assets/build_icon_${kind}.png"
           done
@@ -256,7 +294,7 @@ jobs:
           grep -q 'Build_btn_build' /tmp/lios-raymob/app/src/main/cpp/mobile_original_hud_layout.hpp
           grep -q 'Build_btn_fundation' /tmp/lios-raymob/app/src/main/cpp/mobile_original_hud_layout.hpp
           cd /tmp/lios-raymob
-          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.22.0-original-build-submenu/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
+          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.23.0-edgeai-source-exact-buildpart/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
@@ -313,6 +351,12 @@ jobs:
               'assets/assets/hud_original_build_selected.png',
               'assets/assets/hud_original_build_rotate.png',
               'assets/assets/hud_original_build_children.png',
+              'assets/assets/hud_original_build_items_type_2.png',
+              'assets/assets/hud_original_build_items_type_3.png',
+              'assets/assets/hud_original_build_items_type_4.png',
+              'assets/assets/hud_original_build_items_type_6.png',
+              'assets/assets/hud_original_build_items_type_7.png',
+              'assets/assets/hud_original_build_items_type_8.png',
               'assets/assets/build_icon_foundation.png',
               'assets/assets/build_icon_wall.png',
               'assets/assets/build_icon_roof.png',
@@ -410,7 +454,7 @@ jobs:
       - name: Copy named downloadable APK
         run: |
           mkdir -p dist
-          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.22.0-ARM64.apk
+          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.23.0-ARM64.apk
           sha256sum dist/*.apk
 
       - name: Upload Android APK for phone testing
@@ -440,15 +484,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          APK="dist/LastIslandLite-v0.22.0-ARM64.apk"
-          TAG="v0.22.0"
+          APK="dist/LastIslandLite-v0.23.0-ARM64.apk"
+          TAG="v0.23.0"
           test -s "$APK"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
           else
             gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" \
               --target "$GITHUB_SHA" \
-              --title "Last Island LITE recriado - Android v0.22.0" \
+              --title "Last Island LITE recriado - Android v0.23.0" \
               --notes "APK ARM64 experimental: tela de fabricacao com sprites originais dos atlas bagandbuildpanel.ab e common.ab, botoes de construcoes, quantidade e fila de fabricacao offline; iconografia de ferramentas dos originais tubiao. Custos e logica completos do Unity ainda nao extraidos."
           fi
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'
