@@ -4,11 +4,30 @@
 #include "raylib.h"
 #include "native_build_craft.hpp"
 namespace LIOS_BUILD {
-inline void drawPart(Vector3 position,Vector3 extents,Color tint,bool preview) {
-    DrawCubeV(position,extents,tint);
+// These six Texture2Ds are direct Unity original diffuse surfaces extracted
+// from partinfo_material/component_*_lv1*.ab. The temporary C++ meshes
+// still require the matching ORIGINAL Unity meshes and UVs for 1:1 fidelity.
+struct OriginalBuildTextures{
+    Texture2D foundation{},wall{},roof{},window{},doorway{},stair{};
+    void load(){
+        foundation=LoadTexture("assets/build_original_foundation.png");
+        wall=LoadTexture("assets/build_original_wall.png");
+        roof=LoadTexture("assets/build_original_roof.png");
+        window=LoadTexture("assets/build_original_window.png");
+        doorway=LoadTexture("assets/build_original_doorway.png");
+        stair=LoadTexture("assets/build_original_stair.png");
+    }
+    bool complete()const{return foundation.id&&wall.id&&roof.id&&window.id&&doorway.id&&stair.id;}
+};
+inline void drawPart(Vector3 position,Vector3 extents,Color tint,bool preview,
+                     Texture2D surface={}){
+    if(surface.id)
+        DrawCubeTexture(surface,position,extents.x,extents.y,extents.z,tint);
+    else DrawCubeV(position,extents,tint);
     if(preview)DrawCubeWiresV(position,extents,tint.a>100?DARKGREEN:MAROON);
 }
-inline void drawPiece(const Piece &piece,bool preview=false,bool possible=true){
+inline void drawPiece(const Piece &piece,const OriginalBuildTextures &surf,
+                      bool preview=false,bool possible=true){
     const float x=world(piece.gx),z=world(piece.gz);
     const Color wood=preview?(possible?Color{80,220,110,110}:Color{255,65,70,110}):
                              Color{145,105,65,255};
@@ -18,7 +37,7 @@ inline void drawPiece(const Piece &piece,bool preview=false,bool possible=true){
                               Color{114,130,136,255};
     switch(piece.type){
       case Foundation:
-          drawPart({x,.2f,z},{3.f,.4f,3.f},stone,preview);break;
+          drawPart({x,.2f,z},{3.f,.4f,3.f},stone,preview,surf.foundation);break;
       case Wall:
       case Doorway:
       case Window:{
@@ -28,25 +47,25 @@ inline void drawPiece(const Piece &piece,bool preview=false,bool possible=true){
           const float wx=x+(alongZ?0.f:normal),wz=z+(alongZ?normal:0.f);
           if(piece.type==Wall){
               drawPart({wx,1.5f,wz},alongZ?Vector3{3.f,2.6f,.22f}:
-                        Vector3{.22f,2.6f,3.f},wood,preview);
+                        Vector3{.22f,2.6f,3.f},WHITE,preview,surf.wall);
           }else if(piece.type==Window){
               // A window has two posts, header and a waist-high sill.
               for(int sign:{-1,1})
                   drawPart({wx+(alongZ?sign*1.35f:0.f),1.5f,
                             wz+(alongZ?0.f:sign*1.35f)},
-                           {.28f,2.6f,.28f},wood,preview);
+                           {.28f,2.6f,.28f},WHITE,preview,surf.window);
               drawPart({wx,2.67f,wz},alongZ?Vector3{2.9f,.28f,.28f}:
-                        Vector3{.28f,.28f,2.9f},wood,preview);
+                        Vector3{.28f,.28f,2.9f},WHITE,preview,surf.window);
               drawPart({wx,.78f,wz},alongZ?Vector3{2.9f,1.05f,.28f}:
-                        Vector3{.28f,1.05f,2.9f},wood,preview);
+                        Vector3{.28f,1.05f,2.9f},WHITE,preview,surf.window);
           }else{
               // Doorway remains passable through its center.
               for(int sign:{-1,1})
                   drawPart({wx+(alongZ?sign*1.18f:0.f),1.42f,
                             wz+(alongZ?0.f:sign*1.18f)},
-                           {.34f,2.45f,.34f},wood,preview);
+                           {.34f,2.45f,.34f},WHITE,preview,surf.doorway);
               drawPart({wx,2.7f,wz},alongZ?Vector3{2.7f,.35f,.38f}:
-                        Vector3{.38f,.35f,2.7f},wood,preview);
+                        Vector3{.38f,.35f,2.7f},WHITE,preview,surf.doorway);
           }
           break;
       }
@@ -58,18 +77,18 @@ inline void drawPiece(const Piece &piece,bool preview=false,bool possible=true){
               drawPart({x+(rotate?along:0.f),height/2.f,
                         z+(rotate?0.f:along)},
                        rotate?Vector3{.57f,height,2.7f}:
-                              Vector3{2.7f,height,.57f},wood,preview);
+                              Vector3{2.7f,height,.57f},WHITE,preview,surf.stair);
           }
           break;
       }
       case Obstacle:
           for(int i=0;i<3;i++){
               float along=(i-1)*.33f;
-              drawPart({x+along,.65f,z},{.24f,1.3f,.24f},wood,preview);
+              drawPart({x+along,.65f,z},{.24f,1.3f,.24f},WHITE,preview,surf.wall);
           }
           break;
       case Roof:
-          drawPart({x,2.9f,z},{3.15f,.25f,3.15f},wood,preview);break;
+          drawPart({x,2.9f,z},{3.15f,.25f,3.15f},WHITE,preview,surf.roof);break;
       case Storage:
           drawPart({x,.66f,z},{1.25f,1.f,1.f},wood,preview);
           drawPart({x,1.20f,z},{1.35f,.12f,1.1f},metal,preview);break;
