@@ -38,7 +38,8 @@ int main(){
     // BuildPart.toggle second; category press NEVER places a wall directly.
     assert(partForOriginalCategory(2,0)==Foundation);
     assert(partForOriginalCategory(3,0)==Wall);
-    assert(partForOriginalCategory(3,1)==Doorway);
+    assert(partForOriginalCategory(3,1)==-1); // source is half-wall, not doorway
+    assert(partForOriginalCategory(6,3)==Doorway); // source is doorframe
     assert(partForOriginalCategory(4,0)==Roof);
     assert(partForOriginalCategory(5,0)==Stair);
     assert(partForOriginalCategory(6,0)==Window);
