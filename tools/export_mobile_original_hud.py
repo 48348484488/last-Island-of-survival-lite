@@ -31,6 +31,8 @@ HudV7=v7.HudV7
 
 class NativeMobileHud(HudV7):
     """Keep original thumb and compass texture separate for native runtime."""
+    hide_build_categories=False
+    hide_hotbar=False
     def render_compass(self):
         # Original compass moves with yaw. Draw it in C++ using the generated
         # exact-source 72-frame atlas, never bake a compass pointing north.
@@ -38,6 +40,10 @@ class NativeMobileHud(HudV7):
     def node(self,go,depth=3,exclude=()):
         name=go if isinstance(go,str) else go["name"]
         if name=="m_littleYaogan":
+            return
+        if self.hide_build_categories and name=="m_buildPartTypes":
+            return
+        if self.hide_hotbar and name=="m_bagItems":
             return
         return super().node(go,depth=depth,exclude=exclude)
 
@@ -166,6 +172,77 @@ def main():
             "draw_calls":audit["drawn_operations"],
             "source_hierarchy_order":audit["source_hierarchy_order"],
         }
+    # Original source Unity Build HUD. The prefab includes runtime-managed
+    # children of m_buildPartTypes initially stacked at one X coordinate.
+    # Export these as independent source sprites, then arrange on device
+    # across the ORIGINAL HorizontalLayoutGroup 797.8 source-width anchor.
+    # Rendering all prefab children in one static PNG made 8 tabs overlap.
+    build=NativeMobileHud(ASSETS,heading_deg=0,map_uv=[.5,.5])
+    build.hide_build_categories=True
+    build.hide_hotbar=True   # Base Layer build UI replaces live hotbar at bottom.
+    build.selected_slot=-1
+    build_audit=build.render_ordered(profile="on-foot-build",
+                                    items=ITEMS,vitals=None,samples=False)
+    outfile=dest/"hud_original_build.png"
+    build.layer.save(outfile,optimize=True)
+    if outfile.stat().st_size<1000:
+        raise ValueError("Original Build HUD was not rendered")
+    geometry["profiles"]["on-foot-build"]={
+        "drawn_components":build_audit["source_image_components_drawn_unique"],
+        "draw_calls":build_audit["drawn_operations"],
+        "source_hierarchy_order":build_audit["source_hierarchy_order"]}
+    # RectTransforms of exact original controls and derived position strip.
+    geometry["build_controls"]={}
+    for name in ("btn_build","btn_freeBuildModel","btn_opRotate","m_buildPartTypes"):
+        go=hud.go(name)
+        geometry["build_controls"][name]={
+            "bounds":source_rect(hud,go["path_id"]),
+            "go_path_id":go["path_id"],
+            "source_parent":hud.t[hud.bygo[go["path_id"]]["father"]]["go"]
+                if hud.bygo[go["path_id"]]["father"] in hud.t else None}
+    names=("btn_null","btn_lantu","btn_fundation","btn_wall",
+           "btn_floor","btn_stair","btn_window","btn_obstacle")
+    bounds=geometry["build_controls"]["m_buildPartTypes"]["bounds"]
+    count=len(names)
+    selection_sprites=[]
+    tiles=[]
+    class SingleSourceTab(NativeMobileHud):
+        def node(self,go,depth=3,exclude=()):
+            name=go if isinstance(go,str) else go["name"]
+            # Runtime Toggle groups activate their own Checkmark only.
+            if name=="Checkmark":return
+            return super().node(go,depth=depth,exclude=exclude)
+    for i,name in enumerate(names):
+        obj=hud.go(name)
+        assert hud.t[hud.bygo[obj["path_id"]]["father"]]["go"]==hud.go("m_buildPartTypes")["path_id"]
+        tab=SingleSourceTab(ASSETS,heading_deg=0,map_uv=[.5,.5])
+        tab.node(obj,depth=4)
+        source=source_rect(hud,obj["path_id"])
+        src=(round(source["left"]),round(source["top"]),
+             round(source["right"]),round(source["bottom"]))
+        tile=tab.layer.crop(src)
+        if tile.getbbox() is None:
+            raise ValueError("Empty source original Build category: "+name)
+        tiles.append(tile)
+        # The ROOT source layout rect is 757.9 pixels wide after hierarchy scale.
+        # Slots are N equal-width columns; source button 95 pixels each.
+        width=(bounds["right"]-bounds["left"])/count
+        slot=dict(left=bounds["left"]+width*i,top=bounds["top"],
+                  right=bounds["left"]+width*(i+1),bottom=bounds["bottom"])
+        geometry["build_controls"][name]={"bounds":slot,"go_path_id":obj["path_id"],
+                                          "original_unity_tab":name,
+                                          "source_image_bounds":source}
+    w=max(x.width for x in tiles);h=max(x.height for x in tiles)
+    atlas=Image.new("RGBA",(len(tiles)*w,h))
+    for i,tile in enumerate(tiles):
+        atlas.alpha_composite(tile,(i*w,0))
+    atlas.save(dest/"hud_original_build_categories.png",optimize=True)
+    geometry["build_category_atlas"]={"count":len(names),"tile_width":w,"tile_height":h,
+                                       "source_group":"m_buildPartTypes",
+                                       "order":names}
+    print("LIOS_UNITY_ORIGINAL_BUILD_HUD",outfile.stat().st_size,
+          "source_tabs",names,"atlas",atlas.size,flush=True)
+
     # Compute original RawImage compass displacement using the same exact
     # PathID m_compassImage, screen crop, and mask_leftrightfade logic as the
     # PC version's render_source_unity_hud.py.
@@ -264,6 +341,12 @@ def main():
            "struct Text {Rect bounds;int fontSize;int align;unsigned char r,g,b,a;};"]
     for action,rc in geometry["buttons"].items():
         lines.append("static constexpr Rect "+ACTIONS[action]+"="+literal_rect(rc)+";")
+    for name,entry in geometry["build_controls"].items():
+        lines.append("static constexpr Rect Build_"+name+"="+
+                     literal_rect(entry["bounds"])+";")
+    lines.append("static constexpr int BuildCategoryCount=%d;"%geometry["build_category_atlas"]["count"])
+    lines.append("static constexpr int BuildCategoryTileW=%d;"%geometry["build_category_atlas"]["tile_width"])
+    lines.append("static constexpr int BuildCategoryTileH=%d;"%geometry["build_category_atlas"]["tile_height"])
     for i,item in enumerate(icons):
         lines.append("static constexpr Rect SlotBox"+str(i)+"="+literal_rect(item["slot"])+";")
         lines.append("static constexpr Rect Slot"+str(i)+"="+literal_rect(item["icon"])+";")
