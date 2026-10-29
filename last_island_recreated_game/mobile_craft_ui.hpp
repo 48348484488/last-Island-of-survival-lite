@@ -45,7 +45,7 @@ inline int visibleRecipe(int big,int small,int slot){
 struct Art {
     Texture2D button={},back={},slot={},smallSlot={},strip={},selected={},
               plus={},minus={},close={},hammer={},pickaxe={},buildIcon={},
-              wood={},stone={},metal={};
+              wood={},stone={},metal={},primaryTab={},secondaryTab={};
     void load(){
         button=LoadTexture("assets/craft_original_create_button.png");
         back=LoadTexture("assets/craft_original_back_button.png");
@@ -62,6 +62,8 @@ struct Art {
         wood=LoadTexture("assets/icon_resource_wood.png");
         stone=LoadTexture("assets/icon_resource_stone.png");
         metal=LoadTexture("assets/icon_resource_metal.png");
+        primaryTab=LoadTexture("assets/craft_original_primary_tab.png");
+        secondaryTab=LoadTexture("assets/craft_original_secondary_tab.png");
     }
 };
 inline Rectangle rect(float l,float t,float w,float h,float scale,float left,float top){
@@ -114,9 +116,14 @@ inline void render(const Art &art, const LIOS_BUILD::System &sys,
     for(int i=0;i<5;i++){
         float x=76.0f,y=230.0f+76.0f*i;
         Rectangle tab=b(x,y,148,60);
-        DrawRectangleRec(tab,bigTab==BigTabs[i].id?
-            Color{74,88,85,238}:Color{30,39,41,220});
-        DrawRectangleLinesEx(tab,sc*2,Color{152,161,149,220});
+        const bool active=bigTab==BigTabs[i].id;
+        if(art.primaryTab.id){
+            sprite(art.primaryTab,tab,active?WHITE:Color{170,170,170,245});
+        }else{
+            DrawRectangleRec(tab,active?
+                Color{74,88,85,238}:Color{30,39,41,220});
+            DrawRectangleLinesEx(tab,sc*2,Color{152,161,149,220});
+        }
         title(BigTabs[i].label,x+12,y+14,22,sc,ox,oy);
     }
     for(int i=0;i<subTabCount(bigTab);i++){
@@ -124,8 +131,13 @@ inline void render(const Art &art, const LIOS_BUILD::System &sys,
             LIOS_CRAFT_SOURCE::SubTabStepX*i;
         float y=LIOS_CRAFT_SOURCE::SubTabOriginY;
         const Tab sub=subTab(bigTab,i);
-        DrawRectangleRec(b(x,y,136,43),
-            sub.id==smallTab?Color{77,97,87,235}:Color{26,33,38,220});
+        if(art.secondaryTab.id){
+            sprite(art.secondaryTab,b(x,y,136,43),
+                   sub.id==smallTab?WHITE:Color{165,165,165,230});
+        }else{
+            DrawRectangleRec(b(x,y,136,43),
+                sub.id==smallTab?Color{77,97,87,235}:Color{26,33,38,220});
+        }
         title(sub.label,x+6,y+10,19,sc,ox,oy);
     }
     int recipesOnTab=0;
