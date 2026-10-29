@@ -34,6 +34,31 @@ int main(){
     assert(!b.valid(Foundation,6000,0,0,0.f,0.f)); // Must be in 6000 world.
     assert(grid(-4.51f)==-2&&grid(4.51f)==2);
     assert(turn(-1)==3&&turn(4)==0);
+    // All original source building category tabs now have a native action.
+    Resources extra{400,400,100,0};
+    assert(b.place(Stair,1,0,0,0.f,0.f,extra));
+    assert(b.place(Window,1,0,2,0.f,0.f,extra));
+    assert(b.blocks(3.f,1.5f)); // Window sill must be collidable.
+    assert(b.place(Obstacle,-2,0,0,0.f,0.f,extra));
+    assert(b.blocks(-6.f,0.f));
+    assert(b.saveCurrentBlueprint()&&b.savedPlan.size()==b.placed.size());
+    b.freePlacement=true;
+    assert(b.place(Stair,0,2,0,0.f,0.f,extra));
+    // Original production queue concept: quantity, timers, refunds, queue cap.
+    System craft;
+    Resources ingredients{1000,1000,1000,0};
+    assert(craft.requestCraft(StonePickaxe,ingredients,3));
+    assert(craft.queue.size()==3);
+    assert(ingredients.wood==1000-3*CRAFT_COSTS[StonePickaxe].wood);
+    assert(craft.cancelCraft(1,ingredients));
+    assert(craft.queue.size()==2);
+    assert(ingredients.wood==1000-2*CRAFT_COSTS[StonePickaxe].wood);
+    for(int i=0;i<14;i++)craft.tickCraft(1.f);
+    assert(craft.queue.empty()&&craft.pickaxe&&craft.craftedCount[StonePickaxe]==2);
+    assert(!craft.requestCraft(Blueprint,ingredients,9));
+    assert(craft.requestCraft(Blueprint,ingredients,8));
+    assert(!craft.requestCraft(Hammer,ingredients));
+    assert(craft.cancelCraft(0,ingredients));
     std::cout<<"LIOS_BUILD_CRAFT_NATIVE_LOGIC_PASS placed="<<b.placed.size()
-             <<" recipes=3 mobile_ui=touch_down_only wall_collision=pass\\n";
+             <<" recipes=3 queued_quantity=true item_sprite_source=true build_categories=8 wall_collision=pass\\n";
 }
