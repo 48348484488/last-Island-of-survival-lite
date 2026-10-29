@@ -325,6 +325,32 @@ def main():
     if original_rotate.getbbox() is None:
         raise ValueError("Original Unity btn_opRotate icon missing")
     original_rotate.save(dest/"hud_original_build_rotate.png",optimize=True)
+    # Additional original Unity contextual build operation Image subtrees.
+    # All operation RectTransforms share a serialized anchor; the original
+    # m_buildBaseBtns runtime list positions/hides them dynamically. Crops
+    # here recover sprite pixels, NOT a claimed runtime button layout.
+    geometry["build_operator_art"]={}
+    for name in ("btn_opUp","btn_opMove","btn_opRepair","btn_opDestory"):
+        operator=NativeMobileHud(ASSETS,heading_deg=0,map_uv=[.5,.5])
+        obj=operator.go(name)
+        operator.node(obj,depth=4)
+        bounds=geometry["build_controls"][name]["bounds"]
+        crop=tuple(round(bounds[k]) for k in
+                   ("left","top","right","bottom"))
+        image=operator.layer.crop(crop)
+        if image.getbbox() is None:
+            print("LIOS_UNITY_BUILD_OPERATION_ART_MISSING",name,flush=True)
+            geometry["build_operator_art"][name]={"source":name,
+                                                   "status":"not_rendered"}
+            continue
+        path="hud_original_"+name+".png"
+        image.save(dest/path,optimize=True)
+        geometry["build_operator_art"][name]={
+           "source":name,"source_rect":bounds,"file":path,
+           "go_path_id":obj["path_id"]}
+        print("LIOS_UNITY_BUILD_OPERATION_ART",name,path,
+              image.size,flush=True)
+
 
     print("LIOS_UNITY_ORIGINAL_BUILD_HUD",outfile.stat().st_size,
           "source_tabs",names,"atlas",atlas.size,flush=True)
