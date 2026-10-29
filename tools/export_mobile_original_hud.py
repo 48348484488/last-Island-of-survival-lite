@@ -33,6 +33,7 @@ class NativeMobileHud(HudV7):
     """Keep original thumb and compass texture separate for native runtime."""
     hide_build_categories=False
     hide_hotbar=False
+    hide_build_children=False
     def hotbar(self,samples=False,items=None):
         if not self.hide_hotbar:
             return super().hotbar(samples=samples,items=items)
@@ -53,6 +54,10 @@ class NativeMobileHud(HudV7):
         if name=="m_littleYaogan":
             return
         if self.hide_build_categories and name=="m_buildPartTypes":
+            return
+        if self.hide_build_children and name in (
+            "m_buildChilds","m_buildBaseBtns","m_buildoperatesbtns",
+            "m_operatesPanel","scp_bagBuilds"):
             return
         if self.hide_hotbar and name=="m_bagItems":
             return
@@ -190,6 +195,7 @@ def main():
     # Rendering all prefab children in one static PNG made 8 tabs overlap.
     build=NativeMobileHud(ASSETS,heading_deg=0,map_uv=[.5,.5])
     build.hide_build_categories=True
+    build.hide_build_children=True
     build.hide_hotbar=True   # Base Layer build UI replaces live hotbar at bottom.
     build.selected_slot=-1
     build_audit=build.render_ordered(profile="on-foot-build",
@@ -204,7 +210,9 @@ def main():
         "source_hierarchy_order":build_audit["source_hierarchy_order"]}
     # RectTransforms of exact original controls and derived position strip.
     geometry["build_controls"]={}
-    for name in ("btn_build","btn_freeBuildModel","btn_opRotate","m_buildPartTypes"):
+    for name in ("btn_build","btn_freeBuildModel","btn_opRotate",
+                 "m_buildPartTypes","m_buildChilds","btn_changeButton",
+                 "scp_bagBuilds"):
         go=hud.go(name)
         geometry["build_controls"][name]={
             "bounds":source_rect(hud,go["path_id"]),
@@ -265,6 +273,46 @@ def main():
     geometry["build_category_atlas"]={"count":len(names),"tile_width":w,"tile_height":h,
                                        "source_group":"m_buildPartTypes",
                                        "order":names}
+    # Source m_buildChilds prefab provides 11 actual Toggle instances in two
+    # rows. Its root RectTransform is zero-sized at prefab serialization
+    # time: runtime UIGameObjectList fills the objects and icons. Derive
+    # button hit centers from every original child RectTransform, not
+    # hardcoded screen-space replacements.
+    root=hud.go("m_buildChilds")
+    rt=hud.bygo[root["path_id"]]
+    source_children=[]
+    for transform in rt["children"]:
+        obj=hud.t.get(transform)
+        if not obj or obj["go"] not in hud.g:continue
+        child=hud.g[obj["go"]]
+        if not child["name"].startswith("Toggle"):continue
+        source=source_rect(hud,child["path_id"])
+        cx=(source["left"]+source["right"])/2
+        cy=(source["top"]+source["bottom"])/2
+        # An uninstantiated Toggle has width=0 in source. The visible
+        # source item slots are 95 units in the same m_buildPartTypes layout.
+        w=max(95.,source["right"]-source["left"])
+        h=max(95.,source["bottom"]-source["top"])
+        box={"left":cx-w/2,"top":cy-h/2,"right":cx+w/2,"bottom":cy+h/2}
+        source_children.append({"go_path_id":child["path_id"],
+                                "name":child["name"],"bounds":box})
+    source_children.sort(key=lambda entry:(entry["bounds"]["top"],
+                                           entry["bounds"]["left"]))
+    if len(source_children)<6:
+        raise ValueError("Original Unity m_buildChilds submenus unavailable")
+    geometry["build_subitems"]=source_children
+    # Keep the actual source Toggle graphics (background / checkmark),
+    # without runtime placeholder icons or manual state imitations.
+    child_layer=NativeMobileHud(ASSETS,heading_deg=0,map_uv=[.5,.5])
+    original=child_layer.game_objects
+    for entry in source_children:
+        go=child_layer.g[entry["go_path_id"]]
+        original[go["path_id"]]["active_self"]=True
+        child_layer.node(go,depth=6)
+    child_layer.layer.save(dest/"hud_original_build_children.png",optimize=True)
+    print("LIOS_ORIGINAL_UNITY_BUILD_SUBMENU",len(source_children),
+          child_layer.layer.getbbox(),flush=True)
+
     # Operator rotate is a separate original button, in its source
     # m_buildBaseBtns branch. It is not part of the static on-foot build
     # profile, so render the exact original subtree at its own source bounds.
@@ -397,6 +445,11 @@ def main():
     for name,entry in geometry["build_controls"].items():
         lines.append("static constexpr Rect Build_"+name+"="+
                      literal_rect(entry["bounds"])+";")
+    for i,entry in enumerate(geometry["build_subitems"]):
+        lines.append("static constexpr Rect BuildChildBox%d="%i+
+                     literal_rect(entry["bounds"])+";")
+    lines.append("static constexpr int BuildChildCount=%d;"%
+                 len(geometry["build_subitems"]))
     lines.append("static constexpr int BuildCategoryCount=%d;"%geometry["build_category_atlas"]["count"])
     lines.append("static constexpr int BuildCategoryTileW=%d;"%geometry["build_category_atlas"]["tile_width"])
     lines.append("static constexpr int BuildCategoryTileH=%d;"%geometry["build_category_atlas"]["tile_height"])
