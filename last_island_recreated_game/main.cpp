@@ -331,6 +331,12 @@ int main() {
     LIOS_AUDIO::Audio sound;
     sound.init();
     bool autoRun=false,aim=false,crouch=false,prone=false;
+    // Exact original Unity source FSM: Stand -> Crouch -> Pa (prone).
+    int lastStance=0;
+    bool stanceTransitionActive=false;
+    std::string stanceTransitionClip;
+    float stanceTransitionTime=0.f;
+    float cameraEyeHeight=1.65f,cameraTargetHeight=1.45f;
     int activePanel=0; // 0=game, 1=bag, 2=craft, 3=settings, 4=chat
     int selectedHotbarSlot=0,magazine=30,reserveAmmo=90;
     float shotCooldown=0.f,stepTimer=0.f;
@@ -409,8 +415,34 @@ int main() {
             selectedHotbarSlot=i+2;player.equippedSlot=-1;aim=false;
         }
         if(hudInput.justPressed(HA::AutoRun))autoRun=!autoRun;
-        if(hudInput.justPressed(HA::Crouch)){crouch=!crouch;prone=false;}
-        if(hudInput.justPressed(HA::Prone)){prone=!prone;crouch=false;}
+        if(hudInput.justPressed(HA::Crouch)||IsKeyPressed(KEY_C)){
+            const bool wasProne=prone;
+            crouch=wasProne||!crouch;prone=false;
+        }
+        if(hudInput.justPressed(HA::Prone)||IsKeyPressed(KEY_Z)){
+            prone=!prone;crouch=false;
+        }
+        const int stance=prone?2:crouch?1:0;
+        if(stance!=lastStance){
+            stanceTransitionClip.clear();
+            if(lastStance==1&&stance==2)
+                stanceTransitionClip=player.equippedSlot==1?
+                    "chongfengqiang_hengwo_dun_qiepa01":"kongshou_dun_qiepa01";
+            else if(lastStance==2&&stance==1)
+                stanceTransitionClip=player.equippedSlot==1?
+                    "chongfengqiang_hengwo_pa_qiedun01":"kongshou_pa_qiedun01";
+            else if(lastStance==2&&stance==0)
+                stanceTransitionClip=player.equippedSlot==1?
+                    "chiqiang_pa_qiezhan01":"kongshou_pa_qiezhan01";
+            else if(lastStance==0&&stance==2)
+                stanceTransitionClip=player.equippedSlot==1?
+                    "chongfengqiang_hengwo_dun_qiepa01":"kongshou_dun_qiepa01";
+            stanceTransitionTime=0.f;
+            stanceTransitionActive=hasUnityRig&&!stanceTransitionClip.empty()&&
+                unityRig.clipIndex(stanceTransitionClip.c_str())>=0;
+            lastStance=stance;
+            if(stance>0){player.isAttacking=false;aim=false;}
+        }
         if(hudInput.justPressed(HA::Aim)&&player.equippedSlot==1)aim=!aim;
         if(hudInput.justPressed(HA::Reload)&&player.equippedSlot==1&&magazine<30&&reserveAmmo>0){
             int n=std::min(30-magazine,reserveAmmo);
@@ -477,8 +509,11 @@ int main() {
             moveDir = Vector3Add(moveDir, stickMove);
         }
 
-        // Sprint logic
-        player.isRunning = (IsKeyDown(KEY_LEFT_SHIFT) || autoRun) && (player.stamina > 5.0f);
+        // Original Unity suppresses lateral motion during PaUp/CrouchDown.
+        if(stanceTransitionActive)moveDir={0.f,0.f,0.f};
+        // Crouched locomotion can accelerate; prone cannot sprint.
+        player.isRunning = !prone&&(IsKeyDown(KEY_LEFT_SHIFT) || autoRun) &&
+            (player.stamina > 5.0f);
         // Measure the original 30fps clips at the ground-contact frames:
         // front ~4.35, back ~2.15, source-left ~2.25, source-right ~3.0.
         // These are foot-plant treadmill velocities, not frame translations
@@ -529,7 +564,8 @@ int main() {
 
         // Jump and Gravity Physics
         const float gravity = 24.0f;
-        bool wantJump = IsKeyPressed(KEY_SPACE) || hudInput.justPressed(HA::Jump);
+        bool wantJump = !prone&&!crouch&&!stanceTransitionActive&&
+            (IsKeyPressed(KEY_SPACE) || hudInput.justPressed(HA::Jump));
         if (player.isGrounded) {
             if (wantJump && player.stamina >= 10.0f) {
                 player.verticalVelocity = 8.5f;
@@ -665,10 +701,20 @@ int main() {
             }
         }
 
-        // Original skeletal state machine, using the same clip selection,
-        // frame interpolation, and 0.15s crossfade as PC viewer3d.py.
+        // Extracted original Unity man AnimatorController Base Layer:
+        // Crouch: kongshou_dun_stand01 + dun_run_* blend.
+        // Pa.Pa: pa_stand01 + pa_walk_* crawling blend.
+        // CrouchDown / PaUp: real (weapon-specific) transition clips.
         if (hasUnityRig) {
             animationIdleTime+=dt;
+            if(stanceTransitionActive){
+                stanceTransitionTime+=dt;
+                int transition=unityRig.clipIndex(stanceTransitionClip.c_str());
+                if(transition<0||stanceTransitionTime>=
+                    float(unityRig.clips[transition].frames-1)/
+                    unityRig.clips[transition].fps)
+                    stanceTransitionActive=false;
+            }
             // Source locomotion is an in-place 64-bone clip. Advance it by
             // the same speed ratio as the physically traveled distance, so
             // sprint, slow analog input and crouch do not visibly over/under
@@ -681,17 +727,45 @@ int main() {
             // joystick left -> zhan_run_left01, right -> zhan_run_right01.
             float localRight=Vector3DotProduct(moveDir,screenRight);
             std::string target;
-            if(player.isAttacking)
-                target=player.equippedSlot==1?"wq_m4_1_zhan_miaozhun_attack01":"fu_zhan_attack_01";
-            else if(!player.isGrounded)
+            if(stanceTransitionActive)
+                target=stanceTransitionClip;
+            else if(player.isAttacking){
+                if(prone)
+                    target=player.equippedSlot==1?
+                        "chongfengqiang_hengwo_pa_miaozhun_attack01":"pa_stand01";
+                else if(crouch)
+                    target=player.equippedSlot==1?
+                        "chongfengqiang_hengwo_dun_miaozhun_attack01":"kongshou_dun_stand01";
+                else target=player.equippedSlot==1?
+                    "wq_m4_1_zhan_miaozhun_attack01":"fu_zhan_attack_01";
+            }else if(!player.isGrounded)
                 target=animationJumpTime<.25f?"kongshou_zhan_jump_up02":
                        animationJumpTime<.55f?"kongshou_zhan_jump_idle02":"kongshou_zhan_jump_down02";
-            else if(moving) {
+            else if(prone){
+                if(moving){
+                    if(std::fabs(localFwd)>=std::fabs(localRight))
+                        target=localFwd>=0?"pa_walk_front01":"pa_walk_back01";
+                    else target=localRight>=0?"pa_walk_left01":"pa_walk_right01";
+                }else target=player.equippedSlot==1?
+                    "chongfengqiang_hengwo_pa_miaozhun_stand01":"pa_stand01";
+            }else if(crouch){
+                if(moving){
+                    if(std::fabs(localFwd)>=std::fabs(localRight))
+                        target=localFwd>=0?
+                            (player.equippedSlot==1?"chongfengqiang_hengwo_dun_miaozhun_run_front01":
+                             player.isRunning?"dun_rush_front01":"dun_run_front01"):
+                            "dun_run_back01";
+                    else target=localRight>=0?"dun_run_left01":"dun_run_right01";
+                }else target=player.equippedSlot==1?
+                    "chongfengqiang_hengwo_dun_miaozhun_stand01":"kongshou_dun_stand01";
+            }else if(moving){
                 if(std::fabs(localFwd)>=std::fabs(localRight))
-                    target=localFwd>=0?(player.equippedSlot==1?"wq_m4_1_zhan_miaozhun_run_front01":"zhan_run_front01"):
-                           "zhan_run_back01";
+                    target=localFwd>=0?
+                        (player.equippedSlot==1?"wq_m4_1_zhan_miaozhun_run_front01":"zhan_run_front01"):
+                        "zhan_run_back01";
                 else target=localRight>=0?"zhan_run_left01":"zhan_run_right01";
-            } else target=player.equippedSlot==1?"wq_m4_1_zhan_miaozhun_stand01":"zhan_stand01";
+            }else target=player.equippedSlot==1?
+                "wq_m4_1_zhan_miaozhun_stand01":"zhan_stand01";
             if(target!=animationCurrent){
                 animationPrevious=animationCurrent;animationCurrent=target;
                 animationCrossFade=0;
@@ -700,7 +774,11 @@ int main() {
             auto clipTime=[&](const std::string& name)->float{
                 if(name=="fu_zhan_attack_01"||name=="wq_m4_1_zhan_miaozhun_attack01")
                     return player.attackTimer*(player.equippedSlot==1?3.5f:1.3f);
-                if(name.find("_run_")!=std::string::npos)return animationWalkTime;
+                if(stanceTransitionActive&&name==stanceTransitionClip)
+                    return stanceTransitionTime;
+                if(name.find("_run_")!=std::string::npos||
+                   name.find("_walk_")!=std::string::npos||
+                   name.find("_rush_")!=std::string::npos)return animationWalkTime;
                 return animationIdleTime;
             };
             int from=unityRig.clipIndex(animationPrevious.c_str());
@@ -743,6 +821,12 @@ int main() {
             cosf(player.yaw) * cosf(player.pitch)
         };
 
+        // Follow Unity stance change with smoothly moving camera anchor.
+        const float eyeGoal=prone?.65f:crouch?1.20f:1.65f;
+        const float targetGoal=prone?.50f:crouch?1.00f:1.45f;
+        const float eyeAlpha=std::min(1.f,dt*7.f);
+        cameraEyeHeight+=(eyeGoal-cameraEyeHeight)*eyeAlpha;
+        cameraTargetHeight+=(targetGoal-cameraTargetHeight)*eyeAlpha;
         camera.fovy=aim&&player.equippedSlot==1?48.0f:65.0f;
         if (player.thirdPerson) {
             // Match the working desktop viewer3d.py gluLookAt exactly.
@@ -753,17 +837,17 @@ int main() {
             Vector3 shoulderTarget=Vector3Add(player.position,shoulderOffset);
             camera.position={
                 shoulderTarget.x-lookDir.x*camDist,
-                player.position.y+(prone?.65f:crouch?1.20f:1.65f)-lookDir.y*camDist,
+                player.position.y+cameraEyeHeight-lookDir.y*camDist,
                 shoulderTarget.z-lookDir.z*camDist
             };
             camera.target={
                 shoulderTarget.x+lookDir.x*2.0f,
-                player.position.y+(prone?.5f:crouch?1.0f:1.45f)+lookDir.y*2.0f,
+                player.position.y+cameraTargetHeight+lookDir.y*2.0f,
                 shoulderTarget.z+lookDir.z*2.0f
             };
         } else {
             // First Person mode
-            camera.position = (Vector3){ player.position.x, player.position.y + 1.65f, player.position.z };
+            camera.position = (Vector3){ player.position.x, player.position.y + cameraEyeHeight, player.position.z };
             camera.target = Vector3Add(camera.position, lookDir);
         }
 
