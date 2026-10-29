@@ -13,12 +13,14 @@
 #include "mobile_original_hud_layout.hpp"
 #include "mobile_hud_input.hpp"
 #include "mobile_audio.hpp"
+#include "native_build_craft.hpp"
 
 #include <vector>
 #include <string>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <set>
 
 // -----------------------------------------------------------------------------------------
 // Global Definitions & Data Structures
@@ -305,6 +307,10 @@ int main() {
 
     std::vector<HitParticle> particles;
     std::vector<FloatingNotification> notifications;
+    LIOS_BUILD::System building;
+    std::string buildStatus="Colete recursos para fabricar.";
+    std::set<int> previousUiTouches;
+    bool buildMode=false;
 
     // -------------------------------------------------------------------------------------
     // Mobile On-Screen Virtual Controls Setup
@@ -377,6 +383,20 @@ int main() {
         // stable Android finger. Raylib synthesizes a mouse click for touchscreen
         // activity; it must NEVER be interpreted as a separate global attack.
         hudInput.frame(player.equippedSlot==1,(float)GetScreenWidth(),(float)GetScreenHeight());
+        // UI overlay consumes only touch DOWN edges, never a continuous drag.
+        // Keeps construction buttons from placing 60 pieces while held.
+        std::vector<Vector2> uiClicks;
+        std::set<int> touchesNow;
+        for(int n=0;n<touchCount;n++){
+            int id=GetTouchPointId(n);
+            touchesNow.insert(id);
+            if(!previousUiTouches.count(id))uiClicks.push_back(GetTouchPosition(n));
+        }
+        previousUiTouches.swap(touchesNow);
+#if !defined(__ANDROID__)
+        if(!hasTouchActive&&IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            uiClicks.push_back(GetMousePosition());
+#endif
         using HA=LIOS_INPUT::Action;
         btnAttack.isPressed=hudInput.isHeld(HA::Attack);
         btnJump.isPressed=hudInput.isHeld(HA::Jump);
@@ -452,6 +472,81 @@ int main() {
         if(hudInput.justPressed(HA::Craft))activePanel=(activePanel==2?0:2);
         if(hudInput.justPressed(HA::Settings))activePanel=(activePanel==3?0:3);
         if(hudInput.justPressed(HA::QuickChat))activePanel=(activePanel==4?0:4);
+        // Original HUD craft icon opens this native temporary crafting panel.
+        // Costs are provisional until the source item/recipe cfg is decoded.
+        if(IsKeyPressed(KEY_B)&&building.blueprint){
+            buildMode=!buildMode;
+            activePanel=0;
+        }
+        auto panelBox=[&](float x,float y,float w,float h)->Rectangle{
+            return {canvasLeft+x*canvasScale,canvasTop+y*canvasScale,
+                    w*canvasScale,h*canvasScale};
+        };
+        auto hitUi=[&](Vector2 p,Rectangle b)->bool{
+            return CheckCollisionPointRec(p,b);
+        };
+        for(const Vector2 &click:uiClicks){
+            if(activePanel==2){
+                LIOS_BUILD::Resources available={
+                    player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
+                for(int i=0;i<3;i++)if(hitUi(click,panelBox(675.f,300.f+i*82.f,550.f,65.f))){
+                    if(building.craft(static_cast<LIOS_BUILD::RecipeType>(i),available)){
+                        player.woodCount=available.wood;
+                        player.stoneCount=available.stone;
+                        player.ironCount=available.metal;
+                        buildStatus=i==0?"Planta fabricada!":i==1?"Martelo fabricado!":
+                            "Picareta fabricada!";
+                    }else buildStatus="Recursos insuficientes ou ja fabricado.";
+                }
+                if(hitUi(click,panelBox(675.f,552.f,550.f,73.f))){
+                    if(building.blueprint){
+                        buildMode=true;
+                        activePanel=0;
+                        buildStatus="MODO CONSTRUCAO: gire e posicione as pecas.";
+                    }else buildStatus="Fabrique primeiro a planta de construcao.";
+                }
+            }else if(buildMode&&activePanel==0){
+                if(hitUi(click,panelBox(120.f,135.f,200.f,72.f)))
+                    building.selected=(building.selected+1)%LIOS_BUILD::PieceCount;
+                else if(hitUi(click,panelBox(325.f,135.f,185.f,72.f)))
+                    building.orientation=(building.orientation+1)%4;
+                else if(hitUi(click,panelBox(120.f,218.f,390.f,80.f))){
+                    LIOS_BUILD::Resources available={
+                        player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
+                    Vector3 dir={sinf(player.yaw),0.f,cosf(player.yaw)};
+                    int gx=LIOS_BUILD::grid(player.position.x+dir.x*4.3f);
+                    int gz=LIOS_BUILD::grid(player.position.z+dir.z*4.3f);
+                    auto type=static_cast<LIOS_BUILD::PieceType>(building.selected);
+                    if(building.place(type,gx,gz,building.orientation,
+                                     player.position.x,player.position.z,available)){
+                        player.woodCount=available.wood;
+                        player.stoneCount=available.stone;
+                        player.ironCount=available.metal;
+                        buildStatus="Peca construida com sucesso.";
+                    }else buildStatus="Posicao invalida ou recursos insuficientes.";
+                }else if(hitUi(click,panelBox(120.f,308.f,390.f,65.f))){
+                    buildMode=false;buildStatus="Construcao encerrada.";
+                }
+            }
+        }
+        if(buildMode&&activePanel==0){
+            if(IsKeyPressed(KEY_V))
+                building.selected=(building.selected+1)%LIOS_BUILD::PieceCount;
+            if(IsKeyPressed(KEY_R))
+                building.orientation=(building.orientation+1)%4;
+            if(IsKeyPressed(KEY_ENTER)){
+                LIOS_BUILD::Resources available={
+                    player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
+                Vector3 dir={sinf(player.yaw),0.f,cosf(player.yaw)};
+                int gx=LIOS_BUILD::grid(player.position.x+dir.x*4.3f);
+                int gz=LIOS_BUILD::grid(player.position.z+dir.z*4.3f);
+                if(building.place(static_cast<LIOS_BUILD::PieceType>(building.selected),
+                      gx,gz,building.orientation,player.position.x,player.position.z,available)){
+                    player.woodCount=available.wood;player.stoneCount=available.stone;
+                    player.ironCount=available.metal;buildStatus="Peca construida.";
+                }else buildStatus="Construcao invalida.";
+            }
+        }
         if(activePanel!=0&&hudInput.justPressed(HA::Attack)){
             // A gameplay command outside a panel does not implicitly close it
             // or fire the weapon. Menus have explicit source touch owners.
@@ -546,7 +641,11 @@ int main() {
                 }
             }
             moveDir = Vector3Normalize(moveDir);
-            player.position = Vector3Add(player.position, Vector3Scale(moveDir, currentSpeed * driveScale * dt));
+            Vector3 nextPosition=Vector3Add(player.position,
+                Vector3Scale(moveDir,currentSpeed*driveScale*dt));
+            // Walls are solid; door frames preserve a walkable passage.
+            if(!building.blocks(nextPosition.x,nextPosition.z))
+                player.position=nextPosition;
             player.walkCycle += dt * (player.isRunning ? 12.0f : 8.0f);
 
             if (player.isRunning) {
@@ -589,12 +688,12 @@ int main() {
         // ---------------------------------------------------------------------------------
         // Touchscreen events are also exposed as mouse clicks by raylib on
         // Android. Do not make EVERY button / drag fire the weapon.
-        bool wantAttack=btnAttack.isPressed;
+        bool wantAttack=btnAttack.isPressed&&!buildMode;
 #if !defined(__ANDROID__)
         if(!hasTouchActive && cursorLocked && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             wantAttack=true;
 #endif
-        if(activePanel!=0)wantAttack=false;
+        if(activePanel!=0||buildMode)wantAttack=false;
         shotCooldown=std::max(0.f,shotCooldown-dt);
         if(wantAttack && !player.isAttacking && shotCooldown<=0.f &&
             (player.equippedSlot==0||player.equippedSlot==1)){
