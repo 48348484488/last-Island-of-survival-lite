@@ -12,6 +12,8 @@ on:
       - tools/export_mobile_original_hud.py
       - tools/test_android_character_parity.py
       - tools/test_original_footplants.py
+      - tools/export_original_stances.py
+      - tools/restore_original_melee_run.py
       - .github/workflows/build_android_raylib_lite.yml
       - tools/package_android_assets.py
 permissions:
@@ -36,6 +38,9 @@ jobs:
             last_island_recreated_game/original_hud_touch.py
             last_island_recreated_game/original_hud_runtime.py
             last_island_recreated_game/authentic_animations.npz
+            raw_assets/assets/role/animationbundle.ab
+            tools/export_original_stances.py
+            tools/restore_original_melee_run.py
             last_island_recreated_game/master_character.npz
             last_island_recreated_game/assets
             tools/package_android_assets.py
@@ -74,7 +79,7 @@ jobs:
           test -f /tmp/lios-raymob/gradlew
 
       - name: Install converter dependency for original animations and Unity HUD
-        run: python -m pip install numpy Pillow
+        run: python -m pip install numpy Pillow UnityPy
 
       - name: Regression-test camera, original skin atlas and mesh normals
         run: python -u tools/test_android_character_parity.py
@@ -88,6 +93,7 @@ jobs:
           cp last_island_recreated_game/mobile_audio.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_audio.hpp
           rm /tmp/lios-raymob/app/src/main/cpp/main.c
           python tools/package_android_assets.py             last_island_recreated_game/main.cpp             last_island_recreated_game/assets             /tmp/lios-raymob/app/src/main/assets/assets
+          python -u tools/export_original_stances.py --report /tmp/lios_original_stances_report.json
           python tools/export_mobile_skeletal_animation.py --output /tmp/lios-raymob/app/src/main/assets/assets/lios_skeleton_v1.bin
           python -u tools/test_original_footplants.py /tmp/lios-raymob/app/src/main/assets/assets/lios_skeleton_v1.bin
           python tools/prepare_mobile_character_textures.py last_island_recreated_game/assets /tmp/lios-raymob/app/src/main/assets/assets/
@@ -97,7 +103,7 @@ jobs:
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_melee.png
           test -s /tmp/lios-raymob/app/src/main/assets/assets/hud_original_rifle.png
           cd /tmp/lios-raymob
-          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.16.4-original-foot-plant-locomotion/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
+          sed -i -e 's/^app.name=.*/app.name=Last Island Lite Recriado/'                  -e 's/^app.application_id=.*/app.application_id=org.lios.recreatedlite/'                  -e 's/^app.version_name=.*/app.version_name=0.17.0-original-crouch-prone/'                  -e 's/^app.native_library_name=.*/app.native_library_name=raymob/'                  -e 's/^gl.version=.*/gl.version=ES30/'                  gradle.properties
           echo 'android.ndkVersion=27.2.12479018' >>gradle.properties
           sed -i '/^[[:space:]]*defaultConfig {/a\        ndk { abiFilters "arm64-v8a" }' app/build.gradle
           grep 'app.application_id' gradle.properties
@@ -175,7 +181,14 @@ jobs:
             skeleton=z.read('assets/assets/lios_skeleton_v1.bin')
             assert skeleton.startswith(b'LIOSSKN1')
             version,bones,meshes,clips=struct.unpack_from('<4I',skeleton,8)
-            assert (version,bones,meshes,clips)==(1,64,7,33)
+            assert (version,bones,meshes,clips)==(1,64,7,59)
+            from pathlib import Path
+            report=Path('/tmp/lios_original_stances_report.json')
+            assert report.is_file()
+            import json
+            a=json.loads(report.read_text(encoding='utf8'))
+            assert a['source_stances']==26 and a['total_native_clips']==59
+            print("LIOS_ANDROID_SOURCE_CROUCH_PRONE_CLIPS_PASS",len(a['clips']))
             from PIL import Image,ImageChops
             import io
             melee=Image.open(io.BytesIO(z.read('assets/assets/hud_original_melee.png'))).convert('RGBA')
@@ -219,7 +232,7 @@ jobs:
       - name: Copy named downloadable APK
         run: |
           mkdir -p dist
-          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.16.4-ARM64.apk
+          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.17.0-ARM64.apk
           sha256sum dist/*.apk
 
       - name: Upload Android APK for phone testing
@@ -250,14 +263,14 @@ jobs:
         run: |
           set -euo pipefail
           APK="dist/LastIslandLite-v0.16.4-ARM64.apk"
-          TAG="v0.16.4"
+          TAG="v0.17.0"
           test -s "$APK"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
           else
             gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" \
               --target "$GITHUB_SHA" \
-              --title "Last Island LITE recriado - Android v0.16.4" \
-              --notes "APK experimental para Android ARM64. Recriação não oficial; ainda exige validação visual das animações no dispositivo."
+              --title "Last Island LITE recriado - Android v0.17.0" \
+              --notes "APK experimental ARM64 com 26 clipes de postura extraídos do Unity original (agachar, deitar, rastejar e transições). Áudios de passos/pulo originais ausentes no XAPK; ainda exige validação visual no aparelho."
           fi
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'
