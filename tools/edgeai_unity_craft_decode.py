@@ -221,6 +221,12 @@ def main():
         items = args.item_binary.read_bytes() if args.item_binary else None
     # Hex source prefix is needed to diagnose field-layout drift from the
     # older decompiled C# (as already observed for BuildPart.oc).
+    # Archive the unmodified source for exact local byte-level verification.
+    # It is already part of the user-supplied original XAPK, not synthesized.
+    args.output.parent.mkdir(parents=True,exist_ok=True)
+    (args.output.parent/"original_DrawingCfg.oc").write_bytes(draw)
+    if items is not None:
+        (args.output.parent/"original_ItemCfg.oc").write_bytes(items)
     print("EDGEAI_DRAWING_SOURCE_PREFIX",len(draw),draw[:128].hex(),flush=True)
     print("EDGEAI_ITEM_SOURCE_PREFIX",len(items) if items else 0,
           items[:64].hex() if items else "",flush=True)
