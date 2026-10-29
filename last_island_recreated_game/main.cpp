@@ -14,6 +14,7 @@
 #include "mobile_hud_input.hpp"
 #include "mobile_audio.hpp"
 #include "native_build_craft.hpp"
+#include "original_buildpart_v7.hpp"
 #include "mobile_build_visual.hpp"
 #include "mobile_craft_ui.hpp"
 
@@ -273,14 +274,15 @@ int main() {
     Texture2D originalBuildSelected=LoadTexture("assets/hud_original_build_selected.png");
     Texture2D originalBuildRotate=LoadTexture("assets/hud_original_build_rotate.png");
     Texture2D originalBuildChildren=LoadTexture("assets/hud_original_build_children.png");
-    Texture2D buildPartIcons[LIOS_BUILD::PieceCount]={};
-    buildPartIcons[LIOS_BUILD::Foundation]=LoadTexture("assets/build_icon_foundation.png");
-    buildPartIcons[LIOS_BUILD::Wall]=LoadTexture("assets/build_icon_wall.png");
-    buildPartIcons[LIOS_BUILD::Doorway]=LoadTexture("assets/build_icon_doorway.png");
-    buildPartIcons[LIOS_BUILD::Roof]=LoadTexture("assets/build_icon_roof.png");
-    buildPartIcons[LIOS_BUILD::Stair]=LoadTexture("assets/build_icon_stair.png");
-    buildPartIcons[LIOS_BUILD::Window]=LoadTexture("assets/build_icon_window.png");
-    buildPartIcons[LIOS_BUILD::Obstacle]=LoadTexture("assets/build_icon_obstacle.png");
+    // All 35 original source BuildPart.icon sprites, in original cfg order.
+    Texture2D originalBuildItemAtlases[6]={
+        LoadTexture("assets/hud_original_build_items_type_2.png"),
+        LoadTexture("assets/hud_original_build_items_type_3.png"),
+        LoadTexture("assets/hud_original_build_items_type_8.png"),
+        LoadTexture("assets/hud_original_build_items_type_4.png"),
+        LoadTexture("assets/hud_original_build_items_type_6.png"),
+        LoadTexture("assets/hud_original_build_items_type_7.png")
+    };
     LIOS_CRAFT_UI::Art originalCraftArt;
     originalCraftArt.load();
     Texture2D originalThumb=LoadTexture("assets/hud_original_joystick_knob.png");
@@ -337,6 +339,7 @@ int main() {
     bool buildMode=false;
     int buildCategory=-1; // No category active; source m_buildChilds hidden.
     int buildSubitem=-1;
+    int sourceBuildPartId=-1,sourceBuildOnceAngle=0;
     bool buildSubmenuOpen=false,buildBagOpen=false;
     int craftSelectedRecipe=0,craftQuantity=1;
     std::string craftStatus="Selecione uma receita e fabrique.";
@@ -522,12 +525,14 @@ int main() {
             buildMode=!buildMode;
             if(buildMode){
                 buildCategory=-1;buildSubitem=-1;buildSubmenuOpen=false;
+                sourceBuildPartId=-1;sourceBuildOnceAngle=0;
                 buildBagOpen=false;building.selected=-1;
                 selectedHotbarSlot=6;player.equippedSlot=-1;aim=false;
                 buildStatus="CONSTRUCAO: categoria > peca > colocar.";
             }else{
                 buildSubmenuOpen=false;buildBagOpen=false;
                 buildCategory=-1;buildSubitem=-1;building.selected=-1;
+                sourceBuildPartId=-1;sourceBuildOnceAngle=0;
                 buildStatus="Construcao encerrada.";
             }
             activePanel=0;
@@ -588,6 +593,7 @@ int main() {
                     LIOS_HUD::Build_btn_floor,LIOS_HUD::Build_btn_stair,
                     LIOS_HUD::Build_btn_window,LIOS_HUD::Build_btn_obstacle
                 };
+                static constexpr int sourceTypeByCategory[8]={0,0,2,3,8,4,6,7};
                 const LIOS_HUD::Rect childRects[]={
                     LIOS_HUD::BuildChildBox0,LIOS_HUD::BuildChildBox1,
                     LIOS_HUD::BuildChildBox2,LIOS_HUD::BuildChildBox3,
@@ -599,6 +605,7 @@ int main() {
                 if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_changeButton))){
                     buildMode=false;buildSubmenuOpen=false;buildBagOpen=false;
                     buildCategory=-1;buildSubitem=-1;building.selected=-1;
+                    sourceBuildPartId=-1;sourceBuildOnceAngle=0;
                     buildStatus="Construcao encerrada.";
                     continue;
                 }
@@ -610,6 +617,7 @@ int main() {
                         buildBagOpen=!buildBagOpen;
                         buildSubmenuOpen=false;building.selected=-1;
                         buildCategory=0;buildSubitem=-1;
+                        sourceBuildPartId=-1;sourceBuildOnceAngle=0;
                         buildStatus=buildBagOpen?"Itens de construcao no inventario.":
                                                 "Inventario fechado.";
                     }else if(category==1){
@@ -624,6 +632,7 @@ int main() {
                         buildCategory=close?-1:category;
                         buildSubmenuOpen=!close;
                         buildBagOpen=false;buildSubitem=-1;building.selected=-1;
+                        sourceBuildPartId=-1;sourceBuildOnceAngle=0;
                         buildStatus=close?"Categoria fechada.":"Selecione uma peca abaixo.";
                     }
                     break;
@@ -631,14 +640,26 @@ int main() {
                 if(tabTouched)continue;
                 bool childTouched=false;
                 if(buildSubmenuOpen&&buildCategory>=2){
-                    for(int n=0;n<LIOS_HUD::BuildChildCount;n++){
+                    const int origType=sourceTypeByCategory[buildCategory];
+                    const int sourceCount=LIOS_SOURCE_BUILD::count(origType);
+                    for(int n=0;n<LIOS_HUD::BuildChildCount&&n<sourceCount;n++){
                         if(!hitUi(click,sourceRect(childRects[n])))continue;
+                        const auto *source=LIOS_SOURCE_BUILD::find(origType,n);
+                        if(!source)continue;
+                        sourceBuildPartId=source->id;
+                        sourceBuildOnceAngle=source->onceAngle;
+                        buildSubitem=n;
                         const int which=LIOS_BUILD::partForOriginalCategory(buildCategory,n);
                         if(which<0){
-                            buildStatus="Peca original indisponivel nesta recriacao.";
+                            building.selected=-1;
+                            buildStatus=TextFormat(
+                                "Peça Unity ID %d: modelo 3D ainda nao portado.",
+                                sourceBuildPartId);
                         }else{
-                            building.selected=which;buildSubitem=n;
-                            buildStatus="Peca selecionada: posicione e construa.";
+                            building.selected=which;
+                            buildStatus=TextFormat(
+                                "Peça Unity ID %d selecionada (rotacao %d).",
+                                sourceBuildPartId,sourceBuildOnceAngle);
                         }
                         childTouched=true;break;
                     }
@@ -656,7 +677,12 @@ int main() {
                 }
                 if(building.selected>=0&&building.selected<LIOS_BUILD::PieceCount&&
                     hitUi(click,sourceRect(LIOS_HUD::Build_btn_opRotate))){
-                    building.orientation=(building.orientation+1)%4;
+                    if(sourceBuildOnceAngle>0&&sourceBuildOnceAngle%90==0){
+                        building.orientation=(building.orientation+
+                            (sourceBuildOnceAngle/90))%4;
+                    }else{
+                        buildStatus="Angulo original nao suportado pela malha nativa.";
+                    }
                     continue;
                 }
                 if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_freeBuildModel))){
@@ -687,8 +713,12 @@ int main() {
                 buildCategory=buildCategory<2?2:2+(buildCategory-1)%6;
                 buildSubmenuOpen=true;buildSubitem=-1;building.selected=-1;
             }
-            if(IsKeyPressed(KEY_R))
-                building.orientation=(building.orientation+1)%4;
+            if(IsKeyPressed(KEY_R)&&building.selected>=0){
+                if(sourceBuildOnceAngle>0&&sourceBuildOnceAngle%90==0)
+                    building.orientation=(building.orientation+
+                        (sourceBuildOnceAngle/90))%4;
+                else buildStatus="Angulo original nao suportado.";
+            }
             if(IsKeyPressed(KEY_ENTER)&&building.selected>=0&&
                building.selected<LIOS_BUILD::PieceCount){
                 LIOS_BUILD::Resources available={
@@ -1574,7 +1604,7 @@ int main() {
                     {0,0,float(originalBuildSelected.width),
                      float(originalBuildSelected.height)},target,{0,0},0,WHITE);
             }
-            if(building.selected>=0&&originalBuildRotate.id)
+            if(building.selected>=0&&sourceBuildOnceAngle>0&&originalBuildRotate.id)
                 DrawTexturePro(originalBuildRotate,
                     {0,0,float(originalBuildRotate.width),
                      float(originalBuildRotate.height)},
@@ -1593,21 +1623,21 @@ int main() {
                     LIOS_HUD::BuildChildBox8,LIOS_HUD::BuildChildBox9,
                     LIOS_HUD::BuildChildBox10
                 };
-                for(int n=0;n<LIOS_HUD::BuildChildCount;n++){
-                    const int part=LIOS_BUILD::partForOriginalCategory(buildCategory,n);
-                    if(part<0||part>=LIOS_BUILD::PieceCount)continue;
+                static constexpr int sourceTypes[8]={0,0,2,3,8,4,6,7};
+                const int typ=sourceTypes[buildCategory];
+                const int origCount=LIOS_SOURCE_BUILD::count(typ);
+                const Texture2D &atlas=originalBuildItemAtlases[buildCategory-2];
+                for(int n=0;n<LIOS_HUD::BuildChildCount&&n<origCount;n++){
                     const LIOS_HUD::Rect &slot=partSlots[n];
                     Rectangle target=sourceRect(slot);
                     DrawTexturePro(originalBuildChildren,
                         {slot.left,slot.top,slot.right-slot.left,slot.bottom-slot.top},
                         target,{0,0},0,WHITE);
-                    if(buildPartIcons[part].id){
+                    if(atlas.id){
                         Rectangle iconRect=target;
                         iconRect.x+=target.width*.11f;iconRect.y+=target.height*.11f;
                         iconRect.width*=.78f;iconRect.height*=.78f;
-                        DrawTexturePro(buildPartIcons[part],
-                            {0,0,float(buildPartIcons[part].width),
-                             float(buildPartIcons[part].height)},
+                        DrawTexturePro(atlas,{float(n*120),0.f,120.f,120.f},
                             iconRect,{0,0},0,WHITE);
                     }
                     if(buildSubitem==n&&originalBuildSelected.id)
@@ -1632,7 +1662,7 @@ int main() {
             // The original btn_opRotate Image is a dark 9-slice background;
             // its actual caption is a Unity UGUI Text component. In this
             // renderer a readable font fallback preserves button usability.
-            if(building.selected>=0){
+            if(building.selected>=0&&sourceBuildOnceAngle>0){
                 const Rectangle rotate=sourceRect(LIOS_HUD::Build_btn_opRotate);
                 DrawText("GIRAR",int(rotate.x+rotate.width*.28f),
                     int(rotate.y+rotate.height*.28f),
