@@ -75,25 +75,25 @@ inline void drawPiece(const Piece &piece,const OriginalBuildTextures &surf,
           const float wx=x+(alongZ?0.f:normal),wz=z+(alongZ?normal:0.f);
           if(piece.type==Wall){
               drawPart({wx,1.5f,wz},alongZ?Vector3{3.f,2.6f,.22f}:
-                        Vector3{.22f,2.6f,3.f},WHITE,preview,surf.wall);
+                        Vector3{.22f,2.6f,3.f},preview?wood:WHITE,preview,surf.wall);
           }else if(piece.type==Window){
               // A window has two posts, header and a waist-high sill.
               for(int sign:{-1,1})
                   drawPart({wx+(alongZ?sign*1.35f:0.f),1.5f,
                             wz+(alongZ?0.f:sign*1.35f)},
-                           {.28f,2.6f,.28f},WHITE,preview,surf.window);
+                           {.28f,2.6f,.28f},preview?wood:WHITE,preview,surf.window);
               drawPart({wx,2.67f,wz},alongZ?Vector3{2.9f,.28f,.28f}:
-                        Vector3{.28f,.28f,2.9f},WHITE,preview,surf.window);
+                        Vector3{.28f,.28f,2.9f},preview?wood:WHITE,preview,surf.window);
               drawPart({wx,.78f,wz},alongZ?Vector3{2.9f,1.05f,.28f}:
-                        Vector3{.28f,1.05f,2.9f},WHITE,preview,surf.window);
+                        Vector3{.28f,1.05f,2.9f},preview?wood:WHITE,preview,surf.window);
           }else{
               // Doorway remains passable through its center.
               for(int sign:{-1,1})
                   drawPart({wx+(alongZ?sign*1.18f:0.f),1.42f,
                             wz+(alongZ?0.f:sign*1.18f)},
-                           {.34f,2.45f,.34f},WHITE,preview,surf.doorway);
+                           {.34f,2.45f,.34f},preview?wood:WHITE,preview,surf.doorway);
               drawPart({wx,2.7f,wz},alongZ?Vector3{2.7f,.35f,.38f}:
-                        Vector3{.38f,.35f,2.7f},WHITE,preview,surf.doorway);
+                        Vector3{.38f,.35f,2.7f},preview?wood:WHITE,preview,surf.doorway);
           }
           break;
       }
@@ -105,18 +105,18 @@ inline void drawPiece(const Piece &piece,const OriginalBuildTextures &surf,
               drawPart({x+(rotate?along:0.f),height/2.f,
                         z+(rotate?0.f:along)},
                        rotate?Vector3{.57f,height,2.7f}:
-                              Vector3{2.7f,height,.57f},WHITE,preview,surf.stair);
+                              Vector3{2.7f,height,.57f},preview?wood:WHITE,preview,surf.stair);
           }
           break;
       }
       case Obstacle:
           for(int i=0;i<3;i++){
               float along=(i-1)*.33f;
-              drawPart({x+along,.65f,z},{.24f,1.3f,.24f},WHITE,preview,surf.wall);
+              drawPart({x+along,.65f,z},{.24f,1.3f,.24f},preview?wood:WHITE,preview,surf.wall);
           }
           break;
       case Roof:
-          drawPart({x,2.9f,z},{3.15f,.25f,3.15f},WHITE,preview,surf.roof);break;
+          drawPart({x,2.9f,z},{3.15f,.25f,3.15f},preview?wood:WHITE,preview,surf.roof);break;
       case Storage:
           drawPart({x,.66f,z},{1.25f,1.f,1.f},wood,preview);
           drawPart({x,1.20f,z},{1.35f,.12f,1.1f},metal,preview);break;
