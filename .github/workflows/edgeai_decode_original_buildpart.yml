@@ -18,6 +18,7 @@ jobs:
           sparse-checkout: |
             xapk_original
             tools/edgeai_unity_buildpart_decode.py
+            tools/edgeai_buildpart_atlas.py
             tests/test_edgeai_unity_buildpart_decode.py
           filter: blob:none
           sparse-checkout-cone-mode: false
@@ -50,10 +51,24 @@ jobs:
           print("EDGEAI_REAL_UNITY_BUILDPART_CONFIG_VERIFIED",
                 r["record_count"],r["basic_level1_count"])
           PY
+      - name: Rebuild exact original Unity m_buildChilds sprites for every category
+        run: |
+          python3 -m pip install --disable-pip-version-check pillow
+          python3 tools/edgeai_buildpart_atlas.py \
+            --source edgeai_real_buildpart_decoded.json \
+            --sprites /tmp/edgeai-lio-icons/part_icons_manifest.json \
+            --sprite-directory /tmp/edgeai-lio-icons \
+            --output edgeai_native_build_widgets
+          test -s edgeai_native_build_widgets/original_buildpart_v7.hpp
+          for type in 2 3 4 6 7 8; do
+            test -s "edgeai_native_build_widgets/hud_original_build_items_type_${type}.png"
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: EdgeAI-Original-Unity-BuildPart-Level1-Exact-Config
-          path: edgeai_real_buildpart_decoded.json
+          path: |
+            edgeai_real_buildpart_decoded.json
+            edgeai_native_build_widgets/
           if-no-files-found: warn
           retention-days: 30
