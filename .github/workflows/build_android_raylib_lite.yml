@@ -100,13 +100,18 @@ jobs:
           g++ -std=c++17 -Wall -Wextra -Werror tests/test_native_build_craft.cpp -o /tmp/lios_build_test
           /tmp/lios_build_test
 
-      - name: Download 73 original Unity crafting sprites from audited XAPK extraction
+      - name: Download source-traced Unity crafting sprites from audited XAPK extraction
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           mkdir -p /tmp/lios-craft-original
-          gh run download 40809871434 --repo "$GITHUB_REPOSITORY" \
+          SOURCE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow export_original_craft_ui.yml --status success \
+            --limit 1 --json databaseId --jq '.[0].databaseId')"
+          test -n "$SOURCE_RUN"
+          echo "LIOS_ORIGINAL_CRAFT_SOURCE_ARTIFACT_RUN=$SOURCE_RUN"
+          gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
             --name Original-Unity-Craft-UI-Sprites --dir /tmp/lios-craft-original
           test -s /tmp/lios-craft-original/craft_source_manifest.json
           python - <<'PY'
@@ -125,7 +130,8 @@ jobs:
               "craft_original_selected.png":"3490842252566290328",
               "craft_original_plus.png":"-8009850754480514078",
               "craft_original_minus.png":"1743642145107030626",
-              "craft_original_close.png":"-1129542740885068637"}
+              "craft_original_close.png":"-1129542740885068637",
+              "craft_original_secondary_tab.png":"-6746909455405468362"}
           target=Path("/tmp/lios-raymob/app/src/main/assets/assets")
           target.mkdir(parents=True,exist_ok=True)
           import shutil
@@ -133,6 +139,13 @@ jobs:
               original=src/byid[identifier]["file"]
               shutil.copyfile(original,target/name)
               print("LIOS_ORIGINAL_CRAFT_PPTR_PACKAGED",identifier,name,flush=True)
+          source_main=byid.get("8081054173552591411")
+          if source_main:
+              shutil.copyfile(src/source_main["file"],
+                              target/"craft_original_primary_tab.png")
+              print("LIOS_ORIGINAL_PRIMARY_CRAFT_TAB_SOURCE_FOUND",flush=True)
+          else:
+              print("LIOS_ORIGINAL_PRIMARY_CRAFT_TAB_SOURCE_NOT_YET_RECOVERED",flush=True)
           PY
 
       - name: Package original Unity level-one building albedo textures
