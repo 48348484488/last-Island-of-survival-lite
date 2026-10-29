@@ -1577,19 +1577,70 @@ int main() {
                     {0,0,float(originalBuildSelected.width),
                      float(originalBuildSelected.height)},target,{0,0},0,WHITE);
             }
-            if(originalBuildRotate.id)
+            if(building.selected>=0&&originalBuildRotate.id)
                 DrawTexturePro(originalBuildRotate,
                     {0,0,float(originalBuildRotate.width),
                      float(originalBuildRotate.height)},
                     sourceRect(LIOS_HUD::Build_btn_opRotate),
                     {0,0},0,WHITE);
+            if(buildSubmenuOpen&&buildCategory>=2&&originalBuildChildren.id){
+                // The original scene contains 11 Toggle children in
+                // m_buildChilds. Draw only slots that have an implemented
+                // native BuildPart selection; the Unity runtime hides the
+                // unused ones after FillBuildChildsIcons(type).
+                const LIOS_HUD::Rect partSlots[]={
+                    LIOS_HUD::BuildChildBox0,LIOS_HUD::BuildChildBox1,
+                    LIOS_HUD::BuildChildBox2,LIOS_HUD::BuildChildBox3,
+                    LIOS_HUD::BuildChildBox4,LIOS_HUD::BuildChildBox5,
+                    LIOS_HUD::BuildChildBox6,LIOS_HUD::BuildChildBox7,
+                    LIOS_HUD::BuildChildBox8,LIOS_HUD::BuildChildBox9,
+                    LIOS_HUD::BuildChildBox10
+                };
+                for(int n=0;n<LIOS_HUD::BuildChildCount;n++){
+                    const int part=LIOS_BUILD::partForOriginalCategory(buildCategory,n);
+                    if(part<0||part>=LIOS_BUILD::PieceCount)continue;
+                    const LIOS_HUD::Rect &slot=partSlots[n];
+                    Rectangle target=sourceRect(slot);
+                    DrawTexturePro(originalBuildChildren,
+                        {slot.left,slot.top,slot.right-slot.left,slot.bottom-slot.top},
+                        target,{0,0},0,WHITE);
+                    if(buildPartIcons[part].id){
+                        Rectangle iconRect=target;
+                        iconRect.x+=target.width*.11f;iconRect.y+=target.height*.11f;
+                        iconRect.width*=.78f;iconRect.height*=.78f;
+                        DrawTexturePro(buildPartIcons[part],
+                            {0,0,float(buildPartIcons[part].width),
+                             float(buildPartIcons[part].height)},
+                            iconRect,{0,0},0,WHITE);
+                    }
+                    if(buildSubitem==n&&originalBuildSelected.id)
+                        DrawTexturePro(originalBuildSelected,
+                            {0,0,float(originalBuildSelected.width),
+                             float(originalBuildSelected.height)},target,{0,0},0,WHITE);
+                }
+            }
+            if(buildBagOpen){
+                // The original btn_null toggles scp_bagBuilds (inventory
+                // building items). Only two offline crafted options exist.
+                const Rectangle box=sourceRect(LIOS_HUD::Build_scp_bagBuilds);
+                DrawRectangleRec(box,Fade(BLACK,.72f));
+                DrawRectangleLinesEx(box,2.f,RAYWHITE);
+                DrawText("BAU",int(canvasLeft+725.f*canvasScale),
+                    int(canvasTop+688.f*canvasScale),
+                    std::max(12,int(24.f*canvasScale)),RAYWHITE);
+                DrawText("FOGUEIRA",int(canvasLeft+846.f*canvasScale),
+                    int(canvasTop+688.f*canvasScale),
+                    std::max(12,int(24.f*canvasScale)),RAYWHITE);
+            }
             // The original btn_opRotate Image is a dark 9-slice background;
             // its actual caption is a Unity UGUI Text component. In this
             // renderer a readable font fallback preserves button usability.
-            const Rectangle rotate=sourceRect(LIOS_HUD::Build_btn_opRotate);
-            DrawText("GIRAR",int(rotate.x+rotate.width*.28f),
-                int(rotate.y+rotate.height*.28f),
-                std::max(12,int(31.f*canvasScale)),WHITE);
+            if(building.selected>=0){
+                const Rectangle rotate=sourceRect(LIOS_HUD::Build_btn_opRotate);
+                DrawText("GIRAR",int(rotate.x+rotate.width*.28f),
+                    int(rotate.y+rotate.height*.28f),
+                    std::max(12,int(31.f*canvasScale)),WHITE);
+            }
             if(building.freePlacement&&originalBuildSelected.id){
                 const Rectangle t=sourceRect(LIOS_HUD::Build_btn_freeBuildModel);
                 DrawTexturePro(originalBuildSelected,
