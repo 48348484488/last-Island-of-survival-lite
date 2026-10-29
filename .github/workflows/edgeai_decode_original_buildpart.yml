@@ -25,7 +25,7 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_edgeai_unity_buildpart_decode.py' -v
       - name: Retrieve independently recovered original Unity buildpart sprites
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p /tmp/edgeai-lio-icons
           gh run download 40815880408 --repo "$GITHUB_REPOSITORY" \
