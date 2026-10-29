@@ -266,6 +266,10 @@ int main() {
     // per-mode sibling draw order and RectTransforms (no static fake selection).
     Texture2D originalHudMelee=LoadTexture("assets/hud_original_melee.png");
     Texture2D originalHudRifle=LoadTexture("assets/hud_original_rifle.png");
+    // Sprite pixels and rects from ORIGINAL battlepanel.ab build profile.
+    Texture2D originalHudBuild=LoadTexture("assets/hud_original_build.png");
+    Texture2D originalBuildCategories=LoadTexture("assets/hud_original_build_categories.png");
+    Texture2D originalBuildSelected=LoadTexture("assets/hud_original_build_selected.png");
     Texture2D originalThumb=LoadTexture("assets/hud_original_joystick_knob.png");
     // Exact-source Unity m_heightLignt for all seven hotbar slots.
     Texture2D originalHotbarSelection=LoadTexture("assets/hud_original_hotbar_selection.png");
@@ -507,26 +511,53 @@ int main() {
                     }else buildStatus="Fabrique primeiro a planta de construcao.";
                 }
             }else if(buildMode&&activePanel==0){
-                if(hitUi(click,panelBox(120.f,135.f,200.f,72.f)))
-                    building.selected=(building.selected+1)%LIOS_BUILD::PieceCount;
-                else if(hitUi(click,panelBox(325.f,135.f,185.f,72.f)))
+                // Exact Unity Build HUD RectTransforms (original
+                // battlepanel.ab); do not resurrect V18 hand-placed
+                // TROCAR/GIRAR/CONSTRUIR/SAIR rectangles.
+                const LIOS_HUD::Rect categories[]={
+                    LIOS_HUD::Build_btn_null,LIOS_HUD::Build_btn_lantu,
+                    LIOS_HUD::Build_btn_fundation,LIOS_HUD::Build_btn_wall,
+                    LIOS_HUD::Build_btn_floor,LIOS_HUD::Build_btn_stair,
+                    LIOS_HUD::Build_btn_window,LIOS_HUD::Build_btn_obstacle
+                };
+                bool tabTouched=false;
+                for(int category=0;category<8;category++){
+                    if(!hitUi(click,sourceRect(categories[category])))continue;
+                    tabTouched=true;
+                    if(category==0){building.selected=0;buildStatus="Sem peca selecionada."; }
+                    else if(category==1){buildStatus="Categoria: projetos de construcao."; }
+                    else if(category==2){building.selected=LIOS_BUILD::Foundation;buildStatus="Fundacao selecionada."; }
+                    else if(category==3){building.selected=LIOS_BUILD::Wall;buildStatus="Parede selecionada."; }
+                    else if(category==4){building.selected=LIOS_BUILD::Roof;buildStatus="Piso/teto selecionado."; }
+                    else {
+                        // Original source has stair/window/obstacle category
+                        // art, but none has a source-verified mesh/recipe yet.
+                        // Do not silently place an unrelated object.
+                        building.selected=-1;
+                        buildStatus="Categoria original: recurso ainda indisponivel.";
+                    }
+                    break;
+                }
+                if(tabTouched)continue;
+                if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_opRotate))){
                     building.orientation=(building.orientation+1)%4;
-                else if(hitUi(click,panelBox(120.f,218.f,390.f,80.f))){
+                }else if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_freeBuildModel))){
+                    buildStatus="Modo livre original ainda indisponivel.";
+                }else if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_build))){
                     LIOS_BUILD::Resources available={
                         player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
-                    Vector3 dir={sinf(player.yaw),0.f,cosf(player.yaw)};
-                    int gx=LIOS_BUILD::grid(player.position.x+dir.x*4.3f);
-                    int gz=LIOS_BUILD::grid(player.position.z+dir.z*4.3f);
-                    auto type=static_cast<LIOS_BUILD::PieceType>(building.selected);
-                    if(building.place(type,gx,gz,building.orientation,
-                                     player.position.x,player.position.z,available)){
-                        player.woodCount=available.wood;
-                        player.stoneCount=available.stone;
+                    const Vector3 dir={sinf(player.yaw),0.f,cosf(player.yaw)};
+                    const int gx=LIOS_BUILD::grid(player.position.x+dir.x*4.3f);
+                    const int gz=LIOS_BUILD::grid(player.position.z+dir.z*4.3f);
+                    if(building.selected<0||building.selected>=LIOS_BUILD::PieceCount){
+                        buildStatus="Escolha uma peca disponivel primeiro.";
+                    }else if(building.place(static_cast<LIOS_BUILD::PieceType>(building.selected),
+                          gx,gz,building.orientation,player.position.x,
+                          player.position.z,available)){
+                        player.woodCount=available.wood;player.stoneCount=available.stone;
                         player.ironCount=available.metal;
                         buildStatus="Peca construida com sucesso.";
                     }else buildStatus="Posicao invalida ou recursos insuficientes.";
-                }else if(hitUi(click,panelBox(120.f,308.f,390.f,65.f))){
-                    buildMode=false;buildStatus="Construcao encerrada.";
                 }
             }
         }
@@ -535,7 +566,8 @@ int main() {
                 building.selected=(building.selected+1)%LIOS_BUILD::PieceCount;
             if(IsKeyPressed(KEY_R))
                 building.orientation=(building.orientation+1)%4;
-            if(IsKeyPressed(KEY_ENTER)){
+            if(IsKeyPressed(KEY_ENTER)&&building.selected>=0&&
+               building.selected<LIOS_BUILD::PieceCount){
                 LIOS_BUILD::Resources available={
                     player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
                 Vector3 dir={sinf(player.yaw),0.f,cosf(player.yaw)};
@@ -988,7 +1020,8 @@ int main() {
             // is audited. Gameplay/costs/collision are implemented natively.
             for(const auto& part:building.placed)
                 LIOS_BUILD::drawPiece(part);
-            if(buildMode&&activePanel==0){
+            if(buildMode&&activePanel==0&&building.selected>=0&&
+               building.selected<LIOS_BUILD::PieceCount){
                 const Vector3 dir={sinf(player.yaw),0.f,cosf(player.yaw)};
                 const int gx=LIOS_BUILD::grid(player.position.x+dir.x*4.3f);
                 const int gz=LIOS_BUILD::grid(player.position.z+dir.z*4.3f);
@@ -1125,7 +1158,8 @@ int main() {
             // Both layers are generated directly from the Unity UGUI renderer:
             // includes source-selected slot highlight, weapon icons, controls,
             // compass, minimap and the correct rifle-only aim/reload buttons.
-            const Texture2D &base=(player.equippedSlot==1)?originalHudRifle:originalHudMelee;
+            const Texture2D &base=(buildMode&&originalHudBuild.id)?
+                originalHudBuild:(player.equippedSlot==1)?originalHudRifle:originalHudMelee;
             DrawTexturePro(base,{0,0,float(base.width),float(base.height)},
                 {canvasLeft,canvasTop,1920.f*canvasScale,1080.f*canvasScale},
                 {0,0},0,WHITE);
@@ -1137,7 +1171,7 @@ int main() {
                 LIOS_HUD::SlotHighlight4,LIOS_HUD::SlotHighlight5,
                 LIOS_HUD::SlotHighlight6
             };
-            if(originalHotbarSelection.id&&selectedHotbarSlot>=0&&selectedHotbarSlot<7){
+            if(!buildMode&&originalHotbarSelection.id&&selectedHotbarSlot>=0&&selectedHotbarSlot<7){
                 const Rectangle sample={
                     float(selectedHotbarSlot*LIOS_HUD::HotbarHighlightTileW),
                     0,float(LIOS_HUD::HotbarHighlightTileW),
@@ -1189,7 +1223,7 @@ int main() {
                 LIOS_HUD::SlotCount2,LIOS_HUD::SlotCount3,
                 LIOS_HUD::SlotCount4,LIOS_HUD::SlotCount5};
             for(int i=0;i<4;i++){
-                if(counts[i]<=0)continue;
+                if(buildMode||counts[i]<=0)continue;
                 const Texture2D icon=sourceResources[i];
                 if(icon.id){
                     Rectangle b=sourceRect(sourceIcons[i]);
