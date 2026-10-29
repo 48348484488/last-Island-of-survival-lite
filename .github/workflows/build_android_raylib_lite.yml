@@ -262,7 +262,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          APK="dist/LastIslandLite-v0.16.4-ARM64.apk"
+          APK="dist/LastIslandLite-v0.17.0-ARM64.apk"
           TAG="v0.17.0"
           test -s "$APK"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
