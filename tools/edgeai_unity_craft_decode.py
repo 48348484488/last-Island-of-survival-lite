@@ -160,6 +160,63 @@ def parse_items(payload):
     if not rows or reader.off != len(payload): raise ValueError("Incomplete ItemCfg decode")
     return rows
 
+def extract_item_headers(payload, wanted_ids):
+    """Read exact validated LITE 7.3 ItemCfg *prefixes* for known item IDs.
+
+    Original 7.3 starts: id, name, type, childType, quality, one bool,
+    two signed integers, two bools, icon, description. The later fields
+    differ from the older ItemCfg.cs and are deliberately NOT interpreted.
+    Each accepted match is unique and records the exact offset in the file.
+    """
+    import struct
+    blob = bytes(payload)
+    found = {}
+    ambiguous = []
+    def text_field(reader, upper):
+        size = reader.integer()
+        if not 0 <= size <= upper or reader.off + size > len(reader.data):
+            raise ValueError("Unbounded source ItemCfg text")
+        value = reader.data[reader.off:reader.off+size].tobytes().decode("utf-8")
+        reader.off += size
+        if value and not value.isprintable():
+            raise ValueError("Nonprintable source ItemCfg name")
+        return value
+    for ident in sorted(set(wanted_ids)):
+        if ident <= 0: continue
+        target = struct.pack("<i", ident)
+        matches = []
+        cursor = 0
+        while True:
+            offset = blob.find(target,cursor)
+            if offset < 0: break
+            cursor = offset + 1
+            reader = Octets(blob)
+            reader.off = offset
+            try:
+                if reader.integer() != ident: continue
+                name = text_field(reader, 512)
+                if not (0 < len(name) <= 120): continue
+                enum_fields = [reader.integer() for _ in range(3)]
+                if any(not -1 <= value <= 100000 for value in enum_fields):continue
+                flag = reader.boolean()
+                raw_ints = [reader.integer() for _ in range(2)]
+                other_flags = [reader.boolean(),reader.boolean()]
+                icon = text_field(reader, 256)
+                description = text_field(reader, 4096)
+                if icon and "/" not in icon:continue
+                matches.append({"id":ident,"name":name,"icon":icon,
+                                "description":description,
+                                "record_start":offset,
+                                "verified_prefix_end":reader.off,
+                                "raw_enum_fields":enum_fields,
+                                "raw_flag_fields":[flag]+other_flags,
+                                "raw_int_fields":raw_ints,
+                                "header_only":True})
+            except (ValueError,UnicodeError):continue
+        if len(matches)==1:found[ident]=matches[0]
+        elif matches:ambiguous.append(ident)
+    return found, ambiguous
+
 def report_from_bytes(draw_bytes, item_bytes=None):
     drawings = parse_drawing(draw_bytes)
     items = []
@@ -172,6 +229,14 @@ def report_from_bytes(draw_bytes, item_bytes=None):
             # version-drifted ItemCfg must not discard all authentic recipes.
             item_error = str(exc)
     byitem = {x["id"]: x for x in items}
+    requested = {r["targetItemId"] for r in drawings}
+    for drawing in drawings:
+        requested.update(m["itemId"] for m in drawing["materials"])
+    item_prefixes = {}
+    ambiguous = []
+    if item_bytes is not None and not items:
+        item_prefixes,ambiguous = extract_item_headers(item_bytes,requested)
+        byitem.update(item_prefixes)
     for row in drawings:
         item = byitem.get(row["targetItemId"])
         row["target"] = ({
@@ -201,6 +266,10 @@ def report_from_bytes(draw_bytes, item_bytes=None):
         "item_count": len(items),
         "item_verified": bool(items) and item_error is None,
         "item_decode_error": item_error,
+        "item_header_count":len(item_prefixes),
+        "item_header_expected":len(requested),
+        "item_header_ambiguous_ids":ambiguous,
+        "item_headers_verified_only":bool(item_prefixes),
         "item_linked": sum(x["target"] is not None for x in drawings),
         "groups": {key: rows for key, rows in sorted(groups.items(), key=lambda p:int(p[0]))},
         "all_records": drawings,
@@ -256,6 +325,8 @@ def main():
     result = report_from_bytes(draw, items)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, ensure_ascii=False)+"\n")
+    print("EDGEAI_SOURCE_ITEM_HEADER_MATCH",result["item_header_count"],
+          "/",result["item_header_expected"],flush=True)
     print("EDGEAI_SOURCE_ITEM_STATUS",result["item_verified"],
           result["item_decode_error"],flush=True)
     print("EDGEAI_SOURCE_CRAFT_CONFIG_PASS",
