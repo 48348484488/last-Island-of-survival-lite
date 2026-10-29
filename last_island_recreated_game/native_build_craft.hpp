@@ -25,6 +25,22 @@ struct Piece {
     Piece(PieceType t=Foundation,int x=0,int z=0,int r=0):
         type(t),gx(x),gz(z),turn(r){}
 };
+// Unity SC.UI.BattlePanel.OnClick* opens m_buildChilds (source original):
+// BuildPartType: Foundation=2, Wall=3, Stair=4, Window=6,
+// Obstacle=7, floor=8. Buttons are categories, NOT direct placement.
+// The subset below maps the only parts implemented by the native engine.
+inline int partForOriginalCategory(int buttonIndex,int subitemIndex){
+    if(subitemIndex<0)return -1;
+    switch(buttonIndex){
+    case 2:return subitemIndex==0?Foundation:-1;
+    case 3:return subitemIndex==0?Wall:subitemIndex==1?Doorway:-1;
+    case 4:return subitemIndex==0?Roof:-1;
+    case 5:return subitemIndex==0?Stair:-1;
+    case 6:return subitemIndex==0?Window:-1;
+    case 7:return subitemIndex==0?Obstacle:-1;
+    default:return -1;
+    }
+}
 static constexpr Cost BUILD_COSTS[PieceCount]={
     {60,20,0}, // Foundation
     {50,0,0},  // Wall
