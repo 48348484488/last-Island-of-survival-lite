@@ -11,6 +11,36 @@
 #include <algorithm>
 #include <string>
 namespace LIOS_CRAFT_UI {
+// Tab values and nesting copied from SC.UI.BagProducePage.OnInit in the
+// original 7.3 Assembly-CSharp source; coordinates are still native layout.
+struct Tab {int id;const char* label;};
+inline constexpr Tab BigTabs[]={{1,"BASICO"},{12,"ITENS"},{4,"ESTRUTURAS"},
+                                {13,"COMBATE"},{14,"VEICULOS"}};
+inline constexpr Tab BasicTabs[]={{1,"GERAL"}};
+inline constexpr Tab ItemTabs[]={{2,"FERRAMENTAS"},{5,"COZINHA"},
+                                 {6,"MEDICINA"},{3,"MATERIAIS"}};
+inline constexpr Tab StructureTabs[]={{4,"ESTRUTURAS"}};
+inline constexpr Tab CombatTabs[]={{7,"EQUIPAMENTO"},{8,"ARMAS"},
+                                   {9,"MUNICAO"},{10,"ARMADILHAS"}};
+inline constexpr Tab VehicleTabs[]={{15,"VEICULOS"}};
+inline int subTabCount(int big){
+    switch(big){case 1:case 4:case 14:return 1;
+                case 12:case 13:return 4;default:return 0;}
+}
+inline Tab subTab(int big,int at){
+    if(at<0||at>=subTabCount(big))return {-1,""};
+    switch(big){case 1:return BasicTabs[at];case 12:return ItemTabs[at];
+                case 4:return StructureTabs[at];case 13:return CombatTabs[at];
+                case 14:return VehicleTabs[at];default:return {-1,""};}
+}
+inline int firstSubTab(int big){return subTab(big,0).id;}
+// These THREE demo recipes are not DrawingCfg-derived. Never display them
+// as an authentic original recipe catalog or fill other tabs with fake items.
+inline int visibleRecipe(int big,int small,int slot){
+    if(big==1&&small==1&&slot==0)return 0;
+    if(big==12&&small==2&&slot>=0&&slot<2)return slot+1;
+    return -1;
+}
 struct Art {
     Texture2D button={},back={},slot={},smallSlot={},strip={},selected={},
               plus={},minus={},close={},hammer={},pickaxe={},buildIcon={},
@@ -54,7 +84,8 @@ static const char* recipeLabel(int r){
 }
 inline void render(const Art &art, const LIOS_BUILD::System &sys,
                    const LIOS_BUILD::Resources &r, int selection,
-                   int quantity,const std::string &status,
+                   int quantity,int bigTab,int smallTab,int selectedOrder,
+                   const std::string &status,
                    float sc,float ox,float oy){
     const auto b=[&](float x,float y,float w,float h){
         return rect(x,y,w,h,sc,ox,oy);
@@ -68,22 +99,50 @@ inline void render(const Art &art, const LIOS_BUILD::System &sys,
     title("FABRICACAO",235,114,43,sc,ox,oy);
     sprite(art.back,b(1654,0,266,86));
     title("VOLTAR",1748,24,28,sc,ox,oy);
-    title("RECEITAS",250,216,29,sc,ox,oy);
-    title("DETALHES",1110,216,29,sc,ox,oy);
-    // Source scp_items is at (239,208) 735x641. The real Unity list
-    // populates item cards dynamically; here its three available recipes
-    // are rendered using the original prefab com_item_k_3/com_item_k_4.
-    for(int i=0;i<3;i++){
-        float x=252+203*i,y=280;
+    // Original tab hierarchy from BagProducePage.OnInit, not inferred
+    // from marketing screenshots. Positions remain provisional until the
+    // exact Unity prefab RectTransform export is integrated.
+    for(int i=0;i<5;i++){
+        float x=220.f+i*294.f;
+        Rectangle tab=b(x,179,276,51);
+        DrawRectangleRec(tab,bigTab==BigTabs[i].id?
+            Color{74,88,85,238}:Color{30,39,41,220});
+        DrawRectangleLinesEx(tab,sc*2,Color{152,161,149,220});
+        title(BigTabs[i].label,x+15,188,25,sc,ox,oy);
+    }
+    for(int i=0;i<subTabCount(bigTab);i++){
+        float x=232.f+i*198.f;
+        const Tab sub=subTab(bigTab,i);
+        DrawRectangleRec(b(x,244,189,43),
+            sub.id==smallTab?Color{77,97,87,235}:Color{26,33,38,220});
+        title(sub.label,x+8,253,20,sc,ox,oy);
+    }
+    title("RECEITAS",250,305,27,sc,ox,oy);
+    title("DETALHES",1110,305,27,sc,ox,oy);
+    int recipesOnTab=0;
+    for(int slot=0;slot<3;slot++){
+        int i=visibleRecipe(bigTab,smallTab,slot);
+        if(i<0)continue;
+        ++recipesOnTab;
+        float x=252+203*slot,y=365;
         sprite(art.slot,b(x,y,160,160));
-        if(i==selection) sprite(art.selected,b(x+15,y+14,130,130));
+        if(i==selection)sprite(art.selected,b(x+15,y+14,130,130));
         Texture2D item=i==0?art.buildIcon:i==1?art.hammer:art.pickaxe;
         sprite(item,b(x+35,y+30,92,92));
         title(i==0?"CONSTRUIR":i==1?"MARTELO":"PICARETA",
               x+5,y+176,22,sc,ox,oy);
-        bool owned=sys.owns(static_cast<LIOS_BUILD::RecipeType>(i));
-        if(owned)title("FABRICADO",x+15,y+207,20,sc,ox,oy,LIME);
+        if(sys.owns(static_cast<LIOS_BUILD::RecipeType>(i)))
+            title("FABRICADO",x+15,y+207,20,sc,ox,oy,LIME);
     }
+    if(!recipesOnTab){
+        title("RECEITAS ORIGINAIS AINDA NAO PORTADAS",
+              254,412,22,sc,ox,oy,GRAY);
+    }else title("RECEITAS DE TESTE OFFLINE (CFG PENDENTE)",
+                254,641,20,sc,ox,oy,GRAY);
+    if(selection<0){
+        title("SELECIONE UMA RECEITA DISPONIVEL",
+              1110,390,25,sc,ox,oy,GRAY);
+    } else {
     // Original source-selected item, cost and queue widgets.
     sprite(art.slot,b(1130,260,195,195));
     Texture2D selected=selection==0?art.buildIcon:
@@ -102,20 +161,36 @@ inline void render(const Art &art, const LIOS_BUILD::System &sys,
             1403,y+15,27,sc,ox,oy,
             mat[i].available>=mat[i].needed*quantity?RAYWHITE:ORANGE);
     }
-    title("QUANTIDADE",1130,680,25,sc,ox,oy);
+    title("QUANTIDADE",1130,675,25,sc,ox,oy);
     sprite(art.minus,b(1360,663,72,72));
     title(TextFormat("%d",quantity),1467,684,31,sc,ox,oy);
     sprite(art.plus,b(1547,663,72,72));
-    sprite(art.button,b(1340,760,334,84));
-    title(sys.owns(static_cast<LIOS_BUILD::RecipeType>(selection))?
-          "FABRICADO":"FABRICAR",1397,785,31,sc,ox,oy,WHITE);
-    title(status.c_str(),1100,886,23,sc,ox,oy,YELLOW);
+    DrawRectangleRec(b(1642,663,105,72),Color{61,72,63,235});
+    title("MAX",1658,682,25,sc,ox,oy);
+    const int maxQuantity=sys.maxCraftableQuantity(
+        static_cast<LIOS_BUILD::RecipeType>(selection),r);
+    title(TextFormat("MAX %d",maxQuantity),1380,728,19,sc,ox,oy,LIGHTGRAY);
+    title(TextFormat("TEMPO %.0fs",
+        LIOS_BUILD::System::recipeDuration(
+            static_cast<LIOS_BUILD::RecipeType>(selection))*quantity),
+        1130,735,20,sc,ox,oy,GRAY);
+    sprite(art.button,b(1340,770,334,84),maxQuantity>0?WHITE:GRAY);
+    title("FABRICAR",1397,795,31,sc,ox,oy,WHITE);
+    } // selected recipe details
+    title(status.c_str(),1100,860,20,sc,ox,oy,YELLOW);
     if(!sys.queue.empty()){
-        const auto &q=sys.queue.front();
-        title(TextFormat("PRODUZINDO: %s  %.0f%%",
-            recipeLabel(q.type),100.f*std::min(1.f,q.elapsed/q.duration)),
-            1110,944,23,sc,ox,oy,SKYBLUE);
-        sprite(art.close,b(1600,930,66,66));
+        title("FILA DE FABRICACAO (SELECIONE PARA CANCELAR)",
+            1100,891,19,sc,ox,oy,LIGHTGRAY);
+        for(unsigned i=0;i<sys.queue.size();i++){
+            const auto &q=sys.queue[i];
+            float y=921.f+18.f*i;
+            if(int(i)==selectedOrder)
+                DrawRectangleRec(b(1100,y-2,520,19),Color{49,77,88,240});
+            title(TextFormat("%d. %s  %.0f%%",int(i)+1,recipeLabel(q.type),
+                100.f*std::min(1.f,q.elapsed/q.duration)),
+                1110,y,17,sc,ox,oy,SKYBLUE);
+        }
+        sprite(art.close,b(1640,914,63,63));
     }
 }
 } // namespace LIOS_CRAFT_UI
