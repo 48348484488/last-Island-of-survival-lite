@@ -470,7 +470,7 @@ jobs:
       - name: Copy named downloadable APK
         run: |
           mkdir -p dist
-          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.23.0-ARM64.apk
+          cp /tmp/lios-raymob/app/build/outputs/apk/debug/*.apk             dist/LastIslandLite-v0.24.0-${GITHUB_SHA:0:8}-ARM64.apk
           sha256sum dist/*.apk
 
       - name: Upload Android APK for phone testing
@@ -500,15 +500,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          APK="dist/LastIslandLite-v0.23.0-ARM64.apk"
-          TAG="v0.23.0"
+          APK="dist/LastIslandLite-v0.24.0-${GITHUB_SHA:0:8}-ARM64.apk"
+          TAG="v0.24.0-${GITHUB_SHA:0:8}"
           test -s "$APK"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
           else
             gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" \
               --target "$GITHUB_SHA" \
-              --title "Last Island LITE recriado - Android v0.23.0" \
-              --notes "APK ARM64 experimental: tela de fabricacao com sprites originais dos atlas bagandbuildpanel.ab e common.ab, botoes de construcoes, quantidade e fila de fabricacao offline; iconografia de ferramentas dos originais tubiao. Custos e logica completos do Unity ainda nao extraidos."
+              --title "Last Island LITE recriado - Android craft V24 commit ${GITHUB_SHA:0:8}" \
+              --notes "APK ARM64 experimental V24: telas de fabricacao com abas baseadas no prefab Unity, 80 sprites recuperados do XAPK original, navegacao, MAX e fila nativos. Layout dinamico e DrawingCfg ainda nao equivalentes ao original."
           fi
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'
