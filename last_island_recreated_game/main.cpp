@@ -613,9 +613,11 @@ int main() {
                         buildStatus=buildBagOpen?"Itens de construcao no inventario.":
                                                 "Inventario fechado.";
                     }else if(category==1){
-                        buildBagOpen=false;buildSubmenuOpen=false;
-                        buildCategory=1;buildSubitem=-1;building.selected=-1;
-                        buildStatus="Projetos: toque Construir para salvar.";
+                        // EdgeAI original callback audit: btn_lantu is present
+                        // in the prefab but is NOT wired with ClickListener
+                        // in the decompiled BattlePanel. Never invent a
+                        // blueprint-saving action here.
+                        buildStatus="Funcao do projeto nao comprovada no Unity.";
                     }else{
                         // Source toggles same category on a second click.
                         const bool close=buildSubmenuOpen&&buildCategory==category;
@@ -663,11 +665,6 @@ int main() {
                     continue;
                 }
                 if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_build))){
-                    if(buildCategory==1){
-                        buildStatus=building.saveCurrentBlueprint()?
-                            "Projeto salvo nesta sessao.":"Construa uma base antes de salvar.";
-                        continue;
-                    }
                     LIOS_BUILD::Resources available={
                         player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
                     const Vector3 dir={sinf(player.yaw),0.f,cosf(player.yaw)};
@@ -1568,7 +1565,7 @@ int main() {
                      float(LIOS_HUD::BuildCategoryTileH)},
                     sourceRect(tabs[i]),{0,0},0,WHITE);
             }
-            if(originalBuildSelected.id&&buildCategory>=0&&buildCategory<8){
+            if(originalBuildSelected.id&&buildCategory>=0&&buildCategory<8&&buildCategory!=1){
                 Rectangle target=sourceRect(tabs[buildCategory]);
                 // Source Checkmark nested inside the source 95px Toggle.
                 target.x+=target.width*.10f;target.y+=target.height*.10f;
