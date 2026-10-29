@@ -56,6 +56,7 @@ class System {
 public:
     std::vector<Piece> placed;
     bool blueprint=false,hammer=false,pickaxe=false;
+    int craftedCount[RecipeCount]={0,0,0};
     bool building=false;
     bool freePlacement=false;
     int selected=0,orientation=0;
@@ -71,12 +72,16 @@ public:
         if(type<Blueprint||type>=RecipeCount)return false;
         return type==Blueprint?blueprint:type==Hammer?hammer:pickaxe;
     }
-    bool requestCraft(RecipeType type,Resources &r){
-        if(type<Blueprint||type>=RecipeCount||queue.size()>=MaxCraftOrders||
-           owns(type))return false;
-        for(const auto &q:queue)if(q.type==type)return false;
-        if(!spend(r,CRAFT_COSTS[type]))return false;
-        queue.push_back({type,0.f,recipeDuration(type)});
+    bool requestCraft(RecipeType type,Resources &r,int quantity=1){
+        if(type<Blueprint||type>=RecipeCount||quantity<1||quantity>8||
+           queue.size()+unsigned(quantity)>MaxCraftOrders)return false;
+        const Cost c=CRAFT_COSTS[type];
+        if(r.wood<c.wood*quantity||r.stone<c.stone*quantity||
+           r.metal<c.metal*quantity)return false;
+        for(int i=0;i<quantity;i++){
+            if(!spend(r,c))return false;
+            queue.push_back({type,0.f,recipeDuration(type)});
+        }
         return true;
     }
     bool cancelCraft(unsigned index,Resources &r){
@@ -94,6 +99,7 @@ public:
             if(type==Blueprint)blueprint=true;
             if(type==Hammer)hammer=true;
             if(type==StonePickaxe)pickaxe=true;
+            craftedCount[type]++;
             queue.pop_front();
         }
     }
@@ -106,7 +112,7 @@ public:
         if(type<Blueprint||type>=RecipeCount)return false;
         bool *owned=type==Blueprint?&blueprint:type==Hammer?&hammer:&pickaxe;
         if(*owned||!spend(r,CRAFT_COSTS[type]))return false;
-        *owned=true;return true;
+        *owned=true;craftedCount[type]++;return true;
     }
     bool occupies(PieceType type,int gx,int gz,int rot)const{
         for(const auto &p:placed){
