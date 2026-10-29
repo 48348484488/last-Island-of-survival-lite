@@ -2,6 +2,7 @@
 // Provisional low-poly placement visualization; the native collision/crafting
 // rules are functional, but these shapes are NOT original Unity build meshes.
 #include "raylib.h"
+#include "rlgl.h"
 #include "native_build_craft.hpp"
 namespace LIOS_BUILD {
 // These six Texture2Ds are direct Unity original diffuse surfaces extracted
@@ -19,10 +20,33 @@ struct OriginalBuildTextures{
     }
     bool complete()const{return foundation.id&&wall.id&&roof.id&&window.id&&doorway.id&&stair.id;}
 };
+// raymob bundles raylib without raylib-extras/DrawCubeTexture. Use the
+// standard rlgl textured QUADS path instead of calling a nonexistent API.
+inline void drawTexturedCube(Texture2D surface,Vector3 p,Vector3 e,Color c){
+    const float x=p.x,y=p.y,z=p.z;
+    const float hx=e.x*.5f,hy=e.y*.5f,hz=e.z*.5f;
+    const Vector3 faces[6][4]={
+        {{x-hx,y-hy,z+hz},{x+hx,y-hy,z+hz},{x+hx,y+hy,z+hz},{x-hx,y+hy,z+hz}},
+        {{x+hx,y-hy,z-hz},{x-hx,y-hy,z-hz},{x-hx,y+hy,z-hz},{x+hx,y+hy,z-hz}},
+        {{x-hx,y-hy,z-hz},{x-hx,y-hy,z+hz},{x-hx,y+hy,z+hz},{x-hx,y+hy,z-hz}},
+        {{x+hx,y-hy,z+hz},{x+hx,y-hy,z-hz},{x+hx,y+hy,z-hz},{x+hx,y+hy,z+hz}},
+        {{x-hx,y+hy,z+hz},{x+hx,y+hy,z+hz},{x+hx,y+hy,z-hz},{x-hx,y+hy,z-hz}},
+        {{x-hx,y-hy,z-hz},{x+hx,y-hy,z-hz},{x+hx,y-hy,z+hz},{x-hx,y-hy,z+hz}}
+    };
+    const float uv[4][2]={{0.f,1.f},{1.f,1.f},{1.f,0.f},{0.f,0.f}};
+    rlSetTexture(surface.id);
+    rlBegin(RL_QUADS);
+    rlColor4ub(c.r,c.g,c.b,c.a);
+    for(int f=0;f<6;f++)for(int i=0;i<4;i++){
+        rlTexCoord2f(uv[i][0],uv[i][1]);
+        rlVertex3f(faces[f][i].x,faces[f][i].y,faces[f][i].z);
+    }
+    rlEnd();
+    rlSetTexture(0);
+}
 inline void drawPart(Vector3 position,Vector3 extents,Color tint,bool preview,
                      Texture2D surface={}){
-    if(surface.id)
-        DrawCubeTexture(surface,position,extents.x,extents.y,extents.z,tint);
+    if(surface.id)drawTexturedCube(surface,position,extents,tint);
     else DrawCubeV(position,extents,tint);
     if(preview)DrawCubeWiresV(position,extents,tint.a>100?DARKGREEN:MAROON);
 }
