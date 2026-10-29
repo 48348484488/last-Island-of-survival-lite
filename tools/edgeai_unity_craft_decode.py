@@ -224,6 +224,22 @@ def main():
     print("EDGEAI_DRAWING_SOURCE_PREFIX",len(draw),draw[:128].hex(),flush=True)
     print("EDGEAI_ITEM_SOURCE_PREFIX",len(items) if items else 0,
           items[:64].hex() if items else "",flush=True)
+    print("EDGEAI_DRAWING_SOURCE_WINDOW_112_370",draw[112:370].hex(),flush=True)
+    candidates=[]
+    for start in range(110,min(600,len(draw)-20)):
+        try:
+            probe=Octets(draw)
+            probe.off=start
+            ident=probe.integer()
+            if not 1<=ident<=1000000: continue
+            name=probe.string()
+            if not 1<=len(name)<=128 or not name.isprintable(): continue
+            big=probe.integer()
+            small=probe.integer()
+            if not (0<=big<=32 and 0<=small<=32):continue
+            candidates.append((start,ident,name[:22],big,small))
+        except (ValueError,UnicodeError):pass
+    print("EDGEAI_DRAWING_SOURCE_NEXT_HEADERS",candidates[:15],flush=True)
     result = report_from_bytes(draw, items)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, ensure_ascii=False)+"\n")
