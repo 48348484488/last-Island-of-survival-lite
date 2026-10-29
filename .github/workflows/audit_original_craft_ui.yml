@@ -24,7 +24,7 @@ jobs:
           python-version: '3.11'
       - name: Read original manufacturing assets
         env:
-          INSPECT_UI: '1'
+          INSPECT_UI: '0'
         run: |
           python -m pip install -q UnityPy
           python -u tools/audit_original_craft_ui.py
@@ -32,4 +32,7 @@ jobs:
         if: always()
         with:
           name: Original-Unity-Crafting-UI-Inventory
-          path: source_ui_craft_index.json
+          path: |
+            source_ui_craft_index.json
+            bagandbuildpanel_craft_original_layout.json
+            blueprintbuildpanel_craft_original_layout.json
