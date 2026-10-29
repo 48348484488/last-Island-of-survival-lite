@@ -14,15 +14,15 @@ namespace LIOS_CRAFT_UI {
 // Tab values and nesting copied from SC.UI.BagProducePage.OnInit in the
 // original 7.3 Assembly-CSharp source; coordinates are still native layout.
 struct Tab {int id;const char* label;};
-inline constexpr Tab BigTabs[]={{1,"BASICO"},{12,"ITENS"},{4,"ESTRUTURAS"},
+static constexpr Tab BigTabs[]={{1,"BASICO"},{12,"ITENS"},{4,"ESTRUTURAS"},
                                 {13,"COMBATE"},{14,"VEICULOS"}};
-inline constexpr Tab BasicTabs[]={{1,"GERAL"}};
-inline constexpr Tab ItemTabs[]={{2,"FERRAMENTAS"},{5,"COZINHA"},
+static constexpr Tab BasicTabs[]={{1,"GERAL"}};
+static constexpr Tab ItemTabs[]={{2,"FERRAMENTAS"},{5,"COZINHA"},
                                  {6,"MEDICINA"},{3,"MATERIAIS"}};
-inline constexpr Tab StructureTabs[]={{4,"ESTRUTURAS"},{16,"ELETRICA"}};
-inline constexpr Tab CombatTabs[]={{7,"EQUIPAMENTO"},{8,"ARMAS"},
+static constexpr Tab StructureTabs[]={{4,"ESTRUTURAS"},{16,"ELETRICA"}};
+static constexpr Tab CombatTabs[]={{7,"EQUIPAMENTO"},{8,"ARMAS"},
                                    {9,"MUNICAO"},{10,"ARMADILHAS"}};
-inline constexpr Tab VehicleTabs[]={{15,"VEICULOS"}};
+static constexpr Tab VehicleTabs[]={{15,"VEICULOS"}};
 inline int subTabCount(int big){
     switch(big){case 1:case 14:return 1;case 4:return 2;
                 case 12:case 13:return 4;default:return 0;}
