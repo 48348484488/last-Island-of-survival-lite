@@ -1,0 +1,53 @@
+name: EdgeAI source-audited Unity construction HUD parity
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/edgeai_unity_ui_behavior_audit.py
+      - tests/test_edgeai_unity_ui_behavior_audit.py
+      - last_island_recreated_game/main.cpp
+      - last_island_recreated_game/native_build_craft.hpp
+      - .github/workflows/edgeai_unity_build_hud_audit.yml
+permissions:
+  contents: read
+jobs:
+  build-hud-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            tools/edgeai_unity_ui_behavior_audit.py
+            tests/test_edgeai_unity_ui_behavior_audit.py
+            ExportedProject/Assets/MonoScript/Assembly-CSharp/SC/UI/BattlePanel.cs
+            last_island_recreated_game/main.cpp
+          sparse-checkout-cone-mode: false
+      - name: Unit-test EdgeAI static source provenance
+        run: python3 -m unittest discover -s tests -p 'test_edgeai_unity_ui_behavior_audit.py' -v
+      - name: Audit original Unity button callbacks against Android client
+        run: |
+          python3 tools/edgeai_unity_ui_behavior_audit.py \
+            --source ExportedProject/Assets/MonoScript/Assembly-CSharp/SC/UI/BattlePanel.cs \
+            --native last_island_recreated_game/main.cpp \
+            --output edgeai_unity_hud_audit.json \
+            --require-original-controls
+          python3 - <<'PY'
+          import json
+          d=json.load(open("edgeai_unity_hud_audit.json"))
+          assert d["source_category_types"] == {
+              "btn_fundation":2,"btn_wall":3,"btn_stair":4,
+              "btn_floor":8,"btn_window":6,"btn_obstacle":7}, d["source_category_types"]
+          assert "btn_lantu" in d["unbound_buttons"]
+          assert d["original_submenu_data_source"]["sprite"]=="BuildPart.icon"
+          assert d["fidelity_proven"] is False
+          print("EDGEAI_REAL_LIOS_ORIGINAL_SOURCE_MAPPING_PASS",
+                len(d["controls"]), len(d["native_issues"]))
+          PY
+      - name: Archive source evidence including unmet native controls
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: EdgeAI-Unity-HUD-Construction-Evidence
+          path: edgeai_unity_hud_audit.json
+          if-no-files-found: warn
+          retention-days: 30
