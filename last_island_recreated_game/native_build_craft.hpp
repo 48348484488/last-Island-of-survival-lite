@@ -88,9 +88,19 @@ public:
         if(type<Blueprint||type>=RecipeCount)return false;
         return type==Blueprint?blueprint:type==Hammer?hammer:pickaxe;
     }
+    // Source BagProducePage uses MaxNumCanCreate for btn_max and clamps
+    // quantity by materials. This offline cap also reserves queue slots.
+    int maxCraftableQuantity(RecipeType type,const Resources &r)const{
+        if(type<Blueprint||type>=RecipeCount||queue.size()>=MaxCraftOrders)return 0;
+        const Cost c=CRAFT_COSTS[type];
+        int quantity=int(MaxCraftOrders-queue.size());
+        if(c.wood>0) quantity=std::min(quantity,r.wood/c.wood);
+        if(c.stone>0) quantity=std::min(quantity,r.stone/c.stone);
+        if(c.metal>0) quantity=std::min(quantity,r.metal/c.metal);
+        return std::max(0,quantity);
+    }
     bool requestCraft(RecipeType type,Resources &r,int quantity=1){
-        if(type<Blueprint||type>=RecipeCount||quantity<1||quantity>8||
-           queue.size()+unsigned(quantity)>MaxCraftOrders)return false;
+        if(quantity<1||quantity>maxCraftableQuantity(type,r))return false;
         const Cost c=CRAFT_COSTS[type];
         if(r.wood<c.wood*quantity||r.stone<c.stone*quantity||
            r.metal<c.metal*quantity)return false;
