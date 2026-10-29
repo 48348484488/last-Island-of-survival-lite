@@ -105,7 +105,7 @@ def main():
     assert axis_snap(-.85,0.0)==(-.85,0.0)
     assert axis_snap(.75,-.72)==(.75,.72)
     assert 'const float driveScale=std::min(1.0f,moveAmount);' in CPP
-    assert 'currentSpeed * driveScale * dt' in CPP
+    assert 'currentSpeed * driveScale * dt' in CPP or 'currentSpeed*driveScale*dt' in CPP
     assert 'animationWalkTime+=dt*(currentSpeed/strideSpeed)*driveScale;' in CPP
     # A physically planted foot must travel opposite the player's motion.
     # Source Unity: zhan_run_left => world -X (camera screen-right);
