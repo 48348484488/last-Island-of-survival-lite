@@ -1,0 +1,69 @@
+name: EdgeAI package 519 original crafting recipes and icons for Android
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/generate_native_craft_catalog.py
+      - .github/workflows/edgeai_package_native_craft.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            tools/generate_native_craft_catalog.py
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fetch successful source-verified recipe table and image proof
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/edge-craft-config /tmp/edge-craft-images
+          CFG=$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow edgeai_decode_original_craft.yml --status success --limit 1 \
+            --json databaseId --jq '.[0].databaseId')
+          ICO=$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow edgeai_export_original_craft_icons.yml --status success --limit 1 \
+            --json databaseId --jq '.[0].databaseId')
+          test -n "$CFG" && test -n "$ICO"
+          gh run download "$CFG" --repo "$GITHUB_REPOSITORY" \
+            --name EdgeAI-Original-Unity-Craft-Config --dir /tmp/edge-craft-config
+          gh run download "$ICO" --repo "$GITHUB_REPOSITORY" \
+            --name Original-Unity-Craft-Recipe-Icons --dir /tmp/edge-craft-images
+          test -s /tmp/edge-craft-config/verified_craft_config.json
+          test -s /tmp/edge-craft-images/craft_icons_manifest.json
+      - name: Build original native recipe atlas and byte-provenanced C++ header
+        run: |
+          python -m pip install -q Pillow
+          python -u tools/generate_native_craft_catalog.py \
+            --config /tmp/edge-craft-config/verified_craft_config.json \
+            --icons /tmp/edge-craft-images/craft_icons_manifest.json \
+            --sprite-dir /tmp/edge-craft-images \
+            --out native_craft_catalog
+          test -s native_craft_catalog/original_craft_catalog_v73.hpp
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("native_craft_catalog")
+          manifest=json.loads((p/"native_craft_source_manifest.json").read_text())
+          assert manifest["original_records"]==519
+          assert manifest["matched_unique_source_sprites"]==512
+          assert manifest["atlas_count"]>=2
+          for file in manifest["atlas_images"]:assert (p/file).stat().st_size>0
+          print("EDGEAI_NATIVE_ORIGINAL_CRAFT_PACKAGE_PASS",manifest["original_records"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: EdgeAI-Native-Original-Craft-Catalog-And-Atlases
+          path: native_craft_catalog/
+          retention-days: 30
+          if-no-files-found: warn
