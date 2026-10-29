@@ -272,6 +272,15 @@ int main() {
     Texture2D originalBuildCategories=LoadTexture("assets/hud_original_build_categories.png");
     Texture2D originalBuildSelected=LoadTexture("assets/hud_original_build_selected.png");
     Texture2D originalBuildRotate=LoadTexture("assets/hud_original_build_rotate.png");
+    Texture2D originalBuildChildren=LoadTexture("assets/hud_original_build_children.png");
+    Texture2D buildPartIcons[LIOS_BUILD::PieceCount]={};
+    buildPartIcons[LIOS_BUILD::Foundation]=LoadTexture("assets/build_icon_foundation.png");
+    buildPartIcons[LIOS_BUILD::Wall]=LoadTexture("assets/build_icon_wall.png");
+    buildPartIcons[LIOS_BUILD::Doorway]=LoadTexture("assets/build_icon_doorway.png");
+    buildPartIcons[LIOS_BUILD::Roof]=LoadTexture("assets/build_icon_roof.png");
+    buildPartIcons[LIOS_BUILD::Stair]=LoadTexture("assets/build_icon_stair.png");
+    buildPartIcons[LIOS_BUILD::Window]=LoadTexture("assets/build_icon_window.png");
+    buildPartIcons[LIOS_BUILD::Obstacle]=LoadTexture("assets/build_icon_obstacle.png");
     LIOS_CRAFT_UI::Art originalCraftArt;
     originalCraftArt.load();
     Texture2D originalThumb=LoadTexture("assets/hud_original_joystick_knob.png");
@@ -326,7 +335,9 @@ int main() {
     std::string buildStatus="Colete recursos para fabricar.";
     std::set<int> previousUiTouches;
     bool buildMode=false;
-    int buildCategory=2; // Source category index: btn_fundation.
+    int buildCategory=-1; // No category active; source m_buildChilds hidden.
+    int buildSubitem=-1;
+    bool buildSubmenuOpen=false,buildBagOpen=false;
     int craftSelectedRecipe=0,craftQuantity=1;
     std::string craftStatus="Selecione uma receita e fabrique.";
 
@@ -510,10 +521,15 @@ int main() {
             (!overlayWasOpen&&building.blueprint&&hudInput.justPressed(HA::Slot6)))&&building.blueprint){
             buildMode=!buildMode;
             if(buildMode){
-                buildCategory=2;building.selected=LIOS_BUILD::Foundation;
+                buildCategory=-1;buildSubitem=-1;buildSubmenuOpen=false;
+                buildBagOpen=false;building.selected=-1;
                 selectedHotbarSlot=6;player.equippedSlot=-1;aim=false;
-                buildStatus="CONSTRUCAO: escolha uma categoria e posicione.";
-            }else{building.selected=-1;buildStatus="Construcao encerrada.";}
+                buildStatus="CONSTRUCAO: categoria > peca > colocar.";
+            }else{
+                buildSubmenuOpen=false;buildBagOpen=false;
+                buildCategory=-1;buildSubitem=-1;building.selected=-1;
+                buildStatus="Construcao encerrada.";
+            }
             activePanel=0;
         }
         auto panelBox=[&](float x,float y,float w,float h)->Rectangle{
@@ -562,41 +578,91 @@ int main() {
                     }else craftStatus="Materiais insuficientes ou fila cheia.";
                 }
             }else if(buildMode&&activePanel==0){
-                // Exact Unity Build HUD RectTransforms (original
-                // battlepanel.ab); do not resurrect V18 hand-placed
-                // TROCAR/GIRAR/CONSTRUIR/SAIR rectangles.
+                // Original source SC.UI.BattlePanel.cs:
+                // click a category -> CheckBuildChildsClose -> FillBuildChildsIcons,
+                // then click a populated toggle -> ChangePrefab. btn_null
+                // toggles scp_bagBuilds; btn_changeButton exits BuildState.
                 const LIOS_HUD::Rect categories[]={
                     LIOS_HUD::Build_btn_null,LIOS_HUD::Build_btn_lantu,
                     LIOS_HUD::Build_btn_fundation,LIOS_HUD::Build_btn_wall,
                     LIOS_HUD::Build_btn_floor,LIOS_HUD::Build_btn_stair,
                     LIOS_HUD::Build_btn_window,LIOS_HUD::Build_btn_obstacle
                 };
+                const LIOS_HUD::Rect childRects[]={
+                    LIOS_HUD::BuildChildBox0,LIOS_HUD::BuildChildBox1,
+                    LIOS_HUD::BuildChildBox2,LIOS_HUD::BuildChildBox3,
+                    LIOS_HUD::BuildChildBox4,LIOS_HUD::BuildChildBox5,
+                    LIOS_HUD::BuildChildBox6,LIOS_HUD::BuildChildBox7,
+                    LIOS_HUD::BuildChildBox8,LIOS_HUD::BuildChildBox9,
+                    LIOS_HUD::BuildChildBox10
+                };
+                if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_changeButton))){
+                    buildMode=false;buildSubmenuOpen=false;buildBagOpen=false;
+                    buildCategory=-1;buildSubitem=-1;building.selected=-1;
+                    buildStatus="Construcao encerrada.";
+                    continue;
+                }
                 bool tabTouched=false;
                 for(int category=0;category<8;category++){
                     if(!hitUi(click,sourceRect(categories[category])))continue;
                     tabTouched=true;
-                    buildCategory=category;
                     if(category==0){
-                        building.selected=-1;buildStatus="Nenhuma peca selecionada.";
+                        buildBagOpen=!buildBagOpen;
+                        buildSubmenuOpen=false;building.selected=-1;
+                        buildCategory=0;buildSubitem=-1;
+                        buildStatus=buildBagOpen?"Itens de construcao no inventario.":
+                                                "Inventario fechado.";
                     }else if(category==1){
-                        building.selected=-1;buildStatus="Projetos: clique Construir para salvar.";
+                        buildBagOpen=false;buildSubmenuOpen=false;
+                        buildCategory=1;buildSubitem=-1;building.selected=-1;
+                        buildStatus="Projetos: toque Construir para salvar.";
+                    }else{
+                        // Source toggles same category on a second click.
+                        const bool close=buildSubmenuOpen&&buildCategory==category;
+                        buildCategory=close?-1:category;
+                        buildSubmenuOpen=!close;
+                        buildBagOpen=false;buildSubitem=-1;building.selected=-1;
+                        buildStatus=close?"Categoria fechada.":"Selecione uma peca abaixo.";
                     }
-                    else if(category==2){building.selected=LIOS_BUILD::Foundation;buildStatus="Fundacao selecionada."; }
-                    else if(category==3){building.selected=LIOS_BUILD::Wall;buildStatus="Parede selecionada."; }
-                    else if(category==4){building.selected=LIOS_BUILD::Roof;buildStatus="Piso/teto selecionado."; }
-                    else if(category==5){building.selected=LIOS_BUILD::Stair;buildStatus="Escada selecionada.";}
-                    else if(category==6){building.selected=LIOS_BUILD::Window;buildStatus="Janela selecionada.";}
-                    else if(category==7){building.selected=LIOS_BUILD::Obstacle;buildStatus="Barricada selecionada.";}
                     break;
                 }
                 if(tabTouched)continue;
-                if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_opRotate))){
+                bool childTouched=false;
+                if(buildSubmenuOpen&&buildCategory>=2){
+                    for(int n=0;n<LIOS_HUD::BuildChildCount;n++){
+                        if(!hitUi(click,sourceRect(childRects[n])))continue;
+                        const int which=LIOS_BUILD::partForOriginalCategory(buildCategory,n);
+                        if(which<0){
+                            buildStatus="Peca original indisponivel nesta recriacao.";
+                        }else{
+                            building.selected=which;buildSubitem=n;
+                            buildStatus="Peca selecionada: posicione e construa.";
+                        }
+                        childTouched=true;break;
+                    }
+                }
+                if(childTouched)continue;
+                if(buildBagOpen){
+                    if(hitUi(click,panelBox(720.f,680.f,105.f,105.f))){
+                        building.selected=LIOS_BUILD::Storage;buildBagOpen=false;
+                        buildStatus="Bau selecionado do inventario.";
+                    }else if(hitUi(click,panelBox(840.f,680.f,105.f,105.f))){
+                        building.selected=LIOS_BUILD::Campfire;buildBagOpen=false;
+                        buildStatus="Fogueira selecionada do inventario.";
+                    }
+                    continue;
+                }
+                if(building.selected>=0&&building.selected<LIOS_BUILD::PieceCount&&
+                    hitUi(click,sourceRect(LIOS_HUD::Build_btn_opRotate))){
                     building.orientation=(building.orientation+1)%4;
-                }else if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_freeBuildModel))){
+                    continue;
+                }
+                if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_freeBuildModel))){
                     building.freePlacement=!building.freePlacement;
-                    buildStatus=building.freePlacement?
-                        "MODO LIVRE ativado.":"Encaixe normal ativado.";
-                }else if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_build))){
+                    buildStatus=building.freePlacement?"Posicionamento livre.":"Encaixe ativado.";
+                    continue;
+                }
+                if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_build))){
                     if(buildCategory==1){
                         buildStatus=building.saveCurrentBlueprint()?
                             "Projeto salvo nesta sessao.":"Construa uma base antes de salvar.";
@@ -608,25 +674,21 @@ int main() {
                     const int gx=LIOS_BUILD::grid(player.position.x+dir.x*4.3f);
                     const int gz=LIOS_BUILD::grid(player.position.z+dir.z*4.3f);
                     if(building.selected<0||building.selected>=LIOS_BUILD::PieceCount){
-                        buildStatus="Escolha uma peca disponivel primeiro.";
+                        buildStatus="Selecione primeiro uma peca do submenu.";
                     }else if(building.place(static_cast<LIOS_BUILD::PieceType>(building.selected),
-                          gx,gz,building.orientation,player.position.x,
-                          player.position.z,available)){
+                          gx,gz,building.orientation,player.position.x,player.position.z,available)){
                         player.woodCount=available.wood;player.stoneCount=available.stone;
                         player.ironCount=available.metal;
-                        buildStatus="Peca construida com sucesso.";
-                    }else buildStatus="Posicao invalida ou recursos insuficientes.";
+                        buildStatus="Peca construida.";
+                    }else buildStatus="Posicao invalida ou materiais insuficientes.";
                 }
             }
         }
         if(buildMode&&activePanel==0){
             // Keyboard fallback does not alter camera mode in build state.
             if(IsKeyPressed(KEY_V)){
-                buildCategory=2+(buildCategory-1)%6;
-                const int partByCategory[]={-1,-1,LIOS_BUILD::Foundation,
-                    LIOS_BUILD::Wall,LIOS_BUILD::Roof,LIOS_BUILD::Stair,
-                    LIOS_BUILD::Window,LIOS_BUILD::Obstacle};
-                building.selected=partByCategory[buildCategory];
+                buildCategory=buildCategory<2?2:2+(buildCategory-1)%6;
+                buildSubmenuOpen=true;buildSubitem=-1;building.selected=-1;
             }
             if(IsKeyPressed(KEY_R))
                 building.orientation=(building.orientation+1)%4;
