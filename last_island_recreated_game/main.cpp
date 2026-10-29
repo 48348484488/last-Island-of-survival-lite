@@ -342,6 +342,7 @@ int main() {
     int sourceBuildPartId=-1,sourceBuildOnceAngle=0;
     bool buildSubmenuOpen=false,buildBagOpen=false;
     int craftSelectedRecipe=0,craftQuantity=1;
+    int craftBigTab=1,craftSmallTab=1,craftSelectedOrder=0;
     std::string craftStatus="Selecione uma receita e fabrique.";
 
     // -------------------------------------------------------------------------------------
@@ -552,33 +553,70 @@ int main() {
                 if(touch(1654,0,266,86)){
                     activePanel=0;continue;
                 }
+                // Unity BagProducePage: main tabs -> sub-tabs -> recipe cells.
+                bool navigationTouched=false;
+                for(int i=0;i<5;i++){
+                    if(touch(220.f+294.f*i,179,276,51)){
+                        craftBigTab=LIOS_CRAFT_UI::BigTabs[i].id;
+                        craftSmallTab=LIOS_CRAFT_UI::firstSubTab(craftBigTab);
+                        craftSelectedRecipe=LIOS_CRAFT_UI::visibleRecipe(
+                            craftBigTab,craftSmallTab,0);
+                        craftQuantity=1;navigationTouched=true;break;
+                    }
+                }
+                if(navigationTouched)continue;
+                for(int i=0;i<LIOS_CRAFT_UI::subTabCount(craftBigTab);i++){
+                    if(touch(232.f+198.f*i,244,189,43)){
+                        craftSmallTab=LIOS_CRAFT_UI::subTab(craftBigTab,i).id;
+                        craftSelectedRecipe=LIOS_CRAFT_UI::visibleRecipe(
+                            craftBigTab,craftSmallTab,0);
+                        craftQuantity=1;navigationTouched=true;break;
+                    }
+                }
+                if(navigationTouched)continue;
                 bool recipeTouched=false;
-                for(int i=0;i<3;i++){
-                    if(touch(252.f+203.f*i,280.f,160.f,225.f)){
-                        craftSelectedRecipe=i;craftQuantity=1;
+                for(int slot=0;slot<3;slot++){
+                    int recipe=LIOS_CRAFT_UI::visibleRecipe(
+                        craftBigTab,craftSmallTab,slot);
+                    if(recipe>=0&&touch(252.f+203.f*slot,365.f,160.f,225.f)){
+                        craftSelectedRecipe=recipe;craftQuantity=1;
                         recipeTouched=true;break;
                     }
                 }
                 if(recipeTouched)continue;
-                if(touch(1360,663,72,72)){
+                LIOS_BUILD::Resources available={
+                    player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
+                const int maxAvailable=craftSelectedRecipe>=0?
+                    building.maxCraftableQuantity(
+                        static_cast<LIOS_BUILD::RecipeType>(craftSelectedRecipe),available):0;
+                if(touch(1360,663,72,72)&&craftSelectedRecipe>=0){
                     craftQuantity=std::max(1,craftQuantity-1);
-                }else if(touch(1547,663,72,72)){
-                    craftQuantity=std::min(8,craftQuantity+1);
-                }else if(touch(1600,930,66,66)){
-                    LIOS_BUILD::Resources res={
-                        player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
-                    if(building.cancelCraft(0,res)){
-                        player.woodCount=res.wood;player.stoneCount=res.stone;
-                        player.ironCount=res.metal;
+                }else if(touch(1547,663,72,72)&&craftSelectedRecipe>=0){
+                    craftQuantity=std::min(std::max(1,maxAvailable),craftQuantity+1);
+                }else if(touch(1642,663,105,72)&&craftSelectedRecipe>=0){
+                    craftQuantity=std::max(1,maxAvailable);
+                }else if(touch(1640,914,63,63)&&!building.queue.empty()){
+                    if(building.cancelCraft(
+                        unsigned(std::max(0,std::min(craftSelectedOrder,
+                            int(building.queue.size())-1))),available)){
+                        player.woodCount=available.wood;player.stoneCount=available.stone;
+                        player.ironCount=available.metal;
+                        craftSelectedOrder=std::max(0,std::min(craftSelectedOrder,
+                            int(building.queue.size())-1));
                         craftStatus="Fabricacao cancelada; recursos devolvidos.";
                     }
-                }else if(touch(1340,760,334,84)){
-                    LIOS_BUILD::Resources res={
-                        player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
+                }else if(touch(1100,919,520,18.f*float(building.queue.size()))
+                          &&!building.queue.empty()){
+                    int idx=int((click.y-(canvasTop+919.f*canvasScale))/
+                                (18.f*canvasScale));
+                    craftSelectedOrder=std::max(0,std::min(idx,
+                        int(building.queue.size())-1));
+                }else if(touch(1340,770,334,84)&&craftSelectedRecipe>=0){
                     const auto type=static_cast<LIOS_BUILD::RecipeType>(craftSelectedRecipe);
-                    if(building.requestCraft(type,res,craftQuantity)){
-                        player.woodCount=res.wood;player.stoneCount=res.stone;
-                        player.ironCount=res.metal;
+                    if(building.requestCraft(type,available,craftQuantity)){
+                        player.woodCount=available.wood;player.stoneCount=available.stone;
+                        player.ironCount=available.metal;
+                        craftSelectedOrder=int(building.queue.size())-1;
                         craftStatus="Fabricando...";
                     }else craftStatus="Materiais insuficientes ou fila cheia.";
                 }
@@ -1575,8 +1613,8 @@ int main() {
             const LIOS_BUILD::Resources available={
                 player.woodCount,player.stoneCount,player.ironCount,player.sulfurCount};
             LIOS_CRAFT_UI::render(originalCraftArt,building,available,
-                craftSelectedRecipe,craftQuantity,craftStatus,
-                canvasScale,canvasLeft,canvasTop);
+                craftSelectedRecipe,craftQuantity,craftBigTab,craftSmallTab,
+                craftSelectedOrder,craftStatus,canvasScale,canvasLeft,canvasTop);
         }
         if(buildMode&&activePanel==0&&originalBuildCategories.id){
             // Exact ORIGINAL Unity UGUI sprites, generated from Image.m_Sprite
