@@ -45,7 +45,7 @@ inline int visibleRecipe(int big,int small,int slot){
 struct Art {
     Texture2D button={},back={},slot={},smallSlot={},strip={},selected={},
               plus={},minus={},close={},hammer={},pickaxe={},buildIcon={},
-              wood={},stone={},metal={},primaryTab={},secondaryTab={};
+              wood={},stone={},metal={},primaryTab={},secondaryTab={},activeTabIndicator={};
     void load(){
         button=LoadTexture("assets/craft_original_create_button.png");
         back=LoadTexture("assets/craft_original_back_button.png");
@@ -63,6 +63,7 @@ struct Art {
         stone=LoadTexture("assets/icon_resource_stone.png");
         metal=LoadTexture("assets/icon_resource_metal.png");
         primaryTab=LoadTexture("assets/craft_original_primary_tab.png");
+        activeTabIndicator=LoadTexture("assets/craft_original_primary_tab_indicator.png");
         secondaryTab=LoadTexture("assets/craft_original_secondary_tab.png");
     }
 };
@@ -125,6 +126,12 @@ inline void render(const Art &art, const LIOS_BUILD::System &sys,
             DrawRectangleRec(tab,active?
                 Color{74,88,85,238}:Color{30,39,41,220});
             DrawRectangleLinesEx(tab,sc*2,Color{152,161,149,220});
+        }
+        if(active&&art.activeTabIndicator.id){
+            const auto indicator=LIOS_CRAFT_SOURCE::MainTabActiveIndicator;
+            sprite(art.activeTabIndicator,b(indicator.x,
+                indicator.y+LIOS_CRAFT_SOURCE::MainTabStepY*i,
+                indicator.w,indicator.h));
         }
         title(BigTabs[i].label,x+90,y+29,22,sc,ox,oy);
     }
