@@ -1,0 +1,38 @@
+name: Publish verified Android V18 construction APK
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/publish_android_v18_verified.yml
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish-verified:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Retrieve successful V18 Android ARM64 package
+        run: |
+          mkdir -p dist
+          gh run download 40805383206 --repo "$GITHUB_REPOSITORY" \
+            --name Last-Island-LITE-Recriado-Android-ARM64-APK \
+            --dir dist
+          test -s dist/LastIslandLite-v0.18.0-ARM64.apk
+          sha256sum dist/LastIslandLite-v0.18.0-ARM64.apk
+      - name: Publish single APK direct download
+        run: |
+          set -euo pipefail
+          APK=dist/LastIslandLite-v0.18.0-ARM64.apk
+          TAG=v0.18.0
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "Last Island LITE V18.0 - Construção e fabricação offline" \
+              --notes "APK Android ARM64 experimental com construção de bases, colocação de peças, ferramentas e receitas provisórias. Os modelos 3D das construções ainda são temporários. O terreno completo original está em processo de recuperação."
+          fi
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'
