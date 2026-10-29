@@ -10,6 +10,7 @@ on:
       - last_island_recreated_game/native_build_craft.hpp
       - last_island_recreated_game/mobile_build_visual.hpp
       - last_island_recreated_game/mobile_craft_ui.hpp
+      - last_island_recreated_game/mobile_original_craft_layout.hpp
       - tests/test_native_build_craft.cpp
       - tools/prepare_mobile_character_textures.py
       - tools/export_mobile_skeletal_animation.py
@@ -44,6 +45,7 @@ jobs:
             last_island_recreated_game/native_build_craft.hpp
             last_island_recreated_game/mobile_build_visual.hpp
             last_island_recreated_game/mobile_craft_ui.hpp
+            last_island_recreated_game/mobile_original_craft_layout.hpp
             tests/test_native_build_craft.cpp
             last_island_recreated_game/original_hud_bindings.py
             last_island_recreated_game/original_hud_touch.py
@@ -257,6 +259,7 @@ jobs:
           cp last_island_recreated_game/native_build_craft.hpp /tmp/lios-raymob/app/src/main/cpp/native_build_craft.hpp
           cp last_island_recreated_game/mobile_build_visual.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_build_visual.hpp
           cp last_island_recreated_game/mobile_craft_ui.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_craft_ui.hpp
+          cp last_island_recreated_game/mobile_original_craft_layout.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_original_craft_layout.hpp
           rm /tmp/lios-raymob/app/src/main/cpp/main.c
           python tools/package_android_assets.py             last_island_recreated_game/main.cpp             last_island_recreated_game/assets             /tmp/lios-raymob/app/src/main/assets/assets
           python -u tools/export_original_stances.py --report /tmp/lios_original_stances_report.json
