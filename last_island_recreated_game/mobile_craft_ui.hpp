@@ -109,13 +109,15 @@ inline void render(const Art &art, const LIOS_BUILD::System &sys,
     title("FABRICACAO",235,114,43,sc,ox,oy);
     sprite(art.back,sb(LIOS_CRAFT_SOURCE::Back));
     title("VOLTAR",1748,24,28,sc,ox,oy);
-    // The source canvas positions main categories at the left of
-    // scp_items and its dynamically positioned subtypes above that list.
-    // The 120x58 / 134x43 button sizes below are provisional, since the
-    // serialized source tabs have zero size before Unity LayoutGroup runs.
+    // The source tab On sprite is 258.8x86 (Unity prefab layout);
+    // vertical step is a native estimate because Unity's LayoutGroup
+    // recalculates zero-sized parent buttons at runtime.
     for(int i=0;i<5;i++){
-        float x=76.0f,y=230.0f+76.0f*i;
-        Rectangle tab=b(x,y,148,60);
+        const float x=LIOS_CRAFT_SOURCE::MainTabOnSprite.x;
+        const float y=LIOS_CRAFT_SOURCE::MainTabOnSprite.y+
+            LIOS_CRAFT_SOURCE::MainTabStepY*i;
+        Rectangle tab=b(x,y,LIOS_CRAFT_SOURCE::MainTabOnSprite.w,
+                        LIOS_CRAFT_SOURCE::MainTabOnSprite.h);
         const bool active=bigTab==BigTabs[i].id;
         if(art.primaryTab.id){
             sprite(art.primaryTab,tab,active?WHITE:Color{170,170,170,245});
@@ -124,21 +126,21 @@ inline void render(const Art &art, const LIOS_BUILD::System &sys,
                 Color{74,88,85,238}:Color{30,39,41,220});
             DrawRectangleLinesEx(tab,sc*2,Color{152,161,149,220});
         }
-        title(BigTabs[i].label,x+12,y+14,22,sc,ox,oy);
+        title(BigTabs[i].label,x+90,y+29,22,sc,ox,oy);
     }
     for(int i=0;i<subTabCount(bigTab);i++){
-        float x=LIOS_CRAFT_SOURCE::SubTabOriginX+
+        float x=LIOS_CRAFT_SOURCE::SubTabOnSprite.x+
             LIOS_CRAFT_SOURCE::SubTabStepX*i;
-        float y=LIOS_CRAFT_SOURCE::SubTabOriginY;
+        float y=LIOS_CRAFT_SOURCE::SubTabOnSprite.y;
         const Tab sub=subTab(bigTab,i);
         if(art.secondaryTab.id){
-            sprite(art.secondaryTab,b(x,y,136,43),
+            sprite(art.secondaryTab,b(x,y,120,35),
                    sub.id==smallTab?WHITE:Color{165,165,165,230});
         }else{
-            DrawRectangleRec(b(x,y,136,43),
+            DrawRectangleRec(b(x,y,120,35),
                 sub.id==smallTab?Color{77,97,87,235}:Color{26,33,38,220});
         }
-        title(sub.label,x+6,y+10,19,sc,ox,oy);
+        title(sub.label,x+8,y+7,18,sc,ox,oy);
     }
     int recipesOnTab=0;
     for(int slot=0;slot<3;slot++){
