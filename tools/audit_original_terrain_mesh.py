@@ -49,8 +49,10 @@ def main():
         with zipfile.ZipFile(ap) as pack:
             infos=pack.infolist()
             folders=Counter("/".join(i.filename.split("/")[:2]) for i in infos)
+            # There can be additional scene bundles (including environment or
+            # patch variants); audit every one rather than assuming exactly 16.
             candidates=[i.filename for i in infos if i.filename.startswith("assets/scene/") and i.filename.endswith(".ab")]
-            assert len(candidates)==16
+            assert len(candidates)>=16,("Original scene bundles missing",len(candidates))
             report={"source_asset_pack":nested,
                     "directories":folders.most_common(),
                     "scenes":[]}
