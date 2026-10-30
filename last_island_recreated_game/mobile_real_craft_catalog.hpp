@@ -247,8 +247,15 @@ inline void render(const Art& art,const State& state,
         if(state.selectedId==recipe->id)
             spr(art.selection,B(x+8,y+6,134.f,141.f));
         icon(art,recipe->atlas,recipe->slot,B(x+22,y+12,108,107));
-        txt(TextFormat("#%d",recipe->id),x+15,y+126,21,sc,ox,oy);
-        if(recipe->isNormal)txt("BASICO",x+77,y+126,13,sc,ox,oy,GREEN);
+        // Real emulator screenshot showed the source ID and the repeated
+        // "BASICO" badge colliding inside each 149.5px recipe cell.
+        // Until original localized item names are verified, render only the
+        // source recipe ID, centered and clipped by the existing viewport.
+        const char* idLabel=TextFormat("#%d",recipe->id);
+        const int idFont=std::max(11,int(18*sc));
+        const int idWidth=MeasureText(idLabel,idFont);
+        DrawText(idLabel,int(ox+(x+74.75f)*sc-idWidth*0.5f),
+                 int(oy+(y+126.f)*sc),idFont,LIGHTGRAY);
     }
     EndScissorMode();
     txt(TextFormat("%d RECEITAS",count(state.big,state.small)),
