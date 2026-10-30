@@ -33,6 +33,10 @@ on:
       - tools/restore_original_melee_run.py
       - .github/workflows/build_android_raylib_lite.yml
       - tools/package_android_assets.py
+concurrency:
+  group: lios-android-arm64-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
