@@ -147,7 +147,12 @@ struct Tile {
     void draw(Vector3 observer) const {
         // Distance to each sector's XZ bounding rectangle, rather than its
         // center, avoids discarding a sector when crossing a shared edge.
-        constexpr float drawRadius=520.f;
+        // At spawn a 520m radius submits all five large OBJ meshes every
+        // frame, even though neighboring tiles are outside the visible area.
+        // Keep a 175m border prefetch margin for seamless traversal while
+        // skipping distant sectors on mobile GPUs. This is distance culling,
+        // not frustum culling; benchmark FPS on device/emulator separately.
+        constexpr float drawRadius=175.f;
         for(const auto& sector:sectors){
             if(!sector.ready)continue;
             const float dx=std::max(sector.minX-observer.x,
