@@ -90,5 +90,14 @@ class FrameQualityTests(unittest.TestCase):
                 gate.inspect_transition(before, after, 0.01, 0)
 
 
+    def test_android_smoke_requires_fresh_touch_event_and_visual_change(self):
+        smoke = (Path(__file__).resolve().parents[1] /
+                 ".github" / "scripts" / "android_virtual_smoke.sh").read_text(encoding="utf-8")
+        self.assertIn("adb logcat -c", smoke)
+        self.assertIn("--compare-with evidence/runtime.png", smoke)
+        self.assertIn("LIOS_CRAFT_LOGGED_BUT_VISUAL_TRANSITION_UNCONFIRMED", smoke)
+        self.assertIn("LIOS_VISIBLE_CRAFT_BUTTON_FUNCTIONAL_FAILURE", smoke)
+
+
 if __name__ == "__main__":
     unittest.main()
