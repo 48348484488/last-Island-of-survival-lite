@@ -33,7 +33,7 @@ class CraftGeometryContract(unittest.TestCase):
             ref = "LIOS_CRAFT_SOURCE::" + control
             self.assertIn("DrawRectangleRec(sourceRect(" + ref + ",sc,ox,oy)", code)
             self.assertIn("CheckCollisionPointRec(p,sourceRect(" + ref + ",sc,ox,oy))", code)
-            self.assertRegex(source, rf"{control}\\s*=\\s*\\{{[0-9.]+f,954\\.3f,")
+            self.assertRegex(source, rf"{control}\s*=\s*\{{[0-9.]+f,954\.3f,")
         self.assertNotIn("hit(p,1225,741", code)
         self.assertNotIn("hit(p,1380,741", code)
         self.assertNotIn("hit(p,1480,741", code)
@@ -41,7 +41,7 @@ class CraftGeometryContract(unittest.TestCase):
     def test_native_create_fallback_does_not_overlap_source_quantity_max(self):
         source = SOURCE.read_text(encoding="utf-8")
         code = CLIENT.read_text(encoding="utf-8")
-        match = re.search(r"QuantityMax\\s*=\\s*\\{([0-9.]+)f,([0-9.]+)f,([0-9.]+)f,([0-9.]+)f\\}", source)
+        match = re.search(r"QuantityMax\s*=\s*\{([0-9.]+)f,([0-9.]+)f,([0-9.]+)f,([0-9.]+)f\}", source)
         self.assertIsNotNone(match)
         x, y, w, h = map(float, match.groups())
         create = (1510., 912., 237., 72.)
