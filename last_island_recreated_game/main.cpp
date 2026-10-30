@@ -26,6 +26,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <set>
+#include <array>
+#include <algorithm>
 
 // -----------------------------------------------------------------------------------------
 // Global Definitions & Data Structures
@@ -431,6 +433,10 @@ int main() {
     int selectedHotbarSlot=0,magazine=30,reserveAmmo=90;
     float shotCooldown=0.f,stepTimer=0.f;
     bool wasOnGround=true;
+    // Fixed-size frame-time window: no per-frame allocation or log spam.
+    // Samples measure observed frame pacing, not GPU-only rendering time.
+    std::array<float,60> framePacingMs{};
+    unsigned int framePacingCount=0;
     while (!WindowShouldClose()) {
         const int panelAtFrameStart=activePanel;
         // Snapshot modal ownership before processing any input this frame.
@@ -443,6 +449,21 @@ int main() {
         if (!std::isfinite(elapsedFrame) || elapsedFrame < 0.f)
             elapsedFrame = 0.f;
         const float dt = std::min(elapsedFrame, 0.05f);
+        if(elapsedFrame>0.f && elapsedFrame<10.f){
+            framePacingMs[framePacingCount++]=elapsedFrame*1000.f;
+            if(framePacingCount==framePacingMs.size()){
+                std::array<float,60> sorted=framePacingMs;
+                std::sort(sorted.begin(),sorted.end());
+                float total=0.f;
+                unsigned int slow=0;
+                for(float ms:sorted){total+=ms;if(ms>33.333f)++slow;}
+                const float mean=total/float(sorted.size());
+                TraceLog(LOG_INFO,
+                    "LIOS_FRAME_TIMING frames=60 mean_ms=%.3f p95_ms=%.3f max_ms=%.3f slow_33ms=%u mean_fps=%.2f",
+                    mean,sorted[56],sorted.back(),slow,1000.f/mean);
+                framePacingCount=0;
+            }
+        }
         building.tickCraft(elapsedFrame);
         realCraft.tick(elapsedFrame);
         if(building.blueprint&&craftStatus=="Fabricando..."){
