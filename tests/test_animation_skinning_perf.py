@@ -55,6 +55,12 @@ class SkinningScratchTests(unittest.TestCase):
         self.assertIn("phaseEndTotal+=endDrawingMs;", main)
         self.assertIn("phaseWorkTotal+=frameWorkMs;", main)
 
+    def test_generic_edgeai_skinning_kernel_is_used(self):
+        self.assertIn('#include "native_lbs_kernel.hpp"', self.source)
+        self.assertIn("edgeai_lbs::skin_vertex(matrixData,", self.source)
+        self.assertIn("const float* matrixData=matrices.front().data();", self.source)
+        self.assertNotIn("for(int influence=0;influence<part.influences;influence++)", self.source)
+
     def test_original_gpu_skinning_uploads_are_preserved(self):
         self.assertIn("UpdateMeshBuffer(gpu,0,deformed.data()", self.source)
         self.assertIn("UpdateMeshBuffer(gpu,2,normals.data()", self.source)
