@@ -1,3 +1,9 @@
+### Expanded independent seam audit — 2026-10-30
+
+- Parsed all five source OBJ meshes and evaluated **20 barycentric height samples** across the four center-tile borders (five offsets per edge: -150, -75, 0, 75, 150m; 0.5m on either side). **20/20 positions had source triangle coverage**. Maximum absolute 1m-across-seam height difference: north 0.31252m, south 0.12032m, east 0.24381m, west 0.04688m. All are below a provisional 0.55m step. [Reproducible source-geometry report](https://github.com/48348484488/EdgeAI-Engine/blob/main/docs/last_spawn_mesh_seam_heights_2026-10-30.json).
+- Independently compiled the explicit `SourceTile` constructor and five-element array initialization under strict host C++11 (`g++ -std=c++11 -Wall -Wextra -Werror -pedantic`), passed. This is **not** an Android NDK compilation test of the full game.
+- [Corrected native build #41104418370](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41104418370) was in progress at checkpoint; do not claim an APK or screenshot until its build and virtual runtime jobs complete.
+
 ### Android compilation regression found and corrected — 2026-10-30
 
 - Inspected actual failed [Android run #41103932756](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41103932756) compiler logs. NDK Clang rejected five `SourceTile` array initializers: no six-argument constructor available with the struct's default member initializers under the project's C++ compilation mode. This was a **real compile failure**, not a missing Android screenshot or gameplay crash.
