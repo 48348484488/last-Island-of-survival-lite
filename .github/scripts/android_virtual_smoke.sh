@@ -378,6 +378,49 @@ if ! grep -Fxq 'LIOS_SETTINGS_SAME_BUTTON_CLOSE_CONFIRMED' evidence/settings-pro
   echo 'LIOS_SETTINGS_CLOSE_FUNCTIONAL_FAILURE' | tee evidence/settings-strict-failure.txt
   exit 54
 fi
+# Probe real Unity source-derived attack/jump hitboxes, not invented pixels.
+# A hitbox DOWN alone is insufficient: demand the gameplay transition too.
+read -r jump_x jump_y attack_x attack_y < <(python3 - <<'PY'
+import json,sys
+sys.path.insert(0,"last_island_recreated_game")
+from original_hud_bindings import original_touch_rects
+d=json.load(open("evidence/frame-quality.json",encoding="utf8"))
+w,h=d["width"],d["height"]
+scale=min(w/1920.0,h/1080.0)
+left=(w-1920*scale)/2
+top=(h-1080*scale)/2
+rects=original_touch_rects(profile="on-foot-melee")
+coords=[]
+for action in ("jump","attack"):
+    r=rects[action]
+    x=(r["left"]+r["right"])/2
+    y=(r["top"]+r["bottom"])/2-200.0
+    coords.extend((round(left+x*scale),round(top+y*scale)))
+print(*coords)
+PY
+)
+printf 'jump=%s,%s attack=%s,%s\n' "$jump_x" "$jump_y" "$attack_x" "$attack_y" \
+  > evidence/gameplay-touch-coordinates.txt
+for action in jump attack; do
+  if [[ "$action" == jump ]]; then
+    x="$jump_x"; y="$jump_y"; action_id=4; marker=LIOS_JUMP_TRIGGERED
+  else
+    x="$attack_x"; y="$attack_y"; action_id=3; marker=LIOS_ATTACK_TRIGGERED
+  fi
+  adb logcat -c
+  adb shell input swipe "$x" "$y" "$x" "$y" 850
+  sleep 2
+  adb logcat -d -s raylib:I > "evidence/${action}-gameplay-logcat.txt" 2>&1 || true
+  adb exec-out screencap -p > "evidence/${action}-after-touch.png" || true
+  if grep -E "LIOS_HUD_TOUCH_DOWN finger=[0-9]+ action=${action_id} " \
+       "evidence/${action}-gameplay-logcat.txt" >/dev/null &&
+     grep -F "$marker" "evidence/${action}-gameplay-logcat.txt" >/dev/null; then
+    echo "LIOS_GAMEPLAY_TOUCH_CONFIRMED action=$action" | tee -a evidence/gameplay-touch-result.txt
+  else
+    echo "LIOS_GAMEPLAY_TOUCH_FAILED action=$action x=$x y=$y" | tee -a evidence/gameplay-touch-result.txt
+    exit 55
+  fi
+done
 adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
 test -s evidence/runtime.png
 test -s evidence/pid.txt
