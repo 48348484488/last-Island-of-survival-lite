@@ -103,6 +103,24 @@ if [[ "$ready_frame" -ne 1 ]]; then
   echo 'LIOS_RENDERED_FRAME_NOT_READY: no nonflat frame after 12 attempts' | tee evidence/frame-failure.txt
   exit 47
 fi
+# This build must actually load and collide with the source Unity spawn tile.
+# A nonflat screenshot alone could still be the old placeholder plane.
+adb logcat -d -s raylib:I > evidence/terrain-startup-logcat.txt 2>&1 || true
+python3 - <<'PY' > evidence/terrain-runtime-check.txt
+import re
+from pathlib import Path
+log=Path("evidence/terrain-startup-logcat.txt").read_text(encoding="utf8",errors="replace")
+if "LIOS_TERRAIN_SOURCE_TILE_READY" not in log:
+    raise SystemExit("LIOS_TERRAIN_SOURCE_TILE_NOT_LOADED")
+m=re.search(r"LIOS_TERRAIN_SPAWN_GROUND y=([-+]?\d+(?:\.\d+)?) source=(\d+)",log)
+if m is None or m.group(2)!="1":
+    raise SystemExit("LIOS_TERRAIN_SPAWN_COLLISION_NOT_CONFIRMED")
+height=float(m.group(1))
+if abs(height-22.3035011)>0.1:
+    raise SystemExit(f"LIOS_TERRAIN_SPAWN_HEIGHT_MISMATCH measured={height}")
+print(f"LIOS_TERRAIN_SOURCE_SPAWN_CONFIRMED y={height:.5f}")
+PY
+cat evidence/terrain-runtime-check.txt
 # Two independent, source-grounded craft touch probes:
 # (1) visible icon center from real 1080x640 gameplay screenshot;
 # (2) serialized Unity btn_zhizao RectTransform center (61,1025) in 1920x1080.
