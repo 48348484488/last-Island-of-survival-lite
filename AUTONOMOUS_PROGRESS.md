@@ -1,3 +1,14 @@
+### Verified outcome — 2026-10-30 17:42 America/Recife
+
+- [Android workflow #41124589423](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41124589423) **completed successfully (3/3 jobs)** for code commit `ff23ff27`: NDK ARM64 APK compilation, GitHub Release and real Android x86_64 emulator with ARM64 translation.
+- [Release v0.25.0-ff23ff27](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-ff23ff27): 26,751,235-byte APK, GitHub SHA-256 `2007eb6bb4b67a961d222dd9048b904e5dbaad1b2bf9d9b259c3a99c51a5e2c2`. [Direct APK](https://github.com/48348484488/last-Island-of-survival-lite/releases/download/v0.25.0-ff23ff27/LastIslandLite-v0.25.0-ff23ff27-ARM64.apk).
+- Downloaded and inspected actual [runtime evidence artifact #13010022355](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41124589423/artifacts/13010022355): `script-exit-code.txt=0`, `LIOS_ANDROID_VIRTUAL_ARM64_RUNTIME_SMOKE_PASS`, **20/20 runtime seam grid samples covered**, maximum 1m-across-border step **0.31260m**. Four source OBJ midpoint references also matched within 0.01m. Spawn height **22.30353m**, exact sky-color fraction **30.4057%**.
+- The emulator also verified fresh visible-button opening of fabrication, inventory and settings, plus same-button closing of inventory and settings, with actual screenshot transitions.
+- Compared real 1080x640 startup screenshot with previous five-sector Android screenshot: **785/691,200 pixels (0.11357%)** differed above per-channel RGB 30; mean absolute channel error **0.13079**. This indicates startup scene stability between recreated builds, **not parity with Unity original**.
+- The artifact download succeeded normally in this run; the same-commit GitHub Release digest-verified **fallback was not exercised** and must not be called runtime-tested. No physical device was used. No actual player-controlled crossing or source terrain shader/material parity was established.
+- Next: test player movement over four seams, capture movement traces/camera and compare against independently sampled source geometry. Then recover verified original terrain layer textures and shader inputs from authorized Unity bundles; compare against a matching original LITE 7.3 screenshot.
+
+
 ### 2026-10-30 — 20-point runtime seam gate and resilient virtual APK acquisition
 
 - Investigated [workflow #41111160226](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41111160226): **NDK build and GitHub Release succeeded**, but the emulator job failed **before installation** because `actions/download-artifact@v4` exhausted five blob-storage retries. This is an artifact-transfer failure, not a gameplay crash or a failed seam check.
