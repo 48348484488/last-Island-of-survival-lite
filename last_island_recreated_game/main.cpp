@@ -1276,7 +1276,7 @@ int main() {
 
             // Unity LITE 7.3 exported source tile, with measured mesh heights.
             // Retain a clearly identified fallback if source assets fail.
-            if(terrain.ready) terrain.draw();
+            if(terrain.ready) terrain.draw(player.position);
             else DrawPlane((Vector3){ 0.0f, 0.0f, 0.0f },
                            (Vector2){ 600.0f, 600.0f }, (Color){ 68, 115, 52, 255 });
             // Do not draw raylib's debug grid over the terrain in release gameplay.
