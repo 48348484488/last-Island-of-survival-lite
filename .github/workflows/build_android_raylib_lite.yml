@@ -12,12 +12,16 @@ on:
       - last_island_recreated_game/mobile_craft_ui.hpp
       - last_island_recreated_game/mobile_real_craft_catalog.hpp
       - last_island_recreated_game/mobile_original_craft_layout.hpp
+      - last_island_recreated_game/mobile_original_terrain.hpp
+      - last_island_recreated_game/assets/original_world/a-57_mesh0.obj
+      - last_island_recreated_game/assets/original_world/a-57_tex0.png
       - tests/test_native_build_craft.cpp
       - tests/test_craft_source_geometry.py
       - tests/test_no_debug_grid.py
       - tests/test_android_frame_quality.py
       - tests/test_android_hud_vertical_alignment.py
       - tests/test_keyboard_modal_input.py
+      - tests/test_original_terrain_runtime.py
       - tools/android_frame_quality.py
       - .github/scripts/android_virtual_smoke.sh
       - tools/prepare_mobile_character_textures.py
