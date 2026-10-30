@@ -526,6 +526,8 @@ int main() {
         if(!overlayWasOpen&&hudInput.justPressed(HA::Craft)){
             activePanel=(activePanel==2?0:2);
             if(buildMode){buildMode=false;building.selected=-1;}
+            if(activePanel==2)
+                TraceLog(LOG_INFO,"LIOS_CRAFT_PANEL_OPEN");
         }
         if(!overlayWasOpen&&hudInput.justPressed(HA::Settings))activePanel=(activePanel==3?0:3);
         if(!overlayWasOpen&&hudInput.justPressed(HA::QuickChat))activePanel=(activePanel==4?0:4);
