@@ -118,6 +118,19 @@ jobs:
           python3 tests/test_android_frame_quality.py
           python3 tests/test_android_hud_vertical_alignment.py
 
+      # These four source-audited artifacts are pinned to immutable workflow
+      # runs. Reuse their verified bytes across APK builds to avoid repeated
+      # GitHub Actions artifact egress and intermittent HTTP 503 failures.
+      - name: Restore pinned original Unity source artifact cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /tmp/lios-source-craft
+            /tmp/lios-original-walls
+            /tmp/lios-part-original
+            /tmp/edgeai-original-build
+          key: lios-source-40910945599-40815593060-40815880408-40841337262-v1
+
       - name: Download source-traced Unity crafting sprites from audited XAPK extraction
         env:
           GH_TOKEN: ${{ github.token }}
@@ -179,9 +192,20 @@ jobs:
           mkdir -p /tmp/lios-source-craft
           # Pinned to a previously successful source byte-audited action:
           # avoid silently consuming partially generated or guessed data.
-          gh run download 40910945599 --repo "$GITHUB_REPOSITORY" \
+          if [[ ! -s /tmp/lios-source-craft/native_craft_source_manifest.json ]]; then
+            for attempt in 1 2 3; do
+              if gh run download 40910945599 --repo "$GITHUB_REPOSITORY" \
             --name EdgeAI-Native-Original-Craft-Catalog-And-Atlases \
-            --dir /tmp/lios-source-craft
+            --dir /tmp/lios-source-craft; then
+                break
+              fi
+              if [[ "$attempt" -eq 3 ]]; then
+                echo "PINNED_SOURCE_ARTIFACT_UNAVAILABLE native_craft_source_manifest.json" >&2
+                exit 1
+              fi
+              sleep $((attempt * 15))
+            done
+          fi
           test -s /tmp/lios-source-craft/original_craft_catalog_v73.hpp
           test -s /tmp/lios-source-craft/native_craft_source_manifest.json
           python - <<'PY'
@@ -208,9 +232,20 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/lios-original-walls
-          gh run download 40815593060 --repo "$GITHUB_REPOSITORY" \
+          if [[ ! -s /tmp/lios-original-walls/build_surface_manifest.json ]]; then
+            for attempt in 1 2 3; do
+              if gh run download 40815593060 --repo "$GITHUB_REPOSITORY" \
             --name Source-Unity-Original-Construction-Surface-Textures \
-            --dir /tmp/lios-original-walls
+            --dir /tmp/lios-original-walls; then
+                break
+              fi
+              if [[ "$attempt" -eq 3 ]]; then
+                echo "PINNED_SOURCE_ARTIFACT_UNAVAILABLE build_surface_manifest.json" >&2
+                exit 1
+              fi
+              sleep $((attempt * 15))
+            done
+          fi
           python - <<'PY'
           import json,shutil
           from pathlib import Path
@@ -248,9 +283,20 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/lios-part-original
-          gh run download 40815880408 --repo "$GITHUB_REPOSITORY" \
+          if [[ ! -s /tmp/lios-part-original/part_icons_manifest.json ]]; then
+            for attempt in 1 2 3; do
+              if gh run download 40815880408 --repo "$GITHUB_REPOSITORY" \
             --name Original-LITE-Player-Building-Part-Icons \
-            --dir /tmp/lios-part-original
+            --dir /tmp/lios-part-original; then
+                break
+              fi
+              if [[ "$attempt" -eq 3 ]]; then
+                echo "PINNED_SOURCE_ARTIFACT_UNAVAILABLE part_icons_manifest.json" >&2
+                exit 1
+              fi
+              sleep $((attempt * 15))
+            done
+          fi
           python - <<'PY'
           import json,shutil
           from pathlib import Path
@@ -285,9 +331,20 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/edgeai-original-build
-          gh run download 40841337262 --repo "$GITHUB_REPOSITORY" \
+          if [[ ! -s /tmp/edgeai-original-build/edgeai_real_buildpart_decoded.json ]]; then
+            for attempt in 1 2 3; do
+              if gh run download 40841337262 --repo "$GITHUB_REPOSITORY" \
             --name EdgeAI-Original-Unity-BuildPart-Level1-Exact-Config \
-            --dir /tmp/edgeai-original-build
+            --dir /tmp/edgeai-original-build; then
+                break
+              fi
+              if [[ "$attempt" -eq 3 ]]; then
+                echo "PINNED_SOURCE_ARTIFACT_UNAVAILABLE edgeai_real_buildpart_decoded.json" >&2
+                exit 1
+              fi
+              sleep $((attempt * 15))
+            done
+          fi
           python - <<'PY'
           import json,shutil
           from pathlib import Path
