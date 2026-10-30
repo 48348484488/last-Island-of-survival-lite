@@ -591,6 +591,15 @@ jobs:
           test "$(find dist -name '*.apk' -type f | wc -l)" -eq 1
           sha256sum dist/*.apk > evidence/apk-sha256.txt
 
+      - name: Enable KVM hardware acceleration on GitHub Linux runner
+        run: |
+          if [ -e /dev/kvm ]; then
+            sudo chmod a+rw /dev/kvm
+            ls -l /dev/kvm
+          else
+            echo "KVM_UNAVAILABLE: emulator will use slow software emulation"
+          fi
+
       - name: Install and launch in Android virtual environment
         uses: reactivecircus/android-emulator-runner@v2
         with:
