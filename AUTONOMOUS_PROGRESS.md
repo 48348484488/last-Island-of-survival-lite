@@ -1,3 +1,11 @@
+## Diagnóstico do emulador e correção do smoke test — 2026-10-30 02:45 (America/Recife)
+
+- Investigado o log real do job `Attempt actual Android virtual ARM64 runtime` do [workflow #41003434473](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41003434473): o emulador Android **inicializou** (`sys.boot_completed=1`), mas o script abortou imediatamente com `/usr/bin/sh: set: Illegal option -o pipefail`. **Não chegou a verificar ABI, instalar ou abrir o APK**; não houve crash do jogo comprovado.
+- Corrigido o workflow [commit 20867db](https://github.com/48348484488/last-Island-of-survival-lite/commit/20867db73d10a48b98f333c275ac7e4a5136f034): usa `set -eu` compatível com POSIX sh, captura `logcat`/estado da Activity/screenshot também na falha e registra explicitamente `ARM64_ABI_UNAVAILABLE` caso o emulador x86_64 não ofereça ARM64. Exige PID real do jogo para aprovação.
+- Novo [workflow #41010299659](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41010299659) iniciado; compilação, ABI, instalação e screenshots **ainda aguardam validação**. O APK anterior `630b084` foi compilado no workflow antigo, mas sua publicação em release falhou com HTTP 403 de integração; artefato de build permanece disponível.
+- Nenhuma mudança de gameplay neste ciclo. Sem screenshots reais, **não afirmar paridade visual com Unity LITE 7.3**. Referências públicas de LITE 6.7 não foram utilizadas como prova de mesma versão.
+- Próxima prioridade: concluir o novo smoke test; caso `arm64-v8a` não esteja disponível no emulador x86_64, usar Android virtual ARM64 nativo. Em seguida instalar, iniciar, capturar e comparar o menu de fabricação com referência autorizada da mesma versão.
+
 ## Build com validação virtual integrada — 2026-10-30 01:35 (America/Recife)
 
 - No [workflow #41003434473](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41003434473), o job `android-arm64` **passou**, incluindo APK, recursos e testes nativos. O job `Attempt actual Android virtual ARM64 runtime` foi efetivamente iniciado no mesmo workflow (diferentemente dos eventos separados `BuildFailed`), mas a conclusão ainda estava pendente nesta consulta.
