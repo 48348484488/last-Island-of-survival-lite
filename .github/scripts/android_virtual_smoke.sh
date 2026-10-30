@@ -112,6 +112,8 @@ from pathlib import Path
 log=Path("evidence/terrain-startup-logcat.txt").read_text(encoding="utf8",errors="replace")
 if "LIOS_TERRAIN_SOURCE_TILE_READY" not in log:
     raise SystemExit("LIOS_TERRAIN_SOURCE_TILE_NOT_LOADED")
+if "LIOS_TERRAIN_SOURCE_RGB_OPAQUE" not in log:
+    raise SystemExit("LIOS_TERRAIN_ALPHA_MASK_STILL_USED_AS_TRANSPARENCY")
 m=re.search(r"LIOS_TERRAIN_SPAWN_GROUND y=([-+]?\d+(?:\.\d+)?) source=(\d+)",log)
 if m is None or m.group(2)!="1":
     raise SystemExit("LIOS_TERRAIN_SPAWN_COLLISION_NOT_CONFIRMED")
@@ -119,6 +121,15 @@ height=float(m.group(1))
 if abs(height-22.3035011)>0.1:
     raise SystemExit(f"LIOS_TERRAIN_SPAWN_HEIGHT_MISMATCH measured={height}")
 print(f"LIOS_TERRAIN_SOURCE_SPAWN_CONFIRMED y={height:.5f}")
+# Real source-tile smoke: the previous APK had a valid 3D character and
+# collision but rendered no ground (78.34% exact sky RGB).
+from PIL import Image
+im=Image.open("evidence/runtime.png").convert("RGB")
+sky=sum(1 for rgb in im.getdata() if rgb==(130,200,230))
+fraction=sky/(im.width*im.height)
+print(f"LIOS_TERRAIN_EXACT_SKY_FRACTION {fraction:.6f}")
+if fraction>=0.70:
+    raise SystemExit("LIOS_TERRAIN_GROUND_INVISIBLE_IN_SCREENSHOT")
 PY
 cat evidence/terrain-runtime-check.txt
 # Two independent, source-grounded craft touch probes:
