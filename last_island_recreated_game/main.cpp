@@ -1055,6 +1055,8 @@ int main() {
                 player.isGrounded = false;
                 player.stamina -= 10.0f;
                 sound.play(sound.jump,.7f);
+                TraceLog(LOG_INFO,"LIOS_JUMP_TRIGGERED y=%.3f velocity=%.3f",
+                         player.position.y,player.verticalVelocity);
             }
         } else {
             player.verticalVelocity -= gravity * dt;
@@ -1082,6 +1084,7 @@ int main() {
         shotCooldown=std::max(0.f,shotCooldown-dt);
         if(wantAttack && !player.isAttacking && shotCooldown<=0.f &&
             (player.equippedSlot==0||player.equippedSlot==1)){
+            TraceLog(LOG_INFO,"LIOS_ATTACK_TRIGGERED slot=%d",player.equippedSlot);
             if(player.equippedSlot==0){
                 player.attackDuration=.6f;
                 sound.play(sound.axe,.8f);
