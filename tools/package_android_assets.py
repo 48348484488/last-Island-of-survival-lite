@@ -62,7 +62,7 @@ def main():
     packaged=[]
     for name in names:
         rel=Path(name)
-        if rel.is_absolute() or '..' in rel.parts or len(rel.parts)!=1:
+        if rel.is_absolute() or '..' in rel.parts or not rel.parts:
             raise ValueError("Unexpected asset path "+name)
         original=root/rel
         if not original.is_file():
@@ -70,6 +70,7 @@ def main():
         if original.stat().st_size==0:
             raise ValueError("Empty original game asset: "+name)
         new=dest/rel
+        new.parent.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(original,new)
         packaged.append({"file":name,"bytes":original.stat().st_size})
     result={"native_game_source":str(source),
