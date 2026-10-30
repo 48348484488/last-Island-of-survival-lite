@@ -242,7 +242,17 @@ if adb logcat -c && adb shell input swipe 1044 104 1044 104 700; then
       sleep 2
       adb logcat -d -s raylib:I > evidence/settings-close-logcat.txt 2>&1 || true
       if grep -F 'LIOS_SETTINGS_PANEL_CLOSE' evidence/settings-close-logcat.txt >/dev/null; then
-        echo 'LIOS_SETTINGS_SAME_BUTTON_CLOSE_CONFIRMED' | tee -a evidence/settings-probe.txt
+        # A close marker alone is insufficient: capture the actual frame and
+        # require the panel to visibly disappear before reporting success.
+        adb exec-out screencap -p > evidence/settings-after-close.png || true
+        if python3 tools/android_frame_quality.py evidence/settings-after-close.png \
+            --compare-with evidence/settings-open.png \
+            --min-changed-fraction 0.01 --report evidence/settings-close-transition.json \
+            > evidence/settings-close-transition-check.txt 2>&1; then
+          echo 'LIOS_SETTINGS_SAME_BUTTON_CLOSE_CONFIRMED' | tee -a evidence/settings-probe.txt
+        else
+          echo 'LIOS_SETTINGS_CLOSE_VISUAL_TRANSITION_UNCONFIRMED' | tee -a evidence/settings-probe.txt
+        fi
       else
         echo 'LIOS_SETTINGS_SAME_BUTTON_CLOSE_UNCONFIRMED' | tee -a evidence/settings-probe.txt
       fi
