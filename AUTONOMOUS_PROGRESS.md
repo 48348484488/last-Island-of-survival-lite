@@ -1,3 +1,10 @@
+## Build com validação virtual integrada — 2026-10-30 01:35 (America/Recife)
+
+- No [workflow #41003434473](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41003434473), o job `android-arm64` **passou**, incluindo APK, recursos e testes nativos. O job `Attempt actual Android virtual ARM64 runtime` foi efetivamente iniciado no mesmo workflow (diferentemente dos eventos separados `BuildFailed`), mas a conclusão ainda estava pendente nesta consulta.
+- O job de publicação direta da mesma execução falhou com **HTTP 403 Resource not accessible by integration** na API de releases. O APK do commit `630b084` existe como artefato do build; **não há release direta confirmada para este commit**. A release anterior `v0.25.0-b5473200` permanece disponível.
+- A falha HTTP 403 de publicação não é falha de compilação nem crash do jogo. Não declarar execução Android ou screenshot antes do job virtual terminar.
+- Próxima prioridade: inspecionar resultado e evidência do job virtual, identificar suporte ARM64 do emulador, corrigir publicação se permissões permitirem e comparar screenshots reais.
+
 ## Evidência binária e execução virtual — 2026-10-30 01:34 (America/Recife)
 
 - APK `b5473200` foi baixado do artefato verificado, extraído e comparado com `a290f59a`: `libraymob.so` ARM64 mudou de **3.525.008** para **3.525.136 bytes** (+128), SHA-256 anterior `fef5ef63...` e novo `8c4afd0f...`. Auditoria estática registrou 616.657 → 616.689 instruções e 25.188 → 25.187 chamadas; relatório [EdgeAI](https://github.com/48348484488/EdgeAI-Engine/blob/main/docs/last_recreated_arm64_build_diff_2026-10-30.json). Isso comprova diferença binária, **não prova execução nem equivalência funcional**.
