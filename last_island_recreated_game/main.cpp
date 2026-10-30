@@ -1782,6 +1782,13 @@ int main() {
                 std::max(12,int(21.f*canvasScale)),YELLOW);
         }
         EndDrawing();
+        // The Android smoke runner must wait for a completed render/swap, not
+        // merely a live process while Unity-sourced assets are still loading.
+        static bool firstFrameReported = false;
+        if (!firstFrameReported) {
+            TraceLog(LOG_INFO, "LIOS_FIRST_FRAME_ENDDRAWING");
+            firstFrameReported = true;
+        }
     }
 
     // -------------------------------------------------------------------------------------
