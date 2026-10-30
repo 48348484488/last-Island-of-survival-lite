@@ -33,6 +33,19 @@ int main(){
     assert(!b.place(Foundation,-1,0,0,0.f,0.f,broke));
     assert(b.placed.size()==size_t(placed)); // No free build.
     assert(!b.valid(Foundation,6000,0,0,0.f,0.f)); // Must be in 6000 world.
+    // Invalid physics/camera state must never place geometry or spend resources.
+    const float nan=std::numeric_limits<float>::quiet_NaN();
+    const float inf=std::numeric_limits<float>::infinity();
+    const auto beforeBadPlacement=r;
+    const size_t piecesBeforeBadPlacement=b.placed.size();
+    assert(!b.valid(Foundation,2,1,0,nan,0.f));
+    assert(!b.valid(Foundation,2,1,0,0.f,nan));
+    assert(!b.valid(Foundation,2,1,0,inf,0.f));
+    assert(!b.place(Foundation,2,1,0,nan,0.f,r));
+    assert(!b.place(Foundation,2,1,0,0.f,inf,r));
+    assert(b.placed.size()==piecesBeforeBadPlacement);
+    assert(r.wood==beforeBadPlacement.wood&&r.stone==beforeBadPlacement.stone&&r.metal==beforeBadPlacement.metal);
+    assert(!b.blocks(nan,0.f)&&!b.blocks(0.f,inf));
     assert(grid(-4.51f)==-2&&grid(4.51f)==2);
     assert(turn(-1)==3&&turn(4)==0);
     // The Unity original selects a category first and a second-level child
