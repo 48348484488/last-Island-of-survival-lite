@@ -3,6 +3,7 @@
 ### Verificação final da compilação deste ciclo
 
 - O job Android ARM64 [#40989774432](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40989774432) concluiu a compilação **com sucesso**: `BUILD SUCCESSFUL in 1m 5s`, APK de **25.013.534 bytes**, estrutura de APK e assinatura v2 verificadas, 89 recursos empacotados. O teste nativo de construção/fabricação e os **4/4 testes de geometria** passaram.
+- Publicação de APK **aprovada** no mesmo workflow: [release v0.25.0-cac03782](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-cac03782), [APK ARM64](https://github.com/48348484488/last-Island-of-survival-lite/releases/download/v0.25.0-cac03782/LastIslandLite-v0.25.0-cac03782-ARM64.apk). Publicação não implica instalação/execução.
 - Artefato do APK gerado: [GitHub Actions artifact #12948442605](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40989774432/artifacts/12948442605). A publicação de release é um job separado; não confundir artefato compilado com execução em dispositivo.
 - **Não foi instalado ou executado em Android virtual** neste ciclo; não há captura de tela real nem prova de equivalência com a UI original.
 
