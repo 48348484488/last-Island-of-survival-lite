@@ -1,3 +1,8 @@
+### New build regression diagnosed and corrected — 2026-10-30
+
+- [Build #41085908484](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41085908484) failed **before compilation** because the sparse checkout omitted the newly created `tests/test_keyboard_modal_input.py`. The existing native crafting/geometry tests had passed. This is a CI checkout issue, not evidence of game crash.
+- Added the test path to the **actual indented sparse-checkout list** [4742183](https://github.com/48348484488/last-Island-of-survival-lite/commit/4742183cd50629e4472c1be23c1eeab6a2e5a2db). New build/virtual runtime is pending; do not claim the corrected APK works until the new workflow completes.
+
 ## Keyboard modal input ownership + verified previous release — 2026-10-30
 
 - Rechecked [build #41082820207](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41082820207): all **three jobs succeeded** (ARM64 compilation, Android virtual execution, release publication). Virtual log confirms nonflat gameplay frame, craft visible-icon opening, inventory open/close, settings open/close, and `LIOS_ANDROID_VIRTUAL_ARM64_RUNTIME_SMOKE_PASS`. [Published APK v0.25.0-b81f2e64](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-b81f2e64) is from **before** the keyboard fix.
