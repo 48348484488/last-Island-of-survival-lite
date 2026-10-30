@@ -172,5 +172,21 @@ class FrameQualityTests(unittest.TestCase):
         self.assertIn("if [[ \"$attempt\" -eq 3 ]]; then", workflow)
 
 
+    def test_release_publish_retries_transient_api_errors_and_fails_closed(self):
+        workflow = (Path(__file__).resolve().parents[1] /
+                    ".github" / "workflows" /
+                    "build_android_raylib_lite.yml").read_text(encoding="utf-8")
+        publish = workflow.split("  publish-direct-apk:", 1)[1].split(
+            "  android-virtual-smoke:", 1)[0]
+        self.assertIn("for attempt in 1 2 3 4; do", publish)
+        self.assertIn('gh release upload "$TAG" "$APK"', publish)
+        self.assertIn('gh release create "$TAG" "$APK"', publish)
+        self.assertIn("LIOS_RELEASE_PUBLISH_RETRY", publish)
+        self.assertIn("LIOS_RELEASE_PUBLISH_FAILED_AFTER_RETRIES", publish)
+        self.assertIn("LIOS_RELEASE_VERIFY_FAILED", publish)
+        self.assertIn('if [[ "$published" -ne 1 ]]; then', publish)
+        self.assertIn('test -s "$APK"', publish)
+
+
 if __name__ == "__main__":
     unittest.main()
