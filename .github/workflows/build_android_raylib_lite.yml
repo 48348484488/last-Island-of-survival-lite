@@ -129,18 +129,21 @@ jobs:
           python3 tests/test_keyboard_modal_input.py
            python3 tests/test_original_terrain_runtime.py
 
-      # These four source-audited artifacts are pinned to immutable workflow
+      # These five source-audited artifacts are pinned to immutable workflow
       # runs. Reuse their verified bytes across APK builds to avoid repeated
       # GitHub Actions artifact egress and intermittent HTTP 503 failures.
       - name: Restore pinned original Unity source artifact cache
         uses: actions/cache@v4
         with:
           path: |
+            /tmp/lios-craft-original
             /tmp/lios-source-craft
             /tmp/lios-original-walls
             /tmp/lios-part-original
             /tmp/edgeai-original-build
-          key: lios-source-40910945599-40815593060-40815880408-40841337262-v1
+          key: lios-source-40906450676-40910945599-40815593060-40815880408-40841337262-v2
+          restore-keys: |
+            lios-source-40910945599-40815593060-40815880408-40841337262-v1
 
       - name: Download source-traced Unity crafting sprites from audited XAPK extraction
         env:
@@ -148,13 +151,22 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/lios-craft-original
-          SOURCE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
-            --workflow export_original_craft_ui.yml --status success \
-            --limit 1 --json databaseId --jq '.[0].databaseId')"
-          test -n "$SOURCE_RUN"
-          echo "LIOS_ORIGINAL_CRAFT_SOURCE_ARTIFACT_RUN=$SOURCE_RUN"
-          gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
-            --name Original-Unity-Craft-UI-Sprites --dir /tmp/lios-craft-original
+          # The source run below was verified in the successful APK build
+          # #41094777146. Do not switch to a moving 'latest successful' run.
+          echo "LIOS_ORIGINAL_CRAFT_SOURCE_ARTIFACT_RUN=40906450676"
+          if [[ ! -s /tmp/lios-craft-original/craft_source_manifest.json ]]; then
+            for attempt in 1 2 3; do
+              if gh run download 40906450676 --repo "$GITHUB_REPOSITORY" \
+                --name Original-Unity-Craft-UI-Sprites --dir /tmp/lios-craft-original; then
+                break
+              fi
+              if [[ "$attempt" -eq 3 ]]; then
+                echo "PINNED_SOURCE_ARTIFACT_UNAVAILABLE craft_source_manifest.json" >&2
+                exit 1
+              fi
+              sleep $((attempt * 15))
+            done
+          fi
           test -s /tmp/lios-craft-original/craft_source_manifest.json
           python - <<'PY'
           import json
