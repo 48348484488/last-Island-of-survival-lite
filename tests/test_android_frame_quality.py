@@ -139,6 +139,10 @@ class FrameQualityTests(unittest.TestCase):
         self.assertIn("LIOS_SETTINGS_PANEL_CLOSE", smoke)
         self.assertIn("--compare-with evidence/inventory-after-close.png", smoke)
         self.assertIn("LIOS_SETTINGS_VISIBLE_TOUCH_UNCONFIRMED", smoke)
+        self.assertIn("evidence/settings-after-close.png", smoke)
+        self.assertIn("--compare-with evidence/settings-open.png", smoke)
+        self.assertIn("evidence/settings-close-transition.json", smoke)
+        self.assertIn("LIOS_SETTINGS_CLOSE_VISUAL_TRANSITION_UNCONFIRMED", smoke)
 
 
 if __name__ == "__main__":
