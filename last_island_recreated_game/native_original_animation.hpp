@@ -69,6 +69,10 @@ struct SkinMesh{
     std::vector<float> bindVerts,normals,uvs,weights,rhs;
     std::vector<uint16_t> indices,triangles;
     Model model={};
+    // Reuse CPU skinning buffers across poses. Previously seven meshes
+    // allocated/deallocated these arrays on every rendered frame.
+    std::vector<Mat> poseMatrices;
+    std::vector<float> poseVertices,poseNormals;
     bool uploaded=false;
 };
 class OriginalAnimation{
@@ -78,6 +82,8 @@ public:
     std::vector<Clip> clips;
     std::vector<SkinMesh> parts;
     std::vector<Mat> world;
+    std::vector<Mat> localScratch;
+    std::vector<char> doneScratch,busyScratch;
     bool ready=false;
     ~OriginalAnimation(){unload();}
     void unload(){
@@ -171,7 +177,8 @@ public:
         const Clip& a=clips[first],&b=clips[second];
         const int bc=int(boneNames.size());
         alpha=std::max(0.f,std::min(1.f,alpha));
-        std::vector<Mat> local(bc);
+        localScratch.resize(bc);
+        auto &local=localScratch;
         auto sample=[bc](const Clip& c,float time,int bone,float *p,float *q){
             float frame=fmodf(std::max(0.f,time)*c.fps,float(c.frames));
             int f0=int(frame),f1=(f0+1)%int(c.frames);
@@ -192,7 +199,9 @@ public:
             slerp(qa,qb,alpha,q);
             local[i]=quatMat(q,p);
         }
-        std::vector<char> done(bc,0),busy(bc,0);
+        doneScratch.assign(bc,0);
+        busyScratch.assign(bc,0);
+        auto &done=doneScratch,&busy=busyScratch;
         std::function<void(int)> calc=[&](int i){
             if(done[i])return;
             if(busy[i])throw std::runtime_error("Bone hierarchy cycle");
@@ -210,15 +219,19 @@ public:
         // triangle winding, making faces and materials appear incorrect.
         const Mat LH=ident();
         for(auto &part:parts){
-            std::vector<Mat> matrices;matrices.reserve(part.palette.size());
+            auto &matrices=part.poseMatrices;
+            matrices.clear();
+            matrices.reserve(part.palette.size());
             for(size_t bi=0;bi<part.palette.size();bi++){
                 Mat rhs=ident();
                 const float *r=&part.rhs[bi*12];
                 for(int row=0;row<3;row++)for(int col=0;col<4;col++)rhs[row*4+col]=r[row*4+col];
                 matrices.push_back(multiply(multiply(LH,world[part.palette[bi]]),rhs));
             }
-            std::vector<float> deformed(size_t(part.vertexCount)*3,0);
-            std::vector<float> normals(size_t(part.vertexCount)*3,0);
+            auto &deformed=part.poseVertices;
+            auto &normals=part.poseNormals;
+            deformed.assign(size_t(part.vertexCount)*3,0.f);
+            normals.assign(size_t(part.vertexCount)*3,0.f);
             for(int v=0;v<part.vertexCount;v++){
                 const float x=part.bindVerts[3*v],y=part.bindVerts[3*v+1],z=part.bindVerts[3*v+2];
                 const float nx=part.normals[3*v],ny=part.normals[3*v+1],nz=part.normals[3*v+2];
