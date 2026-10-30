@@ -44,5 +44,51 @@ class FrameQualityTests(unittest.TestCase):
                 gate.inspect_frame(path)
 
 
+    def test_identical_screenshots_do_not_prove_transition(self):
+        with tempfile.TemporaryDirectory() as folder:
+            before, after = Path(folder) / "before.png", Path(folder) / "after.png"
+            Image.new("RGB", (640, 360), (68, 115, 52)).save(before)
+            Image.new("RGBA", (640, 360), (68, 115, 52, 255)).save(after)
+            result = gate.inspect_transition(before, after)
+            self.assertFalse(result["transition_detected"])
+            self.assertEqual(result["changed_pixels"], 0)
+            self.assertIsNone(result["difference_bounds"])
+
+    def test_changed_panel_region_detected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            before, after = Path(folder) / "before.png", Path(folder) / "after.png"
+            Image.new("RGB", (640, 360), (68, 115, 52)).save(before)
+            frame = Image.new("RGB", (640, 360), (68, 115, 52))
+            frame.paste((200, 210, 220), (100, 60, 300, 260))
+            frame.save(after)
+            result = gate.inspect_transition(before, after, min_changed_fraction=0.1)
+            self.assertTrue(result["transition_detected"])
+            self.assertEqual(result["changed_pixels"], 40000)
+            self.assertEqual(result["difference_bounds"], [100, 60, 300, 260])
+            self.assertFalse(result["action_or_original_game_parity_proven"])
+
+    def test_small_change_rejected_at_threshold(self):
+        with tempfile.TemporaryDirectory() as folder:
+            before, after = Path(folder) / "before.png", Path(folder) / "after.png"
+            Image.new("RGB", (640, 360), (0, 0, 0)).save(before)
+            frame = Image.new("RGB", (640, 360), (0, 0, 0))
+            frame.paste((255, 0, 0), (0, 0, 10, 10))
+            frame.save(after)
+            self.assertFalse(gate.inspect_transition(before, after)["transition_detected"])
+            self.assertEqual(gate.inspect_transition(before, after, min_changed_fraction=0.0001)["changed_pixels"], 100)
+
+    def test_resolution_and_invalid_threshold_rejected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            before, after = Path(folder) / "before.png", Path(folder) / "after.png"
+            Image.new("RGB", (640, 360)).save(before)
+            Image.new("RGB", (320, 240)).save(after)
+            with self.assertRaisesRegex(ValueError, "resolutions differ"):
+                gate.inspect_transition(before, after)
+            with self.assertRaisesRegex(ValueError, "min_changed_fraction"):
+                gate.inspect_transition(before, after, float("nan"))
+            with self.assertRaisesRegex(ValueError, "min_channel_delta"):
+                gate.inspect_transition(before, after, 0.01, 0)
+
+
 if __name__ == "__main__":
     unittest.main()
