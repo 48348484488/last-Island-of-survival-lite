@@ -112,8 +112,8 @@ from pathlib import Path
 log=Path("evidence/terrain-startup-logcat.txt").read_text(encoding="utf8",errors="replace")
 if "LIOS_TERRAIN_SOURCE_TILE_READY" not in log:
     raise SystemExit("LIOS_TERRAIN_SOURCE_TILE_NOT_LOADED")
-if "LIOS_TERRAIN_SOURCE_RGB_OPAQUE" not in log:
-    raise SystemExit("LIOS_TERRAIN_ALPHA_MASK_STILL_USED_AS_TRANSPARENCY")
+if "LIOS_TERRAIN_MASK_MATERIAL_PREVIEW" not in log:
+    raise SystemExit("LIOS_TERRAIN_MATERIAL_MASK_PREVIEW_NOT_LOADED")
 m=re.search(r"LIOS_TERRAIN_SPAWN_GROUND y=([-+]?\d+(?:\.\d+)?) source=(\d+)",log)
 if m is None or m.group(2)!="1":
     raise SystemExit("LIOS_TERRAIN_SPAWN_COLLISION_NOT_CONFIRMED")
