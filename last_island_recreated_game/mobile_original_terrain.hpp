@@ -153,14 +153,24 @@ struct Tile {
         // skipping distant sectors on mobile GPUs. This is distance culling,
         // not frustum culling; benchmark FPS on device/emulator separately.
         constexpr float drawRadius=175.f;
+        unsigned int drawn=0;
         for(const auto& sector:sectors){
             if(!sector.ready)continue;
             const float dx=std::max(sector.minX-observer.x,
                                     std::max(0.f,observer.x-sector.maxX));
             const float dz=std::max(sector.minZ-observer.z,
                                     std::max(0.f,observer.z-sector.maxZ));
-            if(dx*dx+dz*dz<=drawRadius*drawRadius)sector.draw();
+            if(dx*dx+dz*dz<=drawRadius*drawRadius){
+                sector.draw();
+                ++drawn;
+            }
         }
+        // Observed draw-call count for correlating FPS with tile culling.
+        // This measures submitted sectors, not GPU time or visible pixels.
+        static unsigned int sampledFrames=0;
+        if(++sampledFrames%60==0)
+            TraceLog(LOG_INFO,"LIOS_TERRAIN_DRAW sectors=%u radius_m=%.1f",
+                     drawn,drawRadius);
     }
 
     void unload(){
