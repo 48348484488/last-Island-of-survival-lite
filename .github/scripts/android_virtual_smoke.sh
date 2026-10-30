@@ -13,6 +13,25 @@ capture_evidence() {
 }
 trap capture_evidence EXIT
 
+# sys.boot_completed alone is insufficient: the previous TCG-only emulator
+# advertised boot completion while Android's package/settings services were
+# absent. Never classify that infrastructure failure as a game crash.
+ready=0
+for attempt in $(seq 1 48); do
+  boot="$(timeout 8s adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+  package="$(timeout 8s adb shell service check package 2>/dev/null || true)"
+  if [[ "$boot" == "1" && "$package" == *"found"* && "$package" != *"not found"* ]]; then
+    ready=1
+    break
+  fi
+  sleep 5
+done
+printf 'boot_completed=%s\npackage_service=%s\n' "$boot" "$package" > evidence/android-service-readiness.txt
+if [[ "$ready" -ne 1 ]]; then
+  echo "ANDROID_FRAMEWORK_NOT_READY: package manager unavailable; APK was not installed" | tee evidence/framework-failure.txt
+  exit 46
+fi
+
 adb shell getprop ro.product.cpu.abilist | tee evidence/device-abilist.txt
 adb shell getprop ro.dalvik.vm.native.bridge | tee evidence/native-bridge.txt
 if ! grep -q 'arm64-v8a' evidence/device-abilist.txt; then
