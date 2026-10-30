@@ -18,6 +18,7 @@
 #include "mobile_build_visual.hpp"
 #include "mobile_craft_ui.hpp"
 #include "mobile_real_craft_catalog.hpp"
+#include "mobile_original_terrain.hpp"
 
 #include <vector>
 #include <string>
@@ -327,6 +328,17 @@ int main() {
         { {   8.0f, 0.0f,  -8.0f }, RES_STONE,  100.0f, 100.0f, 1.2f, 110.0f, true },
         { { -18.0f, 0.0f,  -4.0f }, RES_STONE,  100.0f, 100.0f, 1.0f,  35.0f, true }
     };
+
+    // Source tile around the original world origin. Preserve a flat fallback
+    // only when the authenticated OBJ/texture cannot load.
+    LIOS_TERRAIN::Tile terrain;
+    terrain.load();
+    player.position.y=terrain.ground(player.position.x,player.position.z);
+    for(auto& node:nodes)
+        node.position.y=terrain.ground(node.position.x,node.position.z);
+    const float houseGround=terrain.ground(10.f,-15.f);
+    TraceLog(LOG_INFO,"LIOS_TERRAIN_SPAWN_GROUND y=%.5f source=%d",
+             player.position.y,int(terrain.ready));
 
     std::vector<HitParticle> particles;
     std::vector<FloatingNotification> notifications;
@@ -941,9 +953,14 @@ int main() {
             moveDir = Vector3Normalize(moveDir);
             Vector3 nextPosition=Vector3Add(player.position,
                 Vector3Scale(moveDir,currentSpeed*driveScale*dt));
-            // Walls are solid; door frames preserve a walkable passage.
-            if(!building.blocks(nextPosition.x,nextPosition.z))
+            // Walls are solid; reject implausibly tall uphill steps and
+            // follow the measured source mesh instead of a fixed Y=0 plane.
+            const float nextGround=terrain.ground(nextPosition.x,nextPosition.z);
+            if(!building.blocks(nextPosition.x,nextPosition.z) &&
+               (!player.isGrounded || nextGround-player.position.y<=0.55f)){
                 player.position=nextPosition;
+                if(player.isGrounded)player.position.y=nextGround;
+            }
             player.walkCycle += dt * (player.isRunning ? 12.0f : 8.0f);
 
             if (player.isRunning) {
@@ -973,8 +990,9 @@ int main() {
         } else {
             player.verticalVelocity -= gravity * dt;
             player.position.y += player.verticalVelocity * dt;
-            if (player.position.y <= 0.0f) {
-                player.position.y = 0.0f;
+            const float groundY=terrain.ground(player.position.x,player.position.z);
+            if (player.position.y <= groundY) {
+                player.position.y = groundY;
                 player.verticalVelocity = 0.0f;
                 player.isGrounded = true;
                 sound.play(sound.land,.7f);
@@ -1256,14 +1274,17 @@ int main() {
 
         BeginMode3D(camera);
 
-            // Ground Plane: Island Terrain Grass
-            DrawPlane((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector2){ 600.0f, 600.0f }, (Color){ 68, 115, 52, 255 });
+            // Unity LITE 7.3 exported source tile, with measured mesh heights.
+            // Retain a clearly identified fallback if source assets fail.
+            if(terrain.ready) terrain.draw();
+            else DrawPlane((Vector3){ 0.0f, 0.0f, 0.0f },
+                           (Vector2){ 600.0f, 600.0f }, (Color){ 68, 115, 52, 255 });
             // Do not draw raylib's debug grid over the terrain in release gameplay.
             // The real Android screenshot showed prominent parallel lines at the horizon.
 
             // Draw Base Building (Metal Cabin from original APK)
             if (modelHouse.meshCount > 0) {
-                DrawModelEx(modelHouse, (Vector3){ 10.0f, 0.0f, -15.0f }, (Vector3){ 0, 1, 0 }, 0.0f, (Vector3){ 1.0f, 1.0f, 1.0f }, WHITE);
+                DrawModelEx(modelHouse, (Vector3){ 10.0f, houseGround, -15.0f }, (Vector3){ 0, 1, 0 }, 0.0f, (Vector3){ 1.0f, 1.0f, 1.0f }, WHITE);
             }
 
             // Draw Resource Nodes (Trees & Ores)
@@ -1284,8 +1305,13 @@ int main() {
             // Player-built, grid-snapped offline structures. Geometry is a
             // temporary placeholder while source map/build prefab extraction
             // is audited. Gameplay/costs/collision are implemented natively.
-            for(const auto& part:building.placed)
+            for(const auto& part:building.placed){
+                rlPushMatrix();
+                rlTranslatef(0.f,terrain.ground(LIOS_BUILD::world(part.gx),
+                                              LIOS_BUILD::world(part.gz)),0.f);
                 LIOS_BUILD::drawPiece(part,buildSourceMaterials);
+                rlPopMatrix();
+            }
             if(buildMode&&activePanel==0&&building.selected>=0&&
                building.selected<LIOS_BUILD::PieceCount){
                 const Vector3 dir={sinf(player.yaw),0.f,cosf(player.yaw)};
@@ -1295,7 +1321,11 @@ int main() {
                 const LIOS_BUILD::Piece ghost={type,gx,gz,building.orientation};
                 const bool ok=building.valid(type,gx,gz,building.orientation,
                                       player.position.x,player.position.z);
+                rlPushMatrix();
+                rlTranslatef(0.f,terrain.ground(LIOS_BUILD::world(gx),
+                                              LIOS_BUILD::world(gz)),0.f);
                 LIOS_BUILD::drawPiece(ghost,buildSourceMaterials,true,ok);
+                rlPopMatrix();
             }
 
             // Draw Hit Particles
@@ -1853,6 +1883,7 @@ int main() {
     UnloadModel(modelSulfur);  UnloadTexture(texSulfur);
     UnloadModel(modelIron);    UnloadTexture(texIron);
     UnloadModel(modelStone);   UnloadTexture(texStone);
+    terrain.unload();
 
     CloseWindow();
     return 0;
