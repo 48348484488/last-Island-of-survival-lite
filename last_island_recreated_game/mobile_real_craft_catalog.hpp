@@ -310,16 +310,16 @@ inline void render(const Art& art,const State& state,
     }
     txt(state.message.c_str(),1038,838,19,sc,ox,oy,YELLOW);
     if(!state.queue.empty()){
-        txt("FILA OFFLINE",1038,865,19,sc,ox,oy,LIGHTGRAY);
+        // Offline-only queue uses unused lower-left space; the previous\n        // right-hand location overlapped source-backed quantity controls.\n        txt("FILA OFFLINE",260,879,19,sc,ox,oy,LIGHTGRAY);
         for(unsigned i=0;i<state.queue.size()&&i<4;i++){
             const auto& q=state.queue[i];
-            float y=891.f+22.f*i;
+            float y=905.f+22.f*i;
             txt(TextFormat("#%d %d%%",q.recipeId,
                 int(100.f*std::min(1.f,q.elapsed/q.duration))),
-                1040,y,18,sc,ox,oy,int(i)==state.selectedOrder?SKYBLUE:GRAY);
+                260,y,18,sc,ox,oy,int(i)==state.selectedOrder?SKYBLUE:GRAY);
         }
-        DrawRectangleRec(B(1310,897,116,52),Color{65,47,47,245});
-        txt("CANCEL",1315,912,20,sc,ox,oy);
+        DrawRectangleRec(B(640,898,116,52),Color{65,47,47,245});
+        txt("CANCEL",645,913,20,sc,ox,oy);
     }
     txt("CATALOGO FIEL AOS ARQUIVOS / PROTOTIPO OFFLINE",
         1038,1030,17,sc,ox,oy,GRAY);
@@ -377,11 +377,11 @@ inline bool touch(State& state,Vector2 p,float sc,float ox,float oy,
         }
     }
     if(!state.queue.empty()){
-        if(hit(p,1310,897,116,52,sc,ox,oy)){
+        if(hit(p,640,898,116,52,sc,ox,oy)){
             state.cancel(unsigned(state.selectedOrder),resources);return true;
         }
         for(unsigned i=0;i<state.queue.size()&&i<4;i++){
-            if(hit(p,1040,891.f+22.f*i,245,22,sc,ox,oy)){
+            if(hit(p,260,905.f+22.f*i,245,22,sc,ox,oy)){
                 state.selectedOrder=int(i);return true;
             }
         }
