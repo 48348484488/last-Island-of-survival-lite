@@ -46,6 +46,18 @@ int main(){
     assert(b.placed.size()==piecesBeforeBadPlacement);
     assert(r.wood==beforeBadPlacement.wood&&r.stone==beforeBadPlacement.stone&&r.metal==beforeBadPlacement.metal);
     assert(!b.blocks(nan,0.f)&&!b.blocks(0.f,inf));
+    // Snapping invalid camera/player coordinates must fail closed, not cast
+    // NaN, infinity, or huge floats to int (undefined behavior).
+    assert(grid(nan)==InvalidGridCell&&grid(inf)==InvalidGridCell);
+    assert(grid(-inf)==InvalidGridCell);
+    assert(grid(1e30f)==InvalidGridCell&&grid(-1e30f)==InvalidGridCell);
+    assert(grid(3000.f)==1000&&grid(-3000.f)==-1000);
+    assert(grid(3004.f)==InvalidGridCell);
+    assert(!b.valid(Foundation,grid(nan),1,0,0.f,0.f));
+    assert(!b.valid(Foundation,std::numeric_limits<int>::min(),1,0,0.f,0.f));
+    assert(!b.place(Foundation,grid(inf),1,0,0.f,0.f,r));
+    assert(b.placed.size()==piecesBeforeBadPlacement);
+    assert(r.wood==beforeBadPlacement.wood&&r.stone==beforeBadPlacement.stone);
     assert(grid(-4.51f)==-2&&grid(4.51f)==2);
     assert(turn(-1)==3&&turn(4)==0);
     // The Unity original selects a category first and a second-level child
