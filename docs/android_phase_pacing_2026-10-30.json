@@ -39,5 +39,44 @@
     "CPU wall-clock times, not GPU timer queries",
     "No matched original LITE 7.3 screenshot; no visual or functional parity established",
     "The latest strict jump/attack test still requires a successful emulator run"
-  ]
+  ],
+  "validated_rerun": {
+    "workflow": "https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41137774069",
+    "artifact": "https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41137774069/artifacts/13017451836",
+    "attempt": 2,
+    "commit": "8d89f54aad10bebe60a9cf7ba48024a52f94abb8",
+    "result": "all 3 workflow jobs passed; actual Android virtual ARM64 translation, 1080x640 screenshot, jump and attack touch ownership and gameplay transition confirmed; craft/inventory/settings passed",
+    "gameplay_touch_coordinates_px": {
+      "jump": [
+        1032,
+        348
+      ],
+      "attack": [
+        896,
+        334
+      ]
+    },
+    "gameplay_touch_source": {
+      "jump": "finger=0 action=4 source_x=1834.7 source_y=789.3; LIOS_JUMP_TRIGGERED velocity=8.500",
+      "attack": "finger=0 action=3 source_x=1592.9 source_y=764.7; LIOS_ATTACK_TRIGGERED slot=0"
+    },
+    "phase_windows": 22,
+    "phase_frames": 1320,
+    "mean_phase_ms": {
+      "pose_cpu_ms": 20.711,
+      "vbo_submit_ms": 1.6019,
+      "end_drawing_ms": 18.2243,
+      "frame_work_ms": 42.3133,
+      "unattributed_cpu_ms": 1.7761
+    },
+    "frame_pacing": {
+      "mean_ms": 42.008,
+      "mean_fps": 23.805,
+      "slow_frames_over_33ms": 1247,
+      "worst_window_p95_ms": 109.276
+    },
+    "baseline_frame_time_change_pct": -5.759,
+    "source_version_original_parity_proven": false,
+    "notes": "second emulator run varied from first 1140-frame run; no controlled benchmark or native ARM64 GPU measurements; skinning remains largest measured CPU phase"
+  }
 }
