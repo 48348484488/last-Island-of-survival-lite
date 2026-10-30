@@ -310,7 +310,9 @@ inline void render(const Art& art,const State& state,
     }
     txt(state.message.c_str(),1038,838,19,sc,ox,oy,YELLOW);
     if(!state.queue.empty()){
-        // Offline-only queue uses unused lower-left space; the previous\n        // right-hand location overlapped source-backed quantity controls.\n        txt("FILA OFFLINE",260,879,19,sc,ox,oy,LIGHTGRAY);
+        // Offline-only queue uses unused lower-left space; the previous
+        // right-hand location overlapped source-backed quantity controls.
+        txt("FILA OFFLINE",260,879,19,sc,ox,oy,LIGHTGRAY);
         for(unsigned i=0;i<state.queue.size()&&i<4;i++){
             const auto& q=state.queue[i];
             float y=905.f+22.f*i;
