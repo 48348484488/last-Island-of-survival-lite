@@ -351,6 +351,23 @@ int main() {
                  seamNames[seam],int(inner),int(outer),innerHeight,outerHeight);
     }
 
+    // Five offsets on every tile edge. These are independent runtime
+    // collision samples, not evidence of player-controlled traversal.
+    const float seamGridOffsets[5]={-150.f,-75.f,0.f,75.f,150.f};
+    for(int seam=0;seam<4;seam++){
+        for(float offset:seamGridOffsets){
+            const float xIn=(seam<2)?offset:seamCoords[seam][0];
+            const float zIn=(seam<2)?seamCoords[seam][1]:offset;
+            const float xOut=(seam<2)?offset:seamCoords[seam][2];
+            const float zOut=(seam<2)?seamCoords[seam][3]:offset;
+            float hIn=0.f,hOut=0.f;
+            const bool in=terrain.sample(xIn,zIn,hIn);
+            const bool out=terrain.sample(xOut,zOut,hOut);
+            TraceLog(LOG_INFO,"LIOS_TERRAIN_SEAM_GRID_PROBE %s offset=%.0f inner=%d outer=%d height_in=%.4f height_out=%.4f",
+                     seamNames[seam],offset,int(in),int(out),hIn,hOut);
+        }
+    }
+
     for(auto& node:nodes)
         node.position.y=terrain.ground(node.position.x,node.position.z);
     const float houseGround=terrain.ground(10.f,-15.f);
