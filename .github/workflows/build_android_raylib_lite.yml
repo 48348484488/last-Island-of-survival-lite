@@ -59,6 +59,7 @@ jobs:
             tests/test_no_debug_grid.py
             tests/test_android_frame_quality.py
             tests/test_android_hud_vertical_alignment.py
+            .github/scripts/android_virtual_smoke.sh
             tools/android_frame_quality.py
             last_island_recreated_game/original_hud_bindings.py
             last_island_recreated_game/original_hud_touch.py
