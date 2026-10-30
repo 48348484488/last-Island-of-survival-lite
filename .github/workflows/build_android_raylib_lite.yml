@@ -700,12 +700,14 @@ jobs:
       contents: read
       actions: read
     steps:
-      - name: Checkout standalone emulator smoke script
+      - name: Checkout emulator smoke and original Unity hitbox source
         uses: actions/checkout@v4
         with:
           sparse-checkout: |
             .github/scripts/android_virtual_smoke.sh
             tools/android_frame_quality.py
+            last_island_recreated_game/original_hud_bindings.py
+            last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_original_all_positions.json
           sparse-checkout-cone-mode: false
           filter: blob:none
 
