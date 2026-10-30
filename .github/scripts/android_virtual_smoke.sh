@@ -128,7 +128,7 @@ source_heights = {
 }
 seam_pattern = re.compile(
     r"LIOS_TERRAIN_SEAM_PROBE (north|south|east|west) "
-    r"inner=(\\S+) outer=(\\S+) height_in=(\\S+) height_out=(\\S+)"
+    r"inner=(\S+) outer=(\S+) height_in=(\S+) height_out=(\S+)"
 )
 observed = {}
 for match in seam_pattern.finditer(log):
