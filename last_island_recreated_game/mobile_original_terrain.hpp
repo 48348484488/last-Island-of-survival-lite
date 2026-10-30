@@ -5,6 +5,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <cmath>
+#include <algorithm>
 
 namespace LIOS_TERRAIN {
 struct Tile {
@@ -14,17 +15,34 @@ struct Tile {
 
     void load() {
         model=LoadModel("assets/original_world/a-57_mesh0.obj");
-        // Unity source Texture2D alpha stores a material/blend mask, NOT
-        // visibility. Using it as raylib diffuse alpha made the entire
-        // ground invisible in the real Android screenshot (78% flat sky).
-        // Preserve source RGB for this provisional renderer, without claiming
-        // this reconstructs the original multi-layer terrain shader.
+        // The Unity source image is a splat/material mask, not a diffuse
+        // color texture. Its RGB contains layer weights and alpha is NOT
+        // opacity (72.1% zero alpha). Render a clearly provisional natural
+        // palette from those weights until real Unity terrain layers/shader
+        // are recovered; do not show neon splatmap colors as ground albedo.
         Image source=LoadImage("assets/original_world/a-57_tex0.png");
         if(source.data){
-            ImageFormat(&source,PIXELFORMAT_UNCOMPRESSED_R8G8B8);
+            ImageFormat(&source,PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+            Color* pixels=static_cast<Color*>(source.data);
+            for(int i=0;i<source.width*source.height;i++){
+                const Color mask=pixels[i];
+                const float r=float(mask.r),g=float(mask.g),b=float(mask.b);
+                const float total=r+g+b;
+                if(total<4.f){
+                    pixels[i]={74,105,55,255};
+                }else{
+                    const float inv=1.f/total;
+                    pixels[i]={
+                        static_cast<unsigned char>((127.f*r+71.f*g+115.f*b)*inv),
+                        static_cast<unsigned char>((106.f*r+117.f*g+115.f*b)*inv),
+                        static_cast<unsigned char>((82.f*r+57.f*g+105.f*b)*inv),
+                        255
+                    };
+                }
+            }
             texture=LoadTextureFromImage(source);
             UnloadImage(source);
-            TraceLog(LOG_INFO,"LIOS_TERRAIN_SOURCE_RGB_OPAQUE alpha_is_material_mask");
+            TraceLog(LOG_INFO,"LIOS_TERRAIN_MASK_MATERIAL_PREVIEW alpha_not_opacity");
         }
         if(model.meshCount<=0 || texture.id==0){
             TraceLog(LOG_WARNING,"LIOS_TERRAIN_SOURCE_TILE_MISSING mesh=%d texture=%u",
