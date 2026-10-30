@@ -91,6 +91,15 @@ for attempt in $(seq 1 12); do
   sleep 5
 done
 if [[ "$ready_frame" -ne 1 ]]; then
+  # Keep diagnostic categories distinct: the game may still be swapping
+  # frames while Android's emulator compositor captures only a flat buffer.
+  adb logcat -d -s raylib:I > evidence/frame-heartbeats.txt 2>&1 || true
+  heartbeat_count="$(grep -c 'LIOS_RENDER_HEARTBEAT frame=' evidence/frame-heartbeats.txt || true)"
+  if [[ "$heartbeat_count" -gt 1 ]]; then
+    echo "LIOS_FLAT_FRAME_WITH_ACTIVE_RENDER_LOOP heartbeats=$heartbeat_count" | tee evidence/render-loop-diagnosis.txt
+  else
+    echo "LIOS_FLAT_FRAME_RENDER_LOOP_NOT_CONFIRMED heartbeats=$heartbeat_count" | tee evidence/render-loop-diagnosis.txt
+  fi
   echo 'LIOS_RENDERED_FRAME_NOT_READY: no nonflat frame after 12 attempts' | tee evidence/frame-failure.txt
   exit 47
 fi
