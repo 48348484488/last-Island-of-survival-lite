@@ -153,6 +153,43 @@ for direction, (expected_in, expected_out) in source_heights.items():
     print(f"LIOS_TERRAIN_SEAM_SOURCE_MATCH {direction} delta={hout-hin:.5f}")
 print("LIOS_TERRAIN_FIVE_SECTORS_AND_SEAM_PROBES_RECORDED")
 
+# Verify all 20 independent cross-edge runtime collision probes, not just
+# the four midpoint values. This is sampled terrain coverage, not a
+# simulated movement test and not proof of Unity player traversal.
+grid_pattern = re.compile(
+    r"LIOS_TERRAIN_SEAM_GRID_PROBE (north|south|east|west) "
+    r"offset=(\\S+) inner=(\\S+) outer=(\\S+) "
+    r"height_in=(\\S+) height_out=(\\S+)"
+)
+offsets = {-150, -75, 0, 75, 150}
+expected_grid = {(direction, offset) for direction in source_heights for offset in offsets}
+grid = {}
+for line in log.splitlines():
+    if "LIOS_TERRAIN_SEAM_GRID_PROBE" not in line:
+        continue
+    match = grid_pattern.search(line)
+    if match is None:
+        raise SystemExit("LIOS_TERRAIN_GRID_MALFORMED_EVENT")
+    direction, offset_text, inner, outer, hin_text, hout_text = match.groups()
+    try:
+        offset = float(offset_text)
+        hin, hout = float(hin_text), float(hout_text)
+    except ValueError:
+        raise SystemExit("LIOS_TERRAIN_GRID_INVALID_NUMBER")
+    if not all(math.isfinite(v) for v in (offset, hin, hout)):
+        raise SystemExit("LIOS_TERRAIN_GRID_NONFINITE_NUMBER")
+    key = (direction, offset)
+    if key in grid:
+        raise SystemExit(f"LIOS_TERRAIN_GRID_DUPLICATE {key}")
+    if inner != "1" or outer != "1":
+        raise SystemExit(f"LIOS_TERRAIN_GRID_UNCOVERED {key}")
+    if abs(hout-hin) > 0.55:
+        raise SystemExit(f"LIOS_TERRAIN_GRID_STEP_TOO_HIGH {key} delta={hout-hin:.4f}")
+    grid[key] = (hin, hout)
+if set(grid) != expected_grid:
+    raise SystemExit(f"LIOS_TERRAIN_GRID_MISSING_OR_EXTRA expected={sorted(expected_grid)} actual={sorted(grid)}")
+print(f"LIOS_TERRAIN_GRID_20_PROBES_PASS count={len(grid)} max_step={max(abs(o-i) for i,o in grid.values()):.5f}")
+
 if "LIOS_TERRAIN_MASK_MATERIAL_PREVIEW" not in log:
     raise SystemExit("LIOS_TERRAIN_MATERIAL_MASK_PREVIEW_NOT_LOADED")
 m=re.search(r"LIOS_TERRAIN_SPAWN_GROUND y=([-+]?\d+(?:\.\d+)?) source=(\d+)",log)
