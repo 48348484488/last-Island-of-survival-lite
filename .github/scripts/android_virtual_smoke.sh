@@ -112,6 +112,14 @@ from pathlib import Path
 log=Path("evidence/terrain-startup-logcat.txt").read_text(encoding="utf8",errors="replace")
 if "LIOS_TERRAIN_SOURCE_TILE_READY" not in log:
     raise SystemExit("LIOS_TERRAIN_SOURCE_TILE_NOT_LOADED")
+sectors=re.search(r"LIOS_TERRAIN_SECTORS_READY count=(\d+) total=5",log)
+if sectors is None or int(sectors.group(1)) != 5:
+    raise SystemExit("LIOS_TERRAIN_NEIGHBOR_SECTORS_NOT_READY")
+for direction in ("north","south","east","west"):
+    if f"LIOS_TERRAIN_SEAM_PROBE {direction} " not in log:
+        raise SystemExit(f"LIOS_TERRAIN_SEAM_PROBE_MISSING {direction}")
+print("LIOS_TERRAIN_FIVE_SECTORS_AND_SEAM_PROBES_RECORDED")
+
 if "LIOS_TERRAIN_MASK_MATERIAL_PREVIEW" not in log:
     raise SystemExit("LIOS_TERRAIN_MATERIAL_MASK_PREVIEW_NOT_LOADED")
 m=re.search(r"LIOS_TERRAIN_SPAWN_GROUND y=([-+]?\d+(?:\.\d+)?) source=(\d+)",log)
