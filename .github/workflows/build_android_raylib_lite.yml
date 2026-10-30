@@ -131,7 +131,8 @@ jobs:
           python3 tests/test_android_frame_quality.py
           python3 tests/test_android_hud_vertical_alignment.py
           python3 tests/test_keyboard_modal_input.py
-           python3 tests/test_original_terrain_runtime.py
+          python3 tests/test_original_terrain_runtime.py
+          python3 tests/test_animation_skinning_perf.py
 
       # These five source-audited artifacts are pinned to immutable workflow
       # runs. Reuse their verified bytes across APK builds to avoid repeated
