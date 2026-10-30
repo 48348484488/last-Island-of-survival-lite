@@ -53,6 +53,18 @@ class CraftGeometryContract(unittest.TestCase):
         self.assertIn("state.quantity+1", code)
         self.assertIn("state.maxQuantity(*recipe,resources)", code)
 
+    def test_craft_timers_consume_unclamped_frame_time(self):
+        # Android rendering can take longer than the 50 ms physics cap.
+        # The two offline queues must not silently lose elapsed time.
+        code = (ROOT / "last_island_recreated_game/main.cpp").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("const float dt = std::min(elapsedFrame, 0.05f);", code)
+        self.assertIn("building.tickCraft(elapsedFrame);", code)
+        self.assertIn("realCraft.tick(elapsedFrame);", code)
+        self.assertNotIn("building.tickCraft(dt);", code)
+        self.assertNotIn("realCraft.tick(dt);", code)
+
     def test_offline_queue_does_not_cover_source_quantity_buttons(self):
         code = CLIENT.read_text(encoding="utf-8")
         source = SOURCE.read_text(encoding="utf-8")
