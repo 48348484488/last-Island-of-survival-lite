@@ -107,5 +107,18 @@ class FrameQualityTests(unittest.TestCase):
         self.assertIn("LIOS_VISIBLE_CRAFT_BUTTON_FUNCTIONAL_FAILURE", smoke)
 
 
+    def test_followup_inventory_probe_requires_action_and_real_transition(self):
+        smoke = (Path(__file__).resolve().parents[1] /
+                 ".github" / "scripts" / "android_virtual_smoke.sh").read_text(
+                     encoding="utf-8")
+        self.assertIn("LIOS_CRAFT_PANEL_CLOSE", smoke)
+        self.assertIn("LIOS_INVENTORY_PANEL_OPEN", smoke)
+        self.assertIn("LIOS_INVENTORY_PANEL_CLOSE", smoke)
+        self.assertIn("--compare-with evidence/after-craft-close.png", smoke)
+        self.assertIn("--min-changed-fraction 0.01", smoke)
+        self.assertIn("LIOS_INVENTORY_VISIBLE_TOUCH_UNCONFIRMED", smoke)
+        self.assertIn("LIOS_INVENTORY_SAME_BUTTON_CLOSE_UNCONFIRMED", smoke)
+
+
 if __name__ == "__main__":
     unittest.main()
