@@ -1,3 +1,9 @@
+### Grounded terrain integration target — 2026-10-30
+
+- Inspected genuine previous Android screenshot (1080x640): exact flat-green RGB (68,115,52) covers **285,805 pixels (41.35%)**, flat sky RGB (130,200,230) covers **252,875 (36.58%)**. This quantifies the **recreated** scene's placeholder rendering, not pixel error against the original.
+- Recovered source assets already present in repository: `assets/original_world/map_tiles.txt` indexes **365** Unity-extracted OBJ mesh records. For `a-57_mesh0.obj`, independent OBJ vertex audit confirms world bounds x/z approx ±200, Y **8.002–34.558**, and a source vertex at (x=0,z=0) with height **22.3035011**. Native currently renders `DrawPlane(..., y=0)` instead. Directly substituting this mesh without reconciling player/collision/prop height would bury the player; **do not blindly swap it**.
+- Next visual priority: implement an authenticated source-mesh terrain renderer plus height sampling/spawn calibration and culling, then compile, execute in virtual Android and compare actual frames. Source mesh and texture assets are available, but source-level coordinates, UVs, collisions and runtime performance require validation.
+
 ### New build regression diagnosed and corrected — 2026-10-30
 
 - [Build #41085908484](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41085908484) failed **before compilation** because the sparse checkout omitted the newly created `tests/test_keyboard_modal_input.py`. The existing native crafting/geometry tests had passed. This is a CI checkout issue, not evidence of game crash.
