@@ -131,6 +131,12 @@ else
 fi
 python3 tools/android_frame_quality.py evidence/craft-after-tap.png \
   --min-colors 16 --report evidence/craft-frame-quality.json > evidence/craft-frame-check.txt || true
+# A functional smoke pass now requires the button VISIBLE to a user to open
+# the menu. A successful tap at an invisible source-coordinate is a failure.
+if ! grep -F 'LIOS_CRAFT_VISIBLE_ICON_TOUCH_CONFIRMED' evidence/craft-touch-result.txt >/dev/null; then
+  echo 'LIOS_VISIBLE_CRAFT_BUTTON_FUNCTIONAL_FAILURE' | tee evidence/craft-visible-failure.txt
+  exit 49
+fi
 adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
 test -s evidence/runtime.png
 test -s evidence/pid.txt
