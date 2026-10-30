@@ -50,6 +50,7 @@ jobs:
             last_island_recreated_game/mobile_real_craft_catalog.hpp
             last_island_recreated_game/mobile_original_craft_layout.hpp
             tests/test_native_build_craft.cpp
+            tests/test_craft_source_geometry.py
             last_island_recreated_game/original_hud_bindings.py
             last_island_recreated_game/original_hud_touch.py
             last_island_recreated_game/original_hud_runtime.py
