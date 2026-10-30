@@ -14,6 +14,10 @@ on:
       - last_island_recreated_game/mobile_original_craft_layout.hpp
       - tests/test_native_build_craft.cpp
       - tests/test_craft_source_geometry.py
+      - tests/test_no_debug_grid.py
+      - tests/test_android_frame_quality.py
+      - tools/android_frame_quality.py
+      - .github/scripts/android_virtual_smoke.sh
       - tools/prepare_mobile_character_textures.py
       - tools/export_mobile_skeletal_animation.py
       - tools/export_mobile_original_hud.py
@@ -51,6 +55,9 @@ jobs:
             last_island_recreated_game/mobile_original_craft_layout.hpp
             tests/test_native_build_craft.cpp
             tests/test_craft_source_geometry.py
+            tests/test_no_debug_grid.py
+            tests/test_android_frame_quality.py
+            tools/android_frame_quality.py
             last_island_recreated_game/original_hud_bindings.py
             last_island_recreated_game/original_hud_touch.py
             last_island_recreated_game/original_hud_runtime.py
@@ -104,6 +111,8 @@ jobs:
           g++ -std=c++17 -Wall -Wextra -Werror tests/test_native_build_craft.cpp -o /tmp/lios_build_test
           /tmp/lios_build_test
           python3 tests/test_craft_source_geometry.py
+          python3 tests/test_no_debug_grid.py
+          python3 tests/test_android_frame_quality.py
 
       - name: Download source-traced Unity crafting sprites from audited XAPK extraction
         env:
@@ -575,7 +584,9 @@ jobs:
       - name: Checkout standalone emulator smoke script
         uses: actions/checkout@v4
         with:
-          sparse-checkout: .github/scripts/android_virtual_smoke.sh
+          sparse-checkout: |
+            .github/scripts/android_virtual_smoke.sh
+            tools/android_frame_quality.py
           sparse-checkout-cone-mode: false
           filter: blob:none
 
@@ -590,6 +601,9 @@ jobs:
           find dist -name '*.apk' -type f -print
           test "$(find dist -name '*.apk' -type f | wc -l)" -eq 1
           sha256sum dist/*.apk > evidence/apk-sha256.txt
+
+      - name: Install screenshot verification dependency
+        run: python3 -m pip install --disable-pip-version-check Pillow==11.3.0
 
       - name: Enable KVM hardware acceleration on GitHub Linux runner
         run: |
