@@ -18,6 +18,7 @@
 - Referência primária: Unity LITE 7.3 `assets/ui/bagandbuildpanel.ab` e os limites extraídos em `mobile_original_craft_layout.hpp`.
 - Catálogo original de 519 receitas e 512 ícones permanece integrado pelo workflow V25; produção em rede, níveis, materiais e tempo de servidor **não** são equivalentes ao original comprovadamente.
 - Vídeos de gameplay públicos de outras versões servem apenas de contexto, não de prova de identidade do APK LITE 7.3.
+- Divergência geométrica específica pendente: `mobile_original_craft_layout.hpp` registra QuantityMinus/Plus/Max na faixa y=954.3, enquanto o catálogo nativo ainda desenha controles de quantidade em y=741. A correção precisa considerar sobreposição com o botão de fabricar e ser comparada com captura real, sem deslocar controles por suposição.
 - Restam diferenças em HUD de construção, fontes, textura, câmera, animações, sons, controles e gameplay; sem comparação de screenshots do mesmo estado, nenhuma igualdade deve ser afirmada.
 
 ### Próxima prioridade
