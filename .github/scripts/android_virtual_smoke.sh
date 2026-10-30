@@ -381,4 +381,30 @@ fi
 adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
 test -s evidence/runtime.png
 test -s evidence/pid.txt
+# Keep real touch-down and frame pacing evidence. These measurements do not
+# substitute for an original-game comparison or a controlled FPS benchmark.
+adb logcat -d -s raylib:I > evidence/input-frame-logcat.txt 2>&1 || true
+grep -E 'LIOS_(FRAME_TIMING|HUD_TOUCH_DOWN|TERRAIN_DRAW)' \
+  evidence/input-frame-logcat.txt > evidence/input-frame-telemetry.txt || true
+python3 - <<'PY'
+import json
+import re
+from pathlib import Path
+log=Path("evidence/input-frame-telemetry.txt").read_text(encoding="utf8")
+rows=[]
+for m in re.finditer(
+    r"LIOS_FRAME_TIMING frames=(\d+) mean_ms=([\d.]+) p95_ms=([\d.]+) "
+    r"max_ms=([\d.]+) slow_33ms=(\d+) mean_fps=([\d.]+)", log):
+    rows.append({"frames":int(m[1]),"mean_ms":float(m[2]),
+                 "p95_ms":float(m[3]),"max_ms":float(m[4]),
+                 "slow_33ms":int(m[5]),"mean_fps":float(m[6])})
+result={"observed_windows":len(rows),"observed_frames":sum(r["frames"] for r in rows),
+        "windows":rows,"source":"real Android logcat",
+        "baseline_comparison_performed":False,
+        "original_game_parity_proven":False}
+Path("evidence/frame-pacing-summary.json").write_text(
+    json.dumps(result,indent=2)+"\n",encoding="utf8")
+print("LIOS_FRAME_TIMING_EVIDENCE windows=%d frames=%d" %
+      (result["observed_windows"],result["observed_frames"]))
+PY
 echo 'LIOS_ANDROID_VIRTUAL_ARM64_RUNTIME_SMOKE_PASS'
