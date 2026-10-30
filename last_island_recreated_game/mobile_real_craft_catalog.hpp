@@ -8,6 +8,7 @@
 #include "original_craft_catalog_v73.hpp"
 #include <algorithm>
 #include <deque>
+#include <cmath>
 #include <map>
 #include <string>
 
@@ -121,10 +122,17 @@ struct State {
         return true;
     }
     void tick(float dt){
-        if(queue.empty()||dt<=0.f)return;
-        queue.front().elapsed+=std::min(dt,0.1f);
-        if(queue.front().elapsed>=queue.front().duration){
-            const Order finished=queue.front();
+        if(queue.empty()||!std::isfinite(dt)||dt<=0.f)return;
+        // Consume elapsed wall-clock time across queued offline orders.
+        // This is NOT a claim about the original multiplayer production timer.
+        while(!queue.empty()&&dt>0.f){
+            Order& first=queue.front();
+            const float remaining=std::max(0.f,first.duration-first.elapsed);
+            const float advance=std::min(dt,remaining);
+            first.elapsed+=advance;
+            dt-=advance;
+            if(advance<remaining)break;
+            const Order finished=first;
             const auto* recipe=Data::find(finished.recipeId);
             if(recipe)
                 stock[recipe->targetId]+=
@@ -156,6 +164,16 @@ inline Rectangle box(float x,float y,float w,float h,float sc,float ox,float oy)
 inline bool hit(Vector2 p,float x,float y,float w,float h,
                 float sc,float ox,float oy){
     return CheckCollisionPointRec(p,box(x,y,w,h,sc,ox,oy));
+}
+// One source-backed rectangle feeds both rendering and touch detection.
+inline Rectangle sourceRect(const LIOS_CRAFT_SOURCE::Bounds& r,
+                            float sc,float ox,float oy){
+    return box(r.x,r.y,r.w,r.h,sc,ox,oy);
+}
+inline Rectangle subTabRect(int index,float sc,float ox,float oy){
+    const auto& r=LIOS_CRAFT_SOURCE::SubTabOnSprite;
+    return box(r.x+LIOS_CRAFT_SOURCE::SubTabStepX*index,
+               r.y,r.w,r.h,sc,ox,oy);
 }
 inline void spr(Texture2D tex,Rectangle dst,Color tint=WHITE){
     if(tex.id)DrawTexturePro(tex,
@@ -199,16 +217,18 @@ inline void render(const Art& art,const State& state,
         }
         txt(MAIN[i].label,x+93,y+30,23,sc,ox,oy);
     }
-    spr(art.back,B(1654,0,316,86));
+    spr(art.back,sourceRect(LIOS_CRAFT_SOURCE::Back,sc,ox,oy));
     txt("VOLTAR",1740,28,26,sc,ox,oy);
     txt("FABRICACAO",235,102,34,sc,ox,oy);
     for(int i=0;i<tabCount(state.big);i++){
         const auto cell=tab(state.big,i);
-        float x=255.3f+124.f*i,y=151.1f;
+        const auto& base=LIOS_CRAFT_SOURCE::SubTabOnSprite;
+        float x=base.x+LIOS_CRAFT_SOURCE::SubTabStepX*i,y=base.y;
+        Rectangle tabBox=subTabRect(i,sc,ox,oy);
         if(art.subTab.id)
-            spr(art.subTab,B(x,y,120,35),
+            spr(art.subTab,tabBox,
                 state.small==cell.id?WHITE:Color{155,155,155,229});
-        else DrawRectangleRec(B(x,y,120,35),
+        else DrawRectangleRec(tabBox,
             state.small==cell.id?Color{84,100,89,245}:Color{32,38,39,230});
         txt(cell.label,x+5,y+7,17,sc,ox,oy);
     }
@@ -299,7 +319,8 @@ inline void render(const Art& art,const State& state,
 }
 inline bool touch(State& state,Vector2 p,float sc,float ox,float oy,
                   LIOS_BUILD::Resources& resources){
-    if(hit(p,1654,0,266,86,sc,ox,oy))return false; // caller closes panel
+    if(CheckCollisionPointRec(p,sourceRect(LIOS_CRAFT_SOURCE::Back,sc,ox,oy)))
+        return false; // caller closes panel; full source-backed 316px hitbox
     for(int i=0;i<5;i++){
         if(hit(p,LIOS_CRAFT_SOURCE::MainTabOnSprite.x,
                LIOS_CRAFT_SOURCE::MainTabOnSprite.y+86.f*i,
@@ -308,7 +329,7 @@ inline bool touch(State& state,Vector2 p,float sc,float ox,float oy,
         }
     }
     for(int i=0;i<tabCount(state.big);i++){
-        if(hit(p,255.3f+124.f*i,151.1f,120,35,sc,ox,oy)){
+        if(CheckCollisionPointRec(p,subTabRect(i,sc,ox,oy))){
             state.change(state.big,tab(state.big,i).id);return true;
         }
     }

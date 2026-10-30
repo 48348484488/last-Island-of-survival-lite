@@ -118,10 +118,17 @@ public:
         return true;
     }
     void tickCraft(float dt){
-        if(queue.empty()||dt<=0.f)return;
-        queue.front().elapsed+=std::min(dt,1.f);
-        if(queue.front().elapsed>=queue.front().duration){
-            const RecipeType type=queue.front().type;
+        if(queue.empty()||!std::isfinite(dt)||dt<=0.f)return;
+        // A long frame must not discard time or stall the remaining orders.
+        // These are provisional offline timers, not Unity server timings.
+        while(!queue.empty()&&dt>0.f){
+            CraftOrder& first=queue.front();
+            const float remaining=std::max(0.f,first.duration-first.elapsed);
+            const float advance=std::min(dt,remaining);
+            first.elapsed+=advance;
+            dt-=advance;
+            if(advance<remaining)break;
+            const RecipeType type=first.type;
             if(type==Blueprint)blueprint=true;
             if(type==Hammer)hammer=true;
             if(type==StonePickaxe)pickaxe=true;

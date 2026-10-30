@@ -1,6 +1,7 @@
 #include "../last_island_recreated_game/native_build_craft.hpp"
 #include <cassert>
 #include <iostream>
+#include <limits>
 int main(){
     using namespace LIOS_BUILD;
     System b;
@@ -85,6 +86,22 @@ int main(){
     assert(!independent.requestCraft(StonePickaxe,picked,4));
     assert(independent.requestCraft(StonePickaxe,picked,3));
     assert(picked.wood==0&&picked.stone==5);
+    // Offline queue must conserve elapsed time across multiple orders.
+    System timed;
+    Resources enough{1000,1000,1000,0};
+    assert(timed.requestCraft(StonePickaxe,enough,3));
+    timed.tickCraft(11.25f);
+    assert(timed.craftedCount[StonePickaxe]==2);
+    assert(timed.queue.size()==1);
+    assert(std::abs(timed.queue.front().elapsed-1.25f)<0.0001f);
+    timed.tickCraft(-10.f);
+    assert(std::abs(timed.queue.front().elapsed-1.25f)<0.0001f);
+    timed.tickCraft(3.75f);
+    assert(timed.queue.empty()&&timed.craftedCount[StonePickaxe]==3);
+    System stalled;
+    assert(stalled.requestCraft(Hammer,enough,1));
+    stalled.tickCraft(std::numeric_limits<float>::quiet_NaN());
+    assert(stalled.queue.size()==1&&stalled.queue.front().elapsed==0.f);
     std::cout<<"LIOS_BUILD_CRAFT_NATIVE_LOGIC_PASS placed="<<b.placed.size()
              <<" recipes=3 queued_quantity=true item_sprite_source=true build_categories=8 wall_collision=pass\\n";
 }

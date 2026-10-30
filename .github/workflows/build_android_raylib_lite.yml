@@ -13,6 +13,7 @@ on:
       - last_island_recreated_game/mobile_real_craft_catalog.hpp
       - last_island_recreated_game/mobile_original_craft_layout.hpp
       - tests/test_native_build_craft.cpp
+      - tests/test_craft_source_geometry.py
       - tools/prepare_mobile_character_textures.py
       - tools/export_mobile_skeletal_animation.py
       - tools/export_mobile_original_hud.py
@@ -101,6 +102,7 @@ jobs:
         run: |
           g++ -std=c++17 -Wall -Wextra -Werror tests/test_native_build_craft.cpp -o /tmp/lios_build_test
           /tmp/lios_build_test
+          python3 tests/test_craft_source_geometry.py
 
       - name: Download source-traced Unity crafting sprites from audited XAPK extraction
         env:
