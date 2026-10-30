@@ -53,5 +53,26 @@ class CraftGeometryContract(unittest.TestCase):
         self.assertIn("state.quantity+1", code)
         self.assertIn("state.maxQuantity(*recipe,resources)", code)
 
+    def test_offline_queue_does_not_cover_source_quantity_buttons(self):
+        code = CLIENT.read_text(encoding="utf-8")
+        source = SOURCE.read_text(encoding="utf-8")
+        self.assertIn("float y=905.f+22.f*i;", code)
+        self.assertIn("if(hit(p,260,905.f+22.f*i,245,22,sc,ox,oy))", code)
+        self.assertIn("DrawRectangleRec(B(640,898,116,52)", code)
+        self.assertIn("if(hit(p,640,898,116,52,sc,ox,oy))", code)
+        queue = [(260., 905. + 22. * i, 245., 22.) for i in range(4)]
+        queue.append((640., 898., 116., 52.))
+        for name in ("QuantityMinus", "QuantityPlus", "QuantityMax"):
+            match = re.search(
+                rf"{name}\\s*=\\s*\\{{([0-9.]+)f,([0-9.]+)f,([0-9.]+)f,([0-9.]+)f\\}}",
+                source,
+            )
+            self.assertIsNotNone(match, name)
+            x, y, w, h = map(float, match.groups())
+            for qx, qy, qw, qh in queue:
+                overlap_w = max(0., min(x + w, qx + qw) - max(x, qx))
+                overlap_h = max(0., min(y + h, qy + qh) - max(y, qy))
+                self.assertEqual(overlap_w * overlap_h, 0., name)
+
 if __name__ == "__main__":
     unittest.main()
