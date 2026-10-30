@@ -61,11 +61,12 @@ jobs:
             adb shell wm size 1920x1080
             adb shell monkey -p org.lios.recreatedlite -c android.intent.category.LAUNCHER 1 | tee evidence/launch.txt
             sleep 18
+            # Capture the actual display and crash logs before enforcing liveness.
+            adb exec-out screencap -p > evidence/runtime.png || true
+            adb logcat -d -v threadtime > evidence/logcat.txt || true
+            adb shell dumpsys activity activities > evidence/activities.txt || true
             adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
-            adb exec-out screencap -p > evidence/runtime.png
             test -s evidence/runtime.png
-            adb logcat -d -v threadtime > evidence/logcat.txt
-            adb shell dumpsys activity activities > evidence/activities.txt
             echo "ANDROID_VIRTUAL_ARM64_RUNTIME_SMOKE_PASS"
 
       - name: Preserve runtime evidence even on failure
