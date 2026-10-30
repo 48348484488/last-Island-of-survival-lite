@@ -5,6 +5,7 @@
 #include "raylib.h"
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -72,6 +73,9 @@ struct SkinMesh{
     // Reuse CPU skinning buffers across poses. Previously seven meshes
     // allocated/deallocated these arrays on every rendered frame.
     std::vector<Mat> poseMatrices;
+    // Inverse bind transforms are immutable for the lifetime of a source mesh.
+    // Decode once instead of rebuilding 3x4 matrices every animation frame.
+    std::vector<Mat> inverseBind;
     std::vector<float> poseVertices,poseNormals;
     bool uploaded=false;
 };
@@ -85,6 +89,9 @@ public:
     std::vector<Mat> localScratch;
     std::vector<char> doneScratch,busyScratch;
     bool ready=false;
+    // CPU wall-clock instrumentation; VBO submit includes driver-side blocking,
+    // NOT asynchronous GPU execution time.
+    double lastPoseCpuMs=0.0,lastVboSubmitMs=0.0;
     ~OriginalAnimation(){unload();}
     void unload(){
         for(auto &m:parts)if(m.uploaded){UnloadModel(m.model);m.uploaded=false;}
@@ -118,6 +125,14 @@ public:
                     if(v>=palettes)throw std::runtime_error("Invalid skin palette influence");
                     m.indices.push_back(v);}
                 r.floats(m.rhs,palettes*12);
+                m.inverseBind.resize(palettes);
+                for(uint32_t bi=0;bi<palettes;bi++){
+                    Mat bind=ident();
+                    const float* source=&m.rhs[size_t(bi)*12];
+                    for(int row=0;row<3;row++)for(int col=0;col<4;col++)
+                        bind[row*4+col]=source[row*4+col];
+                    m.inverseBind[bi]=bind;
+                }
                 for(int i=0;i<m.triangleCount*3;i++){auto b=r.bytes(2);uint16_t v=uint16_t(b[0])|uint16_t(b[1])<<8;
                     if(v>=n)throw std::runtime_error("Invalid mesh triangle");m.triangles.push_back(v);}
                 parts.push_back(std::move(m));
@@ -172,6 +187,9 @@ public:
         return -1;
     }
     void pose(int first,float firstTime,int second,float secondTime,float alpha=1.f){
+        lastPoseCpuMs=0.0;lastVboSubmitMs=0.0;
+        const auto poseStart=std::chrono::steady_clock::now();
+        double vboMs=0.0;
         if(!ready||first<0||first>=int(clips.size())||
            second<0||second>=int(clips.size()))return;
         const Clip& a=clips[first],&b=clips[second];
@@ -217,17 +235,11 @@ public:
         // M_U2GL @ RX90 = IDENTITY, NOT a Z reflection. The previous
         // diag(1,1,-1) flipped the entire rig front-to-back and inverted
         // triangle winding, making faces and materials appear incorrect.
-        const Mat LH=ident();
         for(auto &part:parts){
             auto &matrices=part.poseMatrices;
-            matrices.clear();
-            matrices.reserve(part.palette.size());
-            for(size_t bi=0;bi<part.palette.size();bi++){
-                Mat rhs=ident();
-                const float *r=&part.rhs[bi*12];
-                for(int row=0;row<3;row++)for(int col=0;col<4;col++)rhs[row*4+col]=r[row*4+col];
-                matrices.push_back(multiply(multiply(LH,world[part.palette[bi]]),rhs));
-            }
+            matrices.resize(part.palette.size());
+            for(size_t bi=0;bi<part.palette.size();bi++)
+                matrices[bi]=multiply(world[part.palette[bi]],part.inverseBind[bi]);
             auto &deformed=part.poseVertices;
             auto &normals=part.poseNormals;
             deformed.assign(size_t(part.vertexCount)*3,0.f);
@@ -257,10 +269,17 @@ public:
                 Mesh &gpu=part.model.meshes[0];
                 std::memcpy(gpu.vertices,deformed.data(),deformed.size()*sizeof(float));
                 std::memcpy(gpu.normals,normals.data(),normals.size()*sizeof(float));
+                const auto vboStart=std::chrono::steady_clock::now();
                 UpdateMeshBuffer(gpu,0,deformed.data(),int(deformed.size()*sizeof(float)),0);
                 UpdateMeshBuffer(gpu,2,normals.data(),int(normals.size()*sizeof(float)),0);
+                vboMs+=std::chrono::duration<double,std::milli>(
+                    std::chrono::steady_clock::now()-vboStart).count();
             }
         }
+        const double poseMs=std::chrono::duration<double,std::milli>(
+            std::chrono::steady_clock::now()-poseStart).count();
+        lastVboSubmitMs=vboMs;
+        lastPoseCpuMs=std::max(0.0,poseMs-vboMs);
     }
     void setTextures(Texture2D pants,Texture2D torso,Texture2D skin,Texture2D shoes,Texture2D head,Texture2D hair){
         if(!ready)return;
