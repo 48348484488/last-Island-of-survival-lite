@@ -10,8 +10,8 @@
 
 ### Testes e execução
 - [Workflow de HUD do commit](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40987298880): concluído com sucesso.
-- [Build Android ARM64 do commit](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40987298840): iniciado; confirmar conclusão e artefatos antes de declarar APK novo.
-- Compilação/execução do APK no Android virtual, captura de screenshots e comparação visual com o Unity original **ainda não comprovadas** nesta execução.
+- [Build Android ARM64 do commit](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40987477840): **sucesso** (compilação C++/Gradle, testes nativos, testes de geometria, verificação do APK e publicação da release). A primeira tentativa #40987298840 falhou por omissão do arquivo de teste no sparse checkout; corrigida em [2c76283](https://github.com/48348484488/last-Island-of-survival-lite/commit/2c762836c832c4ab7eb0a4ffaa7162d3348de843).
+- APK ARM64 compilado e publicado: [v0.25.0-2c762836](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-2c762836), 25.013.486 bytes. **Instalação/execução do APK no Android virtual, captura de screenshots e comparação visual com o Unity original ainda não foram comprovadas** nesta execução.
 - EdgeAI recebeu auditor de retângulos reutilizável em [EdgeAI-Engine](https://github.com/48348484488/EdgeAI-Engine/tree/main/tools), para distinguir diferença geométrica de fidelidade visual completa.
 
 ### Referências e limitações
@@ -21,7 +21,7 @@
 - Restam diferenças em HUD de construção, fontes, textura, câmera, animações, sons, controles e gameplay; sem comparação de screenshots do mesmo estado, nenhuma igualdade deve ser afirmada.
 
 ### Próxima prioridade
-1. Verificar resultado do build ARM64 #40987298840 e testes C++/geometria.
+1. Baixar o APK ARM64 da release #2c762836 e instalar/executar no Android virtual autorizado, coletando logcat e screenshots.
 2. Instalar APK no Android virtual ARM64 se disponível e registrar screenshots reais e logs.
 3. Capturar mesma tela no original autorizado e medir deltas geométricos/visuais usando EdgeAI.
 4. Corrigir a maior diferença comprovada, repetir testes e registrar novo commit.
