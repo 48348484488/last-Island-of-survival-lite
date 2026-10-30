@@ -5,6 +5,7 @@ on:
     paths:
       - last_island_recreated_game/main.cpp
       - last_island_recreated_game/native_original_animation.hpp
+      - last_island_recreated_game/native_lbs_kernel.hpp
       - last_island_recreated_game/mobile_hud_input.hpp
       - last_island_recreated_game/mobile_audio.hpp
       - last_island_recreated_game/native_build_craft.hpp
@@ -16,6 +17,7 @@ on:
       - last_island_recreated_game/assets/original_world/a-57_mesh0.obj
       - last_island_recreated_game/assets/original_world/a-57_tex0.png
       - tests/test_native_build_craft.cpp
+      - tests/test_native_lbs_kernel.cpp
       - tests/test_craft_source_geometry.py
       - tests/test_no_debug_grid.py
       - tests/test_android_frame_quality.py
@@ -57,6 +59,7 @@ jobs:
           sparse-checkout: |
             last_island_recreated_game/main.cpp
             last_island_recreated_game/native_original_animation.hpp
+            last_island_recreated_game/native_lbs_kernel.hpp
             last_island_recreated_game/mobile_hud_input.hpp
             last_island_recreated_game/mobile_audio.hpp
             last_island_recreated_game/native_build_craft.hpp
@@ -66,6 +69,7 @@ jobs:
             last_island_recreated_game/mobile_original_terrain.hpp
             last_island_recreated_game/mobile_original_craft_layout.hpp
             tests/test_native_build_craft.cpp
+            tests/test_native_lbs_kernel.cpp
             tests/test_craft_source_geometry.py
             tests/test_no_debug_grid.py
             tests/test_android_frame_quality.py
@@ -128,6 +132,8 @@ jobs:
         run: |
           g++ -std=c++17 -Wall -Wextra -Werror tests/test_native_build_craft.cpp -o /tmp/lios_build_test
           /tmp/lios_build_test
+          g++ -std=c++17 -O2 -Wall -Wextra -Werror -Ilast_island_recreated_game tests/test_native_lbs_kernel.cpp -o /tmp/lios_lbs_test
+          /tmp/lios_lbs_test
           python3 tests/test_craft_source_geometry.py
           python3 tests/test_no_debug_grid.py
           python3 tests/test_android_frame_quality.py
@@ -409,6 +415,7 @@ jobs:
           set -euo pipefail
           cp last_island_recreated_game/main.cpp /tmp/lios-raymob/app/src/main/cpp/main.cpp
           cp last_island_recreated_game/native_original_animation.hpp /tmp/lios-raymob/app/src/main/cpp/native_original_animation.hpp
+          cp last_island_recreated_game/native_lbs_kernel.hpp /tmp/lios-raymob/app/src/main/cpp/native_lbs_kernel.hpp
           cp last_island_recreated_game/mobile_hud_input.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_hud_input.hpp
           cp last_island_recreated_game/mobile_audio.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_audio.hpp
           cp last_island_recreated_game/native_build_craft.hpp /tmp/lios-raymob/app/src/main/cpp/native_build_craft.hpp
