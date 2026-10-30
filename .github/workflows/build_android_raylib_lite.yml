@@ -705,10 +705,53 @@ jobs:
           sparse-checkout-cone-mode: false
           filter: blob:none
 
-      - uses: actions/download-artifact@v4
+      # Artifact storage occasionally times out after the build has succeeded.
+      # Only the virtual test job may recover from the SAME COMMIT release;
+      # neither a missing APK nor a failed digest check can pass the smoke.
+      - name: Download APK artifact from this workflow
+        id: artifact_primary
+        continue-on-error: true
+        uses: actions/download-artifact@v4
         with:
           name: Last-Island-LITE-Recriado-Android-ARM64-APK
           path: dist
+
+      - name: Recover APK from same-commit release if artifact storage fails
+        if: steps.artifact_primary.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist evidence
+          TAG="v0.25.0-${GITHUB_SHA:0:8}"
+          APK_NAME="LastIslandLite-v0.25.0-${GITHUB_SHA:0:8}-ARM64.apk"
+          downloaded=0
+          for attempt in $(seq 1 12); do
+            if gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+                --pattern "$APK_NAME" --dir dist; then
+              downloaded=1
+              break
+            fi
+            echo "LIOS_SAME_COMMIT_RELEASE_WAIT attempt=$attempt" >&2
+            sleep 15
+          done
+          if [[ "$downloaded" -ne 1 ]] || [[ ! -s "dist/$APK_NAME" ]]; then
+            echo 'LIOS_APK_RECOVERY_FAILED: no same-commit APK available' >&2
+            exit 1
+          fi
+          digest="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" \
+            --jq ".assets[] | select(.name == \"$APK_NAME\") | .digest")"
+          if [[ "$digest" != sha256:* ]]; then
+            echo 'LIOS_APK_RECOVERY_UNVERIFIED_DIGEST' >&2
+            exit 1
+          fi
+          actual="$(sha256sum "dist/$APK_NAME" | cut -d ' ' -f1)"
+          if [[ "$actual" != "${digest#sha256:}" ]]; then
+            echo 'LIOS_APK_RECOVERY_DIGEST_MISMATCH' >&2
+            exit 1
+          fi
+          echo "LIOS_APK_SAME_COMMIT_RELEASE_DIGEST_VERIFIED sha256=$actual" | tee evidence/apk-recovery.txt
 
       - name: Check compiled APK exists
         run: |
