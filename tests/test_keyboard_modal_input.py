@@ -35,6 +35,15 @@ class KeyboardModalInputTests(unittest.TestCase):
                     f"if (!overlayWasOpen&&IsKeyPressed(KEY_{key}))", self.code)
                 self.assertNotIn(f"if (IsKeyPressed(KEY_{key}))", self.code)
 
+    def test_opening_touch_is_not_replayed_into_new_modal(self):
+        self.assertIn("const int panelAtFrameStart=activePanel;", self.code)
+        self.assertIn("if(activePanel!=panelAtFrameStart) uiClicks.clear();", self.code)
+        self.assertLess(
+            self.code.index("if(activePanel!=panelAtFrameStart) uiClicks.clear();"),
+            self.code.index("for(const Vector2 &click:uiClicks)"))
+        self.assertIn("LIOS_INVENTORY_PANEL_OPEN", self.code)
+        self.assertIn("LIOS_CRAFT_PANEL_OPEN", self.code)
+
     def test_builder_shortcut_keeps_modal_guard(self):
         self.assertRegex(
             self.code,
