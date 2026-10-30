@@ -1,3 +1,11 @@
+## Continuação — 2026-10-30 (America/Recife), validação de coordenadas 3D
+
+- Corrigido o sistema offline de construção em `last_island_recreated_game/native_build_craft.hpp`: `valid()` rejeita coordenadas não finitas do jogador (`NaN`, `Inf`) antes de calcular a distância; `blocks()` rejeita consultas inválidas. Evita que falhas de física/câmera aceitem peças indevidas. Commit [7f3c2ba](https://github.com/48348484488/last-Island-of-survival-lite/commit/7f3c2baa2122ca84d024dbc862a7d19028d3fcc2).
+- Adicionadas regressões C++ para impedir criação de peças e gasto de recursos com `NaN`/`Inf`, commit [a290f59](https://github.com/48348484488/last-Island-of-survival-lite/commit/a290f59a404166011b94cb624924b1c44d9c1e81).
+- Pipeline de HUD construção [#40996840694](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40996840694) aprovado. Compilação APK para o commit `a290f59`: [#40996851203](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40996851203) iniciada; **resultado ainda pendente neste registro**. Não declarar APK novo como aprovado antes do workflow.
+- Pesquisa pública consultou página oficial da App Store e referências de LITE 6.7; nenhuma prova de que correspondam ao APK Unity LITE 7.3. Nenhuma comparação visual, screenshot de execução Android virtual ou teste de som foi realizada neste ciclo.
+- Próxima prioridade: verificar build ARM64, instalar APK em Android virtual quando disponível e capturar imagem real de fabricação em 1920×1080; comparar somente com captura autorizada da mesma versão/estado. Corrigir diferenças comprovadas em vez de inferir fidelidade a partir de posições.
+
 ## Continuação — 2026-10-29, ciclo seguinte (America/Recife)
 
 ### Verificação final da compilação deste ciclo
