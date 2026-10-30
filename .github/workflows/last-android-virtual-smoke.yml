@@ -1,0 +1,78 @@
+name: Last Island Android virtual ARM64 runtime smoke
+
+on:
+  workflow_run:
+    workflows:
+      - Build installable Android ARM64 APK - C++ playable prototype
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  android-runtime:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download APK from verified build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist evidence
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            SOURCE_RUN="${{ github.event.workflow_run.id }}"
+          else
+            SOURCE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+              --workflow build_android_raylib_lite.yml --status success \
+              --limit 1 --json databaseId --jq '.[0].databaseId')"
+          fi
+          test -n "$SOURCE_RUN"
+          gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name Last-Island-LITE-Recriado-Android-ARM64-APK --dir dist
+          APK="$(find dist -type f -name '*.apk' | head -n1)"
+          test -s "$APK"
+          echo "APK=$APK" >> "$GITHUB_ENV"
+          sha256sum "$APK" | tee evidence/apk-sha256.txt
+          echo "SOURCE_RUN=$SOURCE_RUN" | tee evidence/source-run.txt
+
+      - name: Install and run through Android native ARM bridge
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          ram-size: 2048M
+          disk-size: 3G
+          emulator-options: -no-window -no-snapshot-save -noaudio -no-boot-anim -gpu swiftshader_indirect -camera-back none
+          disable-animations: true
+          script: |
+            set -euo pipefail
+            adb shell getprop ro.product.cpu.abilist | tee evidence/device-abilist.txt
+            adb shell getprop ro.dalvik.vm.native.bridge | tee evidence/native-bridge.txt
+            # An x86 emulator without ARM translation is not an ARM64 runtime test.
+            grep -q 'arm64-v8a' evidence/device-abilist.txt
+            adb install -r "$APK" | tee evidence/install.txt
+            adb shell wm size 1920x1080
+            adb shell monkey -p org.lios.recreatedlite -c android.intent.category.LAUNCHER 1 | tee evidence/launch.txt
+            sleep 18
+            adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
+            adb exec-out screencap -p > evidence/runtime.png
+            test -s evidence/runtime.png
+            adb logcat -d -v threadtime > evidence/logcat.txt
+            adb shell dumpsys activity activities > evidence/activities.txt
+            echo "ANDROID_VIRTUAL_ARM64_RUNTIME_SMOKE_PASS"
+
+      - name: Preserve runtime evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Last-Island-Android-Virtual-Runtime-Evidence
+          path: evidence/
+          if-no-files-found: warn
+          retention-days: 14
