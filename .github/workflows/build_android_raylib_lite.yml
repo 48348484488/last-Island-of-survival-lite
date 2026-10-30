@@ -54,6 +54,7 @@ jobs:
             last_island_recreated_game/mobile_build_visual.hpp
             last_island_recreated_game/mobile_craft_ui.hpp
             last_island_recreated_game/mobile_real_craft_catalog.hpp
+            last_island_recreated_game/mobile_original_terrain.hpp
             last_island_recreated_game/mobile_original_craft_layout.hpp
             tests/test_native_build_craft.cpp
             tests/test_craft_source_geometry.py
@@ -61,6 +62,7 @@ jobs:
             tests/test_android_frame_quality.py
             tests/test_android_hud_vertical_alignment.py
             tests/test_keyboard_modal_input.py
+            tests/test_original_terrain_runtime.py
             .github/scripts/android_virtual_smoke.sh
             .github/workflows/build_android_raylib_lite.yml
             tools/android_frame_quality.py
@@ -121,6 +123,7 @@ jobs:
           python3 tests/test_android_frame_quality.py
           python3 tests/test_android_hud_vertical_alignment.py
           python3 tests/test_keyboard_modal_input.py
+           python3 tests/test_original_terrain_runtime.py
 
       # These four source-audited artifacts are pinned to immutable workflow
       # runs. Reuse their verified bytes across APK builds to avoid repeated
@@ -388,6 +391,7 @@ jobs:
           cp last_island_recreated_game/mobile_build_visual.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_build_visual.hpp
           cp last_island_recreated_game/mobile_craft_ui.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_craft_ui.hpp
           cp last_island_recreated_game/mobile_real_craft_catalog.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_real_craft_catalog.hpp
+           cp last_island_recreated_game/mobile_original_terrain.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_original_terrain.hpp
           cp last_island_recreated_game/mobile_original_craft_layout.hpp /tmp/lios-raymob/app/src/main/cpp/mobile_original_craft_layout.hpp
           rm /tmp/lios-raymob/app/src/main/cpp/main.c
           python tools/package_android_assets.py             last_island_recreated_game/main.cpp             last_island_recreated_game/assets             /tmp/lios-raymob/app/src/main/assets/assets
