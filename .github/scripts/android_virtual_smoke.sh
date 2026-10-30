@@ -64,7 +64,56 @@ fi
 adb shell wm size 1920x1080
 adb shell monkey -p org.lios.recreatedlite -c android.intent.category.LAUNCHER 1 | tee evidence/launch.txt
 sleep 18
-adb exec-out screencap -p > evidence/runtime.png
+# A previous successful job captured a *solid green* 1080x640 PNG while
+# the PID was alive. Do not report that as gameplay: wait for EndDrawing and
+# reject low-color/incomplete screenshots, retaining the failed frame.
+ready_frame=0
+for attempt in $(seq 1 12); do
+  if ! adb shell pidof org.lios.recreatedlite > evidence/pid.txt || [[ ! -s evidence/pid.txt ]]; then
+    echo 'LIOS_GAME_PROCESS_EXITED_BEFORE_FIRST_FRAME' | tee evidence/frame-failure.txt
+    exit 48
+  fi
+  if ! adb logcat -d -s raylib:I 2>/dev/null | grep -F 'LIOS_FIRST_FRAME_ENDDRAWING' >/dev/null; then
+    echo "WAITING_FOR_FIRST_COMPLETE_FRAME attempt=$attempt" | tee -a evidence/frame-attempts.txt
+    sleep 5
+    continue
+  fi
+  if adb exec-out screencap -p > evidence/runtime-candidate.png &&
+     python3 tools/android_frame_quality.py evidence/runtime-candidate.png \
+       --min-colors 16 --report evidence/frame-quality.json >> evidence/frame-attempts.txt; then
+    cp evidence/runtime-candidate.png evidence/runtime.png
+    ready_frame=1
+    echo "LIOS_NONFLAT_FRAME_CONFIRMED attempt=$attempt" | tee -a evidence/frame-attempts.txt
+    break
+  fi
+  cp evidence/runtime-candidate.png evidence/last-incomplete-frame.png || true
+  echo "WAITING_FOR_NONFLAT_FRAME attempt=$attempt" | tee -a evidence/frame-attempts.txt
+  sleep 5
+done
+if [[ "$ready_frame" -ne 1 ]]; then
+  echo 'LIOS_RENDERED_FRAME_NOT_READY: no nonflat frame after 12 attempts' | tee evidence/frame-failure.txt
+  exit 47
+fi
+# A touch experiment is only a functional check when the game logs the real
+# craft-panel transition; screenshot color variation alone is insufficient.
+# Coordinates are grounded in the prior 1080x640 emulator HUD capture.
+read -r tap_x tap_y < <(python3 - <<'PY'
+import json
+d=json.load(open("evidence/frame-quality.json",encoding="utf-8"))
+print(round(d["width"]*1012/1080),round(d["height"]*103/640))
+PY
+)
+printf '%s %s\n' "$tap_x" "$tap_y" > evidence/craft-tap-coordinate.txt
+adb shell input swipe "$tap_x" "$tap_y" "$tap_x" "$tap_y" 900
+sleep 5
+adb exec-out screencap -p > evidence/craft-after-tap.png
+python3 tools/android_frame_quality.py evidence/craft-after-tap.png \
+  --min-colors 16 --report evidence/craft-frame-quality.json > evidence/craft-frame-check.txt || true
+if adb logcat -d -s raylib:I 2>/dev/null | grep -F 'LIOS_CRAFT_PANEL_OPEN' >/dev/null; then
+  echo 'LIOS_CRAFT_TOUCH_TRANSITION_CONFIRMED' | tee evidence/craft-touch-result.txt
+else
+  echo 'LIOS_CRAFT_TOUCH_NOT_CONFIRMED: screenshot captured for diagnosis' | tee evidence/craft-touch-result.txt
+fi
 adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
 test -s evidence/runtime.png
 test -s evidence/pid.txt
