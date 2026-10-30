@@ -115,9 +115,42 @@ if "LIOS_TERRAIN_SOURCE_TILE_READY" not in log:
 sectors=re.search(r"LIOS_TERRAIN_SECTORS_READY count=(\d+) total=5",log)
 if sectors is None or int(sectors.group(1)) != 5:
     raise SystemExit("LIOS_TERRAIN_NEIGHBOR_SECTORS_NOT_READY")
-for direction in ("north","south","east","west"):
-    if f"LIOS_TERRAIN_SEAM_PROBE {direction} " not in log:
-        raise SystemExit(f"LIOS_TERRAIN_SEAM_PROBE_MISSING {direction}")
+# These four source heights were measured independently from the Unity-
+# extracted OBJ triangles (EdgeAI source seam audit). A mere log marker is
+# insufficient: require covered, finite collision values within 1cm of source
+# geometry and less than a provisional 0.55m step across each seam.
+import math
+source_heights = {
+    "north": (33.8332333178658, 34.005118328),
+    "south": (23.622817541997698, 23.625942600571427),
+    "east": (26.394343992758614, 26.355275537427623),
+    "west": (8.310323519064955, 8.299384349133796),
+}
+seam_pattern = re.compile(
+    r"LIOS_TERRAIN_SEAM_PROBE (north|south|east|west) "
+    r"inner=(\\S+) outer=(\\S+) height_in=(\\S+) height_out=(\\S+)"
+)
+observed = {}
+for match in seam_pattern.finditer(log):
+    direction, inner, outer, hin_text, hout_text = match.groups()
+    if direction in observed:
+        raise SystemExit(f"LIOS_TERRAIN_SEAM_DUPLICATE {direction}")
+    try:
+        hin, hout = float(hin_text), float(hout_text)
+    except ValueError:
+        raise SystemExit(f"LIOS_TERRAIN_SEAM_INVALID_HEIGHT {direction}")
+    if inner != "1" or outer != "1" or not math.isfinite(hin) or not math.isfinite(hout):
+        raise SystemExit(f"LIOS_TERRAIN_SEAM_COLLISION_MISSING {direction}")
+    observed[direction] = (hin, hout)
+if set(observed) != set(source_heights):
+    raise SystemExit(f"LIOS_TERRAIN_SEAM_DIRECTIONS_MISMATCH {sorted(observed)}")
+for direction, (expected_in, expected_out) in source_heights.items():
+    hin, hout = observed[direction]
+    if abs(hin-expected_in) > 0.01 or abs(hout-expected_out) > 0.01:
+        raise SystemExit(f"LIOS_TERRAIN_SEAM_SOURCE_MISMATCH {direction}")
+    if abs(hout-hin) > 0.55:
+        raise SystemExit(f"LIOS_TERRAIN_SEAM_STEP_TOO_HIGH {direction}")
+    print(f"LIOS_TERRAIN_SEAM_SOURCE_MATCH {direction} delta={hout-hin:.5f}")
 print("LIOS_TERRAIN_FIVE_SECTORS_AND_SEAM_PROBES_RECORDED")
 
 if "LIOS_TERRAIN_MASK_MATERIAL_PREVIEW" not in log:
