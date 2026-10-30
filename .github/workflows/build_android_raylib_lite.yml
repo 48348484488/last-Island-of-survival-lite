@@ -600,7 +600,11 @@ jobs:
           ram-size: 2048M
           disk-size: 3G
           emulator-options: -no-window -no-snapshot-save -noaudio -no-boot-anim -gpu swiftshader_indirect -camera-back none
-          disable-animations: true
+          # The runner's automatic 'adb shell settings put ...' failed with
+          # Broken pipe (32) after a slow first boot, before our smoke script ran.
+          # Skip that optional ADB settings operation; runtime checks are in
+          # the checked-in script and still require a live game PID.
+          disable-animations: false
           script: bash .github/scripts/android_virtual_smoke.sh
 
       - name: Preserve virtual execution diagnostics
