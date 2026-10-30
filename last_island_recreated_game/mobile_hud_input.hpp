@@ -88,6 +88,11 @@ struct Controller {
           if(a==Action::None&&x>=0&&x<=1920&&y>=0&&y<=1080&&x>940)
              a=Action::Look;
           owner[id]=a;iter=owner.find(id);
+          // Log only DOWN edges, never every held frame. Runtime evidence can
+          // now distinguish a missed hitbox from a later panel-action bug.
+          TraceLog(LOG_INFO,
+              "LIOS_HUD_TOUCH_DOWN finger=%d action=%d source_x=%.1f source_y=%.1f",
+              id,int(a),x,y);
           if(a!=Action::None&&a!=Action::Look&&a!=Action::Joystick)pressed.insert(a);
           if(a==Action::Look)cameraPrevious[id]=screen;
        }
