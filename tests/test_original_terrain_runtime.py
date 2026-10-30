@@ -79,5 +79,23 @@ class TerrainIntegrationTests(unittest.TestCase):
         self.assertIn("for(const auto& sector:sectors)", header)
 
 
+    def test_five_offsets_per_boundary_are_runtime_checked(self):
+        import ast
+        game = (GAME / "main.cpp").read_text(encoding="utf8")
+        smoke = (ROOT / ".github/scripts/android_virtual_smoke.sh").read_text(encoding="utf8")
+        self.assertIn("const float seamGridOffsets[5]={-150.f,-75.f,0.f,75.f,150.f}", game)
+        self.assertIn("for(float offset:seamGridOffsets)", game)
+        self.assertIn("LIOS_TERRAIN_SEAM_GRID_PROBE", game)
+        self.assertIn("LIOS_TERRAIN_GRID_20_PROBES_PASS", smoke)
+        self.assertIn("if set(grid) != expected_grid:", smoke)
+        self.assertIn("if abs(hout-hin) > 0.55:", smoke)
+        start = "python3 - <<'PY' > evidence/terrain-runtime-check.txt\n"
+        end = "\nPY\ncat evidence/terrain-runtime-check.txt"
+        # Parse the exact embedded Python that the Android virtual job runs.
+        self.assertEqual(smoke.count(start), 1)
+        embedded = smoke.split(start, 1)[1].split(end, 1)[0]
+        ast.parse(embedded)
+
+
 if __name__ == "__main__":
     unittest.main()
