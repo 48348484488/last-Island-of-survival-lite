@@ -224,9 +224,9 @@ if ! grep -Fxq 'LIOS_INVENTORY_SAME_BUTTON_CLOSE_CONFIRMED' evidence/inventory-p
   echo 'LIOS_INVENTORY_CLOSE_FUNCTIONAL_FAILURE' | tee evidence/inventory-strict-failure.txt
   exit 52
 fi
-# New evidence-only probe: tap the visible settings gear at (1044,104)
-# in the verified 1080x640 emulator screenshot. Until it passes on a real
-# Android run, do not treat it as proven or as a strict regression gate.
+# Settings open/close was independently confirmed in Android run #41061440637:
+# fresh LIOS_SETTINGS_PANEL_OPEN/CLOSE events and 15.9346% changed pixels on
+# opening. Require a new independent close screenshot transition as well.
 if adb logcat -c && adb shell input swipe 1044 104 1044 104 700; then
   sleep 3
   adb exec-out screencap -p > evidence/settings-open.png || true
@@ -260,6 +260,16 @@ if adb logcat -c && adb shell input swipe 1044 104 1044 104 700; then
   else
     echo 'LIOS_SETTINGS_VISIBLE_TOUCH_UNCONFIRMED' | tee evidence/settings-probe.txt
   fi
+fi
+# Settings is a strict runtime gate only after independent verification of
+# the visible gear and its same-button close in a real emulator run.
+if ! grep -Fxq 'LIOS_SETTINGS_VISIBLE_TOUCH_AND_TRANSITION_CONFIRMED' evidence/settings-probe.txt; then
+  echo 'LIOS_SETTINGS_OPEN_FUNCTIONAL_FAILURE' | tee evidence/settings-strict-failure.txt
+  exit 53
+fi
+if ! grep -Fxq 'LIOS_SETTINGS_SAME_BUTTON_CLOSE_CONFIRMED' evidence/settings-probe.txt; then
+  echo 'LIOS_SETTINGS_CLOSE_FUNCTIONAL_FAILURE' | tee evidence/settings-strict-failure.txt
+  exit 54
 fi
 adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
 test -s evidence/runtime.png
