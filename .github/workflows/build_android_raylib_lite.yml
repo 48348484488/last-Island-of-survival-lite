@@ -562,3 +562,61 @@ jobs:
               --notes "APK ARM64 experimental V25: catalogo de 519 receitas e 512 sprites originais do XAPK, mais filtros e listagem. Producao offline parcial de itens basicos, sem servidor nem provas de paridade visual UGUI completa; antigo sistema demonstrativo acessivel como teste separado."
           fi
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'
+
+  android-virtual-smoke:
+    name: Attempt actual Android virtual ARM64 runtime
+    needs: android-arm64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Last-Island-LITE-Recriado-Android-ARM64-APK
+          path: dist
+
+      - name: Check compiled APK exists
+        run: |
+          mkdir -p evidence
+          find dist -name '*.apk' -type f -print
+          test "$(find dist -name '*.apk' -type f | wc -l)" -eq 1
+          sha256sum dist/*.apk > evidence/apk-sha256.txt
+
+      - name: Install and launch in Android virtual environment
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          ram-size: 2048M
+          disk-size: 3G
+          emulator-options: -no-window -no-snapshot-save -noaudio -no-boot-anim -gpu swiftshader_indirect -camera-back none
+          disable-animations: true
+          script: |
+            set -euo pipefail
+            adb shell getprop ro.product.cpu.abilist | tee evidence/device-abilist.txt
+            adb shell getprop ro.dalvik.vm.native.bridge | tee evidence/native-bridge.txt
+            # x86_64 is only a valid ARM64 test if a real ARM64 bridge exists.
+            grep -q 'arm64-v8a' evidence/device-abilist.txt
+            APK="$(find dist -type f -name '*.apk' | head -n1)"
+            adb install -r "$APK" | tee evidence/install.txt
+            adb shell wm size 1920x1080
+            adb shell monkey -p org.lios.recreatedlite -c android.intent.category.LAUNCHER 1 | tee evidence/launch.txt
+            sleep 18
+            adb exec-out screencap -p > evidence/runtime.png || true
+            adb logcat -d -v threadtime > evidence/logcat.txt || true
+            adb shell dumpsys activity activities > evidence/activities.txt || true
+            adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
+            test -s evidence/runtime.png
+            echo "LIOS_ANDROID_VIRTUAL_ARM64_RUNTIME_SMOKE_PASS"
+
+      - name: Preserve virtual execution diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Last-Island-Android-Virtual-Runtime-Evidence
+          path: evidence/
+          if-no-files-found: warn
+          retention-days: 14
