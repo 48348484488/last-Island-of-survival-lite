@@ -192,7 +192,15 @@ if adb logcat -c &&
           sleep 2
           adb logcat -d -s raylib:I > evidence/inventory-close-logcat.txt 2>&1 || true
           if grep -F 'LIOS_INVENTORY_PANEL_CLOSE' evidence/inventory-close-logcat.txt >/dev/null; then
-            echo 'LIOS_INVENTORY_SAME_BUTTON_CLOSE_CONFIRMED' | tee -a evidence/inventory-probe.txt
+            adb exec-out screencap -p > evidence/inventory-after-close.png || true
+            if python3 tools/android_frame_quality.py evidence/inventory-after-close.png \
+                --compare-with evidence/inventory-open.png \
+                --min-changed-fraction 0.01 --report evidence/inventory-close-transition.json \
+                > evidence/inventory-close-transition-check.txt 2>&1; then
+              echo 'LIOS_INVENTORY_SAME_BUTTON_CLOSE_CONFIRMED' | tee -a evidence/inventory-probe.txt
+            else
+              echo 'LIOS_INVENTORY_CLOSE_VISUAL_TRANSITION_UNCONFIRMED' | tee -a evidence/inventory-probe.txt
+            fi
           else
             echo 'LIOS_INVENTORY_SAME_BUTTON_CLOSE_UNCONFIRMED' | tee -a evidence/inventory-probe.txt
           fi
@@ -203,6 +211,44 @@ if adb logcat -c &&
     fi
   else
     echo 'LIOS_CRAFT_CLOSE_UNCONFIRMED_IN_FOLLOWUP_PROBE' | tee evidence/inventory-probe.txt
+  fi
+fi
+# Inventory is now a strict runtime gate: run #41054357399 independently
+# confirmed fresh open/close markers and a 15.9356% screenshot change.
+# Do not allow optional probe failures to masquerade as a smoke success.
+if ! grep -Fxq 'LIOS_INVENTORY_VISIBLE_TOUCH_AND_TRANSITION_CONFIRMED' evidence/inventory-probe.txt; then
+  echo 'LIOS_INVENTORY_OPEN_FUNCTIONAL_FAILURE' | tee evidence/inventory-strict-failure.txt
+  exit 51
+fi
+if ! grep -Fxq 'LIOS_INVENTORY_SAME_BUTTON_CLOSE_CONFIRMED' evidence/inventory-probe.txt; then
+  echo 'LIOS_INVENTORY_CLOSE_FUNCTIONAL_FAILURE' | tee evidence/inventory-strict-failure.txt
+  exit 52
+fi
+# New evidence-only probe: tap the visible settings gear at (1044,104)
+# in the verified 1080x640 emulator screenshot. Until it passes on a real
+# Android run, do not treat it as proven or as a strict regression gate.
+if adb logcat -c && adb shell input swipe 1044 104 1044 104 700; then
+  sleep 3
+  adb exec-out screencap -p > evidence/settings-open.png || true
+  adb logcat -d -s raylib:I > evidence/settings-open-logcat.txt 2>&1 || true
+  if grep -F 'LIOS_SETTINGS_PANEL_OPEN' evidence/settings-open-logcat.txt >/dev/null &&
+     python3 tools/android_frame_quality.py evidence/settings-open.png \
+       --compare-with evidence/inventory-after-close.png \
+       --min-changed-fraction 0.01 --report evidence/settings-transition.json \
+       > evidence/settings-transition-check.txt 2>&1; then
+    echo 'LIOS_SETTINGS_VISIBLE_TOUCH_AND_TRANSITION_CONFIRMED' | tee evidence/settings-probe.txt
+    adb logcat -c || true
+    if adb shell input swipe 1044 104 1044 104 700; then
+      sleep 2
+      adb logcat -d -s raylib:I > evidence/settings-close-logcat.txt 2>&1 || true
+      if grep -F 'LIOS_SETTINGS_PANEL_CLOSE' evidence/settings-close-logcat.txt >/dev/null; then
+        echo 'LIOS_SETTINGS_SAME_BUTTON_CLOSE_CONFIRMED' | tee -a evidence/settings-probe.txt
+      else
+        echo 'LIOS_SETTINGS_SAME_BUTTON_CLOSE_UNCONFIRMED' | tee -a evidence/settings-probe.txt
+      fi
+    fi
+  else
+    echo 'LIOS_SETTINGS_VISIBLE_TOUCH_UNCONFIRMED' | tee evidence/settings-probe.txt
   fi
 fi
 adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
