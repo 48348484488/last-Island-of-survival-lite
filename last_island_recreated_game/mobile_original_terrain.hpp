@@ -14,7 +14,18 @@ struct Tile {
 
     void load() {
         model=LoadModel("assets/original_world/a-57_mesh0.obj");
-        texture=LoadTexture("assets/original_world/a-57_tex0.png");
+        // Unity source Texture2D alpha stores a material/blend mask, NOT
+        // visibility. Using it as raylib diffuse alpha made the entire
+        // ground invisible in the real Android screenshot (78% flat sky).
+        // Preserve source RGB for this provisional renderer, without claiming
+        // this reconstructs the original multi-layer terrain shader.
+        Image source=LoadImage("assets/original_world/a-57_tex0.png");
+        if(source.data){
+            ImageFormat(&source,PIXELFORMAT_UNCOMPRESSED_R8G8B8);
+            texture=LoadTextureFromImage(source);
+            UnloadImage(source);
+            TraceLog(LOG_INFO,"LIOS_TERRAIN_SOURCE_RGB_OPAQUE alpha_is_material_mask");
+        }
         if(model.meshCount<=0 || texture.id==0){
             TraceLog(LOG_WARNING,"LIOS_TERRAIN_SOURCE_TILE_MISSING mesh=%d texture=%u",
                      model.meshCount,texture.id);
