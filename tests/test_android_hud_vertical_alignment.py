@@ -49,5 +49,25 @@ class AndroidHudAlignmentTests(unittest.TestCase):
         self.assertIn("LIOS_INPUT::HudVisualYOffset", main)
 
 
+    def test_modal_buttons_can_close_only_their_own_panels(self):
+        main = MAIN.read_text(encoding="utf-8")
+        self.assertIn(
+            '(!overlayWasOpen||activePanel==1)&&hudInput.justPressed(HA::Inventory)',
+            main)
+        self.assertIn(
+            '(!overlayWasOpen||activePanel==3)&&hudInput.justPressed(HA::Settings)',
+            main)
+        self.assertIn(
+            '(!overlayWasOpen||activePanel==4)&&hudInput.justPressed(HA::QuickChat)',
+            main)
+        self.assertIn('LIOS_INVENTORY_PANEL_OPEN', main)
+        self.assertIn('LIOS_INVENTORY_PANEL_CLOSE', main)
+        self.assertIn('LIOS_SETTINGS_PANEL_OPEN', main)
+        self.assertIn('LIOS_SETTINGS_PANEL_CLOSE', main)
+        # Unrelated gameplay controls remain modal-gated.
+        self.assertIn('!overlayWasOpen&&hudInput.justPressed(HA::Aim)', main)
+        self.assertIn('!overlayWasOpen&&hudInput.justPressed(HA::Craft)', main)
+
+
 if __name__ == "__main__":
     unittest.main()
