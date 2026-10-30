@@ -28,6 +28,7 @@
 #include <set>
 #include <array>
 #include <algorithm>
+#include <chrono>
 
 // -----------------------------------------------------------------------------------------
 // Global Definitions & Data Structures
@@ -437,7 +438,15 @@ int main() {
     // Samples measure observed frame pacing, not GPU-only rendering time.
     std::array<float,60> framePacingMs{};
     unsigned int framePacingCount=0;
+    // Per-frame CPU wall time, not a GPU timer query. Each window uses
+    // exactly 60 completed frames and is emitted once (no log spam).
+    unsigned int phaseFrames=0;
+    double phasePoseTotal=0.0,phaseVboTotal=0.0;
+    double phaseEndTotal=0.0,phaseWorkTotal=0.0;
     while (!WindowShouldClose()) {
+        const auto frameWorkStart=std::chrono::steady_clock::now();
+        unityRig.lastPoseCpuMs=0.0;
+        unityRig.lastVboSubmitMs=0.0;
         const int panelAtFrameStart=activePanel;
         // Snapshot modal ownership before processing any input this frame.
         // Keyboard shortcuts must obey the same UI capture rules as touch.
@@ -1897,7 +1906,25 @@ int main() {
                 int(canvasTop+700.f*canvasScale),
                 std::max(12,int(21.f*canvasScale)),YELLOW);
         }
+        const auto endDrawingStart=std::chrono::steady_clock::now();
         EndDrawing();
+        const auto frameWorkEnd=std::chrono::steady_clock::now();
+        const double endDrawingMs=std::chrono::duration<double,std::milli>(
+            frameWorkEnd-endDrawingStart).count();
+        const double frameWorkMs=std::chrono::duration<double,std::milli>(
+            frameWorkEnd-frameWorkStart).count();
+        phasePoseTotal+=unityRig.lastPoseCpuMs;
+        phaseVboTotal+=unityRig.lastVboSubmitMs;
+        phaseEndTotal+=endDrawingMs;
+        phaseWorkTotal+=frameWorkMs;
+        if(++phaseFrames==60){
+            TraceLog(LOG_INFO,
+                "LIOS_PHASE_TIMING frames=60 pose_cpu_ms=%.3f vbo_submit_ms=%.3f end_drawing_ms=%.3f frame_work_ms=%.3f",
+                phasePoseTotal/60.0,phaseVboTotal/60.0,
+                phaseEndTotal/60.0,phaseWorkTotal/60.0);
+            phaseFrames=0;
+            phasePoseTotal=phaseVboTotal=phaseEndTotal=phaseWorkTotal=0.0;
+        }
         // A live PID and one completed swap do not prove sustained rendering:
         // some emulator runs display a uniform grass frame indefinitely.
         // This heartbeat distinguishes a continuing native render loop from
