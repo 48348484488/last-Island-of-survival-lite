@@ -90,6 +90,14 @@ class FrameQualityTests(unittest.TestCase):
                 gate.inspect_transition(before, after, 0.01, 0)
 
 
+    def test_flat_frame_failure_collects_render_loop_diagnostics(self):
+        smoke = (Path(__file__).resolve().parents[1] /
+                 ".github" / "scripts" / "android_virtual_smoke.sh").read_text(encoding="utf-8")
+        self.assertIn("LIOS_FLAT_FRAME_WITH_ACTIVE_RENDER_LOOP", smoke)
+        self.assertIn("LIOS_FLAT_FRAME_RENDER_LOOP_NOT_CONFIRMED", smoke)
+        self.assertIn("evidence/frame-heartbeats.txt", smoke)
+        self.assertIn("exit 47", smoke)
+
     def test_android_smoke_requires_fresh_touch_event_and_visual_change(self):
         smoke = (Path(__file__).resolve().parents[1] /
                  ".github" / "scripts" / "android_virtual_smoke.sh").read_text(encoding="utf-8")
