@@ -1,26 +1,27 @@
 #pragma once
-// UnityPy OBJ exporter emits Z-up coordinates. Original Unity scene uses
-// an Rx(-90 deg) transform: (x,y,z) -> (x,z,-y). This tile is a bounded
-// first step toward a real world, NOT a full scene/physics reconstruction.
+// World-space UnityPy OBJ tiles are Z-up. Their native Y-up orientation is
+// (x,y,z) -> (x,z,-y). These five sectors are extracted geometry, not proof
+// of original Unity material, collision, or scene behavior.
 #include "raylib.h"
 #include "raymath.h"
 #include <cmath>
 #include <algorithm>
 
 namespace LIOS_TERRAIN {
-struct Tile {
+struct SourceTile {
+    const char* meshPath;
+    const char* maskPath;
+    float minX, maxX, minZ, maxZ;
     Model model{};
     Texture2D texture{};
     bool ready=false;
 
     void load() {
-        model=LoadModel("assets/original_world/a-57_mesh0.obj");
-        // The Unity source image is a splat/material mask, not a diffuse
-        // color texture. Its RGB contains layer weights and alpha is NOT
-        // opacity (72.1% zero alpha). Render a clearly provisional natural
-        // palette from those weights until real Unity terrain layers/shader
-        // are recovered; do not show neon splatmap colors as ground albedo.
-        Image source=LoadImage("assets/original_world/a-57_tex0.png");
+        model=LoadModel(meshPath);
+        // Unity source RGBA is a packed material/splat mask. The alpha channel
+        // is NOT transparency. Use an opaque, explicitly provisional palette
+        // until source Unity layer albedos and shader are verified.
+        Image source=LoadImage(maskPath);
         if(source.data){
             ImageFormat(&source,PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
             Color* pixels=static_cast<Color*>(source.data);
@@ -45,25 +46,22 @@ struct Tile {
             TraceLog(LOG_INFO,"LIOS_TERRAIN_MASK_MATERIAL_PREVIEW alpha_not_opacity");
         }
         if(model.meshCount<=0 || texture.id==0){
-            TraceLog(LOG_WARNING,"LIOS_TERRAIN_SOURCE_TILE_MISSING mesh=%d texture=%u",
-                     model.meshCount,texture.id);
+            TraceLog(LOG_WARNING,"LIOS_TERRAIN_SOURCE_TILE_MISSING path=%s mesh=%d texture=%u",
+                     meshPath,model.meshCount,texture.id);
             return;
         }
         model.transform=MatrixRotateX(-PI/2.0f);
         for(int i=0;i<model.materialCount;i++)
             SetMaterialTexture(&model.materials[i],MATERIAL_MAP_DIFFUSE,texture);
         ready=true;
-        TraceLog(LOG_INFO,"LIOS_TERRAIN_SOURCE_TILE_READY meshes=%d material=%u",
-                 model.meshCount,texture.id);
+        TraceLog(LOG_INFO,"LIOS_TERRAIN_SOURCE_TILE_READY meshes=%d material=%u path=%s",
+                 model.meshCount,texture.id,meshPath);
     }
 
-    // A vertical ray finds the highest intersected triangle. This is an
-    // approximation for local walking, not Unity's original collision mesh.
     bool sample(float x,float z,float& height) const {
-        if(!ready || !std::isfinite(x) || !std::isfinite(z) ||
-           x < -200.f || x > 200.f || z < -200.f || z > 200.f)
-            return false;
-        Ray ray={{x,128.f,z},{0.f,-1.f,0.f}};
+        if(!ready || x<minX-0.05f || x>maxX+0.05f ||
+           z<minZ-0.05f || z>maxZ+0.05f) return false;
+        const Ray ray={{x,512.f,z},{0.f,-1.f,0.f}};
         bool found=false;
         float top=-100000.f;
         for(int i=0;i<model.meshCount;i++){
@@ -77,16 +75,86 @@ struct Tile {
         return found;
     }
 
+    void draw() const {
+        if(ready)DrawModel(model,{0.f,0.f,0.f},1.f,WHITE);
+    }
+
+    void unload(){
+        if(model.meshCount>0)UnloadModel(model);
+        if(texture.id>0)UnloadTexture(texture);
+        model={};
+        texture={};
+        ready=false;
+    }
+};
+
+struct Tile {
+    // Neighbors selected from the 365-record Unity source world catalog by
+    // matching ~400m boundaries and >=80% shared-edge coverage. The map
+    // contains large non-terrain meshes: do not load arbitrary bbox overlaps.
+    SourceTile sectors[5]={
+        {"assets/original_world/a-57_mesh0.obj","assets/original_world/a-57_tex0.png",
+         -200.f,200.f,-200.f,200.f},
+        {"assets/original_world/a-56_mesh1.obj","assets/original_world/a-56_tex0.png",
+         -200.f,200.001f,199.218f,600.f},
+        {"assets/original_world/d-01_mesh2.obj","assets/original_world/d-01_tex1.png",
+         -200.f,200.f,-600.f,-199.999f},
+        {"assets/original_world/c-07_mesh0.obj","assets/original_world/c-07_tex0.png",
+         200.f,600.f,-200.f,200.f},
+        {"assets/original_world/b-50_mesh2.obj","assets/original_world/b-50_tex2.png",
+         -600.001f,-200.f,-200.001f,200.f}
+    };
+    bool ready=false;
+
+    void load(){
+        int loaded=0;
+        for(auto& sector:sectors){
+            sector.load();
+            if(sector.ready)loaded++;
+        }
+        // Keep spawn availability independent from optional adjacent sectors.
+        ready=sectors[0].ready;
+        TraceLog(LOG_INFO,"LIOS_TERRAIN_SECTORS_READY count=%d total=5",loaded);
+    }
+
+    // Highest vertical intersection is a temporary walking approximation,
+    // not Unity's actual collision mesh or navigation rules.
+    bool sample(float x,float z,float& height) const {
+        if(!ready || !std::isfinite(x) || !std::isfinite(z))return false;
+        bool found=false;
+        float top=-100000.f;
+        for(const auto& sector:sectors){
+            float candidate=0.f;
+            if(sector.sample(x,z,candidate) && (!found || candidate>top)){
+                top=candidate;
+                found=true;
+            }
+        }
+        if(found)height=top;
+        return found;
+    }
+
     float ground(float x,float z) const {
         float h=0.f;
         return sample(x,z,h)?h:0.f;
     }
-    void draw() const {
-        if(ready)DrawModel(model,{0.f,0.f,0.f},1.f,WHITE);
+
+    void draw(Vector3 observer) const {
+        // Distance to each sector's XZ bounding rectangle, rather than its
+        // center, avoids discarding a sector when crossing a shared edge.
+        constexpr float drawRadius=520.f;
+        for(const auto& sector:sectors){
+            if(!sector.ready)continue;
+            const float dx=std::max(sector.minX-observer.x,
+                                    std::max(0.f,observer.x-sector.maxX));
+            const float dz=std::max(sector.minZ-observer.z,
+                                    std::max(0.f,observer.z-sector.maxZ));
+            if(dx*dx+dz*dz<=drawRadius*drawRadius)sector.draw();
+        }
     }
+
     void unload(){
-        if(model.meshCount>0)UnloadModel(model);
-        if(texture.id>0)UnloadTexture(texture);
+        for(auto& sector:sectors)sector.unload();
         ready=false;
     }
 };
