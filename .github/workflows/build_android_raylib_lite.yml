@@ -60,6 +60,7 @@ jobs:
             tests/test_no_debug_grid.py
             tests/test_android_frame_quality.py
             tests/test_android_hud_vertical_alignment.py
+            tests/test_keyboard_modal_input.py
             .github/scripts/android_virtual_smoke.sh
             .github/workflows/build_android_raylib_lite.yml
             tools/android_frame_quality.py
