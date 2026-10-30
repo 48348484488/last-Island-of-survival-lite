@@ -1,3 +1,13 @@
+## Continuação — 2026-10-29, ciclo seguinte (America/Recife)
+
+- Correção funcional publicada: [46fab875](https://github.com/48348484488/last-Island-of-survival-lite/commit/46fab875d42460d454e786c37ac6b9ecc4548664) alinha os botões de quantidade (menos, mais, máximo) aos RectTransforms do Unity LITE 7.3: y=954.3, não y=741. Renderização e toque agora compartilham os mesmos `sourceRect`. O incremento respeita o máximo offline calculado da receita, não um limite fixo de oito.
+- A ação `FABRICAR OFFLINE` permanece uma aproximação nativa: sua posição foi movida para x=1510, y=912, w=237, h=72, eliminando a interseção com a área clicável `QuantityMax` (que termina em x=1486.8). **Não afirmar que esse botão usa a posição original**.
+- Regressões de geometria adicionadas em [0128281](https://github.com/48348484488/last-Island-of-survival-lite/commit/0128281b566738e21377d79855d6f7724178444b) e regex corrigida em [cac0378](https://github.com/48348484488/last-Island-of-survival-lite/commit/cac03782a92f5e158b76d9653f8ffd33569be45b).
+- Workflow Android ARM64 [#40989774432](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40989774432): testes nativos e de geometria **aprovados**; etapa de compilação APK iniciada. Resultado final e release ainda pendentes no momento desta anotação.
+- O build intermediário [#40989760191](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40989760191) falhou nos testes por erro de escape na regex; o erro foi corrigido antes do build mais recente. Não confundir falha intermediária com travamento.
+- Referências públicas consultadas: App Store oficial e páginas de Last Island LITE, mas nenhuma captura comprovadamente da versão Unity LITE 7.3 foi obtida. A comparação visual com o original e a execução no Android virtual ARM64 continuam **não verificadas**.
+- Próxima prioridade: concluir/inspecionar build #40989774432; instalar APK em Android virtual ARM64 quando disponível, obter screenshot real do menu de fabricação e comparar em 1920x1080 com o original. Corrigir a maior diferença demonstrada, sem inferir igualdade visual a partir de coordenadas isoladas.
+
 # AUTONOMOUS_PROGRESS.md
 
 ## Estado em 2026-10-29 (America/Recife)
