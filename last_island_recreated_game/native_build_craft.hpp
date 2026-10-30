@@ -65,7 +65,15 @@ inline bool spend(Resources &r,const Cost &c){
     r.wood-=c.wood;r.stone-=c.stone;r.metal-=c.metal;
     return true;
 }
-inline int grid(float position){return int(std::round(position/3.f));}
+// A nonfinite or out-of-world camera coordinate must never be converted to
+// int (undefined behavior) or accidentally snapped onto a buildable cell.
+// 1001 is deliberately outside the accepted [-1000, 1000] build grid.
+static constexpr int InvalidGridCell=1001;
+inline int grid(float position){
+    if(!std::isfinite(position)||position < -3001.5f||position > 3001.5f)
+        return InvalidGridCell;
+    return int(std::round(position/3.f));
+}
 inline float world(int cell){return float(cell)*3.f;}
 inline int turn(int rotation){return (rotation%4+4)%4;}
 class System {
@@ -162,7 +170,7 @@ public:
     bool valid(PieceType type,int gx,int gz,int rot,float playerX,float playerZ)const{
         if(!blueprint||type<Foundation||type>=PieceCount||
            !std::isfinite(playerX)||!std::isfinite(playerZ)||
-           placed.size()>=MaxPlaced||std::abs(gx)>1000||std::abs(gz)>1000)return false;
+           placed.size()>=MaxPlaced||gx < -1000||gx > 1000||gz < -1000||gz > 1000)return false;
         float dx=world(gx)-playerX,dz=world(gz)-playerZ;
         if(dx*dx+dz*dz>64.f)return false; // 8 metres max placement range
         if(type==Foundation) {
