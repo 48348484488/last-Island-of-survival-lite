@@ -3,6 +3,7 @@
 The APK/emulator must still validate rendered orientation and ray collision.
 """
 import math
+import re
 import unittest
 from pathlib import Path
 
@@ -74,7 +75,21 @@ class TerrainIntegrationTests(unittest.TestCase):
                 for measured, target in zip(source[:4], bounds):
                     self.assertLess(abs(measured - target), 1.0)
         self.assertIn("LIOS_TERRAIN_SECTORS_READY", header)
-        self.assertIn("drawRadius=520.f", header)
+        # The original 520m radius drew every neighboring 400m tile at
+        # spawn. Allow performance tuning while preserving a positive border
+        # prefetch margin; do not pin a particular optimization constant.
+        match = re.search(r"constexpr float drawRadius=([0-9.]+)f;", header)
+        self.assertIsNotNone(match)
+        radius = float(match.group(1))
+        self.assertGreaterEqual(radius, 50.)
+        self.assertLess(radius, 200.)
+        # With these world bounds, the spawn at (0,0) sees the center
+        # sector, not all four distant neighbors. A neighbor is included
+        # before the player actually crosses its 200m boundary.
+        distance_to_east_at_spawn = 200.
+        distance_to_east_near_seam = 50.
+        self.assertGreater(distance_to_east_at_spawn, radius)
+        self.assertLessEqual(distance_to_east_near_seam, radius)
         self.assertIn("std::isfinite(x)", header)
         self.assertIn("for(const auto& sector:sectors)", header)
 
