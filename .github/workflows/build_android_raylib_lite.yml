@@ -614,6 +614,9 @@ jobs:
           # Skip that optional ADB settings operation; runtime checks are in
           # the checked-in script and still require a live game PID.
           disable-animations: false
+          # The script also waits for a live Android package service before
+          # installing, so a partially booted guest cannot masquerade as a
+          # game installation failure.
           script: bash .github/scripts/android_virtual_smoke.sh
 
       - name: Preserve virtual execution diagnostics
