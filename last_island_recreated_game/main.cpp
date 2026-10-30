@@ -522,9 +522,15 @@ int main() {
             int n=std::min(30-magazine,reserveAmmo);
             magazine+=n;reserveAmmo-=n;
         }
-        if(!overlayWasOpen&&hudInput.justPressed(HA::Inventory)){
+        // Modal HUD buttons must remain able to close their OWN panels.
+        // The previous !overlayWasOpen guard made the advertised "tap again
+        // to close" action unreachable for inventory/settings/quick chat.
+        // Other HUD actions stay blocked while an overlay owns input.
+        if((!overlayWasOpen||activePanel==1)&&hudInput.justPressed(HA::Inventory)){
             activePanel=(activePanel==1?0:1);
             if(buildMode){buildMode=false;building.selected=-1;}
+            TraceLog(LOG_INFO,activePanel==1?
+                "LIOS_INVENTORY_PANEL_OPEN":"LIOS_INVENTORY_PANEL_CLOSE");
         }
         if(!overlayWasOpen&&hudInput.justPressed(HA::Craft)){
             activePanel=(activePanel==2?0:2);
@@ -532,8 +538,13 @@ int main() {
             if(activePanel==2)
                 TraceLog(LOG_INFO,"LIOS_CRAFT_PANEL_OPEN");
         }
-        if(!overlayWasOpen&&hudInput.justPressed(HA::Settings))activePanel=(activePanel==3?0:3);
-        if(!overlayWasOpen&&hudInput.justPressed(HA::QuickChat))activePanel=(activePanel==4?0:4);
+        if((!overlayWasOpen||activePanel==3)&&hudInput.justPressed(HA::Settings)){
+            activePanel=(activePanel==3?0:3);
+            TraceLog(LOG_INFO,activePanel==3?
+                "LIOS_SETTINGS_PANEL_OPEN":"LIOS_SETTINGS_PANEL_CLOSE");
+        }
+        if((!overlayWasOpen||activePanel==4)&&hudInput.justPressed(HA::QuickChat))
+            activePanel=(activePanel==4?0:4);
         // Original BuildState is entered from equipped/quick-use builder
         // equipment, NOT from an invented "ENTER BUILD MODE" craft button.
         // Offline native mapping: building item occupies the last hotbar slot.
