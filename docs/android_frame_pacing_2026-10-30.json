@@ -1,0 +1,43 @@
+{
+  "measurement": "real Android x86_64 emulator with ARM64 translation; first 900 consecutive frame samples each",
+  "analysis_tool": "https://github.com/48348484488/EdgeAI-Engine/blob/main/tools/edgeai_frame_pacing.py",
+  "baseline": {
+    "run_id": 41134090430,
+    "code_commit": "efaa4279",
+    "runtime_artifact_id": 13014647077,
+    "frames": 900,
+    "windows": 15,
+    "mean_ms": 53.496,
+    "mean_fps": 18.693,
+    "worst_window_p95_ms": 112.62,
+    "max_ms": 198.729,
+    "slow_33ms": 900
+  },
+  "candidate": {
+    "run_id": 41135260133,
+    "code_commit": "a5e528a7",
+    "runtime_artifact_id": 13015632687,
+    "frames": 900,
+    "windows": 15,
+    "mean_ms": 44.575,
+    "mean_fps": 22.434,
+    "worst_window_p95_ms": 87.647,
+    "max_ms": 172.966,
+    "slow_33ms": 897
+  },
+  "comparison": {
+    "mean_frame_time_change_pct": -16.676,
+    "mean_fps_change_pct": 20.013,
+    "visual_changed_pixels_over_rgb30": 1332,
+    "visual_total_pixels": 691200
+  },
+  "validated": {
+    "android_build": true,
+    "android_virtual_runtime": true,
+    "craft_inventory_settings_touch_and_screenshot_transitions": true,
+    "original_game_visual_parity": false,
+    "all_buttons_tested": false,
+    "physical_device_fps_tested": false
+  },
+  "limitations": "One Android virtual run per revision, same nominal emulator setup and first 900 frame windows; FPS remains below 30 and no controlled repeated trials or original-game parity comparison."
+}
