@@ -145,5 +145,17 @@ class FrameQualityTests(unittest.TestCase):
         self.assertIn("LIOS_SETTINGS_CLOSE_VISUAL_TRANSITION_UNCONFIRMED", smoke)
 
 
+    def test_settings_gate_requires_fresh_open_and_visual_close(self):
+        smoke = (Path(__file__).resolve().parents[1] /
+                 ".github" / "scripts" / "android_virtual_smoke.sh").read_text(
+                     encoding="utf-8")
+        self.assertIn("LIOS_SETTINGS_OPEN_FUNCTIONAL_FAILURE", smoke)
+        self.assertIn("LIOS_SETTINGS_CLOSE_FUNCTIONAL_FAILURE", smoke)
+        self.assertIn("exit 53", smoke)
+        self.assertIn("exit 54", smoke)
+        self.assertIn("--compare-with evidence/settings-open.png", smoke)
+        self.assertIn("LIOS_SETTINGS_SAME_BUTTON_CLOSE_CONFIRMED", smoke)
+
+
 if __name__ == "__main__":
     unittest.main()
