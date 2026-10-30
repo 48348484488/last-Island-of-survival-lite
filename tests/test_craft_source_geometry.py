@@ -64,7 +64,7 @@ class CraftGeometryContract(unittest.TestCase):
         queue.append((640., 898., 116., 52.))
         for name in ("QuantityMinus", "QuantityPlus", "QuantityMax"):
             match = re.search(
-                rf"{name}\\s*=\\s*\\{{([0-9.]+)f,([0-9.]+)f,([0-9.]+)f,([0-9.]+)f\\}}",
+                rf"{name}\s*=\s*\{{([0-9.]+)f,([0-9.]+)f,([0-9.]+)f,([0-9.]+)f\}}",
                 source,
             )
             self.assertIsNotNone(match, name)
