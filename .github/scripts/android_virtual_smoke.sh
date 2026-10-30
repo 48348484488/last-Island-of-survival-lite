@@ -111,19 +111,39 @@ PY
 )
 printf 'visible=%s,%s source=%s,%s\n' "$visible_x" "$visible_y" \
   "$source_x" "$source_y" > evidence/craft-tap-coordinate.txt
+# A stale startup/previous-touch marker is not proof of this touch. Clear the
+# ring buffer immediately before the probe and preserve each probe's logs.
+if ! adb logcat -c; then
+  echo 'LIOS_TOUCH_LOG_RESET_FAILED' | tee evidence/craft-touch-result.txt
+  exit 50
+fi
 adb shell input swipe "$visible_x" "$visible_y" "$visible_x" "$visible_y" 900
 sleep 5
 adb exec-out screencap -p > evidence/craft-after-visible-tap.png
-if adb logcat -d -s raylib:I 2>/dev/null | grep -F 'LIOS_CRAFT_PANEL_OPEN' >/dev/null; then
-  echo 'LIOS_CRAFT_VISIBLE_ICON_TOUCH_CONFIRMED' | tee evidence/craft-touch-result.txt
+adb logcat -d -s raylib:I > evidence/logcat-after-visible.txt 2>&1 || true
+if grep -F 'LIOS_CRAFT_PANEL_OPEN' evidence/logcat-after-visible.txt >/dev/null; then
   cp evidence/craft-after-visible-tap.png evidence/craft-after-tap.png
+  # Require both a fresh action event AND a substantial real screenshot
+  # transition. Neither a stale log nor a changed frame alone is sufficient.
+  if python3 tools/android_frame_quality.py evidence/craft-after-visible-tap.png \
+      --compare-with evidence/runtime.png --min-changed-fraction 0.01 \
+      --report evidence/craft-transition.json > evidence/craft-transition-check.txt; then
+    echo 'LIOS_CRAFT_VISIBLE_ICON_TOUCH_CONFIRMED' | tee evidence/craft-touch-result.txt
+  else
+    echo 'LIOS_CRAFT_LOGGED_BUT_VISUAL_TRANSITION_UNCONFIRMED' | tee evidence/craft-touch-result.txt
+  fi
 else
   echo 'LIOS_CRAFT_VISIBLE_ICON_TOUCH_NOT_CONFIRMED' | tee evidence/craft-touch-result.txt
+  if ! adb logcat -c; then
+    echo 'LIOS_SOURCE_TOUCH_LOG_RESET_FAILED' | tee -a evidence/craft-touch-result.txt
+    exit 50
+  fi
   adb shell input swipe "$source_x" "$source_y" "$source_x" "$source_y" 900
   sleep 5
   adb exec-out screencap -p > evidence/craft-after-source-tap.png
   cp evidence/craft-after-source-tap.png evidence/craft-after-tap.png
-  if adb logcat -d -s raylib:I 2>/dev/null | grep -F 'LIOS_CRAFT_PANEL_OPEN' >/dev/null; then
+  adb logcat -d -s raylib:I > evidence/logcat-after-source.txt 2>&1 || true
+  if grep -F 'LIOS_CRAFT_PANEL_OPEN' evidence/logcat-after-source.txt >/dev/null; then
     echo 'LIOS_CRAFT_SOURCE_RECT_TOUCH_CONFIRMED_BUT_VISIBLE_TOUCH_FAILED' | tee -a evidence/craft-touch-result.txt
   else
     echo 'LIOS_CRAFT_SOURCE_RECT_TOUCH_NOT_CONFIRMED' | tee -a evidence/craft-touch-result.txt
