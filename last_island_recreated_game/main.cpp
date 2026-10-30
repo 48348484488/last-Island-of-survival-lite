@@ -386,10 +386,15 @@ int main() {
     float shotCooldown=0.f,stepTimer=0.f;
     bool wasOnGround=true;
     while (!WindowShouldClose()) {
-        float dt = GetFrameTime();
-        if (dt > 0.05f) dt = 0.05f; // Clamp delta time
-        building.tickCraft(dt);
-        realCraft.tick(dt);
+        // Cap only physics/movement steps. Offline crafting must consume
+        // actual elapsed frame time, otherwise a slow Android frame makes
+        // every crafting order take longer than its stated duration.
+        float elapsedFrame = GetFrameTime();
+        if (!std::isfinite(elapsedFrame) || elapsedFrame < 0.f)
+            elapsedFrame = 0.f;
+        const float dt = std::min(elapsedFrame, 0.05f);
+        building.tickCraft(elapsedFrame);
+        realCraft.tick(elapsedFrame);
         if(building.blueprint&&craftStatus=="Fabricando..."){
             craftStatus="Item pronto. Equipe pelo ultimo slot da barra.";
         }
