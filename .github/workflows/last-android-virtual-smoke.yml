@@ -1,10 +1,8 @@
 name: Last Island Android virtual ARM64 runtime smoke
 
+# The automatic runtime job now lives in build_android_raylib_lite.yml.
+# Keep this workflow for explicit, isolated reruns only.
 on:
-  workflow_run:
-    workflows:
-      - Build installable Android ARM64 APK - C++ playable prototype
-    types: [completed]
   workflow_dispatch:
 
 permissions:
