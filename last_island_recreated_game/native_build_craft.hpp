@@ -161,6 +161,7 @@ public:
     }
     bool valid(PieceType type,int gx,int gz,int rot,float playerX,float playerZ)const{
         if(!blueprint||type<Foundation||type>=PieceCount||
+           !std::isfinite(playerX)||!std::isfinite(playerZ)||
            placed.size()>=MaxPlaced||std::abs(gx)>1000||std::abs(gz)>1000)return false;
         float dx=world(gx)-playerX,dz=world(gz)-playerZ;
         if(dx*dx+dz*dz>64.f)return false; // 8 metres max placement range
@@ -191,6 +192,7 @@ public:
         return true;
     }
     bool blocks(float x,float z)const{
+        if(!std::isfinite(x)||!std::isfinite(z))return false;
         for(const auto &p:placed){
             if(p.type!=Wall&&p.type!=Window&&p.type!=Obstacle)continue;
             if(p.type==Obstacle){
