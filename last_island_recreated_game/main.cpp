@@ -432,6 +432,7 @@ int main() {
     float shotCooldown=0.f,stepTimer=0.f;
     bool wasOnGround=true;
     while (!WindowShouldClose()) {
+        const int panelAtFrameStart=activePanel;
         // Snapshot modal ownership before processing any input this frame.
         // Keyboard shortcuts must obey the same UI capture rules as touch.
         const bool overlayWasOpen=activePanel!=0;
@@ -624,6 +625,10 @@ int main() {
         auto hitUi=[&](Vector2 p,Rectangle b)->bool{
             return CheckCollisionPointRec(p,b);
         };
+        // A touch opening a modal belongs to the HUD for this frame. Do not
+        // dispatch that same DOWN event into the newly opened panel: it can
+        // otherwise select a recipe or close a menu behind the HUD icon.
+        if(activePanel!=panelAtFrameStart) uiClicks.clear();
         for(const Vector2 &click:uiClicks){
             if(activePanel==2){
                 // Source-derived 519 recipes and original Sprite atlases are
