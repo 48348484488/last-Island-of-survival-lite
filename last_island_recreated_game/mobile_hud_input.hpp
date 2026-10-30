@@ -12,6 +12,13 @@
 #include <set>
 
 namespace LIOS_INPUT {
+// Source RectTransforms are in the 1920x1080 prefab canvas. The exported
+// gameplay HUD artwork is 200 source pixels higher in the Android viewport:
+// verified by matching the real 1080x640 craft/inventory/jump/settings icons
+// to their Unity source centers. Apply the SAME offset to hitboxes and
+// dynamic HUD graphics. This is an empirical viewport calibration, not proof
+// of original Unity CanvasScaler behavior.
+static constexpr float HudVisualYOffset = -200.0f;
 enum class Action {
  None, Joystick, Look, Attack, Jump, AutoRun, Crouch, Prone,
  Inventory, Craft, Aim, Reload, Settings, QuickChat,
@@ -70,7 +77,7 @@ struct Controller {
     for(int i=0;i<count;i++){
        int id=GetTouchPointId(i);
        Vector2 screen=GetTouchPosition(i);
-       float x=(screen.x-left)/scale,y=(screen.y-top)/scale;
+       float x=(screen.x-left)/scale,y=(screen.y-top)/scale-HudVisualYOffset;
        alive.insert(id);
        auto iter=owner.find(id);
        if(iter==owner.end()){
@@ -92,7 +99,7 @@ struct Controller {
           if(length>1){dx/=length;dy/=length;}
           stick={dx,dy};
           stickPoint={left+(centerX+dx*LIOS_HUD::JoystickRadius)*scale,
-                      top+(centerY+dy*LIOS_HUD::JoystickRadius)*scale};
+                      top+(centerY+dy*LIOS_HUD::JoystickRadius+HudVisualYOffset)*scale};
           stickSeen=true;
        }else if(a==Action::Look){
           Vector2 last=cameraPrevious[id];
@@ -111,7 +118,7 @@ struct Controller {
     }
     if(!stickSeen){
         stick={0,0};
-        stickPoint={left+centerX*scale,top+centerY*scale};
+        stickPoint={left+centerX*scale,top+(centerY+HudVisualYOffset)*scale};
     }
  }
 };
