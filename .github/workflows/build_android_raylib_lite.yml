@@ -572,6 +572,13 @@ jobs:
       contents: read
       actions: read
     steps:
+      - name: Checkout standalone emulator smoke script
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts/android_virtual_smoke.sh
+          sparse-checkout-cone-mode: false
+          filter: blob:none
+
       - uses: actions/download-artifact@v4
         with:
           name: Last-Island-LITE-Recriado-Android-ARM64-APK
@@ -583,13 +590,6 @@ jobs:
           find dist -name '*.apk' -type f -print
           test "$(find dist -name '*.apk' -type f | wc -l)" -eq 1
           sha256sum dist/*.apk > evidence/apk-sha256.txt
-
-      - name: Checkout standalone emulator smoke script
-        uses: actions/checkout@v4
-        with:
-          sparse-checkout: .github/scripts/android_virtual_smoke.sh
-          sparse-checkout-cone-mode: false
-          filter: blob:none
 
       - name: Install and launch in Android virtual environment
         uses: reactivecircus/android-emulator-runner@v2
