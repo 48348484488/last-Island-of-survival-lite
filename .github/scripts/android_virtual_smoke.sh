@@ -384,7 +384,7 @@ test -s evidence/pid.txt
 # Keep real touch-down and frame pacing evidence. These measurements do not
 # substitute for an original-game comparison or a controlled FPS benchmark.
 adb logcat -d -s raylib:I > evidence/input-frame-logcat.txt 2>&1 || true
-grep -E 'LIOS_(FRAME_TIMING|HUD_TOUCH_DOWN|TERRAIN_DRAW)' \
+grep -E 'LIOS_(FRAME_TIMING|PHASE_TIMING|HUD_TOUCH_DOWN|TERRAIN_DRAW)' \
   evidence/input-frame-logcat.txt > evidence/input-frame-telemetry.txt || true
 python3 - <<'PY'
 import json
