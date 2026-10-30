@@ -158,8 +158,8 @@ print("LIOS_TERRAIN_FIVE_SECTORS_AND_SEAM_PROBES_RECORDED")
 # simulated movement test and not proof of Unity player traversal.
 grid_pattern = re.compile(
     r"LIOS_TERRAIN_SEAM_GRID_PROBE (north|south|east|west) "
-    r"offset=(\\S+) inner=(\\S+) outer=(\\S+) "
-    r"height_in=(\\S+) height_out=(\\S+)"
+    r"offset=(\S+) inner=(\S+) outer=(\S+) "
+    r"height_in=(\S+) height_out=(\S+)"
 )
 offsets = {-150, -75, 0, 75, 150}
 expected_grid = {(direction, offset) for direction in source_heights for offset in offsets}
