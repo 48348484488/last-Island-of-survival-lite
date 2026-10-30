@@ -1,3 +1,11 @@
+### Final verification: APK, Android runtime, and release succeeded — 2026-10-30
+
+- [Workflow #41086155659](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41086155659) **passed all 3 jobs** for [commit 4742183](https://github.com/48348484488/last-Island-of-survival-lite/commit/4742183cd50629e4472c1be23c1eeab6a2e5a2db): Android ARM64 compilation, direct release, and Android virtual runtime (x86_64 with ARM64 native bridge). New [APK v0.25.0-4742183c](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-4742183c), **25,014,614 bytes**, is published.
+- Independently downloaded and examined actual [runtime artifact #12992606487](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41086155659/artifacts/12992606487): 1080x640 gameplay screenshot, real craft/inventory/settings screenshots, fresh visible-icon craft event, inventory/settings open+same-button close markers, Android PID, and `script-exit-code.txt=0`. Runtime log ends with `LIOS_ANDROID_VIRTUAL_ARM64_RUNTIME_SMOKE_PASS`.
+- Pixel comparison between new gameplay screenshot and older [run #41054357399](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41054357399) showed **3,168/691,200** changed pixels (0.4583%) and mean RGB channel absolute difference **0.02422**, consistent with no large visual regression in the captured state. This is **not** a matched-original comparison.
+- Keyboard camera/hotbar modal fix is compiled and the APK runs, and the four source regressions passed. The emulator smoke did **not** inject keyboard shortcuts while settings were open; specific runtime keyboard-modal behavior remains unverified. Original Unity 7.3 parity remains unproven.
+- Next: implement a deterministic virtual keyboard-modal probe and prioritize calibrated original-world terrain integration (real mesh at spawn y=22.3035011 vs current flat y=0), preserving collision and camera consistency.
+
 ### Grounded terrain integration target — 2026-10-30
 
 - Inspected genuine previous Android screenshot (1080x640): exact flat-green RGB (68,115,52) covers **285,805 pixels (41.35%)**, flat sky RGB (130,200,230) covers **252,875 (36.58%)**. This quantifies the **recreated** scene's placeholder rendering, not pixel error against the original.
