@@ -120,5 +120,26 @@ class FrameQualityTests(unittest.TestCase):
         self.assertIn("LIOS_INVENTORY_SAME_BUTTON_CLOSE_UNCONFIRMED", smoke)
 
 
+    def test_inventory_gate_requires_fresh_open_and_visual_close(self):
+        smoke = (Path(__file__).resolve().parents[1] /
+                 ".github" / "scripts" / "android_virtual_smoke.sh").read_text(
+                     encoding="utf-8")
+        self.assertIn("LIOS_INVENTORY_OPEN_FUNCTIONAL_FAILURE", smoke)
+        self.assertIn("LIOS_INVENTORY_CLOSE_FUNCTIONAL_FAILURE", smoke)
+        self.assertIn("exit 51", smoke)
+        self.assertIn("exit 52", smoke)
+        self.assertIn("--compare-with evidence/inventory-open.png", smoke)
+        self.assertIn("LIOS_INVENTORY_CLOSE_VISUAL_TRANSITION_UNCONFIRMED", smoke)
+
+    def test_settings_probe_collects_independent_action_and_frame(self):
+        smoke = (Path(__file__).resolve().parents[1] /
+                 ".github" / "scripts" / "android_virtual_smoke.sh").read_text(
+                     encoding="utf-8")
+        self.assertIn("LIOS_SETTINGS_PANEL_OPEN", smoke)
+        self.assertIn("LIOS_SETTINGS_PANEL_CLOSE", smoke)
+        self.assertIn("--compare-with evidence/inventory-after-close.png", smoke)
+        self.assertIn("LIOS_SETTINGS_VISIBLE_TOUCH_UNCONFIRMED", smoke)
+
+
 if __name__ == "__main__":
     unittest.main()
