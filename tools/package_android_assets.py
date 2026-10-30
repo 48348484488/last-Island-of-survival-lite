@@ -25,6 +25,10 @@ def main():
     if not audio_header.is_file():
         raise FileNotFoundError(audio_header)
     program+="\n"+audio_header.read_text(encoding="utf8")
+    terrain_header=source.parent/"mobile_original_terrain.hpp"
+    if not terrain_header.is_file():
+        raise FileNotFoundError(terrain_header)
+    program+="\n"+terrain_header.read_text(encoding="utf8")
     names=sorted(set(re.findall(r'"assets/([^"\\]+\.(?:obj|png|wav|ogg))"',program)))
     # Generated skeletal binary and original Unity GUI sprites are copied from
     # recovered asset locations in the workflow, not the flat OBJ directory.
