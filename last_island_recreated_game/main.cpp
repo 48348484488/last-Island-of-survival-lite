@@ -1232,7 +1232,7 @@ int main() {
 
             // Ground Plane: Island Terrain Grass
             DrawPlane((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector2){ 600.0f, 600.0f }, (Color){ 68, 115, 52, 255 });
-            DrawGrid(60, 5.0f);
+            // Do not draw raylib's debug grid over the terrain in release gameplay.\n            // The real Android screenshot showed prominent parallel lines at the horizon.
 
             // Draw Base Building (Metal Cabin from original APK)
             if (modelHouse.meshCount > 0) {
