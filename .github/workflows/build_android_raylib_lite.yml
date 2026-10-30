@@ -135,6 +135,7 @@ jobs:
           python3 tests/test_keyboard_modal_input.py
           python3 tests/test_original_terrain_runtime.py
           python3 tests/test_animation_skinning_perf.py
+          bash -n .github/scripts/android_virtual_smoke.sh
 
       # These five source-audited artifacts are pinned to immutable workflow
       # runs. Reuse their verified bytes across APK builds to avoid repeated
