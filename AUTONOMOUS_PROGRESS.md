@@ -1,3 +1,10 @@
+## Evidência binária e execução virtual — 2026-10-30 01:34 (America/Recife)
+
+- APK `b5473200` foi baixado do artefato verificado, extraído e comparado com `a290f59a`: `libraymob.so` ARM64 mudou de **3.525.008** para **3.525.136 bytes** (+128), SHA-256 anterior `fef5ef63...` e novo `8c4afd0f...`. Auditoria estática registrou 616.657 → 616.689 instruções e 25.188 → 25.187 chamadas; relatório [EdgeAI](https://github.com/48348484488/EdgeAI-Engine/blob/main/docs/last_recreated_arm64_build_diff_2026-10-30.json). Isso comprova diferença binária, **não prova execução nem equivalência funcional**.
+- Como o workflow virtual independente recebeu eventos `BuildFailed/startup_failure` sem jobs, o teste foi integrado como job dependente do **mesmo workflow de build Android** no commit [630b084](https://github.com/48348484488/last-Island-of-survival-lite/commit/630b084cd0bcb36cc00927423ea22bc57c94847a). O workflow separado ficou apenas para execução manual, commit [1b1baeb](https://github.com/48348484488/last-Island-of-survival-lite/commit/1b1baebcf4db728f407062819399c05e39e16015).
+- Build com novo job virtual [#41003434473](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41003434473) ainda estava compilando na consulta. **Nenhum screenshot real ou instalação virtual confirmado até aqui**.
+- Próxima prioridade: obter conclusão do job virtual e, se o emulador x86 não tiver tradução ARM64, migrar a validação para Android virtual nativo ARM64; depois comparar o mesmo estado da interface com o original LITE 7.3.
+
 ## Resultados adicionais — 2026-10-30 01:30 (America/Recife)
 
 - **Build ARM64 [#41002903306](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41002903306) aprovado integralmente**, incluindo regressão C++, verificação de assinatura/estrutura APK e publicação. Release [v0.25.0-b5473200](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-b5473200), APK de **25.013.758 bytes**. Compilação aprovada **não significa execução Android comprovada**.
