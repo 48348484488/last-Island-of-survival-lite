@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-30",
+  "source_workflow": "https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41137100620",
+  "source_artifact": "https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41137100620/artifacts/13017248880",
+  "source_commit": "fdc9d9fccf048b7da9b7c47eb096cfda86c8f937",
+  "environment": "Android x86_64 emulator with ARM64 translation",
+  "status": "APK installed, rendered and craft/inventory/settings passed; jump/attack probe not executed due missing Python module in sparse checkout; fixed in subsequent commit",
+  "edgeai_tool": "tools/edgeai_runtime_phases.py",
+  "deduplication": "19 unique timestamped 60-frame windows from overlapping real logcat snapshots",
+  "observed_windows": 19,
+  "observed_frames": 1140,
+  "mean_phase_ms": {
+    "pose_cpu_ms": 20.4782,
+    "vbo_submit_ms": 1.3914,
+    "end_drawing_ms": 16.8794,
+    "frame_work_ms": 40.4795,
+    "unattributed_cpu_ms": 1.7305
+  },
+  "largest_observed_cpu_component": "pose_cpu_ms",
+  "frame_pacing": {
+    "mean_ms": 40.166,
+    "mean_fps": 24.897,
+    "worst_window_p95_ms": 63.869,
+    "slow_frames_over_33ms": 994
+  },
+  "baseline": {
+    "workflow": "https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41135260133",
+    "observed_frames": 900,
+    "mean_ms": 44.575,
+    "mean_fps": 22.434
+  },
+  "comparison": {
+    "mean_frame_time_change_pct": -9.891,
+    "relative_mean_fps_change_pct": 10.977,
+    "controlled_benchmark": false
+  },
+  "limitations": [
+    "Only one emulator run per revision; different gameplay/interaction windows",
+    "CPU wall-clock times, not GPU timer queries",
+    "No matched original LITE 7.3 screenshot; no visual or functional parity established",
+    "The latest strict jump/attack test still requires a successful emulator run"
+  ]
+}
