@@ -157,6 +157,22 @@ class FrameQualityTests(unittest.TestCase):
         self.assertIn("LIOS_SETTINGS_SAME_BUTTON_CLOSE_CONFIRMED", smoke)
 
 
+    def test_runtime_captures_measured_frame_pacing_and_touch_ownership(self):
+        root = Path(__file__).resolve().parents[1]
+        game = (root / "last_island_recreated_game" / "main.cpp").read_text(encoding="utf8")
+        input_header = (root / "last_island_recreated_game" /
+                        "mobile_hud_input.hpp").read_text(encoding="utf8")
+        terrain = (root / "last_island_recreated_game" /
+                   "mobile_original_terrain.hpp").read_text(encoding="utf8")
+        smoke = (root / ".github" / "scripts" /
+                 "android_virtual_smoke.sh").read_text(encoding="utf8")
+        self.assertIn("LIOS_FRAME_TIMING frames=60", game)
+        self.assertIn("LIOS_HUD_TOUCH_DOWN finger=", input_header)
+        self.assertIn("LIOS_TERRAIN_DRAW sectors=", terrain)
+        self.assertIn("evidence/frame-pacing-summary.json", smoke)
+        self.assertIn("evidence/input-frame-telemetry.txt", smoke)
+        self.assertIn('"baseline_comparison_performed":False', smoke)
+
     def test_android_build_reuses_pinned_source_artifacts_without_skipping_validation(self):
         workflow = (Path(__file__).resolve().parents[1] /
                     ".github" / "workflows" /
