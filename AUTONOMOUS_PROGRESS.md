@@ -1,3 +1,9 @@
+### Android compilation regression found and corrected — 2026-10-30
+
+- Inspected actual failed [Android run #41103932756](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41103932756) compiler logs. NDK Clang rejected five `SourceTile` array initializers: no six-argument constructor available with the struct's default member initializers under the project's C++ compilation mode. This was a **real compile failure**, not a missing Android screenshot or gameplay crash.
+- Added an explicit six-argument `SourceTile` constructor, preserving all five original mesh/texture pairs [af4d5b8](https://github.com/48348484488/last-Island-of-survival-lite/commit/af4d5b8f62a11b28c989e890bfbf6eb4fc92daec). A new Android build is required before declaring the fix compiled or the five sectors functional.
+- Next: check latest Android build log for native compilation, then verify five-sector load count, seam heights, FPS and real screenshots. The previous single-sector APK remains the last confirmed runnable version.
+
 ### Source-geometry seam results and build queue management — 2026-10-30
 
 - Independent source OBJ triangle intersection (EdgeAI-style) confirms all four selected neighboring tiles cover a probe 0.5m beyond the original spawn tile boundary. North delta +0.17189m, south +0.00313m, east -0.03907m, west -0.01094m. Each is below provisional 0.55m step height, but only at these coordinates; runtime collision and actual traversal remain unverified. [Provenance](https://github.com/48348484488/EdgeAI-Engine/blob/main/docs/last_spawn_mesh_seam_heights_2026-10-30.json).
