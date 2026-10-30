@@ -282,21 +282,28 @@ inline void render(const Art& art,const State& state,
                 owned>=mat.amount*state.quantity?WHITE:ORANGE);
             txt(TextFormat("#%d",mat.itemId),x+70,y+34,17,sc,ox,oy,GRAY);
         }
-        txt("QUANTIDADE",1038,748,24,sc,ox,oy);
-        DrawRectangleRec(B(1225,741,63,55),Color{43,50,50,245});
-        DrawRectangleRec(B(1380,741,63,55),Color{43,50,50,245});
-        txt("-",1249,750,29,sc,ox,oy);
-        txt(TextFormat("%d",state.quantity),1320,751,26,sc,ox,oy);
-        txt("+",1399,750,27,sc,ox,oy);
-        int maxCraft=state.maxQuantity(*recipe,resources);
-        DrawRectangleRec(B(1480,741,107,55),Color{43,50,50,245});
-        txt(TextFormat("MAX %d",maxCraft),1488,752,18,sc,ox,oy);
+        // The Unity LITE 7.3 RectTransform bounds are shared by rendering
+        // and hit testing. These controls were previously drawn at y=741,
+        // despite the original source placing them at y=954.3.
+        txt("QUANTIDADE",1038,916,24,sc,ox,oy);
+        DrawRectangleRec(sourceRect(LIOS_CRAFT_SOURCE::QuantityMinus,sc,ox,oy),
+                         Color{43,50,50,245});
+        DrawRectangleRec(sourceRect(LIOS_CRAFT_SOURCE::QuantityPlus,sc,ox,oy),
+                         Color{43,50,50,245});
+        DrawRectangleRec(sourceRect(LIOS_CRAFT_SOURCE::QuantityMax,sc,ox,oy),
+                         Color{43,50,50,245});
+        txt("-",1042,968,29,sc,ox,oy);
+        txt(TextFormat("%d",state.quantity),1200,968,26,sc,ox,oy);
+        txt("+",1325,968,27,sc,ox,oy);
+        const int maxCraft=state.maxQuantity(*recipe,resources);
+        txt(TextFormat("MAX %d",maxCraft),1382,973,18,sc,ox,oy);
         if(state.safeForOffline(*recipe)){
-            DrawRectangleRec(B(1457,912,290,72),Color{57,80,65,240});
-            txt("FABRICAR OFFLINE",1468,931,24,sc,ox,oy);
+            // Native fallback position: does not overlap the source MAX hitbox.
+            DrawRectangleRec(B(1510,912,237,72),Color{57,80,65,240});
+            txt("FABRICAR OFFLINE",1517,931,22,sc,ox,oy);
         }else{
-            DrawRectangleRec(B(1457,912,290,72),Color{46,49,51,230});
-            txt("AINDA NAO PORTADO",1463,931,23,sc,ox,oy,GRAY);
+            DrawRectangleRec(B(1510,912,237,72),Color{46,49,51,230});
+            txt("AINDA NAO PORTADO",1517,931,20,sc,ox,oy,GRAY);
         }
     }else{
         txt("SELECIONE UMA RECEITA",1038,280,29,sc,ox,oy,LIGHTGRAY);
@@ -350,17 +357,20 @@ inline bool touch(State& state,Vector2 p,float sc,float ox,float oy,
     }
     const auto* recipe=current(state);
     if(recipe){
-        if(hit(p,1225,741,63,55,sc,ox,oy)){
+        if(CheckCollisionPointRec(p,sourceRect(LIOS_CRAFT_SOURCE::QuantityMinus,sc,ox,oy))){
             state.quantity=std::max(1,state.quantity-1);return true;
         }
-        if(hit(p,1380,741,63,55,sc,ox,oy)){
-            state.quantity=std::min(8,state.quantity+1);return true;
+        if(CheckCollisionPointRec(p,sourceRect(LIOS_CRAFT_SOURCE::QuantityPlus,sc,ox,oy))){
+            // Respect source recipe limits and available offline materials.
+            state.quantity=std::max(1,std::min(state.maxQuantity(*recipe,resources),
+                                               state.quantity+1));
+            return true;
         }
-        if(hit(p,1480,741,107,55,sc,ox,oy)){
+        if(CheckCollisionPointRec(p,sourceRect(LIOS_CRAFT_SOURCE::QuantityMax,sc,ox,oy))){
             state.quantity=std::max(1,state.maxQuantity(*recipe,resources));
             return true;
         }
-        if(hit(p,1457,912,290,72,sc,ox,oy)){
+        if(hit(p,1510,912,237,72,sc,ox,oy)){
             if(state.request(*recipe,state.quantity,resources))return true;
             state.message="INDISPONIVEL: MATERIAIS / DESBLOQUEIO OFFLINE";
             return true;
