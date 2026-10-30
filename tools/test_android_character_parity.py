@@ -35,7 +35,11 @@ def main():
     rx90=np.array([[1,0,0],[0,0,-1],[0,1,0]],dtype=float)
     lh=u2gl@rx90
     assert np.array_equal(lh,np.eye(3)),lh
-    assert "const Mat LH=ident();" in NATIVE, "Android root bone correction must be identity!"
+    # The optimized skinning path removes identity multiplication altogether:
+    # world * inverseBind is algebraically equal to identity * world * rhs.
+    assert "m.inverseBind[bi]=bind;" in NATIVE, "Bind matrices must be cached"
+    assert "matrices[bi]=multiply(world[part.palette[bi]],part.inverseBind[bi]);" in NATIVE, (
+        "Android root conversion must stay identity and preserve inverse binds")
     assert "const Mat LH={1,0,0,0,0,1,0,0,0,0,-1" not in NATIVE
     assert "LIOS::Mat LH=LIOS::ident();" in CPP, "Weapon socket must use same Unity conversion"
 
