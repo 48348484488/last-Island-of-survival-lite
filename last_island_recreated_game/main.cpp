@@ -386,6 +386,9 @@ int main() {
     float shotCooldown=0.f,stepTimer=0.f;
     bool wasOnGround=true;
     while (!WindowShouldClose()) {
+        // Snapshot modal ownership before processing any input this frame.
+        // Keyboard shortcuts must obey the same UI capture rules as touch.
+        const bool overlayWasOpen=activePanel!=0;
         // Cap only physics/movement steps. Offline crafting must consume
         // actual elapsed frame time, otherwise a slow Android frame makes
         // every crafting order take longer than its stated duration.
@@ -407,19 +410,20 @@ int main() {
         }
 
         // Toggle camera with TAB or V
-        if (IsKeyPressed(KEY_TAB) || (!buildMode&&IsKeyPressed(KEY_V))) {
+        if (!overlayWasOpen &&
+            (IsKeyPressed(KEY_TAB) || (!buildMode&&IsKeyPressed(KEY_V)))) {
             player.thirdPerson = !player.thirdPerson;
         }
 
         // Switch Weapon with Keys 1 and 2
-        if (IsKeyPressed(KEY_ONE)){player.equippedSlot=0;selectedHotbarSlot=0;aim=false;}
-        if (IsKeyPressed(KEY_TWO)){player.equippedSlot=1;selectedHotbarSlot=1;}
+        if (!overlayWasOpen&&IsKeyPressed(KEY_ONE)){player.equippedSlot=0;selectedHotbarSlot=0;aim=false;}
+        if (!overlayWasOpen&&IsKeyPressed(KEY_TWO)){player.equippedSlot=1;selectedHotbarSlot=1;}
         // Resource/empty quick slots have no native item-use port yet.
-        if (IsKeyPressed(KEY_THREE)){player.equippedSlot=-1;selectedHotbarSlot=2;aim=false;}
-        if (IsKeyPressed(KEY_FOUR)){player.equippedSlot=-1;selectedHotbarSlot=3;aim=false;}
-        if (IsKeyPressed(KEY_FIVE)){player.equippedSlot=-1;selectedHotbarSlot=4;aim=false;}
-        if (IsKeyPressed(KEY_SIX)){player.equippedSlot=-1;selectedHotbarSlot=5;aim=false;}
-        if (IsKeyPressed(KEY_SEVEN)){player.equippedSlot=-1;selectedHotbarSlot=6;aim=false;}
+        if (!overlayWasOpen&&IsKeyPressed(KEY_THREE)){player.equippedSlot=-1;selectedHotbarSlot=2;aim=false;}
+        if (!overlayWasOpen&&IsKeyPressed(KEY_FOUR)){player.equippedSlot=-1;selectedHotbarSlot=3;aim=false;}
+        if (!overlayWasOpen&&IsKeyPressed(KEY_FIVE)){player.equippedSlot=-1;selectedHotbarSlot=4;aim=false;}
+        if (!overlayWasOpen&&IsKeyPressed(KEY_SIX)){player.equippedSlot=-1;selectedHotbarSlot=5;aim=false;}
+        if (!overlayWasOpen&&IsKeyPressed(KEY_SEVEN)){player.equippedSlot=-1;selectedHotbarSlot=6;aim=false;}
 
         // ---------------------------------------------------------------------------------
         // Touch Input Processing (Multi-touch support for Mobile)
@@ -478,7 +482,6 @@ int main() {
         }
         // A BagAndBuildPanel captures all touches. Without modal ownership,
         // tapping a recipe also fires hidden HUD/weapon buttons underneath.
-        const bool overlayWasOpen=activePanel!=0;
         // Touch events (edge-triggered unless the action is explicitly held).
         if(!overlayWasOpen&&!buildMode&&hudInput.justPressed(HA::Slot0)){player.equippedSlot=0;selectedHotbarSlot=0;aim=false;}
         if(!overlayWasOpen&&!buildMode&&hudInput.justPressed(HA::Slot1)){player.equippedSlot=1;selectedHotbarSlot=1;}
