@@ -94,26 +94,43 @@ if [[ "$ready_frame" -ne 1 ]]; then
   echo 'LIOS_RENDERED_FRAME_NOT_READY: no nonflat frame after 12 attempts' | tee evidence/frame-failure.txt
   exit 47
 fi
-# A touch experiment is only a functional check when the game logs the real
-# craft-panel transition; screenshot color variation alone is insufficient.
-# Coordinates are grounded in the prior 1080x640 emulator HUD capture.
-read -r tap_x tap_y < <(python3 - <<'PY'
+# Two independent, source-grounded craft touch probes:
+# (1) visible icon center from real 1080x640 gameplay screenshot;
+# (2) serialized Unity btn_zhizao RectTransform center (61,1025) in 1920x1080.
+# If only (2) works, the recreated HUD hitbox is displaced from its artwork.
+read -r visible_x visible_y source_x source_y < <(python3 - <<'PY'
 import json
 d=json.load(open("evidence/frame-quality.json",encoding="utf-8"))
-print(round(d["width"]*1012/1080),round(d["height"]*103/640))
+w,h=d["width"],d["height"]
+scale=min(w/1920,h/1080)
+left=(w-1920*scale)/2
+top=(h-1080*scale)/2
+print(round(w*34/1080),round(h*480/640),
+      round(left+61*scale),round(top+1025*scale))
 PY
 )
-printf '%s %s\n' "$tap_x" "$tap_y" > evidence/craft-tap-coordinate.txt
-adb shell input swipe "$tap_x" "$tap_y" "$tap_x" "$tap_y" 900
+printf 'visible=%s,%s source=%s,%s\n' "$visible_x" "$visible_y" \
+  "$source_x" "$source_y" > evidence/craft-tap-coordinate.txt
+adb shell input swipe "$visible_x" "$visible_y" "$visible_x" "$visible_y" 900
 sleep 5
-adb exec-out screencap -p > evidence/craft-after-tap.png
+adb exec-out screencap -p > evidence/craft-after-visible-tap.png
+if adb logcat -d -s raylib:I 2>/dev/null | grep -F 'LIOS_CRAFT_PANEL_OPEN' >/dev/null; then
+  echo 'LIOS_CRAFT_VISIBLE_ICON_TOUCH_CONFIRMED' | tee evidence/craft-touch-result.txt
+  cp evidence/craft-after-visible-tap.png evidence/craft-after-tap.png
+else
+  echo 'LIOS_CRAFT_VISIBLE_ICON_TOUCH_NOT_CONFIRMED' | tee evidence/craft-touch-result.txt
+  adb shell input swipe "$source_x" "$source_y" "$source_x" "$source_y" 900
+  sleep 5
+  adb exec-out screencap -p > evidence/craft-after-source-tap.png
+  cp evidence/craft-after-source-tap.png evidence/craft-after-tap.png
+  if adb logcat -d -s raylib:I 2>/dev/null | grep -F 'LIOS_CRAFT_PANEL_OPEN' >/dev/null; then
+    echo 'LIOS_CRAFT_SOURCE_RECT_TOUCH_CONFIRMED_BUT_VISIBLE_TOUCH_FAILED' | tee -a evidence/craft-touch-result.txt
+  else
+    echo 'LIOS_CRAFT_SOURCE_RECT_TOUCH_NOT_CONFIRMED' | tee -a evidence/craft-touch-result.txt
+  fi
+fi
 python3 tools/android_frame_quality.py evidence/craft-after-tap.png \
   --min-colors 16 --report evidence/craft-frame-quality.json > evidence/craft-frame-check.txt || true
-if adb logcat -d -s raylib:I 2>/dev/null | grep -F 'LIOS_CRAFT_PANEL_OPEN' >/dev/null; then
-  echo 'LIOS_CRAFT_TOUCH_TRANSITION_CONFIRMED' | tee evidence/craft-touch-result.txt
-else
-  echo 'LIOS_CRAFT_TOUCH_NOT_CONFIRMED: screenshot captured for diagnosis' | tee evidence/craft-touch-result.txt
-fi
 adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
 test -s evidence/runtime.png
 test -s evidence/pid.txt
