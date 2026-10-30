@@ -1787,6 +1787,18 @@ int main() {
                 std::max(12,int(21.f*canvasScale)),YELLOW);
         }
         EndDrawing();
+        // A live PID and one completed swap do not prove sustained rendering:
+        // some emulator runs display a uniform grass frame indefinitely.
+        // This heartbeat distinguishes a continuing native render loop from
+        // a stall after the first frame without fabricating visual success.
+        static unsigned int completedFrames = 0;
+        ++completedFrames;
+        if (completedFrames == 1 || completedFrames % 60 == 0) {
+            TraceLog(LOG_INFO,
+                     "LIOS_RENDER_HEARTBEAT frame=%u screen=%dx%d canvas=%.3f hud=%d panel=%d camera_y=%.3f",
+                     completedFrames,GetScreenWidth(),GetScreenHeight(),
+                     canvasScale,int(hasOriginalHud),activePanel,camera.position.y);
+        }
         // The Android smoke runner must wait for a completed render/swap, not
         // merely a live process while Unity-sourced assets are still loading.
         static bool firstFrameReported = false;
