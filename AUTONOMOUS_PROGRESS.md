@@ -1,5 +1,12 @@
 ## Continuação — 2026-10-29, ciclo seguinte (America/Recife)
 
+### Verificação final da compilação deste ciclo
+
+- O job Android ARM64 [#40989774432](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40989774432) concluiu a compilação **com sucesso**: `BUILD SUCCESSFUL in 1m 5s`, APK de **25.013.534 bytes**, estrutura de APK e assinatura v2 verificadas, 89 recursos empacotados. O teste nativo de construção/fabricação e os **4/4 testes de geometria** passaram.
+- Artefato do APK gerado: [GitHub Actions artifact #12948442605](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/40989774432/artifacts/12948442605). A publicação de release é um job separado; não confundir artefato compilado com execução em dispositivo.
+- **Não foi instalado ou executado em Android virtual** neste ciclo; não há captura de tela real nem prova de equivalência com a UI original.
+
+
 - Correção funcional publicada: [46fab875](https://github.com/48348484488/last-Island-of-survival-lite/commit/46fab875d42460d454e786c37ac6b9ecc4548664) alinha os botões de quantidade (menos, mais, máximo) aos RectTransforms do Unity LITE 7.3: y=954.3, não y=741. Renderização e toque agora compartilham os mesmos `sourceRect`. O incremento respeita o máximo offline calculado da receita, não um limite fixo de oito.
 - A ação `FABRICAR OFFLINE` permanece uma aproximação nativa: sua posição foi movida para x=1510, y=912, w=237, h=72, eliminando a interseção com a área clicável `QuantityMax` (que termina em x=1486.8). **Não afirmar que esse botão usa a posição original**.
 - Regressões de geometria adicionadas em [0128281](https://github.com/48348484488/last-Island-of-survival-lite/commit/0128281b566738e21377d79855d6f7724178444b) e regex corrigida em [cac0378](https://github.com/48348484488/last-Island-of-survival-lite/commit/cac03782a92f5e158b76d9653f8ffd33569be45b).
