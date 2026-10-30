@@ -548,8 +548,11 @@ int main() {
         // Original BuildState is entered from equipped/quick-use builder
         // equipment, NOT from an invented "ENTER BUILD MODE" craft button.
         // Offline native mapping: building item occupies the last hotbar slot.
-        if((IsKeyPressed(KEY_B)||
-            (!overlayWasOpen&&building.blueprint&&hudInput.justPressed(HA::Slot6)))&&building.blueprint){
+        // A keyboard shortcut must not bypass modal input ownership:
+        // previously KEY_B could close inventory/settings and enter build
+        // mode while a panel was open, even though the HUD slot was gated.
+        if(!overlayWasOpen&&building.blueprint&&
+            (IsKeyPressed(KEY_B)||hudInput.justPressed(HA::Slot6))){
             buildMode=!buildMode;
             if(buildMode){
                 buildCategory=-1;buildSubitem=-1;buildSubmenuOpen=false;
