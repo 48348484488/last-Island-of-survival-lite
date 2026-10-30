@@ -461,12 +461,15 @@ int main() {
                     (r-l)*canvasScale,(b-t)*canvasScale};
         };
         auto sourceRect=[&](LIOS_HUD::Rect bounds)->Rectangle {
-            return unityRect(bounds.left,bounds.top,bounds.right,bounds.bottom);
+            // Use the same measured HUD artwork offset as touch hit-testing.
+            const float dy=LIOS_INPUT::HudVisualYOffset;
+            return unityRect(bounds.left,bounds.top+dy,
+                             bounds.right,bounds.bottom+dy);
         };
         if(hasOriginalHud){
             leftStick.center={
                 canvasLeft+LIOS_HUD::JoystickCenterX*canvasScale,
-                canvasTop+LIOS_HUD::JoystickCenterY*canvasScale
+                canvasTop+(LIOS_HUD::JoystickCenterY+LIOS_INPUT::HudVisualYOffset)*canvasScale
             };
             leftStick.radius=LIOS_HUD::JoystickRadius*canvasScale;
             leftStick.knob=hudInput.stickPoint;
