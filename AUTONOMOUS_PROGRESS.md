@@ -1,3 +1,10 @@
+### Source-geometry seam results and build queue management — 2026-10-30
+
+- Independent source OBJ triangle intersection (EdgeAI-style) confirms all four selected neighboring tiles cover a probe 0.5m beyond the original spawn tile boundary. North delta +0.17189m, south +0.00313m, east -0.03907m, west -0.01094m. Each is below provisional 0.55m step height, but only at these coordinates; runtime collision and actual traversal remain unverified. [Provenance](https://github.com/48348484488/EdgeAI-Engine/blob/main/docs/last_spawn_mesh_seam_heights_2026-10-30.json).
+- Added concurrency cancellation for superseded ARM64 builds to avoid redundant Android compilation after rapid source commits [48eff08](https://github.com/48348484488/last-Island-of-survival-lite/commit/48eff08b4e879eef1d24844fe91308258d8b3190). New APK with five sectors still **not confirmed compiled or executed** at checkpoint; inspect the newest workflow before claiming success.
+- Next: verify latest build, virtual Android `LIOS_TERRAIN_SECTORS_READY count=5` and four `LIOS_TERRAIN_SEAM_PROBE` logs; compare their heights with independent OBJ results and capture a real screenshot.
+
+
 ## 2026-10-30 — five authentic Unity-extracted terrain sectors (runtime validation pending)
 
 - Previous proven baseline: [Android workflow #41096420997](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41096420997) compiled, ran and published the **single-sector** source-terrain APK; do not transfer that validation to the new five-sector code.
