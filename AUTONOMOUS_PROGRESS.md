@@ -1,3 +1,10 @@
+## Resultados adicionais — 2026-10-30 01:30 (America/Recife)
+
+- **Build ARM64 [#41002903306](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41002903306) aprovado integralmente**, incluindo regressão C++, verificação de assinatura/estrutura APK e publicação. Release [v0.25.0-b5473200](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-b5473200), APK de **25.013.758 bytes**. Compilação aprovada **não significa execução Android comprovada**.
+- Workflow virtual ARM64 criado e reforçado para capturar screenshot/logcat antes de checar processo; commit [dbe6ffa](https://github.com/48348484488/last-Island-of-survival-lite/commit/dbe6ffa5a3447b69975598f11d01a112ad2946b9). Eventos `workflow_run` geraram `startup_failure` antes de criar jobs, com `name=""`, `path="BuildFailed"`, `jobs=0` ([#41003151840](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41003151840)). **Não foi possível instalar ou executar o APK em Android virtual**, nem capturar screenshot. Causa da falha de inicialização externa não comprovada; não confundir com crash do jogo.
+- EdgeAI auditou estaticamente `libraymob.so` de APK anterior `a290f59a`, com 25.188 chamadas detectadas e 674 indiretas; relatório [aqui](https://github.com/48348484488/EdgeAI-Engine/blob/main/docs/last_recreated_arm64_callgraph_2026-10-30.json). Não é auditoria do original nem prova de fidelidade.
+- Próxima prioridade: diagnosticar/contornar falha pré-job do GitHub Actions virtual sem mascará-la; executar APK num ambiente virtual ARM64 autorizado, capturar screenshot e comparar o mesmo estado com Unity LITE 7.3.
+
 ## Continuação — 2026-10-30 01:25–01:30 (America/Recife), conversão segura de coordenadas
 
 - Corrigido `native_build_craft.hpp`: `grid(float)` não converte NaN, infinito ou coordenadas enormes para `int` (comportamento indefinido); devolve sentinela fora da área permitida. `valid()` evita `std::abs(INT_MIN)` (overflow). Commit [b06e6b9](https://github.com/48348484488/last-Island-of-survival-lite/commit/b06e6b99019c0b2f49d2419a5e4b9a01eba21697).
