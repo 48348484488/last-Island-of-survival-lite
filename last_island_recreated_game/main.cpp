@@ -334,6 +334,23 @@ int main() {
     LIOS_TERRAIN::Tile terrain;
     terrain.load();
     player.position.y=terrain.ground(player.position.x,player.position.z);
+    // Probe both sides of each 400m source-tile seam in the real Android
+    // runtime. Log gaps/height discontinuities without claiming Unity physics.
+    const float seamCoords[4][4]={
+        {0.f,199.5f,0.f,200.5f},
+        {0.f,-199.5f,0.f,-200.5f},
+        {199.5f,0.f,200.5f,0.f},
+        {-199.5f,0.f,-200.5f,0.f}
+    };
+    const char* seamNames[4]={"north","south","east","west"};
+    for(int seam=0;seam<4;seam++){
+        float innerHeight=0.f,outerHeight=0.f;
+        const bool inner=terrain.sample(seamCoords[seam][0],seamCoords[seam][1],innerHeight);
+        const bool outer=terrain.sample(seamCoords[seam][2],seamCoords[seam][3],outerHeight);
+        TraceLog(LOG_INFO,"LIOS_TERRAIN_SEAM_PROBE %s inner=%d outer=%d height_in=%.4f height_out=%.4f",
+                 seamNames[seam],int(inner),int(outer),innerHeight,outerHeight);
+    }
+
     for(auto& node:nodes)
         node.position.y=terrain.ground(node.position.x,node.position.z);
     const float houseGround=terrain.ground(10.f,-15.f);
