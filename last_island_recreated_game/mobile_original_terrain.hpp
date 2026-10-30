@@ -16,6 +16,11 @@ struct SourceTile {
     Texture2D texture{};
     bool ready=false;
 
+    // raymob's Android NDK toolchain does not treat a struct with default
+    // member initializers as a six-field aggregate in its C++ mode.
+    SourceTile(const char* mesh,const char* mask,float x0,float x1,float z0,float z1)
+        :meshPath(mesh),maskPath(mask),minX(x0),maxX(x1),minZ(z0),maxZ(z1){}
+
     void load() {
         model=LoadModel(meshPath);
         // Unity source RGBA is a packed material/splat mask. The alpha channel
