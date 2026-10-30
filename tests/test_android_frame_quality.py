@@ -157,5 +157,20 @@ class FrameQualityTests(unittest.TestCase):
         self.assertIn("LIOS_SETTINGS_SAME_BUTTON_CLOSE_CONFIRMED", smoke)
 
 
+    def test_android_build_reuses_pinned_source_artifacts_without_skipping_validation(self):
+        workflow = (Path(__file__).resolve().parents[1] /
+                    ".github" / "workflows" /
+                    "build_android_raylib_lite.yml").read_text(encoding="utf-8")
+        self.assertIn("actions/cache@v4", workflow)
+        for name in ("native_craft_source_manifest.json",
+                     "build_surface_manifest.json",
+                     "part_icons_manifest.json",
+                     "edgeai_real_buildpart_decoded.json"):
+            self.assertIn(name, workflow)
+            self.assertIn("PINNED_SOURCE_ARTIFACT_UNAVAILABLE " + name, workflow)
+        self.assertIn("for attempt in 1 2 3; do", workflow)
+        self.assertIn("if [[ \"$attempt\" -eq 3 ]]; then", workflow)
+
+
 if __name__ == "__main__":
     unittest.main()
