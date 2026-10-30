@@ -23,3 +23,11 @@ for profile in ("on-foot-melee","on-foot-rifle"):
         except ValueError as e:hit=str(e)
         result[action]={"rect":b,"center":p,"center_hit":hit}
     print("SOURCE_TOUCH_PROFILE",profile,json.dumps(result,ensure_ascii=False),flush=True)
+    craft=result.get("craft")
+    if craft:
+        w,h=1080,640
+        scale=min(w/1920,h/1080)
+        x=round((w-1920*scale)/2+craft["center"][0]*scale)
+        y=round((h-1080*scale)/2+craft["center"][1]*scale)
+        print("LIOS_SOURCE_CRAFT_TAP_1080x640",profile,x,y,
+              "source_rect",craft["rect"],"center_hit",craft["center_hit"],flush=True)
