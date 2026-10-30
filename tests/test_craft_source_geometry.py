@@ -53,6 +53,18 @@ class CraftGeometryContract(unittest.TestCase):
         self.assertIn("state.quantity+1", code)
         self.assertIn("state.maxQuantity(*recipe,resources)", code)
 
+    def test_recipe_cell_id_and_badge_do_not_overlap(self):
+        # Regression from actual Android 1080x640 craft-panel screenshot:
+        # "#ID" and "BASICO" occupied the same row inside narrow cells.
+        code = CLIENT.read_text(encoding="utf-8")
+        grid = code.split("for(int i=0;i<12;i++){", 1)[1].split(
+            "EndScissorMode();", 1)[0]
+        self.assertIn("MeasureText(idLabel,idFont)", grid)
+        self.assertIn("x+74.75f", grid)
+        self.assertIn("DrawText(idLabel", grid)
+        self.assertNotIn('txt("BASICO"', grid)
+        self.assertNotIn('txt(TextFormat("#%d",recipe->id)', grid)
+
     def test_craft_timers_consume_unclamped_frame_time(self):
         # Android rendering can take longer than the 50 ms physics cap.
         # The two offline queues must not silently lose elapsed time.
