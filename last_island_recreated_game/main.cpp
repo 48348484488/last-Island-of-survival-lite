@@ -585,7 +585,9 @@ int main() {
                 if(!showOfflineCraftPrototype){
                     if(LIOS_REAL_CRAFT::hit(click,1654,0,316,86,
                         canvasScale,canvasLeft,canvasTop)){
-                        activePanel=0;continue;
+                        activePanel=0;
+                        TraceLog(LOG_INFO,"LIOS_CRAFT_PANEL_CLOSE");
+                        continue;
                     }
                     LIOS_BUILD::Resources nativeResources{
                         player.woodCount,player.stoneCount,
@@ -602,7 +604,9 @@ int main() {
                 };
                 if(LIOS_CRAFT_UI::hit(click,LIOS_CRAFT_SOURCE::Back,
                     canvasScale,canvasLeft,canvasTop)){
-                    activePanel=0;continue;
+                    activePanel=0;
+                    TraceLog(LOG_INFO,"LIOS_CRAFT_PANEL_CLOSE");
+                    continue;
                 }
                 // Unity BagProducePage: main tabs -> sub-tabs -> recipe cells.
                 bool navigationTouched=false;
