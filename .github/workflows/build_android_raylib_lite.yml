@@ -624,15 +624,41 @@ jobs:
           APK="dist/LastIslandLite-v0.25.0-${GITHUB_SHA:0:8}-ARM64.apk"
           TAG="v0.25.0-${GITHUB_SHA:0:8}"
           test -s "$APK"
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
-          else
-            gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" \
-              --target "$GITHUB_SHA" \
-              --title "Last Island LITE recriado - Android craft V25 commit ${GITHUB_SHA:0:8}" \
-              --notes "APK ARM64 experimental V25: catalogo de 519 receitas e 512 sprites originais do XAPK, mais filtros e listagem. Producao offline parcial de itens basicos, sem servidor nem provas de paridade visual UGUI completa; antigo sistema demonstrativo acessivel como teste separado."
+          # GitHub Releases can intermittently return HTTP 500 after the APK
+          # has already compiled and passed the emulator smoke. Retry only
+          # publishing; never rebuild or claim an APK was published prematurely.
+          published=0
+          for attempt in 1 2 3 4; do
+            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              if gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber; then
+                published=1
+                break
+              fi
+            else
+              if gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" \
+                --target "$GITHUB_SHA" \
+                --title "Last Island LITE recriado - Android craft V25 commit ${GITHUB_SHA:0:8}" \
+                --notes "APK ARM64 experimental V25: catalogo de 519 receitas e 512 sprites originais do XAPK, mais filtros e listagem. Producao offline parcial de itens basicos, sem servidor nem provas de paridade visual UGUI completa; antigo sistema demonstrativo acessivel como teste separado."; then
+                published=1
+                break
+              fi
+            fi
+            echo "LIOS_RELEASE_PUBLISH_RETRY attempt=$attempt" >&2
+            if [[ "$attempt" -lt 4 ]]; then sleep $((attempt * 15)); fi
+          done
+          if [[ "$published" -ne 1 ]]; then
+            echo "LIOS_RELEASE_PUBLISH_FAILED_AFTER_RETRIES" >&2
+            exit 1
           fi
-          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'
+          for attempt in 1 2 3; do
+            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].url'; then
+              exit 0
+            fi
+            echo "LIOS_RELEASE_VERIFY_RETRY attempt=$attempt" >&2
+            sleep $((attempt * 10))
+          done
+          echo "LIOS_RELEASE_VERIFY_FAILED" >&2
+          exit 1
 
   android-virtual-smoke:
     name: Attempt actual Android virtual ARM64 runtime
