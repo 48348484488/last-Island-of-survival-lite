@@ -26,5 +26,32 @@ class CraftGeometryContract(unittest.TestCase):
         self.assertRegex(SOURCE.read_text(encoding="utf-8"),
                          r"SubTabStepX\s*=\s*145\.0f")
 
+    def test_quantity_controls_render_and_touch_use_same_unity_bounds(self):
+        code = CLIENT.read_text(encoding="utf-8")
+        source = SOURCE.read_text(encoding="utf-8")
+        for control in ("QuantityMinus", "QuantityPlus", "QuantityMax"):
+            ref = "LIOS_CRAFT_SOURCE::" + control
+            self.assertIn("DrawRectangleRec(sourceRect(" + ref + ",sc,ox,oy)", code)
+            self.assertIn("CheckCollisionPointRec(p,sourceRect(" + ref + ",sc,ox,oy))", code)
+            self.assertRegex(source, rf"{control}\\s*=\\s*\\{{[0-9.]+f,954\\.3f,")
+        self.assertNotIn("hit(p,1225,741", code)
+        self.assertNotIn("hit(p,1380,741", code)
+        self.assertNotIn("hit(p,1480,741", code)
+
+    def test_native_create_fallback_does_not_overlap_source_quantity_max(self):
+        source = SOURCE.read_text(encoding="utf-8")
+        code = CLIENT.read_text(encoding="utf-8")
+        match = re.search(r"QuantityMax\\s*=\\s*\\{([0-9.]+)f,([0-9.]+)f,([0-9.]+)f,([0-9.]+)f\\}", source)
+        self.assertIsNotNone(match)
+        x, y, w, h = map(float, match.groups())
+        create = (1510., 912., 237., 72.)
+        self.assertIn("DrawRectangleRec(B(1510,912,237,72)", code)
+        self.assertIn("hit(p,1510,912,237,72,sc,ox,oy)", code)
+        overlap_w = max(0., min(x + w, create[0] + create[2]) - max(x, create[0]))
+        overlap_h = max(0., min(y + h, create[1] + create[3]) - max(y, create[1]))
+        self.assertEqual(overlap_w * overlap_h, 0.)
+        self.assertIn("state.quantity+1", code)
+        self.assertIn("state.maxQuantity(*recipe,resources)", code)
+
 if __name__ == "__main__":
     unittest.main()
