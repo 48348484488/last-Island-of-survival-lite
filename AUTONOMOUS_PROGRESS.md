@@ -1,3 +1,11 @@
+## Offline crafting elapsed-time correction — 2026-10-30 05:19 (America/Recife)
+
+- Found a concrete gameplay timing regression in `main.cpp`: `GetFrameTime()` was clamped to 0.05 seconds **before** feeding both crafting queues. At low Android FPS, the queues advanced more slowly than real elapsed time despite their existing long-frame-safe `tick()` logic.
+- Separated physics step `dt=min(elapsedFrame,0.05)` from validated nonnegative finite elapsed frame time. Both `building.tickCraft` and `realCraft.tick` now receive the unclamped elapsed time, commit [1d5f53b](https://github.com/48348484488/last-Island-of-survival-lite/commit/1d5f53bc392c57306fb04658196bccd6052df3e3). Physics remains capped to preserve movement stability.
+- Added source integration regression `test_craft_timers_consume_unclamped_frame_time` in [f7a151d](https://github.com/48348484488/last-Island-of-survival-lite/commit/f7a151dd56940f225020566eee27d27a00bd7c91). Existing native C++ regression already exercises multiple completed orders with `tickCraft(11.25f)`; it did not previously cover the main-loop clamping integration.
+- [Construction HUD parity workflow #41025250237](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41025250237) passed for the gameplay commit. [APK build #41025272572](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41025272572) was running for the new test commit; **new APK build/runtime results pending**. This change has not been validated by Android screenshot or original Unity behavior.
+- Next: confirm native and APK builds, verify KVM-accelerated virtual installation and screenshots, compare crafting timer behavior with original authorized LITE 7.3 runtime before claiming parity.
+
 ## Android emulator boot blocker identified and KVM fix — 2026-10-30 05:15 (America/Recife)
 
 - Rechecked [build #41019492306](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41019492306): **native C++ tests, Android APK build, APK verification, artifact upload and GitHub release publication passed** for `f2421158` (craft queue overlap fix). The overall workflow failed only in the virtual Android job; do not mislabel it as a build failure.
