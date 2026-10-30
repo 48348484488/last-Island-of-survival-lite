@@ -6,8 +6,9 @@ as evidence of gameplay. This is a smoke-test heuristic, NOT visual parity.
 """
 import argparse
 import json
+import math
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageChops, ImageStat
 
 
 def inspect_frame(path, min_colors=16):
@@ -37,22 +38,77 @@ def inspect_frame(path, min_colors=16):
         }
 
 
+
+def inspect_transition(before_path, after_path, min_changed_fraction=0.01,
+                       min_channel_delta=30):
+    """Measure real screenshot change; alone this does NOT prove a menu opened.
+
+    Compare decoded RGB pixels, not PNG file sizes or byte encodings. The
+    runtime action log must independently prove the expected UI transition.
+    """
+    if (type(min_changed_fraction) not in (float, int) or
+            not math.isfinite(min_changed_fraction) or
+            not 0 < min_changed_fraction <= 1):
+        raise ValueError("min_changed_fraction must be finite and in (0, 1]")
+    if type(min_channel_delta) is not int or not 1 <= min_channel_delta <= 255:
+        raise ValueError("min_channel_delta must be an integer in [1, 255]")
+    with Image.open(before_path) as a, Image.open(after_path) as b:
+        if a.format != "PNG" or b.format != "PNG":
+            raise ValueError("both captures must be PNG")
+        a.load()
+        b.load()
+        if a.size != b.size:
+            raise ValueError("screenshot resolutions differ")
+        width, height = a.size
+        if width < 320 or height < 240:
+            raise ValueError("screenshot resolution is too small")
+        diff = ImageChops.difference(a.convert("RGB"), b.convert("RGB"))
+        r, g, blue = diff.split()
+        max_delta = ImageChops.lighter(ImageChops.lighter(r, g), blue)
+        mask = max_delta.point(lambda value: 255 if value >= min_channel_delta else 0)
+        changed = mask.histogram()[255]
+        fraction = changed / (width * height)
+        bbox = mask.getbbox()
+        return {
+            "width": width, "height": height,
+            "changed_pixels": changed,
+            "changed_fraction": round(fraction, 6),
+            "min_changed_fraction": min_changed_fraction,
+            "min_channel_delta": min_channel_delta,
+            "mean_abs_rgb_delta": round(sum(ImageStat.Stat(diff).mean) / 3, 4),
+            "difference_bounds": list(bbox) if bbox else None,
+            "transition_detected": fraction >= min_changed_fraction,
+            "action_or_original_game_parity_proven": False,
+        }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("screenshot", type=Path)
     parser.add_argument("--min-colors", type=int, default=16)
+    parser.add_argument("--compare-with", type=Path, help="Baseline screenshot for pixel transition audit")
+    parser.add_argument("--min-changed-fraction", type=float, default=0.01)
+    parser.add_argument("--min-channel-delta", type=int, default=30)
     parser.add_argument("--report", type=Path)
     args = parser.parse_args()
     try:
-        result = inspect_frame(args.screenshot, args.min_colors)
+        if args.compare_with:
+            result = inspect_transition(args.compare_with, args.screenshot,
+                                        args.min_changed_fraction, args.min_channel_delta)
+            passed = result["transition_detected"]
+        else:
+            result = inspect_frame(args.screenshot, args.min_colors)
+            passed = result["nonflat_frame"]
     except Exception as exc:
-        result = {"nonflat_frame": False, "error": str(exc)}
+        result = {"transition_detected" if args.compare_with else "nonflat_frame": False,
+                  "error": str(exc)}
+        passed = False
     payload = json.dumps(result, indent=2) + "\n"
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(payload, encoding="utf-8")
     print(payload, end="")
-    return 0 if result["nonflat_frame"] else 1
+    return 0 if passed else 1
 
 
 if __name__ == "__main__":
