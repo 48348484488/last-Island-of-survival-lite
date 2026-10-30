@@ -166,6 +166,45 @@ if ! grep -F 'LIOS_CRAFT_VISIBLE_ICON_TOUCH_CONFIRMED' evidence/craft-touch-resu
   echo 'LIOS_VISIBLE_CRAFT_BUTTON_FUNCTIONAL_FAILURE' | tee evidence/craft-visible-failure.txt
   exit 49
 fi
+# Follow-up diagnostic: the original-HUD backpack must open from its visible
+# icon, and the same icon must close its own modal. This is intentionally
+# evidence-only until a clean Android run verifies both touch coordinates.
+# Never classify a missing event or unchanged frame as functional success.
+if adb logcat -c &&
+   adb shell input swipe 1010 35 1010 35 700; then
+  sleep 2
+  adb logcat -d -s raylib:I > evidence/craft-close-logcat.txt 2>&1 || true
+  if grep -F 'LIOS_CRAFT_PANEL_CLOSE' evidence/craft-close-logcat.txt >/dev/null; then
+    adb exec-out screencap -p > evidence/after-craft-close.png || true
+    adb logcat -c || true
+    if adb shell input swipe 289 454 289 454 700; then
+      sleep 3
+      adb exec-out screencap -p > evidence/inventory-open.png || true
+      adb logcat -d -s raylib:I > evidence/inventory-open-logcat.txt 2>&1 || true
+      if grep -F 'LIOS_INVENTORY_PANEL_OPEN' evidence/inventory-open-logcat.txt >/dev/null &&
+         python3 tools/android_frame_quality.py evidence/inventory-open.png \
+           --compare-with evidence/after-craft-close.png \
+           --min-changed-fraction 0.01 --report evidence/inventory-transition.json \
+           > evidence/inventory-transition-check.txt 2>&1; then
+        echo 'LIOS_INVENTORY_VISIBLE_TOUCH_AND_TRANSITION_CONFIRMED' | tee evidence/inventory-probe.txt
+        adb logcat -c || true
+        if adb shell input swipe 289 454 289 454 700; then
+          sleep 2
+          adb logcat -d -s raylib:I > evidence/inventory-close-logcat.txt 2>&1 || true
+          if grep -F 'LIOS_INVENTORY_PANEL_CLOSE' evidence/inventory-close-logcat.txt >/dev/null; then
+            echo 'LIOS_INVENTORY_SAME_BUTTON_CLOSE_CONFIRMED' | tee -a evidence/inventory-probe.txt
+          else
+            echo 'LIOS_INVENTORY_SAME_BUTTON_CLOSE_UNCONFIRMED' | tee -a evidence/inventory-probe.txt
+          fi
+        fi
+      else
+        echo 'LIOS_INVENTORY_VISIBLE_TOUCH_UNCONFIRMED' | tee evidence/inventory-probe.txt
+      fi
+    fi
+  else
+    echo 'LIOS_CRAFT_CLOSE_UNCONFIRMED_IN_FOLLOWUP_PROBE' | tee evidence/inventory-probe.txt
+  fi
+fi
 adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
 test -s evidence/runtime.png
 test -s evidence/pid.txt
