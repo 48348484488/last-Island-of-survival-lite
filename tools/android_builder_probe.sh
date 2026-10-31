@@ -142,6 +142,48 @@ grep -E 'LIOS_BUILD_PLACE frame=[0-9]+ piece=0 placed=1' \
  evidence/build-place-logcat.txt >/dev/null ||
  { echo LIOS_BUILD_FOUNDATION_NOT_PLACED; exit 63; }
 adb exec-out screencap -p > evidence/build-after-place.png || true
+# Continue with a second source-derived category. Place the first wall on
+# the foundation, rotate the preview and place another wall on a new edge.
+# This tests actual Android taps and the native placement state, not parity
+# with the original Unity server.
+tap wall "$wall_x" "$wall_y" 'LIOS_BUILD_CATEGORY'
+grep -E 'LIOS_BUILD_CATEGORY frame=[0-9]+ category=3 submenu=1' \
+ evidence/build-wall-logcat.txt >/dev/null ||
+ { echo LIOS_BUILD_WALL_CATEGORY_NOT_SELECTED; exit 65; }
+tap wall_child0 "$child_x" "$child_y" 'LIOS_BUILD_CHILD'
+grep -E 'LIOS_BUILD_CHILD frame=[0-9]+ category=3 child=0 .*native_piece=1' \
+ evidence/build-wall_child0-logcat.txt >/dev/null ||
+ { echo LIOS_BUILD_WALL_CHILD_NOT_SELECTED; exit 66; }
+tap wall_place "$place_x" "$place_y" 'LIOS_BUILD_PLACE'
+grep -E 'LIOS_BUILD_PLACE frame=[0-9]+ piece=1 placed=2' \
+ evidence/build-wall_place-logcat.txt >/dev/null ||
+ { echo LIOS_BUILD_WALL_NOT_PLACED; exit 67; }
+adb exec-out screencap -p > evidence/build-wall-before-rotate.png || true
+tap rotate "$rotate_x" "$rotate_y" 'LIOS_BUILD_ROTATE'
+python3 - <<'PY'
+import re
+from pathlib import Path
+child=Path("evidence/build-wall_child0-logcat.txt").read_text()
+rotation=Path("evidence/build-rotate-logcat.txt").read_text()
+source=re.search(r"LIOS_BUILD_CHILD frame=\\d+ category=3 child=0 .*source_angle=(\\d+)",child)
+change=re.search(r"LIOS_BUILD_ROTATE frame=\\d+ before=(\\d+) orientation=(\\d+) source_angle=(\\d+)",rotation)
+if not source or not change:
+    raise SystemExit("LIOS_BUILD_WALL_ROTATION_EVIDENCE_MISSING")
+angle=int(source[1]);before,after,logged_angle=map(int,change.groups())
+if angle<=0 or angle%90 or angle!=logged_angle:
+    raise SystemExit("LIOS_BUILD_WALL_SOURCE_ANGLE_NOT_SUPPORTED angle=%d" % angle)
+if after!=(before+angle//90)%4 or after==before:
+    raise SystemExit("LIOS_BUILD_WALL_ROTATION_INCORRECT before=%d after=%d angle=%d" %
+                     (before,after,angle))
+print("LIOS_BUILD_WALL_ROTATION_PASS before=%d after=%d angle=%d" %
+      (before,after,angle))
+PY
+adb exec-out screencap -p > evidence/build-wall-after-rotate.png || true
+tap wall_rotated_place "$place_x" "$place_y" 'LIOS_BUILD_PLACE'
+grep -E 'LIOS_BUILD_PLACE frame=[0-9]+ piece=1 placed=3' \
+ evidence/build-wall_rotated_place-logcat.txt >/dev/null ||
+ { echo LIOS_BUILD_ROTATED_WALL_NOT_PLACED; exit 68; }
+adb exec-out screencap -p > evidence/build-wall-after-place.png || true
 tap exit "$exit_x" "$exit_y" 'LIOS_BUILD_EXIT'
 grep -F 'LIOS_BUILD_MODE_TRANSITION enabled=0 blueprint=1' \
  evidence/build-exit-logcat.txt >/dev/null ||
@@ -152,6 +194,9 @@ cat evidence/build-craft_open-logcat.txt evidence/build-prototype-logcat.txt \
  evidence/build-queue-logcat.txt evidence/build-blueprint-ready-logcat.txt \
  evidence/build-craft_close-logcat.txt evidence/build-equip-logcat.txt \
  evidence/build-foundation-logcat.txt evidence/build-child0-logcat.txt \
- evidence/build-place-logcat.txt evidence/build-exit-logcat.txt \
+ evidence/build-place-logcat.txt evidence/build-wall-logcat.txt \
+ evidence/build-wall_child0-logcat.txt evidence/build-wall_place-logcat.txt \
+ evidence/build-rotate-logcat.txt evidence/build-wall_rotated_place-logcat.txt \
+ evidence/build-exit-logcat.txt \
  > evidence/build-interaction-trace.txt
-echo LIOS_ANDROID_BUILDER_CRAFT_EQUIP_PLACE_EXIT_PASS | tee evidence/build-probe-result.txt
+echo LIOS_ANDROID_BUILDER_FOUNDATION_WALL_ROTATE_PLACE_EXIT_PASS | tee evidence/build-probe-result.txt
