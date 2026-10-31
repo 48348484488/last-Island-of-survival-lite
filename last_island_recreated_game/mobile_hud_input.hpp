@@ -65,7 +65,7 @@ struct Controller {
     if(contains(LIOS_HUD::JoystickTrigger,x,y))return Action::Joystick;
     return Action::None;
  }
- void frame(bool rifle,float width,float height) {
+ void frame(bool rifle,float width,float height,bool modalOpen=false) {
     held.clear();pressed.clear();released.clear();lookDelta={0,0};
     std::set<int> alive;
     float scale=std::min(width/1920.f,height/1080.f);
