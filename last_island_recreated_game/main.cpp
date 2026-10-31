@@ -514,7 +514,7 @@ int main() {
         // The original battlepanel.ab hitboxes are consumed by ONE action per
         // stable Android finger. Raylib synthesizes a mouse click for touchscreen
         // activity; it must NEVER be interpreted as a separate global attack.
-        hudInput.frame(player.equippedSlot==1,(float)GetScreenWidth(),(float)GetScreenHeight());
+        hudInput.frame(player.equippedSlot==1,(float)GetScreenWidth(),(float)GetScreenHeight(),overlayWasOpen);
         // UI overlay consumes only touch DOWN edges, never a continuous drag.
         // Keeps construction buttons from placing 60 pieces while held.
         std::vector<Vector2> uiClicks;
