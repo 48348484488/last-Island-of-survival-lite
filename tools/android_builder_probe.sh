@@ -158,6 +158,10 @@ tap wall_place "$place_x" "$place_y" 'LIOS_BUILD_PLACE'
 grep -E 'LIOS_BUILD_PLACE frame=[0-9]+ piece=1 placed=2' \
  evidence/build-wall_place-logcat.txt >/dev/null ||
  { echo LIOS_BUILD_WALL_NOT_PLACED; exit 67; }
+grep -F 'LIOS_WALL_SWEEP_RUNTIME rotation=0 cross_blocked=1 short_escape_allowed=1 inward_blocked=1 outside_allowed=1' \
+ evidence/build-wall_place-logcat.txt >/dev/null ||
+ { echo LIOS_BUILD_WALL_SWEEP_RUNTIME_FAILED; exit 69; }
+echo LIOS_BUILD_WALL_SWEEP_RUNTIME_PASS rotation=0 | tee -a evidence/build-probe-result.txt
 adb exec-out screencap -p > evidence/build-wall-before-rotate.png || true
 tap rotate "$rotate_x" "$rotate_y" 'LIOS_BUILD_ROTATE'
 python3 - <<'PY'
@@ -183,6 +187,10 @@ tap wall_rotated_place "$place_x" "$place_y" 'LIOS_BUILD_PLACE'
 grep -E 'LIOS_BUILD_PLACE frame=[0-9]+ piece=1 placed=3' \
  evidence/build-wall_rotated_place-logcat.txt >/dev/null ||
  { echo LIOS_BUILD_ROTATED_WALL_NOT_PLACED; exit 68; }
+grep -F 'LIOS_WALL_SWEEP_RUNTIME rotation=2 cross_blocked=1 short_escape_allowed=1 inward_blocked=1 outside_allowed=1' \
+ evidence/build-wall_rotated_place-logcat.txt >/dev/null ||
+ { echo LIOS_BUILD_ROTATED_WALL_SWEEP_RUNTIME_FAILED; exit 70; }
+echo LIOS_BUILD_WALL_SWEEP_RUNTIME_PASS rotation=2 | tee -a evidence/build-probe-result.txt
 adb exec-out screencap -p > evidence/build-wall-after-place.png || true
 # Report measured screenshot deltas without claiming Unity visual parity.
 python3 - <<'PY'
