@@ -407,3 +407,11 @@
 ## 2026-10-30 — auditoria de entrada modal
 
 Inspeção identificou que `wantJump` não verifica `activePanel==0`, enquanto movimento e ataque verificam. A atribuição de novos dedos no `mobile_hud_input.hpp` também não consulta o estado modal. Correção e validação Android ainda pendentes.
+
+## Continuação — 2026-10-30: correção de toques em menus
+
+- Corrigido salto que ignorava `activePanel` e podia ser acionado com menu aberto ([b6b2478](https://github.com/48348484488/last-Island-of-survival-lite/commit/b6b24787ed24e5fbc197f2332f3f14159d7b9578)).
+- `mobile_hud_input.hpp` agora atribui toques de gameplay somente fora de modal; `captureModal()` neutraliza dedos de ataque/joystick/câmera anteriores, preservando botões de fechar menu. `main.cpp` aplica captura e registra `LIOS_MODAL_TOUCH_CAPTURE` ([04c76a2](https://github.com/48348484488/last-Island-of-survival-lite/commit/04c76a2cbc8bbbac8f1840e7079db27084202ed3)).
+- Testes de regressão estáticos atualizados. Smoke Android ampliado: toca o hitbox real de salto enquanto inventário está aberto, exige registro de toque neutro e ausência de salto ([2ef4243](https://github.com/48348484488/last-Island-of-survival-lite/commit/2ef4243315603a292a2f6d015173ba2cc79769f0)).
+- [Build ARM64 #41156856060](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41156856060) ainda enfileirado na última consulta. Sem APK novo validado, screenshot ou nova medição de FPS neste ciclo.
+- EdgeAI ganhou auditor genérico de exclusividade de eventos de modal, ainda aguardando CI. Próxima prioridade: confirmar compilação e execução, verificar teste negativo de salto, auditar logs e avançar para botões de mira/barra/construção.
