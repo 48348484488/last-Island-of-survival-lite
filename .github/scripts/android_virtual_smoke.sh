@@ -111,7 +111,7 @@ if [[ "$ready_frame" -ne 1 ]]; then
   adb logcat -d -v threadtime > evidence/first-frame-stall-logcat.txt 2>&1 || true
   grep 'LIOS_FIRST_FRAME_PHASE' evidence/first-frame-stall-logcat.txt \
     > evidence/first-frame-stages.txt || true
-  pid="$(tr -d '\\r\\n ' < evidence/pid.txt)"
+  pid="$(tr -d '\r\n ' < evidence/pid.txt)"
   if [[ "$pid" =~ ^[0-9]+$ ]]; then
     timeout 15s adb shell debuggerd -b "$pid" \
       > evidence/first-frame-native-backtrace.txt 2>&1 || true
