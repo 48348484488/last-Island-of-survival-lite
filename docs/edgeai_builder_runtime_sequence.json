@@ -44,7 +44,7 @@
     },
     {
       "name": "wall_child",
-      "pattern": "LIOS_BUILD_CHILD frame=\\d+ category=3 child=0 .*native_piece=1 source_angle=\\d+"
+      "pattern": "LIOS_BUILD_CHILD frame=\\d+ category=3 child=0 source_id=24012 native_piece=1 source_angle=180"
     },
     {
       "name": "wall_place",
@@ -52,7 +52,7 @@
     },
     {
       "name": "wall_rotate",
-      "pattern": "LIOS_BUILD_ROTATE frame=\\d+ before=(?P<before>\\d+) orientation=(?P<after>\\d+) source_angle=\\d+"
+      "pattern": "LIOS_BUILD_ROTATE frame=\\d+ before=(?P<before>\\d+) orientation=(?P<after>\\d+) source_angle=180"
     },
     {
       "name": "rotated_wall_place",
