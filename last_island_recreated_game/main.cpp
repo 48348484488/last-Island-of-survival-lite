@@ -984,6 +984,36 @@ int main() {
                         player.woodCount=available.wood;player.stoneCount=available.stone;
                         player.ironCount=available.metal;
                         buildStatus="Peca construida.";
+#if defined(__ANDROID__)
+                        // Diagnostic-only in-process check of the actual
+                        // placed collider. Enabled by the existing explicit
+                        // emulator fixture; normal gameplay is unchanged.
+                        char collisionFixture[PROP_VALUE_MAX]={};
+                        if(building.selected==LIOS_BUILD::Wall &&
+                           __system_property_get("debug.lios.build_fixture",collisionFixture)>0 &&
+                           std::strcmp(collisionFixture,"resources_v1")==0){
+                            const LIOS_BUILD::Piece &wall=building.placed.back();
+                            const int rotation=LIOS_BUILD::turn(wall.turn);
+                            const bool alongZ=(rotation%2)==0;
+                            const float edge=(rotation==0||rotation==3)?
+                                -LIOS_BUILD::WallEdgeOffset:LIOS_BUILD::WallEdgeOffset;
+                            const float cx=LIOS_BUILD::world(wall.gx)+(alongZ?0.f:edge);
+                            const float cz=LIOS_BUILD::world(wall.gz)+(alongZ?edge:0.f);
+                            const float nx=alongZ?0.f:1.f,nz=alongZ?1.f:0.f;
+                            const bool cross=building.blocksMotion(
+                                cx-nx,cz-nz,cx+nx,cz+nz);
+                            const bool shortEscape=!building.blocksMotion(
+                                cx,cz,cx+nx*.05f,cz+nz*.05f);
+                            const bool deeper=building.blocksMotion(
+                                cx+nx*.20f,cz+nz*.20f,
+                                cx+nx*.10f,cz+nz*.10f);
+                            const bool outside=!building.blocksMotion(
+                                cx-nx,cz-nz,cx-nx*.8f,cz-nz*.8f);
+                            TraceLog(LOG_INFO,
+                                "LIOS_WALL_SWEEP_RUNTIME rotation=%d cross_blocked=%d short_escape_allowed=%d inward_blocked=%d outside_allowed=%d",
+                                rotation,int(cross),int(shortEscape),int(deeper),int(outside));
+                        }
+#endif
                     }else buildStatus="Posicao invalida ou materiais insuficientes.";
                     TraceLog(LOG_INFO,
                         "LIOS_BUILD_PLACE frame=%u piece=%d placed=%u",
