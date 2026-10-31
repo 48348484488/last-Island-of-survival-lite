@@ -514,7 +514,7 @@ int main() {
         // The original battlepanel.ab hitboxes are consumed by ONE action per
         // stable Android finger. Raylib synthesizes a mouse click for touchscreen
         // activity; it must NEVER be interpreted as a separate global attack.
-        hudInput.frame(player.equippedSlot==1,(float)GetScreenWidth(),(float)GetScreenHeight(),overlayWasOpen);
+        hudInput.frame(player.equippedSlot==1,(float)GetScreenWidth(),(float)GetScreenHeight(),overlayWasOpen,buildMode);
         // UI overlay consumes only touch DOWN edges, never a continuous drag.
         // Keeps construction buttons from placing 60 pieces while held.
         std::vector<Vector2> uiClicks;
@@ -563,13 +563,20 @@ int main() {
         // A BagAndBuildPanel captures all touches. Without modal ownership,
         // tapping a recipe also fires hidden HUD/weapon buttons underneath.
         // Touch events (edge-triggered unless the action is explicitly held).
-        if(!overlayWasOpen&&!buildMode&&hudInput.justPressed(HA::Slot0)){player.equippedSlot=0;selectedHotbarSlot=0;aim=false;}
-        if(!overlayWasOpen&&!buildMode&&hudInput.justPressed(HA::Slot1)){player.equippedSlot=1;selectedHotbarSlot=1;}
+        if(!overlayWasOpen&&!buildMode&&hudInput.justPressed(HA::Slot0)){
+            player.equippedSlot=0;selectedHotbarSlot=0;aim=false;
+            TraceLog(LOG_INFO,"LIOS_HOTBAR_TOUCH_SELECTED slot=0 equipped=0");
+        }
+        if(!overlayWasOpen&&!buildMode&&hudInput.justPressed(HA::Slot1)){
+            player.equippedSlot=1;selectedHotbarSlot=1;
+            TraceLog(LOG_INFO,"LIOS_HOTBAR_TOUCH_SELECTED slot=1 equipped=1");
+        }
         for(int i=0;i<5;i++)if(!overlayWasOpen&&!buildMode&&hudInput.justPressed(
             static_cast<HA>(int(HA::Slot2)+i))){
             // Unity hotbar selects the item; it does NOT open the inventory.
             // Native resource item use is not ported; never fire the old gun.
             selectedHotbarSlot=i+2;player.equippedSlot=-1;aim=false;
+            TraceLog(LOG_INFO,"LIOS_HOTBAR_TOUCH_SELECTED slot=%d equipped=-1",i+2);
         }
         if(!overlayWasOpen&&hudInput.justPressed(HA::AutoRun))autoRun=!autoRun;
         if(!overlayWasOpen&&(hudInput.justPressed(HA::Crouch)||IsKeyPressed(KEY_C))){
@@ -605,7 +612,10 @@ int main() {
             lastStance=stance;
             if(stance>0){player.isAttacking=false;aim=false;}
         }
-        if(!overlayWasOpen&&hudInput.justPressed(HA::Aim)&&player.equippedSlot==1)aim=!aim;
+        if(!overlayWasOpen&&!buildMode&&hudInput.justPressed(HA::Aim)&&player.equippedSlot==1){
+            aim=!aim;
+            TraceLog(LOG_INFO,"LIOS_AIM_TOUCH_TRANSITION aim=%d slot=%d",int(aim),player.equippedSlot);
+        }
         if(!overlayWasOpen&&hudInput.justPressed(HA::Reload)&&player.equippedSlot==1&&magazine<30&&reserveAmmo>0){
             int n=std::min(30-magazine,reserveAmmo);
             magazine+=n;reserveAmmo-=n;
@@ -642,6 +652,8 @@ int main() {
         if(!overlayWasOpen&&building.blueprint&&
             (IsKeyPressed(KEY_B)||hudInput.justPressed(HA::Slot6))){
             buildMode=!buildMode;
+            TraceLog(LOG_INFO,"LIOS_BUILD_MODE_TRANSITION enabled=%d blueprint=%d",
+                     int(buildMode),int(building.blueprint));
             if(buildMode){
                 buildCategory=-1;buildSubitem=-1;buildSubmenuOpen=false;
                 sourceBuildPartId=-1;sourceBuildOnceAngle=0;
@@ -1061,7 +1073,7 @@ int main() {
 
         // Jump and Gravity Physics
         const float gravity = 24.0f;
-        bool wantJump = !overlayWasOpen&&activePanel==0&&!prone&&!crouch&&!stanceTransitionActive&&
+        bool wantJump = !overlayWasOpen&&activePanel==0&&!buildMode&&!prone&&!crouch&&!stanceTransitionActive&&
             (IsKeyPressed(KEY_SPACE) || hudInput.justPressed(HA::Jump));
         if (player.isGrounded) {
             if (wantJump && player.stamina >= 10.0f) {
