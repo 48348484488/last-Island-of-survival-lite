@@ -1,0 +1,13 @@
+{
+  "schema": "edgeai.wall_footprint.v1",
+  "source": "last_island_recreated_game/native_build_craft.hpp + mobile_build_visual.hpp",
+  "source_version": "provisional native geometry; not original Unity mesh",
+  "visual_half_length": 1.5,
+  "visual_half_thickness": 0.11,
+  "collision_half_length": 1.5,
+  "collision_half_thickness": 0.38,
+  "edge_offset": 1.5,
+  "tolerance": 0.000001,
+  "original_mesh_verified": false,
+  "notes": "Collision overhang normal=0.27 world units approximates avatar clearance; four orientations share one wall footprint. Source prefab part/qiangbi_lv1.ab has not been decoded."
+}
