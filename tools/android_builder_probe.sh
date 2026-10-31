@@ -269,9 +269,18 @@ for m in pattern.finditer(s):
     rows.append(dict(frame=int(f),x=float(x),z=float(z),target_x=float(tx),
         target_z=float(tz),blocked=int(blocked),terrain=int(terrain),
         stick_x=float(sx),stick_y=float(sy),placed=int(placed)))
+colliders=[]
+for label in ("wall_place","wall_rotated_place"):
+    log=Path("evidence/build-"+label+"-logcat.txt").read_text()
+    m=re.search(r"LIOS_WALL_COLLIDER_RUNTIME rotation=(\\d+) center_x=([-\\d.]+) center_z=([-\\d.]+) half_x=([-\\d.]+) half_z=([-\\d.]+)",log)
+    if not m:raise SystemExit("LIOS_JOYSTICK_COLLIDER_GEOMETRY_MISSING "+label)
+    rotation,cx,cz,hx,hz=m.groups()
+    colliders.append({"rotation":int(rotation),"center":[float(cx),float(cz)],
+                      "half_extents":[float(hx),float(hz)]})
 Path("evidence/build-joystick-motion.json").write_text(
-    json.dumps({"records":rows,"source":"actual Android touch joystick and player motion",
-                "original_parity_proven":False},indent=2)+"\n")
+    json.dumps({"records":rows,"colliders":colliders,
+                "source":"actual Android touch joystick and player motion",
+                "original_parity_proven":False},indent=2)+"\\n")
 if len(rows)<5:raise SystemExit("LIOS_JOYSTICK_TELEMETRY_INSUFFICIENT")
 if any(b["frame"]<=a["frame"] for a,b in zip(rows,rows[1:])):
     raise SystemExit("LIOS_JOYSTICK_FRAME_ORDER_INVALID")
