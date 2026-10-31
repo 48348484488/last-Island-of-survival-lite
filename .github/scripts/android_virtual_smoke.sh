@@ -315,6 +315,10 @@ PY
           echo 'LIOS_MODAL_JUMP_LEAK' | tee evidence/modal-jump-failure.txt
           exit 53
         fi
+        if ! grep -E 'LIOS_HUD_TOUCH_DOWN finger=[0-9]+ action=0 ' evidence/inventory-modal-jump-logcat.txt >/dev/null; then
+          echo 'LIOS_MODAL_TOUCH_NOT_OBSERVED' | tee evidence/modal-jump-failure.txt
+          exit 54
+        fi
         echo 'LIOS_MODAL_JUMP_BLOCKED' | tee evidence/modal-jump-result.txt
         adb logcat -c || true
         if adb shell input swipe 289 454 289 454 700; then
