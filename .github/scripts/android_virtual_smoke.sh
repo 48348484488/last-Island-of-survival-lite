@@ -544,7 +544,7 @@ import re,sys
 from pathlib import Path
 lines=Path(sys.argv[1]).read_text(encoding="utf8").splitlines()
 down=[i for i,line in enumerate(lines) if re.search(
-    r"LIOS_HUD_TOUCH_DOWN finger=\\d+ action="+sys.argv[2]+r"\\b",line)]
+    r"LIOS_HUD_TOUCH_DOWN finger=\d+ action="+sys.argv[2]+r"\b",line)]
 if not down:
     raise SystemExit("EXPECTED_HUD_TOUCH_MISSING")
 after=lines[down[-1]:]
