@@ -65,7 +65,7 @@ class AndroidHudAlignmentTests(unittest.TestCase):
         self.assertIn('LIOS_SETTINGS_PANEL_OPEN', main)
         self.assertIn('LIOS_SETTINGS_PANEL_CLOSE', main)
         # Unrelated gameplay controls remain modal-gated.
-        self.assertIn('!overlayWasOpen&&hudInput.justPressed(HA::Aim)', main)
+        self.assertIn('!overlayWasOpen&&!buildMode&&hudInput.justPressed(HA::Aim)', main)
         self.assertIn('!overlayWasOpen&&hudInput.justPressed(HA::Craft)', main)
 
 
