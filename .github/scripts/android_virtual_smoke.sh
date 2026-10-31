@@ -294,6 +294,28 @@ if adb logcat -c &&
            --min-changed-fraction 0.01 --report evidence/inventory-transition.json \
            > evidence/inventory-transition-check.txt 2>&1; then
         echo 'LIOS_INVENTORY_VISIBLE_TOUCH_AND_TRANSITION_CONFIRMED' | tee evidence/inventory-probe.txt
+        # Modal capture regression: a jump hitbox must not jump while inventory owns input.
+        read -r modal_jump_x modal_jump_y < <(python3 - <<'PY'
+import json,sys
+sys.path.insert(0,"last_island_recreated_game")
+from original_hud_bindings import original_touch_rects
+d=json.load(open("evidence/frame-quality.json",encoding="utf8"))
+w,h=d["width"],d["height"]
+s=min(w/1920.,h/1080.)
+r=original_touch_rects(profile="on-foot-melee")["jump"]
+print(round((w-1920*s)/2+(r["left"]+r["right"])*s/2),
+      round((h-1080*s)/2+((r["top"]+r["bottom"])/2-200)*s))
+PY
+)
+        adb logcat -c || true
+        adb shell input swipe "$modal_jump_x" "$modal_jump_y" "$modal_jump_x" "$modal_jump_y" 650
+        sleep 2
+        adb logcat -d -s raylib:I > evidence/inventory-modal-jump-logcat.txt 2>&1 || true
+        if grep -F 'LIOS_JUMP_TRIGGERED' evidence/inventory-modal-jump-logcat.txt >/dev/null; then
+          echo 'LIOS_MODAL_JUMP_LEAK' | tee evidence/modal-jump-failure.txt
+          exit 53
+        fi
+        echo 'LIOS_MODAL_JUMP_BLOCKED' | tee evidence/modal-jump-result.txt
         adb logcat -c || true
         if adb shell input swipe 289 454 289 454 700; then
           sleep 2
