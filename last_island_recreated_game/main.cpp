@@ -666,7 +666,10 @@ int main() {
         // A touch opening a modal belongs to the HUD for this frame. Do not
         // dispatch that same DOWN event into the newly opened panel: it can
         // otherwise select a recipe or close a menu behind the HUD icon.
-        if(activePanel!=panelAtFrameStart) uiClicks.clear();
+        if(activePanel!=panelAtFrameStart){
+            uiClicks.clear();
+            if(activePanel!=0)hudInput.captureModal();
+        }
         for(const Vector2 &click:uiClicks){
             if(activePanel==2){
                 // Source-derived 519 recipes and original Sprite atlases are
