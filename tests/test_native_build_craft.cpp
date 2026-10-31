@@ -141,6 +141,21 @@ int main(){
     assert(rotated.blocks(3.f,-1.5f));
     assert(rotated.blocks(4.5f,0.f));
     assert(rotationResources.wood==250-BUILD_COSTS[Foundation].wood-2*BUILD_COSTS[Wall].wood);
+    // A rendered 3m wall must not have an invisible 8cm passage at either
+    // end. The older collision half-length (1.42m) missed visible geometry.
+    System isolatedWall;
+    isolatedWall.placed.push_back(Piece(Wall,1,0,0));
+    assert(isolatedWall.blocks(3.f-WallVisualHalfLength,-1.5f));
+    assert(isolatedWall.blocks(3.f+WallVisualHalfLength,-1.5f));
+    assert(isolatedWall.blocks(4.49f,-1.5f));
+    assert(!isolatedWall.blocks(4.51f,-1.5f));
+    assert(isolatedWall.blocks(3.f,-1.87f));
+    assert(!isolatedWall.blocks(3.f,-1.89f));
+    isolatedWall.placed.clear();
+    isolatedWall.placed.push_back(Piece(Wall,1,0,1));
+    assert(isolatedWall.blocks(4.5f,1.5f));
+    assert(!isolatedWall.blocks(4.5f,1.51f));
+    assert(WallVisualHalfThickness==.11f&&WallCollisionHalfThickness==.38f);
     std::cout<<"LIOS_BUILD_CRAFT_NATIVE_LOGIC_PASS placed="<<b.placed.size()
              <<" recipes=3 queued_quantity=true item_sprite_source=true build_categories=8 wall_collision=pass\\n";
 }
