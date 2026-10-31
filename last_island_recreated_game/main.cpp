@@ -668,7 +668,10 @@ int main() {
         // otherwise select a recipe or close a menu behind the HUD icon.
         if(activePanel!=panelAtFrameStart){
             uiClicks.clear();
-            if(activePanel!=0)hudInput.captureModal();
+            if(activePanel!=0){
+                hudInput.captureModal();
+                TraceLog(LOG_INFO,"LIOS_MODAL_TOUCH_CAPTURE panel=%d",activePanel);
+            }
         }
         for(const Vector2 &click:uiClicks){
             if(activePanel==2){
