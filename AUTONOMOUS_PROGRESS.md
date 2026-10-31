@@ -1,3 +1,10 @@
+### 2026-10-31 00:55 America/Recife — strict source-grounded hotbar and rifle aim Android probes
+
+- Added actual Android touch probes for source-drawn hotbar icon centers 0/1 and source Unity rifle aim rect: [c9fc212](https://github.com/48348484488/last-Island-of-survival-lite/commit/c9fc212133f5eb29c65f48c3f45f1f0c13593681). Each probe demands the correct HUD down-edge action **and** the corresponding gameplay state transition; rejects attack leakage. Aim toggles on and off. Retains real screenshot/logcat evidence.
+- Fixed Python regular-expression escaping in [3e52ceb](https://github.com/48348484488/last-Island-of-survival-lite/commit/3e52ceb94837c5f46bf62e9ff19234ff48605d95); included source-preview JSON in sparse Android checkout [96bd4fa](https://github.com/48348484488/last-Island-of-survival-lite/commit/96bd4fab82712c3e67c66e24337c18ba75433af1).
+- This new strict probe is **not yet validated in emulator**. If it fails, inspect `hotbar-aim-*-logcat.txt` and screenshot, correct hitbox or state logic, and rerun; do not count it as passed merely because an icon is drawn.
+- Previous [Android #41160931018](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41160931018) passed all three jobs for the earlier modal input fix. New HEAD build and runtime pending. Original Unity LITE 7.3 same-state screenshot still unavailable.
+
 ### 2026-10-31 00:44 America/Recife — construction touch priority and state telemetry (verification pending)
 
 - [Last Android #41160931018](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41160931018) **passed all three jobs** for previous commit `b04e950bc`, including ARM64 build, release and Android virtual runtime. This validates the prior modal touch fix, **not** the changes below.
