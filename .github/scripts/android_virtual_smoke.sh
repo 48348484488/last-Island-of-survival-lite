@@ -62,6 +62,11 @@ if [[ "$installed" -ne 1 ]]; then
   exit 45
 fi
 adb shell wm size 1920x1080
+# Deterministic materials only, no pre-granted blueprint. Normal gameplay
+# is unchanged unless this explicit emulator property is present.
+adb shell setprop debug.lios.build_fixture resources_v1
+adb shell getprop debug.lios.build_fixture | tee evidence/build-fixture-property.txt
+grep -Fxq resources_v1 evidence/build-fixture-property.txt
 adb shell monkey -p org.lios.recreatedlite -c android.intent.category.LAUNCHER 1 | tee evidence/launch.txt
 sleep 18
 # A previous successful job captured a *solid green* 1080x640 PNG while
@@ -561,6 +566,8 @@ PY
   fi
 done
 adb exec-out screencap -p > evidence/hotbar-aim-after-probes.png || true
+# Require a real craft/equip/build interaction before accepting runtime smoke.
+bash tools/android_builder_probe.sh
 # Optional keyboard-driven camera-mode probe. Some Android virtual input bridges
 # do not forward TAB to raylib. Record that limitation explicitly instead of
 # pretending a missing key event proves a game failure.
