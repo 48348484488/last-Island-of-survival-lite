@@ -33,6 +33,40 @@ class FrameQualityTests(unittest.TestCase):
             self.assertTrue(result["color_count_is_lower_bound"])
             self.assertFalse(result["gameplay_or_visual_parity_proven"])
 
+    def test_colorful_hud_on_flat_world_is_not_a_ready_scene(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "hud-only.png"
+            frame = Image.new("RGB", (640, 360), (86, 115, 72))
+            for x in range(30):
+                for y in range(30):
+                    frame.putpixel((x, y), (x * 7, y * 7, (x + y) * 4))
+            frame.save(path)
+            report = gate.inspect_frame(path)
+            self.assertTrue(report["nonflat_frame"])
+            self.assertFalse(report["spatial_scene_coverage"])
+            self.assertFalse(report["scene_ready"])
+            self.assertFalse(report["center_tile_varied"])
+
+    def test_distributed_scene_has_spatial_coverage(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "scene.png"
+            frame = Image.new("RGB", (640, 360))
+            for y in range(360):
+                for x in range(640):
+                    frame.putpixel((x, y), (x * 7 % 256, y * 9 % 256,
+                                           (x + y) * 3 % 256))
+            frame.save(path)
+            report = gate.inspect_frame(path)
+            self.assertTrue(report["scene_ready"])
+            self.assertEqual(report["varied_tiles"], 9)
+            self.assertFalse(report["gameplay_or_visual_parity_proven"])
+
+    def test_first_frame_smoke_requires_spatial_coverage(self):
+        smoke = (Path(__file__).resolve().parents[1] /
+                 ".github" / "scripts" / "android_virtual_smoke.sh").read_text()
+        self.assertIn("--require-spatial-coverage", smoke)
+        self.assertIn("evidence/frame-quality.json", smoke)
+
     def test_small_or_corrupt_capture_is_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "frame.png"
