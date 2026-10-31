@@ -1,3 +1,11 @@
+### VALIDADO — 2026-10-31 07:23 America/Recife — ARM64 overlap escape and wall runtime probes passed
+
+- [Android workflow #41192077552](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41192077552) **3/3 jobs success**: C++ native regression, ARM64 APK build/release and actual Android virtual installation/execution. APK [v0.25.0-f2e4e4da](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-f2e4e4da), **26,887,531 bytes**. Runtime evidence [artifact #13039396569](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41192077552/artifacts/13039396569) includes 1080×640 screenshots and logcat.
+- In-process **real ARM64 collider** checks passed for wall orientations **0 and 2**: cross_blocked=1, short_escape_allowed=1, inward_blocked=1, outside_allowed=1 for both. LIOS_BUILD_WALL_SWEEP_RUNTIME_PASS rotation=0/2 appears in actual Android job logs. This validates the C++ collider from the running APK, **not a joystick-driven physical avatar collision test**.
+- The Android builder touch sequence also passed: blueprint crafting, foundation, wall, 180° rotation, second wall and exit. Terrain 20/20, hotbar, aim and stance probes passed. Rotation preview screenshot changed 31,208/691,200 pixels at RGB>30; next placement changed 362/691,200. These compare **recreated game states**, not original Unity parity.
+- [EdgeAI CI #41192058538](https://github.com/48348484488/EdgeAI-Engine/actions/runs/41192058538) passed 849 Python tests (38 skipped), 15/15 C++ and 100,000 LBS cases. New generic oracle matches progressive overlap escape.
+- **Remaining**: actual joystick wall contact, original LITE 7.3 same-state screenshot, original Unity prefab mesh/UVs, source ARM64 callback recovery, authentic build material mapping and visual parity. Next priority: joystick-driven wall collision with actual player position telemetry, then on-demand prefab recovery.
+
 ### 2026-10-31 07:20 America/Recife — progressive wall overlap escape and Android runtime probe
 
 - Confirmed previous [Android #41190377423](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41190377423) **3/3 success** for the earlier swept-motion patch: 1080×640 runtime, foundation, wall, 180-degree rotation and second wall were exercised. That run did **not** test actual wall traversal by joystick.
