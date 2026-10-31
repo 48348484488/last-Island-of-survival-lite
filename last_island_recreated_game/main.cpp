@@ -572,6 +572,11 @@ int main() {
         if(!overlayWasOpen&&(hudInput.justPressed(HA::Crouch)||IsKeyPressed(KEY_C))){
             const bool wasProne=prone;
             crouch=wasProne||!crouch;prone=false;
+            // Runtime evidence: a HUD hitbox DOWN alone does not prove the
+            // crouch command changed gameplay state. Log the actual transition.
+            if(hudInput.justPressed(HA::Crouch))
+                TraceLog(LOG_INFO,"LIOS_CROUCH_TOUCH_TRANSITION crouch=%d prone=%d",
+                         int(crouch),int(prone));
         }
         if(!overlayWasOpen&&(hudInput.justPressed(HA::Prone)||IsKeyPressed(KEY_Z))){
             prone=!prone;crouch=false;
