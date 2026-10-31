@@ -37,12 +37,22 @@ class KeyboardModalInputTests(unittest.TestCase):
 
     def test_opening_touch_is_not_replayed_into_new_modal(self):
         self.assertIn("const int panelAtFrameStart=activePanel;", self.code)
-        self.assertIn("if(activePanel!=panelAtFrameStart) uiClicks.clear();", self.code)
+        self.assertIn("if(activePanel!=panelAtFrameStart){", self.code)
+        self.assertIn("if(activePanel!=0)hudInput.captureModal();", self.code)
         self.assertLess(
-            self.code.index("if(activePanel!=panelAtFrameStart) uiClicks.clear();"),
+            self.code.index("if(activePanel!=panelAtFrameStart){"),
             self.code.index("for(const Vector2 &click:uiClicks)"))
         self.assertIn("LIOS_INVENTORY_PANEL_OPEN", self.code)
         self.assertIn("LIOS_CRAFT_PANEL_OPEN", self.code)
+
+    def test_jump_respects_modal_capture(self):
+        self.assertIn("bool wantJump = !overlayWasOpen&&activePanel==0", self.code)
+
+    def test_touch_controller_receives_modal_state(self):
+        self.assertIn("GetScreenHeight(),overlayWasOpen);", self.code)
+        header = (SOURCE.parent / "mobile_hud_input.hpp").read_text(encoding="utf-8")
+        self.assertIn("if(modalOpen && a!=Action::Inventory", header)
+        self.assertIn("void captureModal(){", header)
 
     def test_builder_shortcut_keeps_modal_guard(self):
         self.assertRegex(
