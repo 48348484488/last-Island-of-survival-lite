@@ -11,6 +11,32 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageStat
 
 
+def inspect_spatial_coverage(rgb, min_colors=16):
+    """Require scene detail across the frame, not only a colorful HUD corner.
+
+    This is a generic 3x3 framebuffer readiness heuristic. A passing result
+    is NOT proof of the original game's materials, rendering, or behavior.
+    """
+    width, height = rgb.size
+    if width < 3 or height < 3:
+        raise ValueError("frame too small for spatial coverage")
+    counts = []
+    for tile_y in range(3):
+        for tile_x in range(3):
+            box = (width * tile_x // 3, height * tile_y // 3,
+                   width * (tile_x + 1) // 3, height * (tile_y + 1) // 3)
+            colors = rgb.crop(box).getcolors(maxcolors=min_colors - 1)
+            counts.append(min_colors if colors is None else len(colors))
+    varied = sum(count >= min_colors for count in counts)
+    return {
+        "spatial_grid": [3, 3],
+        "tile_color_lower_bounds": counts,
+        "varied_tiles": varied,
+        "center_tile_varied": counts[4] >= min_colors,
+        "spatial_scene_coverage": varied >= 3 and counts[4] >= min_colors,
+    }
+
+
 def inspect_frame(path, min_colors=16):
     if not 2 <= min_colors <= 256:
         raise ValueError("min_colors must be between 2 and 256")
@@ -27,6 +53,7 @@ def inspect_frame(path, min_colors=16):
         ready = few_colors is None
         count_floor = min_colors if ready else len(few_colors)
         extrema = rgb.getextrema()
+        spatial = inspect_spatial_coverage(rgb, min_colors)
         return {
             "width": width, "height": height,
             "min_distinct_rgb_colors": min_colors,
@@ -34,6 +61,8 @@ def inspect_frame(path, min_colors=16):
             "color_count_is_lower_bound": ready,
             "rgb_channel_extrema": [list(pair) for pair in extrema],
             "nonflat_frame": ready,
+            **spatial,
+            "scene_ready": ready and spatial["spatial_scene_coverage"],
             "gameplay_or_visual_parity_proven": False,
         }
 
@@ -86,6 +115,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("screenshot", type=Path)
     parser.add_argument("--min-colors", type=int, default=16)
+    parser.add_argument("--require-spatial-coverage", action="store_true",
+                        help="Reject colorful HUD-only frames over a flat scene")
     parser.add_argument("--compare-with", type=Path, help="Baseline screenshot for pixel transition audit")
     parser.add_argument("--min-changed-fraction", type=float, default=0.01)
     parser.add_argument("--min-channel-delta", type=int, default=30)
@@ -98,7 +129,8 @@ def main():
             passed = result["transition_detected"]
         else:
             result = inspect_frame(args.screenshot, args.min_colors)
-            passed = result["nonflat_frame"]
+            passed = (result["scene_ready"] if args.require_spatial_coverage
+                      else result["nonflat_frame"])
     except Exception as exc:
         result = {"transition_detected" if args.compare_with else "nonflat_frame": False,
                   "error": str(exc)}
