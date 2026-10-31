@@ -837,6 +837,7 @@ int main() {
                     buildCategory=-1;buildSubitem=-1;building.selected=-1;
                     sourceBuildPartId=-1;sourceBuildOnceAngle=0;
                     buildStatus="Construcao encerrada.";
+                    TraceLog(LOG_INFO,"LIOS_BUILD_EXIT frame=%u via=change_button",inputFrameNumber);
                     continue;
                 }
                 bool tabTouched=false;
@@ -865,6 +866,9 @@ int main() {
                         sourceBuildPartId=-1;sourceBuildOnceAngle=0;
                         buildStatus=close?"Categoria fechada.":"Selecione uma peca abaixo.";
                     }
+                    TraceLog(LOG_INFO,
+                        "LIOS_BUILD_CATEGORY frame=%u category=%d submenu=%d bag=%d",
+                        inputFrameNumber,category,int(buildSubmenuOpen),int(buildBagOpen));
                     break;
                 }
                 if(tabTouched)continue;
@@ -891,6 +895,9 @@ int main() {
                                 "Peça Unity ID %d selecionada (rotacao %d).",
                                 sourceBuildPartId,sourceBuildOnceAngle);
                         }
+                        TraceLog(LOG_INFO,
+                            "LIOS_BUILD_CHILD frame=%u category=%d child=%d source_id=%d native_piece=%d",
+                            inputFrameNumber,buildCategory,n,sourceBuildPartId,building.selected);
                         childTouched=true;break;
                     }
                 }
@@ -913,6 +920,8 @@ int main() {
                     }else{
                         buildStatus="Angulo original nao suportado pela malha nativa.";
                     }
+                    TraceLog(LOG_INFO,"LIOS_BUILD_ROTATE frame=%u orientation=%d source_angle=%d",
+                             inputFrameNumber,building.orientation,sourceBuildOnceAngle);
                     continue;
                 }
                 if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_freeBuildModel))){
@@ -934,6 +943,10 @@ int main() {
                         player.ironCount=available.metal;
                         buildStatus="Peca construida.";
                     }else buildStatus="Posicao invalida ou materiais insuficientes.";
+                    TraceLog(LOG_INFO,
+                        "LIOS_BUILD_PLACE frame=%u piece=%d placed=%u",
+                        inputFrameNumber,building.selected,
+                        static_cast<unsigned>(building.placed.size()));
                 }
             }
         }
