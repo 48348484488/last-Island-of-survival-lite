@@ -28,6 +28,7 @@ on:
       - tests/test_animation_skinning_perf.py
       - tools/android_frame_quality.py
       - .github/scripts/android_virtual_smoke.sh
+      - tools/android_builder_probe.sh
       - tools/prepare_mobile_character_textures.py
       - tools/export_mobile_skeletal_animation.py
       - tools/export_mobile_original_hud.py
@@ -82,6 +83,7 @@ jobs:
             tests/test_original_terrain_runtime.py
             tests/test_animation_skinning_perf.py
             .github/scripts/android_virtual_smoke.sh
+            tools/android_builder_probe.sh
             .github/workflows/build_android_raylib_lite.yml
             tools/android_frame_quality.py
             last_island_recreated_game/original_hud_bindings.py
@@ -149,6 +151,7 @@ jobs:
           python3 tests/test_original_terrain_runtime.py
           python3 tests/test_animation_skinning_perf.py
           bash -n .github/scripts/android_virtual_smoke.sh
+          bash -n tools/android_builder_probe.sh
 
       # These five source-audited artifacts are pinned to immutable workflow
       # runs. Reuse their verified bytes across APK builds to avoid repeated
