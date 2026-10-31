@@ -487,7 +487,7 @@ windows=[]
 for line in log.splitlines():
     if "LIOS_PHASE_TIMING" not in line:
         continue
-    m=re.search(r"frames=60 pose_cpu_ms=([0-9.]+) vbo_submit_ms=([0-9.]+).*visible_frames=(\\d+) pose_calls=(\\d+)",line)
+    m=re.search(r"frames=60 pose_cpu_ms=([0-9.]+) vbo_submit_ms=([0-9.]+).*visible_frames=(\d+) pose_calls=(\d+)",line)
     if m and int(m[3])==0:
         windows.append((float(m[1]),float(m[2]),int(m[4])))
 if not windows or not any(p<=0.05 and v<=0.05 and calls==0
