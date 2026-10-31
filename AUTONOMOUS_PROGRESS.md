@@ -1,3 +1,8 @@
+### Regressão intermediária e correção — 2026-10-31
+
+- [Build #41168198620](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41168198620) falhou **antes da compilação**: `tests/test_keyboard_modal_input.py` ainda exigia literalmente a condição antiga `if(activePanel!=panelAtFrameStart){`. A nova guarda correta inclui `|| buildMode!=buildModeAtFrameStart`; portanto o teste ficou obsoleto, não há evidência de falha funcional Android.
+- [72e2f005](https://github.com/48348484488/last-Island-of-survival-lite/commit/72e2f005c76e006ff901c4f600d4479ed4f32b20) atualiza a asserção para a guarda combinada. Aguardar novo workflow antes de afirmar compilação/execução.
+
 ## 2026-10-31 — correção de toque de entrada no modo construção
 
 - Inspeção do `main.cpp` identificou reuso do mesmo evento DOWN: o toque no slot 6 que ativa `buildMode` ainda era processado no loop `uiClicks` do modo construção recém-aberto. Isso podia acionar um botão de construção no mesmo frame, sem segundo toque.
