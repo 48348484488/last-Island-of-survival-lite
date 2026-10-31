@@ -415,3 +415,5 @@ Inspeção identificou que `wantJump` não verifica `activePanel==0`, enquanto m
 - Testes de regressão estáticos atualizados. Smoke Android ampliado: toca o hitbox real de salto enquanto inventário está aberto, exige registro de toque neutro e ausência de salto ([2ef4243](https://github.com/48348484488/last-Island-of-survival-lite/commit/2ef4243315603a292a2f6d015173ba2cc79769f0)).
 - [Build ARM64 #41156856060](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41156856060) ainda enfileirado na última consulta. Sem APK novo validado, screenshot ou nova medição de FPS neste ciclo.
 - EdgeAI ganhou auditor genérico de exclusividade de eventos de modal, ainda aguardando CI. Próxima prioridade: confirmar compilação e execução, verificar teste negativo de salto, auditar logs e avançar para botões de mira/barra/construção.
+
+- Ajuste de regressão após instrumentação de captura: [e63558b](https://github.com/48348484488/last-Island-of-survival-lite/commit/e63558b1375d0c63bdb0299f1ea47f322a3c991d). Build mais recente: [#41156959654](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41156959654), ainda pendente na consulta.
