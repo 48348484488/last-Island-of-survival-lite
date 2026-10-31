@@ -1422,6 +1422,8 @@ int main() {
             // The avatar is not drawn in first-person. Keep advancing clip
             // clocks and transitions, but do not skin/upload seven invisible
             // meshes every frame. Returning to third-person poses immediately.
+            if(traceJoystickWallFixture&&inputFrameNumber==1)
+                TraceLog(LOG_INFO,"LIOS_FIRST_FRAME_PHASE stage=before_pose");
             if(to>=0 && player.thirdPerson){
                 if(from<0)from=to;
                 unityRig.pose(from,clipTime(animationPrevious),to,clipTime(animationCurrent),animationCrossFade);
@@ -1431,6 +1433,8 @@ int main() {
                 firstPersonPoseSkipReported=true;
             }
             if(player.thirdPerson)firstPersonPoseSkipReported=false;
+            if(traceJoystickWallFixture&&inputFrameNumber==1)
+                TraceLog(LOG_INFO,"LIOS_FIRST_FRAME_PHASE stage=after_pose");
         }
 
         // Update Particles
@@ -1498,6 +1502,8 @@ int main() {
         // ---------------------------------------------------------------------------------
         // 3D SCENE RENDERING
         // ---------------------------------------------------------------------------------
+        if(traceJoystickWallFixture&&inputFrameNumber==1)
+            TraceLog(LOG_INFO,"LIOS_FIRST_FRAME_PHASE stage=before_begin_drawing");
         BeginDrawing();
         ClearBackground((Color){ 130, 200, 230, 255 }); // Authentic Tropical Sky
 
@@ -1506,7 +1512,9 @@ int main() {
             // Unity LITE 7.3 exported source tile, with measured mesh heights.
             // Retain a clearly identified fallback if source assets fail.
             if(terrain.ready) terrain.draw(player.position);
-            else DrawPlane((Vector3){ 0.0f, 0.0f, 0.0f },
+            if(traceJoystickWallFixture&&inputFrameNumber==1)
+                TraceLog(LOG_INFO,"LIOS_FIRST_FRAME_PHASE stage=after_terrain_draw");
+            if(!terrain.ready) DrawPlane((Vector3){ 0.0f, 0.0f, 0.0f },
                            (Vector2){ 600.0f, 600.0f }, (Color){ 68, 115, 52, 255 });
             // Do not draw raylib's debug grid over the terrain in release gameplay.
             // The real Android screenshot showed prominent parallel lines at the horizon.
@@ -2066,8 +2074,12 @@ int main() {
                 int(canvasTop+700.f*canvasScale),
                 std::max(12,int(21.f*canvasScale)),YELLOW);
         }
+        if(traceJoystickWallFixture&&inputFrameNumber==1)
+            TraceLog(LOG_INFO,"LIOS_FIRST_FRAME_PHASE stage=before_end_drawing");
         const auto endDrawingStart=std::chrono::steady_clock::now();
         EndDrawing();
+        if(traceJoystickWallFixture&&inputFrameNumber==1)
+            TraceLog(LOG_INFO,"LIOS_FIRST_FRAME_PHASE stage=after_end_drawing");
         const auto frameWorkEnd=std::chrono::steady_clock::now();
         const double endDrawingMs=std::chrono::duration<double,std::milli>(
             frameWorkEnd-endDrawingStart).count();
