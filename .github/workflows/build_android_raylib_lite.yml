@@ -723,6 +723,7 @@ jobs:
         with:
           sparse-checkout: |
             .github/scripts/android_virtual_smoke.sh
+            tools/android_builder_probe.sh
             tools/android_frame_quality.py
             last_island_recreated_game/original_hud_bindings.py
             last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_original_all_positions.json
