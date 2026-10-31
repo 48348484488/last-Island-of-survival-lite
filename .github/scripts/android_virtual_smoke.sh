@@ -469,6 +469,46 @@ PY
     exit 56
   fi
 done
+# Optional keyboard-driven camera-mode probe. Some Android virtual input bridges
+# do not forward TAB to raylib. Record that limitation explicitly instead of
+# pretending a missing key event proves a game failure.
+adb logcat -c || true
+adb shell input keyevent 61 || true
+sleep 4
+adb logcat -d -s raylib:I > evidence/first-person-mode-logcat.txt 2>&1 || true
+adb exec-out screencap -p > evidence/first-person-mode.png || true
+if grep -F 'LIOS_CAMERA_MODE third_person=0' evidence/first-person-mode-logcat.txt >/dev/null &&
+   grep -F 'LIOS_FIRST_PERSON_POSE_SKIPPED' evidence/first-person-mode-logcat.txt >/dev/null; then
+  python3 - <<'PY'
+import re
+from pathlib import Path
+log=Path("evidence/first-person-mode-logcat.txt").read_text(encoding="utf8")
+windows=[]
+for line in log.splitlines():
+    if "LIOS_PHASE_TIMING" not in line:
+        continue
+    m=re.search(r"frames=60 pose_cpu_ms=([0-9.]+) vbo_submit_ms=([0-9.]+).*visible_frames=(\\d+) pose_calls=(\\d+)",line)
+    if m and int(m[3])==0:
+        windows.append((float(m[1]),float(m[2]),int(m[4])))
+if not windows or not any(p<=0.05 and v<=0.05 and calls==0
+                          for p,v,calls in windows):
+    raise SystemExit("LIOS_FIRST_PERSON_HIDDEN_POSE_WORK_NOT_VALIDATED")
+print("LIOS_FIRST_PERSON_HIDDEN_POSE_WORK_PASS windows=%d" % len(windows))
+PY
+  echo 'LIOS_FIRST_PERSON_CAMERA_INPUT_CONFIRMED' | tee evidence/first-person-result.txt
+else
+  echo 'LIOS_FIRST_PERSON_CAMERA_INPUT_UNVERIFIED_ANDROID_KEY_BRIDGE' |
+    tee evidence/first-person-result.txt
+fi
+# Restore third-person gameplay so subsequent screenshots/logs represent the
+# normal avatar-visible state. Only toggle back if the first toggle worked.
+if grep -F 'LIOS_FIRST_PERSON_CAMERA_INPUT_CONFIRMED' evidence/first-person-result.txt >/dev/null; then
+  adb shell input keyevent 61 || true
+  sleep 2
+  adb logcat -d -s raylib:I > evidence/third-person-resume-logcat.txt 2>&1 || true
+  grep -F 'LIOS_CAMERA_MODE third_person=1' evidence/third-person-resume-logcat.txt ||
+    echo 'LIOS_THIRD_PERSON_RESUME_UNVERIFIED' | tee evidence/third-person-result.txt
+fi
 adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
 test -s evidence/runtime.png
 test -s evidence/pid.txt
