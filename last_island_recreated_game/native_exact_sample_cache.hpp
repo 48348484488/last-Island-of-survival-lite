@@ -30,7 +30,14 @@ public:
         return false;
     }
     void store(float x, float z, bool found, float value) noexcept {
-        entries_[next_] = {x, z, value, true, found};
+        // Android raymob currently builds this translation unit as gnu++11.
+        // An Entry with default initializers is not an aggregate in C++11.
+        Entry &entry = entries_[next_];
+        entry.x = x;
+        entry.z = z;
+        entry.value = value;
+        entry.valid = true;
+        entry.found = found;
         next_ = (next_ + 1) % Capacity;
     }
 };
