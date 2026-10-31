@@ -25,6 +25,58 @@ with tempfile.TemporaryDirectory() as td:
         print("LIOS_ORIGINAL_ASSET_DIRECTORIES",json.dumps(folders.most_common(100)),flush=True)
         interesting=re.compile(r'part|component|foundation|wall|floor|stair|build|wood|stone|metal|tiet|muwu|qiang|jianz|chuang|diban|menkuang|tiejia|shitou|mushi|tizi|muqiang|ziyuan',re.I)
         candidates=[x for x in ab if interesting.search(Path(x).name) and not x.startswith("assets/scene/")]
+        # Target the actual BuildPart prefab path before scanning unrelated
+        # scene geometry. Mesh bounds are LOCAL coordinates, not verified
+        # placement pivots or final rendered Unity world transforms.
+        target_paths=[x for x in ab if Path(x).name.lower()=="qiangbi_lv1.ab"]
+        target_wall={
+            "expected_prefab":"part/qiangbi_lv1.ab",
+            "exact_paths":target_paths,
+            "nearby_paths":[x for x in ab if "qiangbi" in x.lower()][:100],
+            "meshes":[],
+            "errors":[],
+            "source_mesh_parity_verified":False,
+        }
+        for path in target_paths:
+            try:
+                env=UnityPy.load(z.read(path))
+                for obj in env.objects:
+                    if obj.type.name!="Mesh":continue
+                    mesh=obj.read()
+                    raw=mesh.export()
+                    if isinstance(raw,bytes):raw=raw.decode("utf-8","replace")
+                    positions=[]
+                    uvs=[]
+                    triangles=0
+                    for line in raw.splitlines():
+                        if line.startswith("v "):
+                            coords=line.split()
+                            if len(coords)>=4:
+                                positions.append([float(v) for v in coords[1:4]])
+                        elif line.startswith("vt "):
+                            coords=line.split()
+                            if len(coords)>=3:
+                                uvs.append([float(v) for v in coords[1:3]])
+                        elif line.startswith("f "):
+                            # Triangulated face count; n-gons add n-2.
+                            triangles+=max(0,len(line.split())-3)
+                    if not positions:raise ValueError("mesh export has no positions")
+                    bounds=[[min(p[i] for p in positions),
+                             max(p[i] for p in positions)] for i in range(3)]
+                    uv_bounds=([[min(p[i] for p in uvs),
+                                 max(p[i] for p in uvs)] for i in range(2)]
+                               if uvs else None)
+                    target_wall["meshes"].append({
+                        "bundle":path,"name":str(mesh.m_Name),
+                        "path_id":str(obj.path_id),
+                        "vertices":len(positions),"triangles":triangles,
+                        "bounds_local_xyz":bounds,"uv_count":len(uvs),
+                        "uv_bounds":uv_bounds,
+                        "pivot_world_verified":False})
+            except Exception as exc:
+                target_wall["errors"].append({"path":path,"error":str(exc)[:300]})
+        print("LIOS_TARGET_WALL_SOURCE_AUDIT",
+              json.dumps(target_wall,ensure_ascii=False)[:12000],flush=True)
         bydir=Counter(x.split("/")[1] for x in candidates)
         print("LIOS_BUILD_CANDIDATE_FOLDERS",json.dumps(bydir.most_common(60)),flush=True)
         for x in candidates:
@@ -55,5 +107,6 @@ with tempfile.TemporaryDirectory() as td:
                 print("LIOS_BUILD_SCAN_ERROR",path,str(e)[:180],flush=True)
         Path("original_construction_mesh_audit.json").write_text(
            json.dumps(dict(folders=dict(folders),candidate_count=len(candidates),
-                           candidates=candidates,scanned=scan),indent=2,ensure_ascii=False))
+                           candidates=candidates,scanned=scan,
+                           target_wall=target_wall),indent=2,ensure_ascii=False))
         print("LIOS_BUILD_SOURCE_AUDIT_DONE",len(scan),flush=True)
