@@ -485,3 +485,12 @@ Inspeção identificou que `wantJump` não verifica `activePanel==0`, enquanto m
 - Build ARM64 mais recente: [#41172427857](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41172427857), **em execução na consulta**. Não há novo APK validado, screenshot ou medição de FPS desta versão até a confirmação dos jobs.
 - Referências externas: Uptodown identifica LITE 6.7 de julho/2026, não 7.3. Não usar essas imagens para afirmar paridade da versão fonte. Nenhuma função ARM nova reconstruída neste ciclo.
 - Próxima prioridade: confirmar build e execução Android; auditar `LIOS_TERRAIN_SAMPLE_CACHE` e a sequência de construção com EdgeAI. A entrada real em BuildState ainda depende de obter/equipar o item no gameplay; não substituir por uma captura artificial. Medir FPS em cenário controlado para determinar se o cache traz benefício.
+
+
+### Correção da falha C++11 e validação de build
+
+- Primeira tentativa [#41172427857](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41172427857) **falhou** no Clang Android: `entries_[next_] = {x,z,value,true,found}` não compila com `-std=gnu++11` porque `Entry` tem inicializadores padrão. Os testes anteriores haviam usado C++17, ocultando a incompatibilidade.
+- Corrigido com atribuições explícitas de campos ([e36e733](https://github.com/48348484488/last-Island-of-survival-lite/commit/e36e733575bb18bee00e4885e6da31f0e577a772)); regressão nativa agora compila em C++11 ([a95bc6f](https://github.com/48348484488/last-Island-of-survival-lite/commit/a95bc6f7b4b7b7be0978a29d81aae5820168309c)). Teste local C++11 passou.
+- [Build Android #41172610497](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41172610497): compilação Gradle/Clang, testes nativos, assinatura e empacotamento **aprovados**; APK de 26.882.211 bytes publicado na [release v0.25.0-a95bc6f7](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-a95bc6f7).
+- Execução Android virtual do mesmo workflow ainda **em andamento** na última consulta. Não afirmar instalação, FPS, screenshot ou paridade desta versão até o resultado final.
+- Referência da versão exata: [Aptoide LITE 7.3 de 23/10/2026](https://last-island-of-survival-lite.vn.aptoide.com/app); screenshots de outros catálogos não são necessariamente dessa versão.
