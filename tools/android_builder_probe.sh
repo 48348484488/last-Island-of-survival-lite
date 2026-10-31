@@ -304,4 +304,67 @@ PY
 adb exec-out screencap -p > evidence/build-joystick-wall-contact.png || true
 echo LIOS_JOYSTICK_WALL_CONTACT_PASS | tee -a evidence/build-probe-result.txt
 
+# Test the opposite direction after wall contact. A collision system must
+# release the avatar when the joystick requests movement away from the wall.
+# The trace is real Android touch telemetry, not an in-process collision oracle.
+joy_retreat_y=$((2*joy_y-joy_end_y))
+screen_height=$(python3 - <<'PY'
+import json
+from pathlib import Path
+print(json.loads(Path("evidence/frame-quality.json").read_text())["height"])
+PY
+)
+if (( joy_retreat_y >= screen_height )); then
+  echo LIOS_JOYSTICK_RETREAT_OUTSIDE_VIEWPORT
+  exit 73
+fi
+adb logcat -c
+adb shell input swipe "$joy_x" "$joy_y" "$joy_x" "$joy_retreat_y" 3500
+sleep 1
+adb logcat -d -s raylib:I > evidence/build-joystick-retreat-logcat.txt 2>&1 || true
+python3 - <<'PY'
+import json, math, re
+from pathlib import Path
+source=Path("evidence/build-joystick-motion.json")
+forward=json.loads(source.read_text())
+log=Path("evidence/build-joystick-retreat-logcat.txt").read_text()
+pattern=re.compile(
+ r"LIOS_JOYSTICK_MOTION frame=(\d+) start_x=([-\d.]+) start_z=([-\d.]+)"
+ r" target_x=([-\d.]+) target_z=([-\d.]+)"
+ r" wall_blocked=(\d+) terrain_blocked=(\d+)"
+ r" stick_x=([-\d.]+) stick_y=([-\d.]+) placed=(\d+)")
+rows=[]
+for m in pattern.finditer(log):
+    f,x,z,tx,tz,blocked,terrain,sx,sy,placed=m.groups()
+    rows.append(dict(frame=int(f),x=float(x),z=float(z),target_x=float(tx),
+        target_z=float(tz),blocked=int(blocked),terrain=int(terrain),
+        stick_x=float(sx),stick_y=float(sy),placed=int(placed)))
+spec={"mode":"retreat","records":rows,"colliders":forward["colliders"],
+      "source":"actual Android reverse joystick touch and player motion",
+      "original_parity_proven":False}
+Path("evidence/build-joystick-retreat.json").write_text(json.dumps(spec,indent=2)+"\n")
+if len(rows)<5 or any(b["frame"]<=a["frame"] for a,b in zip(rows,rows[1:])):
+    raise SystemExit("LIOS_JOYSTICK_RETREAT_TRACE_INVALID")
+if any(r["placed"]<3 for r in rows):
+    raise SystemExit("LIOS_JOYSTICK_RETREAT_WALLS_MISSING")
+if math.hypot(rows[0]["x"]-forward["records"][-1]["x"],
+              rows[0]["z"]-forward["records"][-1]["z"])>.2:
+    raise SystemExit("LIOS_JOYSTICK_RETREAT_START_DISCONTINUITY")
+free=[r for r in rows if not r["blocked"] and not r["terrain"]]
+blocked=[r for r in rows if r["blocked"] and not r["terrain"]]
+travel=math.hypot(rows[-1]["x"]-rows[0]["x"],rows[-1]["z"]-rows[0]["z"])
+def clearance(row):
+    return min(math.hypot(max(abs(row["x"]-c["center"][0])-c["half_extents"][0],0),
+                          max(abs(row["z"]-c["center"][1])-c["half_extents"][1],0))
+               for c in forward["colliders"])
+gain=clearance(rows[-1])-clearance(rows[0])
+if len(free)<3 or len(blocked)>1 or travel<.15 or gain<.15:
+    raise SystemExit("LIOS_JOYSTICK_RETREAT_FAILED free=%d blocked=%d travel=%.3f gain=%.3f" %
+                     (len(free),len(blocked),travel,gain))
+print("LIOS_JOYSTICK_RETREAT_PASS samples=%d free=%d blocked=%d travel=%.3f gain=%.3f" %
+      (len(rows),len(free),len(blocked),travel,gain))
+PY
+adb exec-out screencap -p > evidence/build-joystick-after-retreat.png || true
+echo LIOS_JOYSTICK_RETREAT_PASS | tee -a evidence/build-probe-result.txt
+
 echo LIOS_ANDROID_BUILDER_FOUNDATION_WALL_ROTATE_PLACE_EXIT_PASS | tee -a evidence/build-probe-result.txt
