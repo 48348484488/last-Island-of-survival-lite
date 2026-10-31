@@ -114,4 +114,11 @@ grep -F 'LIOS_BUILD_MODE_TRANSITION enabled=0 blueprint=1' \
  evidence/build-exit-logcat.txt >/dev/null ||
  { echo LIOS_BUILD_EXIT_STATE_INVALID; exit 64; }
 adb exec-out screencap -p > evidence/build-after-exit.png || true
+# Preserve ordered, real logcat fragments for the generic EdgeAI auditor.
+cat evidence/build-craft_open-logcat.txt evidence/build-prototype-logcat.txt \
+ evidence/build-queue-logcat.txt evidence/build-blueprint-ready-logcat.txt \
+ evidence/build-craft_close-logcat.txt evidence/build-equip-logcat.txt \
+ evidence/build-foundation-logcat.txt evidence/build-child0-logcat.txt \
+ evidence/build-place-logcat.txt evidence/build-exit-logcat.txt \
+ > evidence/build-interaction-trace.txt
 echo LIOS_ANDROID_BUILDER_CRAFT_EQUIP_PLACE_EXIT_PASS | tee evidence/build-probe-result.txt
