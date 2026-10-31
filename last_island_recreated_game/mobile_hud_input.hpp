@@ -95,7 +95,11 @@ struct Controller {
           // Only one joystick finger is allowed, regardless of touch count.
           if(a==Action::Joystick)for(auto const& pair:owner)
                if(pair.second==Action::Joystick){a=Action::None;break;}
-          if(a==Action::None&&x>=0&&x<=1920&&y>=0&&y<=1080&&x>940)
+          // A modal owns the entire viewport, including empty areas. A
+          // suppressed gameplay action must never fall through to camera look.
+          // Otherwise a finger placed on a hidden Jump/Attack hitbox becomes
+          // Look and can rotate the camera after the panel closes.
+          if(!modalOpen && a==Action::None&&x>=0&&x<=1920&&y>=0&&y<=1080&&x>940)
              a=Action::Look;
           owner[id]=a;iter=owner.find(id);
           // Log only DOWN edges, never every held frame. Runtime evidence can
