@@ -85,7 +85,8 @@ for attempt in $(seq 1 12); do
   fi
   if adb exec-out screencap -p > evidence/runtime-candidate.png &&
      python3 tools/android_frame_quality.py evidence/runtime-candidate.png \
-       --min-colors 16 --report evidence/frame-quality.json >> evidence/frame-attempts.txt; then
+       --min-colors 16 --require-spatial-coverage \
+       --report evidence/frame-quality.json >> evidence/frame-attempts.txt; then
     cp evidence/runtime-candidate.png evidence/runtime.png
     ready_frame=1
     echo "LIOS_NONFLAT_FRAME_CONFIRMED attempt=$attempt" | tee -a evidence/frame-attempts.txt
