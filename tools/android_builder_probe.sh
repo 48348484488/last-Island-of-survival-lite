@@ -77,10 +77,30 @@ for name in ("foundation","wall","child0","rotate","place","exit"):
 print("LIOS_BUILD_ENTER_AND_TOUCH_ISOLATION_PASS frame="+m[1])
 PY
 # Coordinates are emitted from the live C++ RectTransforms, not guesses.
-read -r foundation_x foundation_y wall_x wall_y child_x child_y rotate_x rotate_y place_x place_y exit_x exit_y < <(python3 - <<'PY'
-import re
+read -r foundation_x foundation_y wall_x wall_y child_x child_y rotate_x rotate_y place_x place_y exit_x exit_y < <(python3 - "$slot6_x" "$slot6_y" <<'PY'
+import json,re,sys
 from pathlib import Path
 s=Path("evidence/build-equip-logcat.txt").read_text()
+startup=Path("evidence/terrain-startup-logcat.txt").read_text()
+quality=json.loads(Path("evidence/frame-quality.json").read_text())
+heartbeat=re.search(r"LIOS_RENDER_HEARTBEAT frame=1 screen=(\d+)x(\d+)",startup)
+touch=re.search(r"LIOS_HUD_TOUCH_DOWN finger=\d+ action=20 source_x=([-\d.]+) source_y=([-\d.]+)",s)
+if not heartbeat or not touch:raise SystemExit("LIOS_BUILD_VIEWPORT_CALIBRATION_MISSING")
+game_w,game_h=map(int,heartbeat.groups())
+source_x,source_y=map(float,touch.groups())
+canvas_scale=min(game_w/1920.,game_h/1080.)
+canvas_left=(game_w-1920*canvas_scale)/2
+canvas_top=(game_h-1080*canvas_scale)/2
+# Raylib uses logical 1280x720 while ADB screenshots are 1080x640.
+# Android letterboxes the game viewport; sourceRect() returns LOGICAL pixels.
+# Calibrate the physical touch origin using the observed slot-6 down event.
+physical_scale=quality["width"]/game_w
+logical_x=canvas_left+source_x*canvas_scale
+logical_y=canvas_top+(source_y-200.)*canvas_scale
+origin_x=int(sys.argv[1])-logical_x*physical_scale
+origin_y=int(sys.argv[2])-logical_y*physical_scale
+if abs(origin_x)>quality["width"]*.15 or abs(origin_y)>quality["height"]*.15:
+    raise SystemExit("LIOS_BUILD_VIEWPORT_CALIBRATION_OUTLIER")
 coords=[]
 for name in ("foundation","wall","child0","rotate","place","exit"):
     m=re.search(r"LIOS_BUILD_HITBOX name="+name+
@@ -88,7 +108,20 @@ for name in ("foundation","wall","child0","rotate","place","exit"):
     if not m:raise SystemExit("LIOS_BUILD_HITBOX_MISSING "+name)
     l,t,r,b=map(float,m.groups())
     if not (r>l and b>t):raise SystemExit("LIOS_BUILD_INVALID_HITBOX "+name)
-    coords.extend((round((l+r)/2),round((t+b)/2)))
+    x=round((l+r)/2*physical_scale+origin_x)
+    y=round((t+b)/2*physical_scale+origin_y)
+    if not (0<=x<quality["width"] and 0<=y<quality["height"]):
+        raise SystemExit("LIOS_BUILD_HITBOX_OFFSCREEN "+name)
+    coords.extend((x,y))
+Path("evidence/build-touch-calibration.json").write_text(json.dumps({
+ "logical_size":[game_w,game_h],
+ "physical_size":[quality["width"],quality["height"]],
+ "physical_scale":physical_scale,
+ "physical_origin":[origin_x,origin_y],
+ "calibration_touch":"slot6 live HUD source coordinates",
+ "hitbox_centers_physical":dict(zip(("foundation","wall","child0","rotate","place","exit"),
+                                    [coords[i:i+2] for i in range(0,len(coords),2)]))
+},indent=2)+"\n")
 print(*coords)
 PY
 )
