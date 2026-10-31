@@ -403,3 +403,7 @@
 2. Instalar APK no Android virtual ARM64 se disponível e registrar screenshots reais e logs.
 3. Capturar mesma tela no original autorizado e medir deltas geométricos/visuais usando EdgeAI.
 4. Corrigir a maior diferença comprovada, repetir testes e registrar novo commit.
+
+## 2026-10-30 — auditoria de entrada modal
+
+Inspeção identificou que `wantJump` não verifica `activePanel==0`, enquanto movimento e ataque verificam. A atribuição de novos dedos no `mobile_hud_input.hpp` também não consulta o estado modal. Correção e validação Android ainda pendentes.
