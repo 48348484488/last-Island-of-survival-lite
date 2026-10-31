@@ -105,6 +105,23 @@ if [[ "$ready_frame" -ne 1 ]]; then
   else
     echo "LIOS_FLAT_FRAME_RENDER_LOOP_NOT_CONFIRMED heartbeats=$heartbeat_count" | tee evidence/render-loop-diagnosis.txt
   fi
+  # Preserve non-destructive native thread evidence before the emulator dies.
+  # A live PID and a marker before EndDrawing do not distinguish GPU driver
+  # submission, eglSwapBuffers, scheduler starvation or a native deadlock.
+  adb logcat -d -v threadtime > evidence/first-frame-stall-logcat.txt 2>&1 || true
+  grep 'LIOS_FIRST_FRAME_PHASE' evidence/first-frame-stall-logcat.txt \
+    > evidence/first-frame-stages.txt || true
+  pid="$(tr -d '\\r\\n ' < evidence/pid.txt)"
+  if [[ "$pid" =~ ^[0-9]+$ ]]; then
+    timeout 15s adb shell debuggerd -b "$pid" \
+      > evidence/first-frame-native-backtrace.txt 2>&1 || true
+    timeout 8s adb shell "cat /proc/$pid/wchan; cat /proc/$pid/status" \
+      > evidence/first-frame-process-state.txt 2>&1 || true
+    timeout 8s adb shell dumpsys gfxinfo org.lios.recreatedlite \
+      > evidence/first-frame-gfxinfo.txt 2>&1 || true
+    timeout 8s adb shell dumpsys SurfaceFlinger --list \
+      > evidence/first-frame-surfaces.txt 2>&1 || true
+  fi
   echo 'LIOS_RENDERED_FRAME_NOT_READY: no nonflat frame after 12 attempts' | tee evidence/frame-failure.txt
   exit 47
 fi
