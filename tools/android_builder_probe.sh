@@ -203,7 +203,7 @@ for name,before,after in pairs:
     result[name]={"resolution":list(a.size),"changed_pixels_rgb30":changed,
                   "changed_fraction_rgb30":changed/(a.width*a.height)}
 Path("evidence/build-wall-visual-diff.json").write_text(
-    json.dumps({"comparisons":result,"original_parity_proven":False},indent=2)+"\\n")
+    json.dumps({"comparisons":result,"original_parity_proven":False},indent=2))
 print("LIOS_BUILD_WALL_VISUAL_DIFF",json.dumps(result))
 PY
 tap exit "$exit_x" "$exit_y" 'LIOS_BUILD_EXIT'
