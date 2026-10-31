@@ -185,6 +185,8 @@ int main() {
     player.ironCount = 0;
     player.stoneCount = 0;
     player.walkCycle = 0.0f;
+    // Explicit opt-in only: diagnostic traces never run in production.
+    bool traceJoystickWallFixture=false;
 #if defined(__ANDROID__)
     // Explicit emulator-only diagnostic fixture. Normal gameplay remains
     // resource-empty; this does NOT grant a blueprint or bypass crafting.
@@ -195,6 +197,7 @@ int main() {
         player.woodCount=250;
         player.stoneCount=250;
         player.ironCount=250;
+        traceJoystickWallFixture=true;
         TraceLog(LOG_INFO,"LIOS_TEST_FIXTURE_RESOURCES wood=250 stone=250 metal=250 blueprint=0");
     }
 #endif
@@ -580,6 +583,9 @@ int main() {
             leftStick.knob=hudInput.stickPoint;
             leftStick.active=hudInput.owner.size()>0&&
                 (std::fabs(hudInput.stick.x)+std::fabs(hudInput.stick.y)>0.002f);
+            if(traceJoystickWallFixture&&inputFrameNumber==1)
+                TraceLog(LOG_INFO,"LIOS_JOYSTICK_CENTER logical_x=%.3f logical_y=%.3f radius=%.3f",
+                         leftStick.center.x,leftStick.center.y,leftStick.radius);
         }
         // A BagAndBuildPanel captures all touches. Without modal ownership,
         // tapping a recipe also fires hidden HUD/weapon buttons underneath.
@@ -1149,9 +1155,22 @@ int main() {
             // Walls are solid; reject implausibly tall uphill steps and
             // follow the measured source mesh instead of a fixed Y=0 plane.
             const float nextGround=terrain.ground(nextPosition.x,nextPosition.z);
-            if(!building.blocksMotion(player.position.x,player.position.z,
-                              nextPosition.x,nextPosition.z) &&
-               (!player.isGrounded || nextGround-player.position.y<=0.55f)){
+            const bool wallBlocked=building.blocksMotion(
+                player.position.x,player.position.z,nextPosition.x,nextPosition.z);
+            const bool terrainBlocked=player.isGrounded&&
+                nextGround-player.position.y>0.55f;
+            // Report the actual player movement path under a test fixture,
+            // not a synthetic call to the collider. Throttle to 1/10 frames.
+            if(traceJoystickWallFixture&&leftStick.active&&
+               !building.placed.empty()&&inputFrameNumber%10==0){
+                TraceLog(LOG_INFO,
+                    "LIOS_JOYSTICK_MOTION frame=%u start_x=%.4f start_z=%.4f target_x=%.4f target_z=%.4f wall_blocked=%d terrain_blocked=%d stick_x=%.3f stick_y=%.3f placed=%u",
+                    inputFrameNumber,player.position.x,player.position.z,
+                    nextPosition.x,nextPosition.z,int(wallBlocked),
+                    int(terrainBlocked),touchMoveDir.x,touchMoveDir.y,
+                    static_cast<unsigned>(building.placed.size()));
+            }
+            if(!wallBlocked&&!terrainBlocked){
                 player.position=nextPosition;
                 if(player.isGrounded)player.position.y=nextGround;
             }
