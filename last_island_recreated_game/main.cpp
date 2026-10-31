@@ -937,8 +937,8 @@ int main() {
                                 sourceBuildPartId,sourceBuildOnceAngle);
                         }
                         TraceLog(LOG_INFO,
-                            "LIOS_BUILD_CHILD frame=%u category=%d child=%d source_id=%d native_piece=%d",
-                            inputFrameNumber,buildCategory,n,sourceBuildPartId,building.selected);
+                            "LIOS_BUILD_CHILD frame=%u category=%d child=%d source_id=%d native_piece=%d source_angle=%d",
+                            inputFrameNumber,buildCategory,n,sourceBuildPartId,building.selected,sourceBuildOnceAngle);
                         childTouched=true;break;
                     }
                 }
@@ -955,14 +955,15 @@ int main() {
                 }
                 if(building.selected>=0&&building.selected<LIOS_BUILD::PieceCount&&
                     hitUi(click,sourceRect(LIOS_HUD::Build_btn_opRotate))){
+                    const int beforeRotation=building.orientation;
                     if(sourceBuildOnceAngle>0&&sourceBuildOnceAngle%90==0){
                         building.orientation=(building.orientation+
                             (sourceBuildOnceAngle/90))%4;
                     }else{
                         buildStatus="Angulo original nao suportado pela malha nativa.";
                     }
-                    TraceLog(LOG_INFO,"LIOS_BUILD_ROTATE frame=%u orientation=%d source_angle=%d",
-                             inputFrameNumber,building.orientation,sourceBuildOnceAngle);
+                    TraceLog(LOG_INFO,"LIOS_BUILD_ROTATE frame=%u before=%d orientation=%d source_angle=%d",
+                             inputFrameNumber,beforeRotation,building.orientation,sourceBuildOnceAngle);
                     continue;
                 }
                 if(hitUi(click,sourceRect(LIOS_HUD::Build_btn_freeBuildModel))){
