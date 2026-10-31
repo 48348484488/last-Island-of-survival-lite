@@ -494,3 +494,12 @@ Inspeção identificou que `wantJump` não verifica `activePanel==0`, enquanto m
 - [Build Android #41172610497](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41172610497): compilação Gradle/Clang, testes nativos, assinatura e empacotamento **aprovados**; APK de 26.882.211 bytes publicado na [release v0.25.0-a95bc6f7](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-a95bc6f7).
 - Execução Android virtual do mesmo workflow ainda **em andamento** na última consulta. Não afirmar instalação, FPS, screenshot ou paridade desta versão até o resultado final.
 - Referência da versão exata: [Aptoide LITE 7.3 de 23/10/2026](https://last-island-of-survival-lite.vn.aptoide.com/app); screenshots de outros catálogos não são necessariamente dessa versão.
+
+
+### Execução Android virtual concluída — #41172610497
+
+- [Workflow #41172610497](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41172610497) **sucesso nos 3 jobs**: compilação ARM64, release e Android virtual com tradução ARM64. Captura real 1080×640 e 72 arquivos de evidência no artefato [#13032290996](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41172610497/artifacts/13032290996).
+- Toques reais confirmados: fabricação, inventário (abre/fecha), configurações (abre/fecha), salto, ataque, agachar/levantar, slots 0/1 e mira on/off. Bloqueio de salto durante inventário também passou. 20/20 amostras de continuidade do terreno passaram.
+- `frame-pacing-summary.json`: 9 janelas de 60 frames, total 540 frames, média agregada de 19,420 ms (~51,49 FPS), cinco frames acima de 33,33 ms. Mistura estados/câmeras e não é A/B controlado; **não atribuir ganho ao cache**.
+- Auditoria de exclusividade de entrada sobre sequência real inventário aberto → toque de salto neutralizado → inventário fechado: 1 entrada, 1 saída, 2 capturas e 0 violações. Isso não valida o modo construção, que não foi ativado.
+- O marcador `LIOS_TERRAIN_SAMPLE_CACHE` não apareceu nos logs preservados: a janela de 600 consultas não foi atingida. Portanto hit ratio e benefício de FPS do cache permanecem **não medidos**. Próxima prioridade: telemetria por janela menor e prova A/B no mesmo cenário; executar fluxo real de coleta/fabricação/equipamento para entrar em BuildState.
