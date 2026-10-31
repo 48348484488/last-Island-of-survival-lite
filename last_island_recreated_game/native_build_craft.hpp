@@ -252,7 +252,20 @@ public:
             // Allow escape from a collision box after a spawn/placement
             // overlap; do not trap the player inside its own geometry.
             if(startsInside){
-                if(endsInside)return true;
+                if(endsInside){
+                    // A player spawned inside geometry must be able to
+                    // escape in ordinary short frames, not only in one
+                    // unrealistically long step that clears the whole box.
+                    // Permit motion that strictly reduces the minimum
+                    // distance to an exit face; reject deeper penetration
+                    // and tangent-only motion at unchanged depth.
+                    const float before=std::min(std::min(x0-minX,maxX-x0),
+                                                std::min(z0-minZ,maxZ-z0));
+                    const float after=std::min(std::min(x1-minX,maxX-x1),
+                                               std::min(z1-minZ,maxZ-z1));
+                    if(after+0.000001f<before)continue;
+                    return true;
+                }
                 continue;
             }
             if(segmentTouchesBox(x0,z0,x1,z1,minX,maxX,minZ,maxZ))return true;
