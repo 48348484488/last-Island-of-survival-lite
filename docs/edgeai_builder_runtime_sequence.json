@@ -1,0 +1,60 @@
+{
+  "schema": "edgeai.event_sequence.v1",
+  "description": "Offline builder Android runtime sequence, with resources_v1 fixture (not original gameplay parity)",
+  "steps": [
+    {
+      "name": "craft_open",
+      "pattern": "LIOS_CRAFT_PANEL_OPEN"
+    },
+    {
+      "name": "prototype",
+      "pattern": "LIOS_OFFLINE_CRAFT_PROTOTYPE enabled=1"
+    },
+    {
+      "name": "queue",
+      "pattern": "LIOS_OFFLINE_CRAFT_QUEUED recipe=0 count=1"
+    },
+    {
+      "name": "blueprint_ready",
+      "pattern": "LIOS_OFFLINE_BLUEPRINT_READY crafted=1"
+    },
+    {
+      "name": "craft_close",
+      "pattern": "LIOS_CRAFT_PANEL_CLOSE"
+    },
+    {
+      "name": "build_enter",
+      "pattern": "LIOS_BUILD_MODE_TRANSITION enabled=1 blueprint=1"
+    },
+    {
+      "name": "foundation_category",
+      "pattern": "LIOS_BUILD_CATEGORY frame=\\d+ category=2 submenu=1"
+    },
+    {
+      "name": "foundation_child",
+      "pattern": "LIOS_BUILD_CHILD frame=\\d+ category=2 child=0 .*native_piece=0"
+    },
+    {
+      "name": "foundation_place",
+      "pattern": "LIOS_BUILD_PLACE frame=\\d+ piece=0 placed=1"
+    },
+    {
+      "name": "build_exit",
+      "pattern": "LIOS_BUILD_EXIT frame=\\d+ via=change_button"
+    }
+  ],
+  "forbidden_between": [
+    {
+      "start": "build_enter",
+      "end": "build_exit",
+      "pattern": "LIOS_ATTACK_TRIGGERED|LIOS_JUMP_TRIGGERED"
+    }
+  ],
+  "forbidden_same_frame": [
+    {
+      "name": "opening_touch",
+      "start_pattern": "LIOS_INPUT_TRANSITION frame=(?P<frame>\\d+) from=game to=build",
+      "forbidden_pattern": "LIOS_INPUT_DISPATCH frame=(?P<frame>\\d+) scope=build"
+    }
+  ]
+}
