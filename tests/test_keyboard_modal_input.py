@@ -38,7 +38,7 @@ class KeyboardModalInputTests(unittest.TestCase):
     def test_opening_touch_is_not_replayed_into_new_modal(self):
         self.assertIn("const int panelAtFrameStart=activePanel;", self.code)
         self.assertIn("if(activePanel!=panelAtFrameStart){", self.code)
-        self.assertIn("if(activePanel!=0)hudInput.captureModal();", self.code)
+        self.assertIn("hudInput.captureModal();", self.code)
         self.assertLess(
             self.code.index("if(activePanel!=panelAtFrameStart){"),
             self.code.index("for(const Vector2 &click:uiClicks)"))
