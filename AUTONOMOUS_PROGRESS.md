@@ -1,3 +1,11 @@
+### 2026-10-30 21:50 America/Recife — LBS normal optimization and crouch touch probe
+
+- Synchronized EdgeAI's portable reciprocal normal normalization into `last_island_recreated_game/native_lbs_kernel.hpp`, commit [8c5297c](https://github.com/48348484488/last-Island-of-survival-lite/commit/8c5297c09f08764502c67484d25567ace5fdb625); kernel text matched the EdgeAI generic header exactly. Standalone local x86_64 100k-case differential passed within 1e-4; repository's native differential and Android NDK build are the final gates.
+- Added `LIOS_CROUCH_TOUCH_TRANSITION` from actual gameplay state change, not only HUD hitbox ownership, commit [5a922fd](https://github.com/48348484488/last-Island-of-survival-lite/commit/5a922fdfcd37b478528e123c90b13353bb68921d).
+- Android smoke now sends source-derived Unity LITE 7.3 crouch touches twice and requires transitions `crouch=1` and `crouch=0`, correct action ID 6, and no attack trigger. Commit [2116595](https://github.com/48348484488/last-Island-of-survival-lite/commit/2116595b617c303f01c95db8b63ce5ca2ac2844c).
+- Android [build #41152430311](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41152430311) queued at checkpoint. Do not claim new APK, runtime FPS improvement or crouch pass until CI/emulator evidence. Last confirmed release remains v0.25.0-dc324103.
+- Next: inspect Android build, install/emulator screenshot, new crouch logs, and phase telemetry; investigate any failure and compare FPS against baseline 28.6001 (different-session measurements only). Same-state original screenshot still unavailable.
+
 ### Verified result — 2026-10-30 20:10 America/Recife — new EdgeAI LBS APK running
 
 - [Android #41141881188](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41141881188) **3/3 jobs passed** on first attempt for commit dc324103. New [release v0.25.0-dc324103](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-dc324103), 26,877,051 bytes, compiled ARM64, installed and executed in Android x86_64 virtual emulator with ARM64 translation. [Real screenshot and logs artifact #13019181169](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41141881188/artifacts/13019181169).
