@@ -1,6 +1,6 @@
 {
   "schema": "edgeai.event_sequence.v1",
-  "description": "Offline builder Android runtime sequence, with resources_v1 fixture (not original gameplay parity)",
+  "description": "Offline builder Android runtime sequence: blueprint fixture resources, foundation, wall, rotation and second wall placement (not original Unity gameplay parity)",
   "steps": [
     {
       "name": "craft_open",
@@ -36,7 +36,27 @@
     },
     {
       "name": "foundation_place",
-      "pattern": "LIOS_BUILD_PLACE frame=\\d+ piece=0 placed=1"
+      "pattern": "LIOS_BUILD_PLACE frame=\\d+ piece=0 placed=(?P<count>\\d+)"
+    },
+    {
+      "name": "wall_category",
+      "pattern": "LIOS_BUILD_CATEGORY frame=\\d+ category=3 submenu=1"
+    },
+    {
+      "name": "wall_child",
+      "pattern": "LIOS_BUILD_CHILD frame=\\d+ category=3 child=0 .*native_piece=1 source_angle=\\d+"
+    },
+    {
+      "name": "wall_place",
+      "pattern": "LIOS_BUILD_PLACE frame=\\d+ piece=1 placed=(?P<count>\\d+)"
+    },
+    {
+      "name": "wall_rotate",
+      "pattern": "LIOS_BUILD_ROTATE frame=\\d+ before=(?P<before>\\d+) orientation=(?P<after>\\d+) source_angle=\\d+"
+    },
+    {
+      "name": "rotated_wall_place",
+      "pattern": "LIOS_BUILD_PLACE frame=\\d+ piece=1 placed=(?P<count>\\d+)"
     },
     {
       "name": "build_exit",
@@ -55,6 +75,41 @@
       "name": "opening_touch",
       "start_pattern": "LIOS_INPUT_TRANSITION frame=(?P<frame>\\d+) from=game to=build",
       "forbidden_pattern": "LIOS_INPUT_DISPATCH frame=(?P<frame>\\d+) scope=build"
+    }
+  ],
+  "numeric_comparisons": [
+    {
+      "left": {
+        "step": "wall_place",
+        "group": "count"
+      },
+      "op": "gt",
+      "right": {
+        "step": "foundation_place",
+        "group": "count"
+      }
+    },
+    {
+      "left": {
+        "step": "wall_rotate",
+        "group": "after"
+      },
+      "op": "ne",
+      "right": {
+        "step": "wall_rotate",
+        "group": "before"
+      }
+    },
+    {
+      "left": {
+        "step": "rotated_wall_place",
+        "group": "count"
+      },
+      "op": "gt",
+      "right": {
+        "step": "wall_place",
+        "group": "count"
+      }
     }
   ]
 }
