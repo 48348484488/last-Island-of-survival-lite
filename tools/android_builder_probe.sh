@@ -165,8 +165,8 @@ import re
 from pathlib import Path
 child=Path("evidence/build-wall_child0-logcat.txt").read_text()
 rotation=Path("evidence/build-rotate-logcat.txt").read_text()
-source=re.search(r"LIOS_BUILD_CHILD frame=\\d+ category=3 child=0 .*source_angle=(\\d+)",child)
-change=re.search(r"LIOS_BUILD_ROTATE frame=\\d+ before=(\\d+) orientation=(\\d+) source_angle=(\\d+)",rotation)
+source=re.search(r"LIOS_BUILD_CHILD frame=\d+ category=3 child=0 .*source_angle=(\d+)",child)
+change=re.search(r"LIOS_BUILD_ROTATE frame=\d+ before=(\d+) orientation=(\d+) source_angle=(\d+)",rotation)
 if not source or not change:
     raise SystemExit("LIOS_BUILD_WALL_ROTATION_EVIDENCE_MISSING")
 angle=int(source[1]);before,after,logged_angle=map(int,change.groups())
