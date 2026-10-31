@@ -4,6 +4,7 @@
 // of original Unity material, collision, or scene behavior.
 #include "raylib.h"
 #include "raymath.h"
+#include "native_exact_sample_cache.hpp"
 #include <cmath>
 #include <algorithm>
 
@@ -110,8 +111,24 @@ struct Tile {
          -600.001f,-200.f,-200.001f,200.f}
     };
     bool ready=false;
+    // Source OBJ meshes and transforms are immutable after load. Cache only
+    // EXACT XZ coordinates; no interpolation, quantization, or approximation.
+    mutable ExactSampleCache2D<8> heightCache;
+    mutable unsigned int heightCacheHits=0, heightCacheMisses=0;
+
+    void sampleCacheEvent(bool hit) const {
+        if(hit)++heightCacheHits;
+        else ++heightCacheMisses;
+        if(heightCacheHits+heightCacheMisses>=600){
+            TraceLog(LOG_INFO,"LIOS_TERRAIN_SAMPLE_CACHE calls=%u hits=%u misses=%u",
+                     heightCacheHits+heightCacheMisses,heightCacheHits,heightCacheMisses);
+            heightCacheHits=heightCacheMisses=0;
+        }
+    }
 
     void load(){
+        heightCache.clear();
+        heightCacheHits=heightCacheMisses=0;
         int loaded=0;
         for(auto& sector:sectors){
             sector.load();
@@ -126,6 +143,13 @@ struct Tile {
     // not Unity's actual collision mesh or navigation rules.
     bool sample(float x,float z,float& height) const {
         if(!ready || !std::isfinite(x) || !std::isfinite(z))return false;
+        bool cachedFound=false;
+        float cachedHeight=0.f;
+        if(heightCache.lookup(x,z,cachedFound,cachedHeight)){
+            sampleCacheEvent(true);
+            if(cachedFound)height=cachedHeight;
+            return cachedFound;
+        }
         bool found=false;
         float top=-100000.f;
         for(const auto& sector:sectors){
@@ -135,6 +159,8 @@ struct Tile {
                 found=true;
             }
         }
+        heightCache.store(x,z,found,top);
+        sampleCacheEvent(false);
         if(found)height=top;
         return found;
     }
@@ -174,6 +200,8 @@ struct Tile {
     }
 
     void unload(){
+        heightCache.clear();
+        heightCacheHits=heightCacheMisses=0;
         for(auto& sector:sectors)sector.unload();
         ready=false;
     }
