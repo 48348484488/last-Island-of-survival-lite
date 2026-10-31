@@ -184,6 +184,28 @@ grep -E 'LIOS_BUILD_PLACE frame=[0-9]+ piece=1 placed=3' \
  evidence/build-wall_rotated_place-logcat.txt >/dev/null ||
  { echo LIOS_BUILD_ROTATED_WALL_NOT_PLACED; exit 68; }
 adb exec-out screencap -p > evidence/build-wall-after-place.png || true
+# Report measured screenshot deltas without claiming Unity visual parity.
+python3 - <<'PY'
+import json
+from pathlib import Path
+from PIL import Image, ImageChops
+pairs=[
+    ("rotation_preview","build-wall-before-rotate.png","build-wall-after-rotate.png"),
+    ("rotated_placement","build-wall-after-rotate.png","build-wall-after-place.png")
+]
+result={}
+for name,before,after in pairs:
+    a=Image.open(Path("evidence")/before).convert("RGB")
+    b=Image.open(Path("evidence")/after).convert("RGB")
+    if a.size!=b.size:raise SystemExit("LIOS_BUILD_SCREENSHOT_SIZE_MISMATCH")
+    changed=sum(1 for pixel in ImageChops.difference(a,b).getdata()
+                if max(pixel)>30)
+    result[name]={"resolution":list(a.size),"changed_pixels_rgb30":changed,
+                  "changed_fraction_rgb30":changed/(a.width*a.height)}
+Path("evidence/build-wall-visual-diff.json").write_text(
+    json.dumps({"comparisons":result,"original_parity_proven":False},indent=2)+"\\n")
+print("LIOS_BUILD_WALL_VISUAL_DIFF",json.dumps(result))
+PY
 tap exit "$exit_x" "$exit_y" 'LIOS_BUILD_EXIT'
 grep -F 'LIOS_BUILD_MODE_TRANSITION enabled=0 blueprint=1' \
  evidence/build-exit-logcat.txt >/dev/null ||
