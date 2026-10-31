@@ -229,4 +229,70 @@ cat evidence/build-craft_open-logcat.txt evidence/build-prototype-logcat.txt \
  evidence/build-rotate-logcat.txt evidence/build-wall_rotated_place-logcat.txt \
  evidence/build-exit-logcat.txt \
  > evidence/build-interaction-trace.txt
+# After leaving BuildState, move the real avatar with the Android touch
+# joystick. The runtime records actual player positions and the collision
+# decision; this is NOT a synthetic call to blocksMotion().
+read -r joy_x joy_y joy_end_y < <(python3 - <<'PY'
+import json,re
+from pathlib import Path
+s=Path("evidence/terrain-startup-logcat.txt").read_text()
+m=re.search(r"LIOS_JOYSTICK_CENTER logical_x=([-\d.]+) logical_y=([-\d.]+) radius=([-\d.]+)",s)
+if not m:raise SystemExit("LIOS_JOYSTICK_CENTER_MISSING")
+x,y,r=map(float,m.groups())
+d=json.loads(Path("evidence/build-touch-calibration.json").read_text())
+scale=d["physical_scale"];ox,oy=d["physical_origin"];w,h=d["physical_size"]
+sx=round(ox+x*scale);sy=round(oy+y*scale)
+ey=round(sy-r*scale*.9)
+if not (0<=sx<w and 0<=sy<h and 0<=ey<h and ey<sy):
+    raise SystemExit("LIOS_JOYSTICK_TOUCH_OUTSIDE_VIEWPORT")
+print(sx,sy,ey)
+PY
+)
+printf 'joystick_start=%s,%s joystick_end=%s,%s\n' \
+ "$joy_x" "$joy_y" "$joy_x" "$joy_end_y" > evidence/build-joystick-coordinates.txt
+adb logcat -c
+adb shell input swipe "$joy_x" "$joy_y" "$joy_x" "$joy_end_y" 5000
+sleep 1
+adb logcat -d -s raylib:I > evidence/build-joystick-motion-logcat.txt 2>&1 || true
+python3 - <<'PY'
+import json,math,re
+from pathlib import Path
+s=Path("evidence/build-joystick-motion-logcat.txt").read_text()
+pattern=re.compile(
+ r"LIOS_JOYSTICK_MOTION frame=(\d+) start_x=([-\d.]+) start_z=([-\d.]+)"
+ r" target_x=([-\d.]+) target_z=([-\d.]+)"
+ r" wall_blocked=(\d+) terrain_blocked=(\d+)"
+ r" stick_x=([-\d.]+) stick_y=([-\d.]+) placed=(\d+)")
+rows=[]
+for m in pattern.finditer(s):
+    f,x,z,tx,tz,blocked,terrain,sx,sy,placed=m.groups()
+    rows.append(dict(frame=int(f),x=float(x),z=float(z),target_x=float(tx),
+        target_z=float(tz),blocked=int(blocked),terrain=int(terrain),
+        stick_x=float(sx),stick_y=float(sy),placed=int(placed)))
+Path("evidence/build-joystick-motion.json").write_text(
+    json.dumps({"records":rows,"source":"actual Android touch joystick and player motion",
+                "original_parity_proven":False},indent=2)+"\n")
+if len(rows)<5:raise SystemExit("LIOS_JOYSTICK_TELEMETRY_INSUFFICIENT")
+if any(b["frame"]<=a["frame"] for a,b in zip(rows,rows[1:])):
+    raise SystemExit("LIOS_JOYSTICK_FRAME_ORDER_INVALID")
+if any(r["placed"]<3 for r in rows):
+    raise SystemExit("LIOS_JOYSTICK_WALLS_MISSING")
+free=[r for r in rows if not r["blocked"] and not r["terrain"]]
+blocked=[r for r in rows if r["blocked"] and not r["terrain"]]
+travel=math.hypot(rows[-1]["x"]-rows[0]["x"],rows[-1]["z"]-rows[0]["z"])
+if len(free)<2 or travel<.15:
+    raise SystemExit("LIOS_JOYSTICK_NO_CONFIRMED_MOVEMENT free=%d travel=%.3f"%(len(free),travel))
+if len(blocked)<2:
+    raise SystemExit("LIOS_JOYSTICK_WALL_CONTACT_NOT_OBSERVED blocked=%d"%len(blocked))
+contact_drift=max(math.hypot(r["x"]-blocked[0]["x"],r["z"]-blocked[0]["z"]) for r in blocked)
+if contact_drift>.12:
+    raise SystemExit("LIOS_JOYSTICK_CONTACT_POSITION_UNSTABLE drift=%.3f"%contact_drift)
+if not all(math.hypot(r["target_x"]-r["x"],r["target_z"]-r["z"])>0.0001 for r in blocked):
+    raise SystemExit("LIOS_JOYSTICK_BLOCKED_WITHOUT_MOVEMENT_INPUT")
+print("LIOS_JOYSTICK_WALL_CONTACT_PASS samples=%d free=%d blocked=%d travel=%.3f drift=%.3f"%
+      (len(rows),len(free),len(blocked),travel,contact_drift))
+PY
+adb exec-out screencap -p > evidence/build-joystick-wall-contact.png || true
+echo LIOS_JOYSTICK_WALL_CONTACT_PASS | tee -a evidence/build-probe-result.txt
+
 echo LIOS_ANDROID_BUILDER_FOUNDATION_WALL_ROTATE_PLACE_EXIT_PASS | tee evidence/build-probe-result.txt
