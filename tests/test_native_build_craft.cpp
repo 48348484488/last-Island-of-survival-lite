@@ -127,6 +127,20 @@ int main(){
     assert(stalled.requestCraft(Hammer,enough,1));
     stalled.tickCraft(std::numeric_limits<float>::quiet_NaN());
     assert(stalled.queue.size()==1&&stalled.queue.front().elapsed==0.f);
+    // Runtime Android probe places two wall edges after one foundation.
+    // Verify this state transition without depending on raylib or Unity.
+    System rotated;
+    rotated.blueprint=true;
+    Resources rotationResources{250,250,250,0};
+    assert(rotated.place(Foundation,1,0,0,0.f,0.f,rotationResources));
+    assert(rotated.place(Wall,1,0,0,0.f,0.f,rotationResources));
+    assert(!rotated.place(Wall,1,0,0,0.f,0.f,rotationResources));
+    assert(rotated.place(Wall,1,0,1,0.f,0.f,rotationResources));
+    assert(rotated.placed.size()==3);
+    assert(rotated.placed[1].turn==0&&rotated.placed[2].turn==1);
+    assert(rotated.blocks(3.f,-1.5f));
+    assert(rotated.blocks(4.5f,0.f));
+    assert(rotationResources.wood==250-BUILD_COSTS[Foundation].wood-2*BUILD_COSTS[Wall].wood);
     std::cout<<"LIOS_BUILD_CRAFT_NATIVE_LOGIC_PASS placed="<<b.placed.size()
              <<" recipes=3 queued_quantity=true item_sprite_source=true build_categories=8 wall_collision=pass\\n";
 }
