@@ -450,6 +450,7 @@ int main() {
         unityRig.lastPoseCpuMs=0.0;
         unityRig.lastVboSubmitMs=0.0;
         const int panelAtFrameStart=activePanel;
+        const bool buildModeAtFrameStart=buildMode;
         // Snapshot modal ownership before processing any input this frame.
         // Keyboard shortcuts must obey the same UI capture rules as touch.
         const bool overlayWasOpen=activePanel!=0;
@@ -678,7 +679,10 @@ int main() {
         // A touch opening a modal belongs to the HUD for this frame. Do not
         // dispatch that same DOWN event into the newly opened panel: it can
         // otherwise select a recipe or close a menu behind the HUD icon.
-        if(activePanel!=panelAtFrameStart){
+        // Entering BuildState via hotbar slot 6 must not dispatch the SAME
+        // touch into construction controls beneath the old hotbar. This also
+        // protects the exit transition from reusing the opening tap.
+        if(activePanel!=panelAtFrameStart || buildMode!=buildModeAtFrameStart){
             uiClicks.clear();
             if(activePanel!=0){
                 hudInput.captureModal();
