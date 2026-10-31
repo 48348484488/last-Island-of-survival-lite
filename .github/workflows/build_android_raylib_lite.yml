@@ -806,7 +806,10 @@ jobs:
           arch: x86_64
           ram-size: 2048M
           disk-size: 3G
-          emulator-options: -no-window -no-snapshot-save -noaudio -no-boot-anim -gpu swiftshader_indirect -camera-back none
+          # A previous Android run completed 79 native render frames yet the
+          # emulator compositor returned a uniform RGB(86,115,72) screenshot.
+          # Isolate the Vulkan translation path before blaming game draw calls.
+          emulator-options: -no-window -no-snapshot-save -noaudio -no-boot-anim -gpu swiftshader -feature -Vulkan -camera-back none
           # The runner's automatic 'adb shell settings put ...' failed with
           # Broken pipe (32) after a slow first boot, before our smoke script ran.
           # Skip that optional ADB settings operation; runtime checks are in
