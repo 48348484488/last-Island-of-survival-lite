@@ -1,0 +1,12 @@
+{
+  "enter": "LIOS_BUILD_MODE_TRANSITION enabled=1",
+  "exit": "LIOS_BUILD_MODE_TRANSITION enabled=0",
+  "capture": "LIOS_BUILD_WIDGET_TOUCH_CAPTURE",
+  "forbidden": [
+    "LIOS_JUMP_TRIGGERED",
+    "LIOS_ATTACK_TRIGGERED",
+    "LIOS_AIM_TOUCH_TRANSITION"
+  ],
+  "minimum_captures": 1,
+  "require_exit": true
+}
