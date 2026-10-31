@@ -421,6 +421,41 @@ for action in jump attack; do
     exit 55
   fi
 done
+# Verify crouch as an actual gameplay state transition, not merely a touch
+# dispatch. Source rect comes from the same Unity LITE 7.3 prefab as jump.
+read -r crouch_x crouch_y < <(python3 - <<'PY'
+import json,sys
+sys.path.insert(0,"last_island_recreated_game")
+from original_hud_bindings import original_touch_rects
+d=json.load(open("evidence/frame-quality.json",encoding="utf8"))
+w,h=d["width"],d["height"]
+scale=min(w/1920.0,h/1080.0)
+left=(w-1920*scale)/2
+top=(h-1080*scale)/2
+r=original_touch_rects(profile="on-foot-melee")["crouch"]
+print(round(left+(r["left"]+r["right"])*0.5*scale),
+      round(top+((r["top"]+r["bottom"])*0.5-200.0)*scale))
+PY
+)
+printf 'crouch=%s,%s\n' "$crouch_x" "$crouch_y" > evidence/crouch-touch-coordinate.txt
+for expected in 1 0; do
+  adb logcat -c
+  adb shell input swipe "$crouch_x" "$crouch_y" "$crouch_x" "$crouch_y" 850
+  sleep 2
+  adb logcat -d -s raylib:I > "evidence/crouch-state-${expected}-logcat.txt" 2>&1 || true
+  if grep -E 'LIOS_HUD_TOUCH_DOWN finger=[0-9]+ action=6 ' \
+       "evidence/crouch-state-${expected}-logcat.txt" >/dev/null &&
+     grep -F "LIOS_CROUCH_TOUCH_TRANSITION crouch=${expected} prone=0" \
+       "evidence/crouch-state-${expected}-logcat.txt" >/dev/null &&
+     ! grep -F 'LIOS_ATTACK_TRIGGERED' \
+       "evidence/crouch-state-${expected}-logcat.txt" >/dev/null; then
+    echo "LIOS_CROUCH_TOUCH_STATE_PASS crouch=$expected" | tee -a evidence/crouch-touch-result.txt
+  else
+    echo "LIOS_CROUCH_TOUCH_STATE_FAIL expected=$expected x=$crouch_x y=$crouch_y" \
+      | tee -a evidence/crouch-touch-result.txt
+    exit 56
+  fi
+done
 adb shell pidof org.lios.recreatedlite | tee evidence/pid.txt
 test -s evidence/runtime.png
 test -s evidence/pid.txt
