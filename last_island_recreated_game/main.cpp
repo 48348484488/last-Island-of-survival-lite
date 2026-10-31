@@ -1006,6 +1006,11 @@ int main() {
                             const float cx=LIOS_BUILD::world(wall.gx)+(alongZ?0.f:edge);
                             const float cz=LIOS_BUILD::world(wall.gz)+(alongZ?edge:0.f);
                             const float nx=alongZ?0.f:1.f,nz=alongZ?1.f:0.f;
+                            TraceLog(LOG_INFO,
+                                "LIOS_WALL_COLLIDER_RUNTIME rotation=%d center_x=%.4f center_z=%.4f half_x=%.4f half_z=%.4f",
+                                rotation,cx,cz,
+                                alongZ?LIOS_BUILD::WallVisualHalfLength:LIOS_BUILD::WallCollisionHalfThickness,
+                                alongZ?LIOS_BUILD::WallCollisionHalfThickness:LIOS_BUILD::WallVisualHalfLength);
                             const bool cross=building.blocksMotion(
                                 cx-nx,cz-nz,cx+nx,cz+nz);
                             const bool shortEscape=!building.blocksMotion(
