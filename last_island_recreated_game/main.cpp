@@ -1055,7 +1055,7 @@ int main() {
 
         // Jump and Gravity Physics
         const float gravity = 24.0f;
-        bool wantJump = !prone&&!crouch&&!stanceTransitionActive&&
+        bool wantJump = !overlayWasOpen&&activePanel==0&&!prone&&!crouch&&!stanceTransitionActive&&
             (IsKeyPressed(KEY_SPACE) || hudInput.justPressed(HA::Jump));
         if (player.isGrounded) {
             if (wantJump && player.stamina >= 10.0f) {
