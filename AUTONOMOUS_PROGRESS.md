@@ -1,3 +1,11 @@
+### Validação concluída — 2026-10-31
+
+- [Workflow Android #41168341991](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41168341991) **sucesso nos 3 jobs**: regressões nativas/estáticas, build ARM64, publicação e execução em Android virtual com tradução ARM64. Corrigida a falha intermediária de teste estático em [72e2f005](https://github.com/48348484488/last-Island-of-survival-lite/commit/72e2f005c76e006ff901c4f600d4479ed4f32b20).
+- Release [v0.25.0-72e2f005](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-72e2f005): APK de 26.878.995 bytes. Evidência real [artefato #13030181495](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41168341991/artifacts/13030181495).
+- Smoke Android: cena não plana em 1080×640; 20/20 sondas de terreno; fabricação, inventário e configurações; salto, ataque, agachar, barra de itens, mira e câmera primeira pessoa aprovados. `LIOS_ANDROID_VIRTUAL_ARM64_RUNTIME_SMOKE_PASS`.
+- Telemetria real: 480 frames em oito janelas, médias entre 17,838 ms e 33,606 ms (29,76 a 56,06 FPS conforme estado). **Sem comparação controlada com baseline ou jogo original**. Screenshot inicial contra o build anterior #41166031283: 0,2167% de pixels com diferença RGB máxima >30, sem prova de paridade original.
+- Os logs mostram `LIOS_INPUT_TRANSITION` para inventário/configurações, mas **não** mostram entrada no modo construção nem `LIOS_INPUT_DISPATCH scope=build`. Portanto o conserto de reuso do toque no slot 6 está integrado e compilado, mas o cenário específico **não foi validado em runtime**. Próximo ciclo: fabricar blueprint e tocar slot 6, selecionar peça, girar e colocar, auditar logs por frame e capturar screenshots da construção.
+
 ### Regressão intermediária e correção — 2026-10-31
 
 - [Build #41168198620](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41168198620) falhou **antes da compilação**: `tests/test_keyboard_modal_input.py` ainda exigia literalmente a condição antiga `if(activePanel!=panelAtFrameStart){`. A nova guarda correta inclui `|| buildMode!=buildModeAtFrameStart`; portanto o teste ficou obsoleto, não há evidência de falha funcional Android.
