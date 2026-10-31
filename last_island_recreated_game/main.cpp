@@ -441,6 +441,8 @@ int main() {
     // Per-frame CPU wall time, not a GPU timer query. Each window uses
     // exactly 60 completed frames and is emitted once (no log spam).
     unsigned int phaseFrames=0;
+    unsigned int phaseVisibleFrames=0,phasePoseCalls=0;
+    bool firstPersonPoseSkipReported=false;
     double phasePoseTotal=0.0,phaseVboTotal=0.0;
     double phaseEndTotal=0.0,phaseWorkTotal=0.0;
     while (!WindowShouldClose()) {
@@ -490,6 +492,7 @@ int main() {
         if (!overlayWasOpen &&
             (IsKeyPressed(KEY_TAB) || (!buildMode&&IsKeyPressed(KEY_V)))) {
             player.thirdPerson = !player.thirdPerson;
+            TraceLog(LOG_INFO,"LIOS_CAMERA_MODE third_person=%d",int(player.thirdPerson));
         }
 
         // Switch Weapon with Keys 1 and 2
@@ -1275,10 +1278,18 @@ int main() {
             };
             int from=unityRig.clipIndex(animationPrevious.c_str());
             int to=unityRig.clipIndex(animationCurrent.c_str());
-            if(to>=0){
+            // The avatar is not drawn in first-person. Keep advancing clip
+            // clocks and transitions, but do not skin/upload seven invisible
+            // meshes every frame. Returning to third-person poses immediately.
+            if(to>=0 && player.thirdPerson){
                 if(from<0)from=to;
                 unityRig.pose(from,clipTime(animationPrevious),to,clipTime(animationCurrent),animationCrossFade);
+                ++phasePoseCalls;
+            }else if(!player.thirdPerson && !firstPersonPoseSkipReported){
+                TraceLog(LOG_INFO,"LIOS_FIRST_PERSON_POSE_SKIPPED");
+                firstPersonPoseSkipReported=true;
             }
+            if(player.thirdPerson)firstPersonPoseSkipReported=false;
         }
 
         // Update Particles
@@ -1921,15 +1932,18 @@ int main() {
             frameWorkEnd-endDrawingStart).count();
         const double frameWorkMs=std::chrono::duration<double,std::milli>(
             frameWorkEnd-frameWorkStart).count();
+        if(player.thirdPerson)++phaseVisibleFrames;
         phasePoseTotal+=unityRig.lastPoseCpuMs;
         phaseVboTotal+=unityRig.lastVboSubmitMs;
         phaseEndTotal+=endDrawingMs;
         phaseWorkTotal+=frameWorkMs;
         if(++phaseFrames==60){
             TraceLog(LOG_INFO,
-                "LIOS_PHASE_TIMING frames=60 pose_cpu_ms=%.3f vbo_submit_ms=%.3f end_drawing_ms=%.3f frame_work_ms=%.3f",
+                "LIOS_PHASE_TIMING frames=60 pose_cpu_ms=%.3f vbo_submit_ms=%.3f end_drawing_ms=%.3f frame_work_ms=%.3f visible_frames=%u pose_calls=%u",
                 phasePoseTotal/60.0,phaseVboTotal/60.0,
-                phaseEndTotal/60.0,phaseWorkTotal/60.0);
+                phaseEndTotal/60.0,phaseWorkTotal/60.0,
+                phaseVisibleFrames,phasePoseCalls);
+            phaseVisibleFrames=phasePoseCalls=0;
             phaseFrames=0;
             phasePoseTotal=phaseVboTotal=phaseEndTotal=phaseWorkTotal=0.0;
         }
