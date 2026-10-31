@@ -417,3 +417,5 @@ Inspeção identificou que `wantJump` não verifica `activePanel==0`, enquanto m
 - EdgeAI ganhou auditor genérico de exclusividade de eventos de modal, ainda aguardando CI. Próxima prioridade: confirmar compilação e execução, verificar teste negativo de salto, auditar logs e avançar para botões de mira/barra/construção.
 
 - Ajuste de regressão após instrumentação de captura: [e63558b](https://github.com/48348484488/last-Island-of-survival-lite/commit/e63558b1375d0c63bdb0299f1ea47f322a3c991d). Build mais recente: [#41156959654](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41156959654), ainda pendente na consulta.
+
+- Build [#41156959654](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41156959654): compilação ARM64, testes nativos/estáticos, estrutura e assinatura v2 do APK **aprovados**. Release [v0.25.0-e63558b1](https://github.com/48348484488/last-Island-of-survival-lite/releases/tag/v0.25.0-e63558b1), APK 26.878.699 bytes. Execução no Android virtual ainda em andamento na última consulta; não afirmar correção funcional comprovada antes do resultado.
