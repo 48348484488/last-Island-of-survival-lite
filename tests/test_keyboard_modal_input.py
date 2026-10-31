@@ -49,7 +49,7 @@ class KeyboardModalInputTests(unittest.TestCase):
         self.assertIn("bool wantJump = !overlayWasOpen&&activePanel==0", self.code)
 
     def test_touch_controller_receives_modal_state(self):
-        self.assertIn("GetScreenHeight(),overlayWasOpen);", self.code)
+        self.assertIn("GetScreenHeight(),overlayWasOpen,buildMode);", self.code)
         header = (SOURCE.parent / "mobile_hud_input.hpp").read_text(encoding="utf-8")
         self.assertIn("if(modalOpen && a!=Action::Inventory", header)
         self.assertIn("void captureModal(){", header)
@@ -58,10 +58,10 @@ class KeyboardModalInputTests(unittest.TestCase):
         header = (SOURCE.parent / "mobile_hud_input.hpp").read_text(encoding="utf-8")
         self.assertRegex(
             header,
-            r"if\(!modalOpen\s*&&\s*a==Action::None\s*&&"
+            r"if\(!modalOpen\s*&&\s*!buildWidget\s*&&\s*a==Action::None\s*&&"
         )
         self.assertLess(header.index("if(modalOpen && a!=Action::Inventory"),
-                        header.index("if(!modalOpen && a==Action::None"))
+                        header.index("if(!modalOpen && !buildWidget && a==Action::None"))
 
 
     def test_construction_controls_capture_before_battle_hud(self):
