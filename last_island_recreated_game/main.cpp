@@ -739,6 +739,7 @@ int main() {
                 if(LIOS_REAL_CRAFT::hit(click,1685,1011,225,60,
                     canvasScale,canvasLeft,canvasTop)){
                     showOfflineCraftPrototype=!showOfflineCraftPrototype;
+                    TraceLog(LOG_INFO,"LIOS_OFFLINE_CRAFT_PROTOTYPE enabled=%d",int(showOfflineCraftPrototype));
                     continue;
                 }
                 if(!showOfflineCraftPrototype){
