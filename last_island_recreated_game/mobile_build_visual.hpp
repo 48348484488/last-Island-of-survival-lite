@@ -71,11 +71,12 @@ inline void drawPiece(const Piece &piece,const OriginalBuildTextures &surf,
       case Window:{
           const int rot=turn(piece.turn);
           const bool alongZ=(rot%2)==0;
-          const float normal=rot==0?-1.5f:rot==1?1.5f:rot==2?1.5f:-1.5f;
+          const float normal=rot==0?-WallEdgeOffset:rot==1?WallEdgeOffset:rot==2?WallEdgeOffset:-WallEdgeOffset;
           const float wx=x+(alongZ?0.f:normal),wz=z+(alongZ?normal:0.f);
           if(piece.type==Wall){
-              drawPart({wx,1.5f,wz},alongZ?Vector3{3.f,2.6f,.22f}:
-                        Vector3{.22f,2.6f,3.f},preview?wood:WHITE,preview,surf.wall);
+              drawPart({wx,1.5f,wz},alongZ?Vector3{2.f*WallVisualHalfLength,2.6f,2.f*WallVisualHalfThickness}:
+                        Vector3{2.f*WallVisualHalfThickness,2.6f,2.f*WallVisualHalfLength},
+                        preview?wood:WHITE,preview,surf.wall);
           }else if(piece.type==Window){
               // A window has two posts, header and a waist-high sill.
               for(int sign:{-1,1})
