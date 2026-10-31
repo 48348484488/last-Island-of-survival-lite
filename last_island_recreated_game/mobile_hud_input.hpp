@@ -36,6 +36,15 @@ struct Controller {
  std::map<int,Vector2> cameraPrevious;
  bool isHeld(Action a)const{return held.count(a)>0;}
  bool justPressed(Action a)const{return pressed.count(a)>0;}
+ void captureModal(){
+    for(auto& finger:owner){
+       if(finger.second!=Action::Inventory && finger.second!=Action::Settings &&
+          finger.second!=Action::QuickChat) finger.second=Action::None;
+    }
+    cameraPrevious.clear();
+    held.clear();pressed.clear();released.clear();
+    stick={0,0};lookDelta={0,0};
+ }
  static Action hit(float x,float y,bool rifle) {
     // Specific UI wins over general actions. Use the FULL original Unity
     // Background RectTransforms, not the smaller icon Rects (and never the
