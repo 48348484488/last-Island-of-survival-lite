@@ -445,7 +445,9 @@ int main() {
     bool firstPersonPoseSkipReported=false;
     double phasePoseTotal=0.0,phaseVboTotal=0.0;
     double phaseEndTotal=0.0,phaseWorkTotal=0.0;
+    unsigned int inputFrameNumber=0;
     while (!WindowShouldClose()) {
+        ++inputFrameNumber;
         const auto frameWorkStart=std::chrono::steady_clock::now();
         unityRig.lastPoseCpuMs=0.0;
         unityRig.lastVboSubmitMs=0.0;
@@ -653,6 +655,8 @@ int main() {
         if(!overlayWasOpen&&building.blueprint&&
             (IsKeyPressed(KEY_B)||hudInput.justPressed(HA::Slot6))){
             buildMode=!buildMode;
+            TraceLog(LOG_INFO,"LIOS_INPUT_TRANSITION frame=%u from=%s to=%s",
+                     inputFrameNumber,buildMode?"game":"build",buildMode?"build":"game");
             TraceLog(LOG_INFO,"LIOS_BUILD_MODE_TRANSITION enabled=%d blueprint=%d",
                      int(buildMode),int(building.blueprint));
             if(buildMode){
@@ -683,6 +687,9 @@ int main() {
         // touch into construction controls beneath the old hotbar. This also
         // protects the exit transition from reusing the opening tap.
         if(activePanel!=panelAtFrameStart || buildMode!=buildModeAtFrameStart){
+            if(activePanel!=panelAtFrameStart)
+                TraceLog(LOG_INFO,"LIOS_INPUT_TRANSITION frame=%u from=panel_%d to=panel_%d",
+                         inputFrameNumber,panelAtFrameStart,activePanel);
             uiClicks.clear();
             if(activePanel!=0){
                 hudInput.captureModal();
@@ -804,6 +811,8 @@ int main() {
                     }else craftStatus="Materiais insuficientes ou fila cheia.";
                 }
             }else if(buildMode&&activePanel==0){
+                TraceLog(LOG_INFO,"LIOS_INPUT_DISPATCH frame=%u scope=build",
+                         inputFrameNumber);
                 // Original source SC.UI.BattlePanel.cs:
                 // click a category -> CheckBuildChildsClose -> FillBuildChildsIcons,
                 // then click a populated toggle -> ChangePrefab. btn_null
