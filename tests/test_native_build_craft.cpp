@@ -168,6 +168,13 @@ int main(){
     assert(!swept.blocksMotion(3.f,0.f,3.f,.2f));
     assert(swept.blocksMotion(1.f,-3.f,5.f,0.f)); // diagonal crossing
     assert(!swept.blocksMotion(3.f,-1.5f,3.f,0.f)); // escape overlap
+    // Regression: real 20ms steps cannot clear a 0.76m collider in one
+    // frame. The previous sweep trapped avatars spawned within a wall.
+    assert(!swept.blocksMotion(3.f,-1.5f,3.f,-1.45f));
+    assert(!swept.blocksMotion(3.f,-1.45f,3.f,-1.40f));
+    assert(swept.blocksMotion(3.f,-1.75f,3.f,-1.65f)); // deeper
+    assert(swept.blocksMotion(3.f,-1.5f,3.05f,-1.5f)); // tangent
+    assert(swept.blocksMotion(3.f,-1.12f,3.f,-1.20f)); // enter from boundary
     assert(swept.blocksMotion(nan,0.f,0.f,0.f));
     assert(swept.blocksMotion(0.f,0.f,inf,0.f));
     swept.placed.clear();
