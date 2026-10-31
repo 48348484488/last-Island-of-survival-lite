@@ -54,6 +54,16 @@ class KeyboardModalInputTests(unittest.TestCase):
         self.assertIn("if(modalOpen && a!=Action::Inventory", header)
         self.assertIn("void captureModal(){", header)
 
+    def test_modal_touch_cannot_fall_through_to_camera_look(self):
+        header = (SOURCE.parent / "mobile_hud_input.hpp").read_text(encoding="utf-8")
+        self.assertRegex(
+            header,
+            r"if\(!modalOpen\s*&&\s*a==Action::None\s*&&"
+        )
+        self.assertLess(header.index("if(modalOpen && a!=Action::Inventory"),
+                        header.index("if(!modalOpen && a==Action::None"))
+
+
     def test_builder_shortcut_keeps_modal_guard(self):
         self.assertRegex(
             self.code,
