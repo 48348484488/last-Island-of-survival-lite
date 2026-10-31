@@ -74,7 +74,29 @@ struct Controller {
     if(contains(LIOS_HUD::JoystickTrigger,x,y))return Action::Joystick;
     return Action::None;
  }
- void frame(bool rifle,float width,float height,bool modalOpen=false) {
+ // Build-state UGUI widgets take precedence over the ordinary battle HUD.
+ // Otherwise their overlapping screen areas can trigger jump, crouch or camera
+ // look while the player selects/rotates/places a construction piece.
+ static bool buildWidgetHit(float x,float y){
+    const LIOS_HUD::Rect widgets[]={
+       LIOS_HUD::Build_btn_null,LIOS_HUD::Build_btn_lantu,
+       LIOS_HUD::Build_btn_fundation,LIOS_HUD::Build_btn_wall,
+       LIOS_HUD::Build_btn_floor,LIOS_HUD::Build_btn_stair,
+       LIOS_HUD::Build_btn_window,LIOS_HUD::Build_btn_obstacle,
+       LIOS_HUD::Build_btn_changeButton,LIOS_HUD::Build_btn_opRotate,
+       LIOS_HUD::Build_btn_freeBuildModel,LIOS_HUD::Build_btn_build,
+       LIOS_HUD::BuildChildBox0,LIOS_HUD::BuildChildBox1,
+       LIOS_HUD::BuildChildBox2,LIOS_HUD::BuildChildBox3,
+       LIOS_HUD::BuildChildBox4,LIOS_HUD::BuildChildBox5,
+       LIOS_HUD::BuildChildBox6,LIOS_HUD::BuildChildBox7,
+       LIOS_HUD::BuildChildBox8,LIOS_HUD::BuildChildBox9,
+       LIOS_HUD::BuildChildBox10
+    };
+    for(const auto& widget:widgets)if(contains(widget,x,y))return true;
+    return false;
+ }
+ void frame(bool rifle,float width,float height,bool modalOpen=false,
+            bool building=false) {
     held.clear();pressed.clear();released.clear();lookDelta={0,0};
     std::set<int> alive;
     float scale=std::min(width/1920.f,height/1080.f);
@@ -90,7 +112,11 @@ struct Controller {
        alive.insert(id);
        auto iter=owner.find(id);
        if(iter==owner.end()){
-          Action a=hit(x,y,rifle);
+          const bool buildWidget=building && buildWidgetHit(x,y);
+          Action a=buildWidget?Action::None:hit(x,y,rifle);
+          if(buildWidget)
+             TraceLog(LOG_INFO,"LIOS_BUILD_WIDGET_TOUCH_CAPTURE finger=%d source_x=%.1f source_y=%.1f",
+                      id,x,y);
           if(modalOpen && a!=Action::Inventory && a!=Action::Settings && a!=Action::QuickChat) a=Action::None;
           // Only one joystick finger is allowed, regardless of touch count.
           if(a==Action::Joystick)for(auto const& pair:owner)
@@ -99,7 +125,7 @@ struct Controller {
           // suppressed gameplay action must never fall through to camera look.
           // Otherwise a finger placed on a hidden Jump/Attack hitbox becomes
           // Look and can rotate the camera after the panel closes.
-          if(!modalOpen && a==Action::None&&x>=0&&x<=1920&&y>=0&&y<=1080&&x>940)
+          if(!modalOpen && !buildWidget && a==Action::None&&x>=0&&x<=1920&&y>=0&&y<=1080&&x>940)
              a=Action::Look;
           owner[id]=a;iter=owner.find(id);
           // Log only DOWN edges, never every held frame. Runtime evidence can
