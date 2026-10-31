@@ -151,7 +151,7 @@ grep -E 'LIOS_BUILD_CATEGORY frame=[0-9]+ category=3 submenu=1' \
  evidence/build-wall-logcat.txt >/dev/null ||
  { echo LIOS_BUILD_WALL_CATEGORY_NOT_SELECTED; exit 65; }
 tap wall_child0 "$child_x" "$child_y" 'LIOS_BUILD_CHILD'
-grep -E 'LIOS_BUILD_CHILD frame=[0-9]+ category=3 child=0 .*native_piece=1' \
+grep -E 'LIOS_BUILD_CHILD frame=[0-9]+ category=3 child=0 source_id=24012 native_piece=1 source_angle=180' \
  evidence/build-wall_child0-logcat.txt >/dev/null ||
  { echo LIOS_BUILD_WALL_CHILD_NOT_SELECTED; exit 66; }
 tap wall_place "$place_x" "$place_y" 'LIOS_BUILD_PLACE'
@@ -170,7 +170,7 @@ change=re.search(r"LIOS_BUILD_ROTATE frame=\d+ before=(\d+) orientation=(\d+) so
 if not source or not change:
     raise SystemExit("LIOS_BUILD_WALL_ROTATION_EVIDENCE_MISSING")
 angle=int(source[1]);before,after,logged_angle=map(int,change.groups())
-if angle<=0 or angle%90 or angle!=logged_angle:
+if angle!=180 or angle!=logged_angle:
     raise SystemExit("LIOS_BUILD_WALL_SOURCE_ANGLE_NOT_SUPPORTED angle=%d" % angle)
 if after!=(before+angle//90)%4 or after==before:
     raise SystemExit("LIOS_BUILD_WALL_ROTATION_INCORRECT before=%d after=%d angle=%d" %
