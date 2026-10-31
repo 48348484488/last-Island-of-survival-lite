@@ -333,13 +333,21 @@ pattern=re.compile(
  r" target_x=([-\d.]+) target_z=([-\d.]+)"
  r" wall_blocked=(\d+) terrain_blocked=(\d+)"
  r" stick_x=([-\d.]+) stick_y=([-\d.]+) placed=(\d+)")
-rows=[]
+raw_rows=[]
 for m in pattern.finditer(log):
     f,x,z,tx,tz,blocked,terrain,sx,sy,placed=m.groups()
-    rows.append(dict(frame=int(f),x=float(x),z=float(z),target_x=float(tx),
+    raw_rows.append(dict(frame=int(f),x=float(x),z=float(z),target_x=float(tx),
         target_z=float(tz),blocked=int(blocked),terrain=int(terrain),
         stick_x=float(sx),stick_y=float(sy),placed=int(placed)))
-spec={"mode":"retreat","records":rows,"colliders":forward["colliders"],
+# Android input swipe events and logcat can overlap at gesture boundaries.
+# Exclude still-in-flight FORWARD joystick samples (negative Y) before
+# evaluating the REVERSE gesture (positive Y). Preserve the count for audit.
+rows=[r for r in raw_rows if r["stick_y"]>.05]
+discarded=len(raw_rows)-len(rows)
+print("LIOS_JOYSTICK_RETREAT_PHASE_FILTER raw=%d reverse=%d ignored=%d" %
+      (len(raw_rows),len(rows),discarded))
+spec={"mode":"retreat","records":rows,"ignored_forward_samples":discarded,
+      "colliders":forward["colliders"],
       "source":"actual Android reverse joystick touch and player motion",
       "original_parity_proven":False}
 Path("evidence/build-joystick-retreat.json").write_text(json.dumps(spec,indent=2)+"\n")
