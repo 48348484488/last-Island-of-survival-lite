@@ -82,6 +82,7 @@ struct Controller {
        auto iter=owner.find(id);
        if(iter==owner.end()){
           Action a=hit(x,y,rifle);
+          if(modalOpen && a!=Action::Inventory && a!=Action::Settings && a!=Action::QuickChat) a=Action::None;
           // Only one joystick finger is allowed, regardless of touch count.
           if(a==Action::Joystick)for(auto const& pair:owner)
                if(pair.second==Action::Joystick){a=Action::None;break;}
