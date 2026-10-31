@@ -1,0 +1,62 @@
+{
+  "workflow": "https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41166031283",
+  "source_commit": "3efe7e46b56205be022d5118b53dbb9ba14a3af2",
+  "runtime_artifact_id": 13028829384,
+  "device": "Android x86_64 emulator with ARM64 translation",
+  "resolution": [
+    1080,
+    640
+  ],
+  "observed_windows": 10,
+  "observed_frames": 600,
+  "groups": {
+    "third_person_full": {
+      "windows": 2,
+      "frames": 120,
+      "mean_frame_ms": 28.7355,
+      "mean_fps": 34.8,
+      "pose_cpu_ms": 13.896,
+      "vbo_submit_ms": 1.167,
+      "end_drawing_ms": 12.832,
+      "slow_frames_over_33ms": 5
+    },
+    "first_person_hidden": {
+      "windows": 6,
+      "frames": 360,
+      "mean_frame_ms": 17.3365,
+      "mean_fps": 57.682,
+      "pose_cpu_ms": 0,
+      "vbo_submit_ms": 0,
+      "end_drawing_ms": 16.3903,
+      "slow_frames_over_33ms": 0
+    },
+    "mixed_transitions": {
+      "windows": 2,
+      "frames": 120,
+      "mean_frame_ms": 32.065,
+      "mean_fps": 31.187,
+      "pose_cpu_ms": 13.638,
+      "vbo_submit_ms": 1.2535,
+      "end_drawing_ms": 16.081,
+      "slow_frames_over_33ms": 40
+    }
+  },
+  "touch_tests": {
+    "slot0": "passed",
+    "slot1": "passed",
+    "aim_on": "passed",
+    "aim_off": "passed",
+    "jump": "passed",
+    "attack": "passed",
+    "crouch_on": "passed",
+    "crouch_off": "passed",
+    "modal_jump_block": "passed"
+  },
+  "builder_touch_runtime_verified": false,
+  "original_game_parity_proven": false,
+  "limitations": [
+    "Mode-specific windows are different camera states, not controlled same-scene FPS A/B.",
+    "EndDrawing is CPU wall time, not GPU-only execution.",
+    "No authorized same-state original Unity LITE 7.3 screenshot available."
+  ]
+}
