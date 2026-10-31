@@ -21,6 +21,21 @@ class BuildModeModalGuardTests(unittest.TestCase):
             "            (!overlayWasOpen&&building.blueprint&&hudInput.justPressed(HA::Slot6)))",
             source)
 
+    def test_build_transition_consumes_its_opening_touch(self):
+        source = (Path(__file__).resolve().parents[1] /
+                  "last_island_recreated_game" / "main.cpp").read_text(
+                      encoding="utf-8")
+        self.assertIn("const bool buildModeAtFrameStart=buildMode;", source)
+        self.assertIn(
+            "if(activePanel!=panelAtFrameStart || buildMode!=buildModeAtFrameStart){",
+            source)
+        segment = source.split(
+            "if(activePanel!=panelAtFrameStart || buildMode!=buildModeAtFrameStart){",
+            1)[1].split("for(const Vector2 &click:uiClicks)", 1)[0]
+        self.assertIn("uiClicks.clear();", segment)
+        self.assertIn("LIOS_INPUT_TRANSITION frame=%u", source)
+        self.assertIn("LIOS_INPUT_DISPATCH frame=%u scope=build", source)
+
 
 if __name__ == "__main__":
     unittest.main()
