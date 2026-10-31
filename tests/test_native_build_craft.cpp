@@ -156,6 +156,29 @@ int main(){
     assert(isolatedWall.blocks(4.5f,1.5f));
     assert(!isolatedWall.blocks(4.5f,1.51f));
     assert(WallVisualHalfThickness==.11f&&WallCollisionHalfThickness==.38f);
+
+    // Swept movement regression: a large frame step can cross an entire
+    // 0.76m collision band with both endpoints outside the wall.
+    System swept;
+    swept.placed.push_back(Piece(Wall,1,0,0));
+    assert(!swept.blocks(3.f,-2.3f)&&!swept.blocks(3.f,-.7f));
+    assert(swept.blocksMotion(3.f,-2.3f,3.f,-.7f));
+    assert(swept.blocksMotion(4.49f,-2.3f,4.49f,-.7f));
+    assert(!swept.blocksMotion(4.51f,-2.3f,4.51f,-.7f));
+    assert(!swept.blocksMotion(3.f,0.f,3.f,.2f));
+    assert(swept.blocksMotion(1.f,-3.f,5.f,0.f)); // diagonal crossing
+    assert(!swept.blocksMotion(3.f,-1.5f,3.f,0.f)); // escape overlap
+    assert(swept.blocksMotion(nan,0.f,0.f,0.f));
+    assert(swept.blocksMotion(0.f,0.f,inf,0.f));
+    swept.placed.clear();
+    swept.placed.push_back(Piece(Wall,1,0,1));
+    assert(swept.blocksMotion(3.7f,0.f,5.3f,0.f));
+    assert(!swept.blocksMotion(3.f,2.f,3.2f,2.f));
+    swept.placed.clear();
+    swept.placed.push_back(Piece(Doorway,1,0,1));
+    assert(!swept.blocksMotion(3.7f,0.f,5.3f,0.f));
+    swept.placed.push_back(Piece(Obstacle,2,0,0));
+    assert(swept.blocksMotion(5.f,0.f,7.f,0.f));
     std::cout<<"LIOS_BUILD_CRAFT_NATIVE_LOGIC_PASS placed="<<b.placed.size()
              <<" recipes=3 queued_quantity=true item_sprite_source=true build_categories=8 wall_collision=pass\\n";
 }

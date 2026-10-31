@@ -1,3 +1,10 @@
+### 2026-10-31 06:49 America/Recife — swept movement collision hardening (CI pending)
+
+- Added continuous 2D segment-versus-box checks in native building collision, preserving existing endpoint behavior for stationary checks and allowing escape from a spawn overlap. Long frame movement can no longer tunnel across the provisional 0.76m wall collision band with both endpoints outside. The same applies to obstacles.
+- The actual Android player movement path now calls `building.blocksMotion(oldX,oldZ,newX,newZ)` instead of checking only the destination. Native C++ regressions cover crossing, end caps, diagonal movement, both wall axes, door openings, overlap escape and invalid floats.
+- Previous wall end-cap fix is now **confirmed compiled and executed** in Android workflow [#41184581865](https://github.com/48348484488/last-Island-of-survival-lite/actions/runs/41184581865) (3/3 jobs successful, commit f1559d0). This verifies the prior APK, not yet the new swept-motion change.
+- The wall mesh and UVs are still provisional; no original Unity gameplay parity or physical player-wall traversal has been demonstrated. Next: verify this new Android build, inspect runtime movement at the wall and extract the authorized original prefab.
+
 ### 2026-10-31 05:23 America/Recife — native wall collision end caps fixed (runtime pending)
 
 - Source inspection found a **provable geometry mismatch**: the fallback wall is 3.00m long (half-length 1.50m) but collision previously accepted only `abs(tangent)<1.42m`, leaving an 0.08m uncovered section at each rendered end.

@@ -207,6 +207,58 @@ public:
         placed.push_back({type,gx,gz,turn(rot)});
         return true;
     }
+
+    // Sweep the entire movement segment, not only the destination point:
+    // otherwise a long Android frame can move straight through a thin wall.
+    static bool segmentTouchesBox(float x0,float z0,float x1,float z1,
+                                  float minX,float maxX,float minZ,float maxZ){
+        float enter=0.f,leave=1.f;
+        const float origin[2]={x0,z0},delta[2]={x1-x0,z1-z0};
+        const float lower[2]={minX,minZ},upper[2]={maxX,maxZ};
+        for(int axis=0;axis<2;axis++){
+            if(delta[axis]==0.f){
+                if(origin[axis]<lower[axis]||origin[axis]>upper[axis])return false;
+            }else{
+                float a=(lower[axis]-origin[axis])/delta[axis];
+                float b=(upper[axis]-origin[axis])/delta[axis];
+                if(a>b)std::swap(a,b);
+                enter=std::max(enter,a);
+                leave=std::min(leave,b);
+                if(enter>leave)return false;
+            }
+        }
+        return true;
+    }
+    bool blocksMotion(float x0,float z0,float x1,float z1)const{
+        // A corrupt/nonfinite movement target must not bypass collisions.
+        if(!std::isfinite(x0)||!std::isfinite(z0)||
+           !std::isfinite(x1)||!std::isfinite(z1))return true;
+        for(const auto &p:placed){
+            if(p.type!=Wall&&p.type!=Window&&p.type!=Obstacle)continue;
+            float cx=world(p.gx),cz=world(p.gz),hx=.75f,hz=.75f;
+            if(p.type!=Obstacle){
+                const int rot=turn(p.turn);
+                const bool alongZ=(rot%2)==0;
+                const float edge=(rot==0||rot==3)?-WallEdgeOffset:WallEdgeOffset;
+                if(alongZ){
+                    cz+=edge;hx=WallVisualHalfLength;hz=WallCollisionHalfThickness;
+                }else{
+                    cx+=edge;hx=WallCollisionHalfThickness;hz=WallVisualHalfLength;
+                }
+            }
+            const float minX=cx-hx,maxX=cx+hx,minZ=cz-hz,maxZ=cz+hz;
+            const bool startsInside=x0>=minX&&x0<=maxX&&z0>=minZ&&z0<=maxZ;
+            const bool endsInside=x1>=minX&&x1<=maxX&&z1>=minZ&&z1<=maxZ;
+            // Allow escape from a collision box after a spawn/placement
+            // overlap; do not trap the player inside its own geometry.
+            if(startsInside){
+                if(endsInside)return true;
+                continue;
+            }
+            if(segmentTouchesBox(x0,z0,x1,z1,minX,maxX,minZ,maxZ))return true;
+        }
+        return false;
+    }
     bool blocks(float x,float z)const{
         if(!std::isfinite(x)||!std::isfinite(z))return false;
         for(const auto &p:placed){

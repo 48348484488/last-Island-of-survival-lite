@@ -1119,7 +1119,8 @@ int main() {
             // Walls are solid; reject implausibly tall uphill steps and
             // follow the measured source mesh instead of a fixed Y=0 plane.
             const float nextGround=terrain.ground(nextPosition.x,nextPosition.z);
-            if(!building.blocks(nextPosition.x,nextPosition.z) &&
+            if(!building.blocksMotion(player.position.x,player.position.z,
+                              nextPosition.x,nextPosition.z) &&
                (!player.isGrounded || nextGround-player.position.y<=0.55f)){
                 player.position=nextPosition;
                 if(player.isGrounded)player.position.y=nextGround;
