@@ -443,12 +443,25 @@ for expected in 1 0; do
   adb shell input swipe "$crouch_x" "$crouch_y" "$crouch_x" "$crouch_y" 850
   sleep 2
   adb logcat -d -s raylib:I > "evidence/crouch-state-${expected}-logcat.txt" 2>&1 || true
-  if grep -E 'LIOS_HUD_TOUCH_DOWN finger=[0-9]+ action=6 ' \
-       "evidence/crouch-state-${expected}-logcat.txt" >/dev/null &&
-     grep -F "LIOS_CROUCH_TOUCH_TRANSITION crouch=${expected} prone=0" \
-       "evidence/crouch-state-${expected}-logcat.txt" >/dev/null &&
-     ! grep -F 'LIOS_ATTACK_TRIGGERED' \
-       "evidence/crouch-state-${expected}-logcat.txt" >/dev/null; then
+  # logcat -c can still expose an older queued ATTACK line. Restrict
+  # negative assertions to events AFTER this crouch touch-down, not the
+  # entire buffer (the preceding test intentionally fires an attack).
+  if python3 - "evidence/crouch-state-${expected}-logcat.txt" "$expected" <<'PY'
+import re,sys
+from pathlib import Path
+lines=Path(sys.argv[1]).read_text(encoding="utf8").splitlines()
+down=[i for i,line in enumerate(lines)
+      if re.search(r"LIOS_HUD_TOUCH_DOWN finger=\d+ action=6 ",line)]
+if not down:
+    raise SystemExit("CROUCH_TOUCH_DOWN_MISSING")
+after=lines[down[-1]:]
+expected=f"LIOS_CROUCH_TOUCH_TRANSITION crouch={sys.argv[2]} prone=0"
+if not any(expected in line for line in after):
+    raise SystemExit("CROUCH_GAMEPLAY_TRANSITION_MISSING")
+if any("LIOS_ATTACK_TRIGGERED" in line for line in after):
+    raise SystemExit("CROUCH_CAUSED_ATTACK")
+PY
+  then
     echo "LIOS_CROUCH_TOUCH_STATE_PASS crouch=$expected" | tee -a evidence/crouch-touch-result.txt
   else
     echo "LIOS_CROUCH_TOUCH_STATE_FAIL expected=$expected x=$crouch_x y=$crouch_y" \
