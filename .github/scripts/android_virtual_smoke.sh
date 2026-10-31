@@ -495,6 +495,72 @@ PY
     exit 56
   fi
 done
+# Verify source-drawn hotbar centers and the rifle-only aim button using
+# real Android touches. Require BOTH HUD ownership and gameplay state markers;
+# a rendered icon or touch-down alone is not a functional pass.
+read -r slot0_x slot0_y slot1_x slot1_y aim_x aim_y < <(python3 - <<'PY'
+import json,sys
+from pathlib import Path
+sys.path.insert(0,"last_island_recreated_game")
+from original_hud_bindings import original_touch_rects
+d=json.loads(Path("evidence/frame-quality.json").read_text())
+preview=json.loads(Path("last_island_recreated_game/assets/hud_original_xapk/complete_source_mapping/hud_v8_onfoot_source_preview.json").read_text())
+w,h=d["width"],d["height"]
+scale=min(w/1920.0,h/1080.0)
+left=(w-1920*scale)/2
+top=(h-1080*scale)/2
+def point(x,y):
+    return round(left+x*scale),round(top+(y-200.0)*scale)
+result=[]
+for index in (1,2):
+    name=f"m_Item{index}.runtime_m_icon"
+    hits=[c for c in preview["draw_calls"] if c.get("go")==name]
+    if len(hits)!=1:
+        raise SystemExit("SOURCE_HOTBAR_ICON_NOT_UNIQUE "+name)
+    c=hits[0]
+    result.extend(point(c["x"]+c["w"]/2,c["y"]+c["h"]/2))
+aim=original_touch_rects(profile="on-foot-rifle")["aim"]
+result.extend(point((aim["left"]+aim["right"])/2,
+                    (aim["top"]+aim["bottom"])/2))
+print(*result)
+PY
+)
+printf 'slot0=%s,%s slot1=%s,%s aim=%s,%s\n' \
+  "$slot0_x" "$slot0_y" "$slot1_x" "$slot1_y" "$aim_x" "$aim_y" \
+  > evidence/hotbar-aim-coordinates.txt
+for probe in slot0 slot1 aim_on aim_off; do
+  case "$probe" in
+    slot0) x="$slot0_x";y="$slot0_y";action_id=14;marker='LIOS_HOTBAR_TOUCH_SELECTED slot=0 equipped=0';;
+    slot1) x="$slot1_x";y="$slot1_y";action_id=15;marker='LIOS_HOTBAR_TOUCH_SELECTED slot=1 equipped=1';;
+    aim_on) x="$aim_x";y="$aim_y";action_id=10;marker='LIOS_AIM_TOUCH_TRANSITION aim=1 slot=1';;
+    aim_off) x="$aim_x";y="$aim_y";action_id=10;marker='LIOS_AIM_TOUCH_TRANSITION aim=0 slot=1';;
+  esac
+  adb logcat -c || true
+  adb shell input swipe "$x" "$y" "$x" "$y" 850
+  sleep 2
+  adb logcat -d -s raylib:I > "evidence/${probe}-touch-logcat.txt" 2>&1 || true
+  if python3 - "evidence/${probe}-touch-logcat.txt" "$action_id" "$marker" <<'PY'
+import re,sys
+from pathlib import Path
+lines=Path(sys.argv[1]).read_text(encoding="utf8").splitlines()
+down=[i for i,line in enumerate(lines) if re.search(
+    r"LIOS_HUD_TOUCH_DOWN finger=\\d+ action="+sys.argv[2]+r"\\b",line)]
+if not down:
+    raise SystemExit("EXPECTED_HUD_TOUCH_MISSING")
+after=lines[down[-1]:]
+if not any(sys.argv[3] in line for line in after):
+    raise SystemExit("EXPECTED_GAMEPLAY_STATE_MISSING")
+if any("LIOS_ATTACK_TRIGGERED" in line for line in after):
+    raise SystemExit("HOTBAR_OR_AIM_TAP_CAUSED_ATTACK")
+PY
+  then
+    echo "LIOS_HOTBAR_AIM_TOUCH_PASS probe=$probe" | tee -a evidence/hotbar-aim-result.txt
+  else
+    echo "LIOS_HOTBAR_AIM_TOUCH_FAIL probe=$probe x=$x y=$y" | tee -a evidence/hotbar-aim-result.txt
+    exit 57
+  fi
+done
+adb exec-out screencap -p > evidence/hotbar-aim-after-probes.png || true
 # Optional keyboard-driven camera-mode probe. Some Android virtual input bridges
 # do not forward TAB to raylib. Record that limitation explicitly instead of
 # pretending a missing key event proves a game failure.
