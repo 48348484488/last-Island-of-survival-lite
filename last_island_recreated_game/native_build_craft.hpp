@@ -76,6 +76,14 @@ inline int grid(float position){
 }
 inline float world(int cell){return float(cell)*3.f;}
 inline int turn(int rotation){return (rotation%4+4)%4;}
+// Shared native fallback wall geometry. These are provisional Raylib
+// dimensions, NOT measured Unity prefab bounds. Keep rendering and
+// collision aligned until original mesh/UVs are recovered.
+static constexpr float WallVisualHalfLength=1.5f;
+static constexpr float WallVisualHalfThickness=.11f;
+static constexpr float WallEdgeOffset=1.5f;
+// The 0.27m extra normal clearance models an approximate player footprint.
+static constexpr float WallCollisionHalfThickness=.38f;
 class System {
 public:
     std::vector<Piece> placed;
@@ -210,10 +218,11 @@ public:
             float dx=x-world(p.gx),dz=z-world(p.gz);
             int rot=turn(p.turn);
             bool alongZ=(rot%2)==0;
-            float wallCoord=(rot==0?-1.5f:rot==1?1.5f:rot==2?1.5f:-1.5f);
+            float wallCoord=(rot==0?-WallEdgeOffset:rot==1?WallEdgeOffset:rot==2?WallEdgeOffset:-WallEdgeOffset);
             float normal=alongZ?dz:dx;
             float tangent=alongZ?dx:dz;
-            if(std::abs(normal-wallCoord)<.38f&&std::abs(tangent)<1.42f)return true;
+            if(std::abs(normal-wallCoord)<WallCollisionHalfThickness&&
+               std::abs(tangent)<=WallVisualHalfLength)return true;
         }
         return false;
     }
