@@ -64,6 +64,28 @@ class KeyboardModalInputTests(unittest.TestCase):
                         header.index("if(!modalOpen && a==Action::None"))
 
 
+    def test_construction_controls_capture_before_battle_hud(self):
+        header = (SOURCE.parent / "mobile_hud_input.hpp").read_text(encoding="utf-8")
+        self.assertIn("static bool buildWidgetHit(float x,float y)", header)
+        for control in ("Build_btn_build", "Build_btn_opRotate",
+                        "Build_btn_changeButton", "Build_btn_wall",
+                        "BuildChildBox0", "BuildChildBox10"):
+            with self.subTest(control=control):
+                self.assertIn("LIOS_HUD::" + control, header)
+        self.assertIn("Action a=buildWidget?Action::None:hit(x,y,rifle);", header)
+        self.assertIn("!modalOpen && !buildWidget && a==Action::None", header)
+        self.assertIn("LIOS_BUILD_WIDGET_TOUCH_CAPTURE", header)
+        self.assertIn("overlayWasOpen,buildMode);", self.code)
+        self.assertIn("!overlayWasOpen&&activePanel==0&&!buildMode", self.code)
+        self.assertIn("LIOS_BUILD_MODE_TRANSITION enabled=%d", self.code)
+
+    def test_hotbar_and_aim_report_real_state_transitions(self):
+        self.assertIn("LIOS_HOTBAR_TOUCH_SELECTED slot=0 equipped=0", self.code)
+        self.assertIn("LIOS_HOTBAR_TOUCH_SELECTED slot=1 equipped=1", self.code)
+        self.assertIn("LIOS_HOTBAR_TOUCH_SELECTED slot=%d equipped=-1", self.code)
+        self.assertIn("LIOS_AIM_TOUCH_TRANSITION aim=%d slot=%d", self.code)
+        self.assertIn("!overlayWasOpen&&!buildMode&&hudInput.justPressed(HA::Aim)", self.code)
+
     def test_builder_shortcut_keeps_modal_guard(self):
         self.assertRegex(
             self.code,
