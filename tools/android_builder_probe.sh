@@ -21,7 +21,14 @@ tap() {
 grep -F 'LIOS_TEST_FIXTURE_RESOURCES wood=250 stone=250 metal=250 blueprint=0' \
  evidence/terrain-startup-logcat.txt >/dev/null ||
  { echo LIOS_BUILD_FIXTURE_NOT_APPLIED; exit 58; }
-# The visible crafting icon is already source-calibrated by the main smoke.
+# Same visible crafting icon already validated by the main smoke.
+read -r visible_x visible_y < <(python3 - <<'PY'
+import json
+from pathlib import Path
+d=json.loads(Path("evidence/frame-quality.json").read_text())
+print(round(d["width"]*34/1080),round(d["height"]*480/640))
+PY
+)
 tap craft_open "$visible_x" "$visible_y" 'LIOS_CRAFT_PANEL_OPEN'
 read -r prototype_x prototype_y create_x create_y close_x close_y slot6_x slot6_y < <(python3 - <<'PY'
 import json
