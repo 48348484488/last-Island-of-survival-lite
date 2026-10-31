@@ -25,6 +25,9 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#if defined(__ANDROID__)
+#include <sys/system_properties.h>
+#endif
 #include <set>
 #include <array>
 #include <algorithm>
@@ -182,6 +185,19 @@ int main() {
     player.ironCount = 0;
     player.stoneCount = 0;
     player.walkCycle = 0.0f;
+#if defined(__ANDROID__)
+    // Explicit emulator-only diagnostic fixture. Normal gameplay remains
+    // resource-empty; this does NOT grant a blueprint or bypass crafting.
+    // ADB must opt in with: setprop debug.lios.build_fixture resources_v1
+    char buildFixture[PROP_VALUE_MAX] = {};
+    if (__system_property_get("debug.lios.build_fixture", buildFixture)>0 &&
+        std::strcmp(buildFixture,"resources_v1")==0) {
+        player.woodCount=250;
+        player.stoneCount=250;
+        player.ironCount=250;
+        TraceLog(LOG_INFO,"LIOS_TEST_FIXTURE_RESOURCES wood=250 stone=250 metal=250 blueprint=0");
+    }
+#endif
 
     // -------------------------------------------------------------------------------------
     // Load Authentic 3D Models & Textures from assets/
@@ -482,6 +498,8 @@ int main() {
         realCraft.tick(elapsedFrame);
         if(building.blueprint&&craftStatus=="Fabricando..."){
             craftStatus="Item pronto. Equipe pelo ultimo slot da barra.";
+            TraceLog(LOG_INFO,"LIOS_OFFLINE_BLUEPRINT_READY crafted=%d",
+                     building.craftedCount[LIOS_BUILD::Blueprint]);
         }
 
         // Desktop toggle cursor lock
@@ -665,6 +683,23 @@ int main() {
                 buildBagOpen=false;building.selected=-1;
                 selectedHotbarSlot=6;player.equippedSlot=-1;aim=false;
                 buildStatus="CONSTRUCAO: categoria > peca > colocar.";
+                // Source RectTransform hitboxes projected through the actual
+                // runtime viewport. Emulator probes consume these values;
+                // never hardcode approximate category/child coordinates.
+                const struct BuildProbe {const char* name; LIOS_HUD::Rect rect;} probes[]={
+                    {"foundation",LIOS_HUD::Build_btn_fundation},
+                    {"wall",LIOS_HUD::Build_btn_wall},
+                    {"child0",LIOS_HUD::BuildChildBox0},
+                    {"rotate",LIOS_HUD::Build_btn_opRotate},
+                    {"place",LIOS_HUD::Build_btn_build},
+                    {"exit",LIOS_HUD::Build_btn_changeButton}
+                };
+                for(const auto& probe:probes){
+                    const Rectangle box=sourceRect(probe.rect);
+                    TraceLog(LOG_INFO,
+                        "LIOS_BUILD_HITBOX name=%s left=%.2f top=%.2f right=%.2f bottom=%.2f",
+                        probe.name,box.x,box.y,box.x+box.width,box.y+box.height);
+                }
             }else{
                 buildSubmenuOpen=false;buildBagOpen=false;
                 buildCategory=-1;buildSubitem=-1;building.selected=-1;
@@ -808,6 +843,8 @@ int main() {
                         player.ironCount=available.metal;
                         craftSelectedOrder=int(building.queue.size())-1;
                         craftStatus="Fabricando...";
+                        TraceLog(LOG_INFO,"LIOS_OFFLINE_CRAFT_QUEUED recipe=%d count=%d",
+                                 craftSelectedRecipe,craftQuantity);
                     }else craftStatus="Materiais insuficientes ou fila cheia.";
                 }
             }else if(buildMode&&activePanel==0){
@@ -838,6 +875,7 @@ int main() {
                     sourceBuildPartId=-1;sourceBuildOnceAngle=0;
                     buildStatus="Construcao encerrada.";
                     TraceLog(LOG_INFO,"LIOS_BUILD_EXIT frame=%u via=change_button",inputFrameNumber);
+                    TraceLog(LOG_INFO,"LIOS_INPUT_TRANSITION frame=%u from=build to=game",inputFrameNumber);
                     TraceLog(LOG_INFO,"LIOS_BUILD_MODE_TRANSITION enabled=0 blueprint=%d",
                              int(building.blueprint));
                     continue;
