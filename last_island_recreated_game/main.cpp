@@ -838,6 +838,8 @@ int main() {
                     sourceBuildPartId=-1;sourceBuildOnceAngle=0;
                     buildStatus="Construcao encerrada.";
                     TraceLog(LOG_INFO,"LIOS_BUILD_EXIT frame=%u via=change_button",inputFrameNumber);
+                    TraceLog(LOG_INFO,"LIOS_BUILD_MODE_TRANSITION enabled=0 blueprint=%d",
+                             int(building.blueprint));
                     continue;
                 }
                 bool tabTouched=false;
