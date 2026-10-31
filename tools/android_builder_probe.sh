@@ -272,7 +272,7 @@ for m in pattern.finditer(s):
 colliders=[]
 for label in ("wall_place","wall_rotated_place"):
     log=Path("evidence/build-"+label+"-logcat.txt").read_text()
-    m=re.search(r"LIOS_WALL_COLLIDER_RUNTIME rotation=(\\d+) center_x=([-\\d.]+) center_z=([-\\d.]+) half_x=([-\\d.]+) half_z=([-\\d.]+)",log)
+    m=re.search(r"LIOS_WALL_COLLIDER_RUNTIME rotation=(\d+) center_x=([-\d.]+) center_z=([-\d.]+) half_x=([-\d.]+) half_z=([-\d.]+)",log)
     if not m:raise SystemExit("LIOS_JOYSTICK_COLLIDER_GEOMETRY_MISSING "+label)
     rotation,cx,cz,hx,hz=m.groups()
     colliders.append({"rotation":int(rotation),"center":[float(cx),float(cz)],
@@ -280,7 +280,7 @@ for label in ("wall_place","wall_rotated_place"):
 Path("evidence/build-joystick-motion.json").write_text(
     json.dumps({"records":rows,"colliders":colliders,
                 "source":"actual Android touch joystick and player motion",
-                "original_parity_proven":False},indent=2)+"\\n")
+                "original_parity_proven":False},indent=2)+"\n")
 if len(rows)<5:raise SystemExit("LIOS_JOYSTICK_TELEMETRY_INSUFFICIENT")
 if any(b["frame"]<=a["frame"] for a,b in zip(rows,rows[1:])):
     raise SystemExit("LIOS_JOYSTICK_FRAME_ORDER_INVALID")
@@ -304,4 +304,4 @@ PY
 adb exec-out screencap -p > evidence/build-joystick-wall-contact.png || true
 echo LIOS_JOYSTICK_WALL_CONTACT_PASS | tee -a evidence/build-probe-result.txt
 
-echo LIOS_ANDROID_BUILDER_FOUNDATION_WALL_ROTATE_PLACE_EXIT_PASS | tee evidence/build-probe-result.txt
+echo LIOS_ANDROID_BUILDER_FOUNDATION_WALL_ROTATE_PLACE_EXIT_PASS | tee -a evidence/build-probe-result.txt
